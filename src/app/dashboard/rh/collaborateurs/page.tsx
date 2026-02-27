@@ -8,13 +8,15 @@ import {
     ToolbarDescription,
     ToolbarHeading,
 } from '@/partials/common/toolbar';
+import { getAllLeaveRequests } from '@/services/leave-requests';
 import { AddCollaboratorForm } from '../components/add-collaborator-form';
 import { CollaboratorsTable } from './collaborators-table';
 import { getAllUsers } from '@/services/users';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { UserPlusIcon, UsersIcon } from "lucide-react";
 
 export default async function CollaboratorsPage() {
     const session = await auth();
-    // Use session.user.role if it's available or (session.user as any).role
     const role = (session?.user as any)?.role;
 
     if (!session?.user || (role !== "ADMIN" && role !== "RH")) {
@@ -28,27 +30,46 @@ export default async function CollaboratorsPage() {
             <Container>
                 <Toolbar>
                     <ToolbarHeading>
-                        <div className="flex items-center">
-                            <h1 className="text-xl font-medium leading-none text-secondary">Collaborateurs</h1>
+                        <div className="flex items-center gap-2">
+                            <span className="p-2 rounded-lg bg-secondary/10 text-secondary">
+                                <UsersIcon className="size-5" />
+                            </span>
+                            <h1 className="text-xl font-medium leading-none text-secondary">Gestion des Collaborateurs</h1>
                         </div>
                         <ToolbarDescription>
-                            Gérez les accès et consultez la liste des employés.
+                            Administrez les accès et coordonnez votre équipe d'ambulanciers.
                         </ToolbarDescription>
                     </ToolbarHeading>
                 </Toolbar>
             </Container>
 
-            <Container className="space-y-8 mt-8">
-                {/* Form to add collaborator */}
-                <div className="max-w-3xl mx-auto">
-                    <AddCollaboratorForm />
-                </div>
+            <Container className="mt-8 pb-10">
+                <Tabs defaultValue="list" className="w-full">
+                    <TabsList className="grid w-full grid-cols-2 max-w-[400px] mb-8 bg-muted/50 p-1 rounded-xl">
+                        <TabsTrigger value="list" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm flex items-center gap-2 py-2">
+                            <UsersIcon className="size-4" />
+                            <span className="hidden sm:inline">Liste des Collaborateurs</span>
+                            <span className="sm:hidden text-xs">Liste</span>
+                        </TabsTrigger>
+                        <TabsTrigger value="add" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm flex items-center gap-2 py-2">
+                            <UserPlusIcon className="size-4" />
+                            <span className="hidden sm:inline">Ajouter un Collaborateur</span>
+                            <span className="sm:hidden text-xs">Ajouter</span>
+                        </TabsTrigger>
+                    </TabsList>
 
-                {/* List of collaborators */}
-                <div className="pt-8 border-t border-border/50">
-                    <h2 className="text-lg font-bold text-secondary mb-6">Liste des Collaborateurs</h2>
-                    <CollaboratorsTable initialData={users as any} />
-                </div>
+                    <TabsContent value="list" className="space-y-6 focus-visible:outline-none focus-visible:ring-0">
+                        <div className="bg-white rounded-xl shadow-sm border border-border border-t-4 border-t-secondary overflow-hidden">
+                            <CollaboratorsTable initialData={users as any} />
+                        </div>
+                    </TabsContent>
+
+                    <TabsContent value="add" className="focus-visible:outline-none focus-visible:ring-0">
+                        <div className="max-w-3xl mx-auto">
+                            <AddCollaboratorForm />
+                        </div>
+                    </TabsContent>
+                </Tabs>
             </Container>
         </Fragment>
     );

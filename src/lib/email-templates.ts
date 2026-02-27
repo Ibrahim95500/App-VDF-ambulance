@@ -20,22 +20,9 @@ export function getBrandedEmailHtml({
   actionUrl,
   actionText
 }: EmailTemplateOptions): string {
+  const logoUrl = "https://vdf-ambulance.fr/media/app/logo.png";
   const primaryColor = "#2c3e8a"; // VDF Blue
   const accentColor = "#f97316";  // VDF Orange
-
-  // VDF Logo as SVG for email (compatible with most modern clients)
-  const logoSvg = `
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="80" height="80">
-      <g stroke="transparent" stroke-width="0">
-        <g stroke="#ffffff" stroke-width="2">
-          <rect x="75" y="10" width="50" height="180" fill="#ffffff" rx="3" />
-          <rect x="75" y="10" width="50" height="180" fill="#ffffff" rx="3" transform="rotate(60 100 100)" />
-          <rect x="75" y="10" width="50" height="180" fill="#ffffff" rx="3" transform="rotate(120 100 100)" />
-        </g>
-      </g>
-      <text x="100" y="120" fill="${accentColor}" style="font-family: 'Georgia', serif; font-size: 56px; font-weight: bold; text-anchor: middle; letter-spacing: 2px;">VDF</text>
-    </svg>
-  `;
 
   return `
 <!DOCTYPE html>
@@ -48,6 +35,7 @@ export function getBrandedEmailHtml({
     body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f7f9; }
     .container { max-width: 600px; margin: 20px auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #e1e8ed; }
     .header { background-color: ${primaryColor}; padding: 40px 20px; text-align: center; }
+    .logo { height: 80px; width: auto; margin-bottom: 10px; }
     .content { padding: 40px 30px; }
     .title { color: ${primaryColor}; font-size: 24px; font-weight: bold; margin-bottom: 20px; margin-top: 0; border-bottom: 2px solid ${accentColor}; display: inline-block; padding-bottom: 5px; }
     .text { font-size: 16px; color: #4b5563; margin-bottom: 25px; }
@@ -62,8 +50,8 @@ export function getBrandedEmailHtml({
   <div style="display:none;font-size:1px;color:#fff;line-height:1px;max-height:0px;max-width:0px;opacity:0;overflow:hidden">${preheader}</div>
   <div class="container">
     <div class="header">
-        ${logoSvg}
-        <div style="color: #ffffff; font-size: 14px; font-weight: bold; margin-top: 10px; letter-spacing: 4px; text-transform: uppercase; font-family: sans-serif;">Ambulance</div>
+        <img src="${logoUrl}" alt="VDF Ambulance" style="height: 100px; width: auto; margin-bottom: 10px;">
+        <div style="color: #ffffff; font-size: 14px; font-weight: bold; letter-spacing: 4px; text-transform: uppercase; font-family: sans-serif;">Ambulance</div>
     </div>
     <div class="content">
       <h1 class="title">${title}</h1>
