@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent } from "@/components/ui/card"
-import { toAbsoluteUrl } from '@/lib/helpers';
 import Link from 'next/link';
+import { VdfLogo } from '@/components/vdf-logo';
 
 export default function LoginPage({ searchParams }: { searchParams?: { error?: string } }) {
     const error = searchParams?.error;
@@ -18,13 +18,11 @@ export default function LoginPage({ searchParams }: { searchParams?: { error?: s
                 <CardContent className="p-8 sm:p-10">
                     <div className="flex flex-col items-center text-center mb-8">
                         <Link href="/">
-                            <img
-                                src={toAbsoluteUrl('/media/app/logo.png?v=2')}
-                                className="h-16 w-auto mb-6 object-contain drop-shadow-sm"
-                                alt="App Ambulance"
-                            />
+                            <VdfLogo className="h-24 w-auto mb-4" />
                         </Link>
-                        <h1 className="text-2xl font-bold tracking-tight text-gray-900">Bienvenue</h1>
+                        <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-blue-600 to-orange-500 bg-clip-text text-transparent pb-1">
+                            Bienvenue
+                        </h1>
                         <p className="text-sm text-gray-500 mt-2">
                             Connectez-vous pour accéder à votre espace
                         </p>

@@ -19,7 +19,11 @@ export const metadata: Metadata = {
   title: {
     template: '%s | App Ambulance',
     default: 'App Ambulance',
-  }
+  },
+  icons: {
+    icon: '/media/app/logo.png',
+    apple: '/media/app/apple-touch-icon.png',
+  },
 };
 
 export default function RootLayout({
