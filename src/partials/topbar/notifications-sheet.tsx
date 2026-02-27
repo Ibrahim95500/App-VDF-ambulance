@@ -1,0 +1,186 @@
+'use client';
+
+import { ReactNode } from 'react';
+import Link from 'next/link';
+import { Calendar, Settings, Settings2, Shield, Users, Clock, CheckCircle, XCircle, Info } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { getNotifications, markAllAsRead, markAsRead } from '@/actions/notifications.actions';
+import { useEffect, useState } from 'react';
+import { cn } from '@/lib/utils';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuPortal,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  Sheet,
+  SheetBody,
+  SheetContent,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import Item1 from './notifications/item-1';
+import Item2 from './notifications/item-2';
+import Item3 from './notifications/item-3';
+import Item4 from './notifications/item-4';
+import Item5 from './notifications/item-5';
+import Item6 from './notifications/item-6';
+import Item10 from './notifications/item-10';
+import Item11 from './notifications/item-11';
+import Item13 from './notifications/item-13';
+import Item14 from './notifications/item-14';
+import Item15 from './notifications/item-15';
+import Item16 from './notifications/item-16';
+import Item17 from './notifications/item-17';
+import Item18 from './notifications/item-18';
+import Item19 from './notifications/item-19';
+import Item20 from './notifications/item-20';
+
+export function NotificationsSheet({ trigger }: { trigger: ReactNode }) {
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchNotifications = async () => {
+    try {
+      const data = await getNotifications();
+      setNotifications(data);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
+
+  const handleMarkAllAsRead = async () => {
+    await markAllAsRead();
+    fetchNotifications();
+  };
+
+  const handleMarkAsRead = async (id: string) => {
+    await markAsRead(id);
+    fetchNotifications();
+  };
+
+  const getIcon = (type: string, status: string) => {
+    if (status === 'APPROVED') return <CheckCircle className="size-4 text-green-500" />;
+    if (status === 'REJECTED') return <XCircle className="size-4 text-red-500" />;
+    if (type === 'ADVANCE') return <div className="text-orange-500 font-bold text-xs">€</div>;
+    return <Calendar className="size-4 text-blue-500" />;
+  };
+  return (
+    <Sheet>
+      <SheetTrigger asChild>{trigger}</SheetTrigger>
+      <SheetContent className="p-0 gap-0 sm:w-[500px] sm:max-w-none inset-5 start-auto h-auto rounded-lg p-0 sm:max-w-none [&_[data-slot=sheet-close]]:top-4.5 [&_[data-slot=sheet-close]]:end-5">
+        <SheetHeader className="mb-0">
+          <SheetTitle className="p-3">
+            Notifications
+          </SheetTitle>
+        </SheetHeader>
+        <SheetBody className="p-0">
+          <ScrollArea className="h-[calc(100vh-10.5rem)]">
+            <Tabs defaultValue="all" className="w-full relative">
+              <TabsList variant="line" className="w-full px-5 mb-5">
+                <TabsTrigger value="all">Tout</TabsTrigger>
+                <TabsTrigger value="inbox" className="relative">
+                  Non lues
+                  <div className="w-1.5 h-1.5 rounded-full bg-orange-500 absolute top-1 -end-1" />
+                </TabsTrigger>
+                <div className="grow flex items-center justify-end">
+                </div>
+              </TabsList>
+
+              {/* All Tab */}
+              <TabsContent value="all" className="mt-0">
+                <div className="flex flex-col">
+                  {loading ? (
+                    <div className="p-10 text-center text-muted-foreground text-sm">Chargement...</div>
+                  ) : notifications.length === 0 ? (
+                    <div className="p-10 text-center text-muted-foreground text-sm">Aucune notification</div>
+                  ) : (
+                    notifications.map((n) => (
+                      <div
+                        key={n.id}
+                        className={cn(
+                          "p-4 border-b border-border hover:bg-muted/30 transition-colors flex gap-3 items-start",
+                          !n.read && "bg-blue-50/30"
+                        )}
+                        onClick={() => !n.read && handleMarkAsRead(n.id)}
+                      >
+                        <div className="mt-1 size-8 rounded-full bg-muted flex items-center justify-center shrink-0">
+                          {getIcon(n.type, n.status)}
+                        </div>
+                        <div className="flex flex-col grow">
+                          <div className="flex justify-between items-start">
+                            <span className="text-sm font-bold text-foreground">{n.title}</span>
+                            <span className="text-[10px] text-muted-foreground">{new Date(n.createdAt).toLocaleDateString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1">{n.message}</p>
+                          {n.link && (
+                            <Link href={n.link} className="text-[10px] uppercase font-bold text-secondary mt-2 hover:underline">
+                              Voir la demande
+                            </Link>
+                          )}
+                        </div>
+                        {!n.read && <div className="size-2 rounded-full bg-orange-500 mt-2 shrink-0" />}
+                      </div>
+                    ))
+                  )}
+                </div>
+              </TabsContent>
+
+              {/* Inbox Tab (Unread) */}
+              <TabsContent value="inbox" className="mt-0">
+                <div className="flex flex-col">
+                  {notifications.filter(n => !n.read).length === 0 ? (
+                    <div className="p-10 text-center text-muted-foreground text-sm">Aucune notification non lue</div>
+                  ) : (
+                    notifications.filter(n => !n.read).map((n) => (
+                      <div
+                        key={n.id}
+                        className="p-4 border-b border-border bg-blue-50/30 flex gap-3 items-start"
+                        onClick={() => handleMarkAsRead(n.id)}
+                      >
+                        <div className="mt-1 size-8 rounded-full bg-muted flex items-center justify-center shrink-0">
+                          {getIcon(n.type, n.status)}
+                        </div>
+                        <div className="flex flex-col grow">
+                          <div className="flex justify-between items-start">
+                            <span className="text-sm font-bold text-foreground">{n.title}</span>
+                            <span className="text-[10px] text-muted-foreground">{new Date(n.createdAt).toLocaleDateString()}</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-1">{n.message}</p>
+                          {n.link && (
+                            <Link href={n.link} className="text-[10px] font-bold text-secondary mt-2 hover:underline">
+                              Gérer
+                            </Link>
+                          )}
+                        </div>
+                        <div className="size-2 rounded-full bg-orange-500 mt-2 shrink-0" />
+                      </div>
+                    ))
+                  )}
+                </div>
+              </TabsContent>
+            </Tabs>
+          </ScrollArea>
+        </SheetBody>
+        <SheetFooter className="border-t border-border p-5 flex items-center justify-end">
+          <Button variant="outline" size="sm" onClick={handleMarkAllAsRead}>Tout marquer comme lu</Button>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
+  );
+}

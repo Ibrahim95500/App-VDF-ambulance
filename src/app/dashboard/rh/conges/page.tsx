@@ -1,0 +1,42 @@
+import { Fragment } from 'react';
+import { auth } from "@/auth"
+import { redirect } from "next/navigation"
+import { Container } from '@/components/common/container';
+import {
+    Toolbar,
+    ToolbarDescription,
+    ToolbarHeading,
+} from '@/partials/common/toolbar';
+import { getAllLeaveRequests } from '@/services/leave-requests';
+import { LeaveManagementTable } from './components/leave-management-table';
+
+export default async function ManageLeavesPage() {
+    const session = await auth()
+    if (!session?.user || (session.user as any).role !== "RH") {
+        redirect("/dashboard/salarie")
+    }
+
+    // Fetch all leave requests directly from the database through the service
+    const leaves = await getAllLeaveRequests()
+
+    return (
+        <Fragment>
+            <Container>
+                <Toolbar>
+                    <ToolbarHeading>
+                        <h1 className="text-xl font-medium leading-none text-secondary">Gestion des Congés</h1>
+                        <ToolbarDescription>
+                            Gérez, validez ou refusez les demandes de congés et d'absences de vos collaborateurs.
+                        </ToolbarDescription>
+                    </ToolbarHeading>
+                </Toolbar>
+            </Container>
+
+            <Container>
+                <div className="mt-8">
+                    <LeaveManagementTable initialLeaves={leaves} />
+                </div>
+            </Container>
+        </Fragment>
+    )
+}
