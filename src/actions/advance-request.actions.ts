@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import { createNotification } from "./notifications.actions"
+import { sendBrandedEmail } from "@/lib/mail"
 import { z } from "zod"
 
 const AdvanceRequestSchema = z.object({
@@ -25,15 +26,27 @@ export async function updateRequestStatus(requestId: string, status: "APPROVED" 
         include: { user: true }
     })
 
-    // Notify the employee
-    await createNotification({
-        userId: request.userId,
-        title: `Demande d'acompte ${status === 'APPROVED' ? 'Approuvée' : 'Refusée'}`,
-        message: `Votre demande d'acompte de ${request.amount}€ a été ${status === 'APPROVED' ? 'approuvée' : 'refusée'} par la RH.`,
-        type: "ADVANCE",
-        status,
-        link: "/dashboard/salarie/acomptes"
-    })
+    // Notify the employee via email
+    if (request.user.email) {
+        await sendBrandedEmail({
+            to: request.user.email,
+            subject: `Décision : Votre demande d'acompte`,
+            title: `Demande ${status === 'APPROVED' ? 'Approuvée' : 'Refusée'}`,
+            preheader: `Réponse à votre demande d'acompte`,
+            content: `
+                <p>Bonjour ${request.user.firstName || request.user.name},</p>
+                <p>Votre demande d'acompte de <strong>${request.amount}€</strong> a été traitée.</p>
+                <p>Le statut de votre demande est désormais : 
+                   <strong style="color: ${status === 'APPROVED' ? '#16a34a' : '#dc2626'};">
+                     ${status === 'APPROVED' ? 'APPROUVÉE' : 'REFUSÉE'}
+                   </strong>.
+                </p>
+                <p>Vous pouvez consulter les détails dans votre espace personnel.</p>
+            `,
+            actionUrl: `${process.env.NEXTAUTH_URL}/dashboard/salarie`,
+            actionText: "Accéder à mes demandes"
+        });
+    }
 
     revalidatePath('/dashboard/rh/acomptes')
     revalidatePath('/dashboard/salarie')
@@ -79,20 +92,32 @@ export async function createAdvanceRequest(amount: number, reason: string) {
             reason,
             targetMonth: targetMonthString,
             userId: session.user.id
-        }
+        },
+        include: { user: true }
     })
 
-    // Notify all RH users
-    const rhUsers = await prisma.user.findMany({ where: { role: 'RH' } })
-    for (const rh of rhUsers) {
-        await createNotification({
-            userId: rh.id,
-            title: "Nouvelle demande d'acompte",
-            message: `${session.user.name} a soumis une demande d'acompte de ${amount}€.`,
-            type: "ADVANCE",
-            status: "PENDING",
-            link: "/dashboard/rh/acomptes"
-        })
+    // Email notification to Admin (ibrahim.nifa01@gmail.com)
+    try {
+        await sendBrandedEmail({
+            to: "ibrahim.nifa01@gmail.com",
+            subject: `[Demande Acompte] ${request.user.name} - ${amount}€`,
+            title: "Nouvelle Demande d'Acompte",
+            preheader: `Nouvelle demande de ${request.user.name}`,
+            content: `
+                <p>Une nouvelle demande d'acompte a été soumise sur l'application.</p>
+                <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; margin: 20px 0;">
+                    <p><strong>Collaborateur :</strong> ${request.user.name}</p>
+                    <p><strong>Montant :</strong> ${amount}€</p>
+                    <p><strong>Mois Cible :</strong> ${targetMonthString}</p>
+                    <p><strong>Motif :</strong> ${reason || "-"}</p>
+                </div>
+            `,
+            actionUrl: `${process.env.NEXTAUTH_URL}/dashboard/rh/acomptes`,
+            actionText: "Voir la demande"
+        });
+        console.log(`Email notification sent for advance request: ${request.user.name}`);
+    } catch (emailError) {
+        console.error("Failed to send advance request email:", emailError);
     }
 
     revalidatePath('/dashboard/rh/acomptes')

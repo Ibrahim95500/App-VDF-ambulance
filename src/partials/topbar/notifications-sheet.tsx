@@ -2,9 +2,9 @@
 
 import { ReactNode } from 'react';
 import Link from 'next/link';
-import { Calendar, Settings, Settings2, Shield, Users, Clock, CheckCircle, XCircle, Info } from 'lucide-react';
+import { Calendar, Settings, Settings2, Shield, Users, Clock, CheckCircle, XCircle, Info, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { getNotifications, markAllAsRead, markAsRead } from '@/actions/notifications.actions';
+import { getNotifications, markAllAsRead, markAsRead, dismissNotification } from '@/actions/notifications.actions';
 import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 import {
@@ -107,27 +107,53 @@ export function NotificationsSheet({ trigger }: { trigger: ReactNode }) {
                       <div
                         key={n.id}
                         className={cn(
-                          "p-4 border-b border-border hover:bg-muted/30 transition-colors flex gap-3 items-start",
+                          "group p-4 border-b border-border hover:bg-muted/30 transition-colors flex gap-3 items-start relative",
                           !n.read && "bg-blue-50/30"
                         )}
-                        onClick={() => !n.read && handleMarkAsRead(n.id)}
                       >
-                        <div className="mt-1 size-8 rounded-full bg-muted flex items-center justify-center shrink-0">
-                          {getIcon(n.type, n.status)}
-                        </div>
-                        <div className="flex flex-col grow">
-                          <div className="flex justify-between items-start">
-                            <span className="text-sm font-bold text-foreground">{n.title}</span>
-                            <span className="text-[10px] text-muted-foreground">{new Date(n.createdAt).toLocaleDateString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
+                        <div
+                          className="flex grow gap-3 cursor-pointer"
+                          onClick={() => !n.read && handleMarkAsRead(n.id)}
+                        >
+                          <div className="mt-1 size-8 rounded-full bg-muted flex items-center justify-center shrink-0">
+                            {getIcon(n.type, n.status)}
                           </div>
-                          <p className="text-xs text-muted-foreground mt-1">{n.message}</p>
-                          {n.link && (
-                            <Link href={n.link} className="text-[10px] uppercase font-bold text-secondary mt-2 hover:underline">
-                              Voir la demande
-                            </Link>
-                          )}
+                          <div className="flex flex-col grow">
+                            <div className="flex justify-between items-start">
+                              <span className="text-sm font-bold text-foreground">{n.title}</span>
+                              <span className="text-[10px] text-muted-foreground">{new Date(n.createdAt).toLocaleDateString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-1">{n.message}</p>
+                            {n.link && (
+                              <Link href={n.link} className="text-[10px] uppercase font-bold text-secondary mt-2 hover:underline">
+                                Voir la demande
+                              </Link>
+                            )}
+                          </div>
                         </div>
-                        {!n.read && <div className="size-2 rounded-full bg-orange-500 mt-2 shrink-0" />}
+
+                        <div className="flex flex-col items-center gap-2 shrink-0">
+                          {!n.read && <div className="size-2 rounded-full bg-orange-500 mt-2" />}
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-red-500"
+                            onClick={(e) => {
+                              console.log("UI: Dismiss button clicked for ID:", n.id);
+                              e.stopPropagation();
+                              dismissNotification(n.id)
+                                .then((res) => {
+                                  console.log("UI: Dismiss success, refreshing list...", res);
+                                  fetchNotifications();
+                                })
+                                .catch(err => {
+                                  console.error("UI: Dismiss failed", err);
+                                });
+                            }}
+                          >
+                            <X size={14} />
+                          </Button>
+                        </div>
                       </div>
                     ))
                   )}

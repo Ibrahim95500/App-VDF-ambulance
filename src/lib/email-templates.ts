@@ -20,8 +20,8 @@ export function getBrandedEmailHtml({
   actionUrl,
   actionText
 }: EmailTemplateOptions): string {
-  // Use the new branded logo
-  const logoUrl = 'https://dev.vdf-ambulance.fr/brand/logo-vdf-star.png';
+  // Use the new branded logo for emails
+  const logoUrl = 'https://dev.vdf-ambulance.fr/brand/logo-mail.png';
   const primaryColor = "#2c3e8a"; // VDF Blue
   const accentColor = "#f97316";  // VDF Orange
 
@@ -36,7 +36,6 @@ export function getBrandedEmailHtml({
     body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f7f9; }
     .container { max-width: 600px; margin: 20px auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #e1e8ed; }
     .header { background-color: ${primaryColor}; padding: 40px 20px; text-align: center; }
-    .logo { height: 80px; width: auto; margin-bottom: 10px; }
     .content { padding: 40px 30px; }
     .title { color: ${primaryColor}; font-size: 24px; font-weight: bold; margin-bottom: 20px; margin-top: 0; border-bottom: 2px solid ${accentColor}; display: inline-block; padding-bottom: 5px; }
     .text { font-size: 16px; color: #4b5563; margin-bottom: 25px; }
@@ -51,8 +50,24 @@ export function getBrandedEmailHtml({
   <div style="display:none;font-size:1px;color:#fff;line-height:1px;max-height:0px;max-width:0px;opacity:0;overflow:hidden">${preheader}</div>
   <div class="container">
     <div class="header">
-        <img src="${logoUrl}" alt="VDF Ambulance" style="height: 100px; width: auto; margin-bottom: 5px; display: block; margin-left: auto; margin-right: auto;">
-        <div style="color: #ffffff; font-size: 14px; font-weight: bold; letter-spacing: 5px; text-transform: uppercase; font-family: 'Arial Black', Gadget, sans-serif; text-align: center;">AMBULANCE</div>
+        <table width="100%" border="0" cellspacing="0" cellpadding="0">
+            <tr>
+                <td align="center">
+                    <table border="0" cellspacing="0" cellpadding="0" style="background-color: #ffffff; width: 100px; height: 100px; border-radius: 50%; border-collapse: separate;">
+                        <tr>
+                            <td align="center" valign="middle" style="width: 100px; height: 100px;">
+                                <img src="${logoUrl}" alt="VDF Ambulance" width="70" style="display: block; width: 70px; height: auto;">
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+            <tr>
+                <td align="center" style="padding-top: 15px;">
+                    <div style="color: #ffffff; font-size: 14px; font-weight: bold; letter-spacing: 5px; text-transform: uppercase; font-family: 'Arial Black', Gadget, sans-serif;">AMBULANCE</div>
+                </td>
+            </tr>
+        </table>
     </div>
     <div class="content">
       <h1 class="title">${title}</h1>

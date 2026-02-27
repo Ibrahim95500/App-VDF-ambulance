@@ -175,28 +175,28 @@ export function CollaboratorsTable({ initialData }: { initialData: User[] }) {
             </div>
 
             <div className="overflow-x-auto border border-border rounded-xl w-full">
-                <table className="w-full text-sm text-left align-middle text-muted-foreground min-w-[1000px]">
-                    <thead className="text-xs uppercase bg-muted/50 text-muted-foreground border-b border-border">
+                <table className="w-full text-sm text-left align-middle text-muted-foreground min-w-[800px]">
+                    <thead className="text-xs uppercase text-muted-foreground border-b border-border">
                         <tr>
-                            <th scope="col" className="px-5 py-4 font-semibold">Collaborateur</th>
-                            <th scope="col" className="px-5 py-4 font-semibold">Contact</th>
-                            <th scope="col" className="px-5 py-4 font-semibold text-center">Rôle</th>
-                            <th scope="col" className="px-5 py-4 font-semibold text-center">Statut Compte</th>
-                            <th scope="col" className="px-5 py-4 font-semibold">Commentaire / Motif</th>
-                            <th scope="col" className="px-5 py-4 font-semibold text-center">Actions</th>
+                            <th scope="col" className="px-4 py-3 font-semibold">Collaborateur</th>
+                            <th scope="col" className="px-4 py-3 font-semibold">Contact</th>
+                            <th scope="col" className="px-4 py-3 font-semibold text-center">Rôle</th>
+                            <th scope="col" className="px-4 py-3 font-semibold text-center">Statut Compte</th>
+                            <th scope="col" className="px-4 py-3 font-semibold">Commentaire / Motif</th>
+                            <th scope="col" className="px-4 py-3 font-semibold text-center">Actions</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
                         {filteredData.length === 0 ? (
                             <tr>
-                                <td colSpan={6} className="px-5 py-10 text-center text-muted-foreground italic">
+                                <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground italic">
                                     {initialData.length === 0 ? "Aucun collaborateur trouvé." : "Aucun résultat pour ces filtres."}
                                 </td>
                             </tr>
                         ) : (
                             filteredData.map((user) => (
                                 <tr key={user.id} className={`hover:bg-muted/10 transition-colors ${(user as any).isActive === false ? 'bg-red-50/20' : ''}`}>
-                                    <td className="px-5 py-4">
+                                    <td className="px-4 py-3">
                                         <div className="flex items-center gap-4">
                                             {user.image ? (
                                                 <img src={user.image} className="w-10 h-10 rounded-full bg-border object-cover border border-border" alt="" />
@@ -213,7 +213,7 @@ export function CollaboratorsTable({ initialData }: { initialData: User[] }) {
                                             </div>
                                         </div>
                                     </td>
-                                    <td className="px-5 py-4">
+                                    <td className="px-4 py-3">
                                         <div className="flex flex-col gap-1">
                                             <span className="text-foreground font-medium">{user.phone || "Non renseigné"}</span>
                                             {user.birthDate && (
@@ -241,7 +241,7 @@ export function CollaboratorsTable({ initialData }: { initialData: User[] }) {
                                             </div>
                                         )}
                                     </td>
-                                    <td className="px-5 py-4">
+                                    <td className="px-4 py-3">
                                         {(user as any).isActive === false && (user as any).deletionReason ? (
                                             <div className="flex items-start gap-2 max-w-[200px]">
                                                 <MessageSquareIcon className="w-3.5 h-3.5 text-red-400 mt-1 flex-shrink-0" />

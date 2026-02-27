@@ -107,8 +107,8 @@ export function RHServiceRequestsTable({ initialData }: { initialData: GlobalSer
             />
 
             <div className="overflow-x-auto border border-border rounded-xl w-full">
-                <table className="w-full text-sm text-left align-middle text-muted-foreground border-collapse min-w-[900px]">
-                    <thead className="text-xs uppercase text-muted-foreground font-bold border-b border-border">
+                <table className="w-full text-sm text-left align-middle text-muted-foreground border-collapse min-w-[800px]">
+                    <thead className="text-xs text-muted-foreground uppercase border-b border-border">
                         <tr>
                             <th scope="col" className="px-4 py-3 font-semibold">Collaborateur</th>
                             <th scope="col" className="px-4 py-3 font-semibold">Catégorie</th>
@@ -155,7 +155,7 @@ export function RHServiceRequestsTable({ initialData }: { initialData: GlobalSer
                                             </Badge>
                                         </div>
                                     </td>
-                                    <td className="px-4 py-3 text-center">
+                                    <td className="px-4 py-3">
                                         <div className="flex flex-col items-center">
                                             <div className="font-semibold text-foreground">{new Date(req.createdAt).toLocaleDateString('fr-FR')}</div>
                                             <div className="text-[10px] opacity-60 flex items-center gap-1"><Clock className="size-2.5" /> {new Date(req.createdAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</div>

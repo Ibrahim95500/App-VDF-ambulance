@@ -8,11 +8,17 @@ export async function getNotifications() {
     const session = await auth()
     if (!session?.user?.id) return []
 
-    return await prisma.notification.findMany({
-        where: { userId: session.user.id },
+    console.log("Fetching notifications for user:", session.user.id);
+    const notifications = await prisma.notification.findMany({
+        where: {
+            userId: session.user.id,
+            dismissed: false
+        },
         orderBy: { createdAt: 'desc' },
         take: 20
     })
+    console.log(`Found ${notifications.length} notifications`);
+    return notifications;
 }
 
 export async function getUnreadNotificationsCount() {
@@ -22,7 +28,8 @@ export async function getUnreadNotificationsCount() {
     return await prisma.notification.count({
         where: {
             userId: session.user.id,
-            read: false
+            read: false,
+            dismissed: false
         }
     })
 }
@@ -35,12 +42,28 @@ export async function markAsRead(notificationId: string) {
     revalidatePath('/')
 }
 
+export async function dismissNotification(notificationId: string) {
+    console.log("Dismissing notification:", notificationId);
+    try {
+        const result = await prisma.notification.update({
+            where: { id: notificationId },
+            data: { dismissed: true }
+        })
+        console.log("Notification dismissed in DB:", result.id);
+        revalidatePath('/')
+        return { success: true };
+    } catch (err) {
+        console.error("Failed to dismiss notification:", err);
+        throw err;
+    }
+}
+
 export async function markAllAsRead() {
     const session = await auth()
     if (!session?.user?.id) return
 
     await prisma.notification.updateMany({
-        where: { userId: session.user.id },
+        where: { userId: session.user.id, dismissed: false },
         data: { read: true }
     })
     revalidatePath('/')

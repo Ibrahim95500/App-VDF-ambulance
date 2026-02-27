@@ -80,7 +80,7 @@ export function AcomptesTable({ initialData }: { initialData: AdvanceRequestWith
 
             <div className="overflow-x-auto border border-border rounded-xl w-full">
                 <table className="w-full text-sm text-left align-middle text-muted-foreground border-collapse min-w-[800px]">
-                    <thead className="text-xs uppercase bg-muted/50 text-muted-foreground">
+                    <thead className="text-xs uppercase text-muted-foreground border-b border-border">
                         <tr>
                             <th scope="col" className="px-4 py-3 font-semibold">Salarié</th>
                             <th scope="col" className="px-4 py-3 font-semibold">Montant</th>

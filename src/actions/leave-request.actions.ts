@@ -5,6 +5,7 @@ import prisma from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 import { LeaveType, RequestStatus } from "@prisma/client"
 import { createNotification } from "./notifications.actions"
+import { sendBrandedEmail } from "@/lib/mail"
 import { z } from "zod"
 
 const LeaveRequestSchema = z.object({
@@ -80,15 +81,28 @@ export async function createLeaveRequest(
 
     // Notify all RH users
     const rhUsers = await prisma.user.findMany({ where: { role: 'RH' } })
-    for (const rh of rhUsers) {
-        await createNotification({
-            userId: rh.id,
-            title: "Nouvelle demande de congé",
-            message: `${user.firstName} ${user.lastName} a soumis une demande de congé (${type.toUpperCase()}).`,
-            type: "LEAVE",
-            status: "PENDING",
-            link: "/dashboard/rh"
-        })
+    // Email notification to Admin (ibrahim.nifa01@gmail.com)
+    try {
+        await sendBrandedEmail({
+            to: "ibrahim.nifa01@gmail.com",
+            subject: `[Demande Congé] ${user.firstName} ${user.lastName} - ${type.toUpperCase()}`,
+            title: "Nouvelle Demande de Congé",
+            preheader: `Nouvelle demande de ${user.firstName} ${user.lastName}`,
+            content: `
+                <p>Une nouvelle demande de congé a été soumise sur l'application.</p>
+                <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; margin: 20px 0;">
+                    <p><strong>Collaborateur :</strong> ${user.firstName} ${user.lastName}</p>
+                    <p><strong>Type :</strong> ${type.toUpperCase()}</p>
+                    <p><strong>Période :</strong> Du ${start.toLocaleDateString()} au ${end.toLocaleDateString()}</p>
+                    <p><strong>Motif :</strong> ${reason || "-"}</p>
+                </div>
+            `,
+            actionUrl: `${process.env.NEXTAUTH_URL}/dashboard/rh`,
+            actionText: "Voir la demande"
+        });
+        console.log(`Email notification sent for leave request: ${user.lastName}`);
+    } catch (emailError) {
+        console.error("Failed to send leave request email:", emailError);
     }
 
     revalidatePath("/dashboard/salarie/conges")
@@ -108,15 +122,27 @@ export async function updateLeaveRequestStatus(requestId: string, status: 'APPRO
         include: { user: true }
     })
 
-    // Notify the employee
-    await createNotification({
-        userId: updatedRequest.userId,
-        title: `Demande de congé ${status === 'APPROVED' ? 'Approuvée' : 'Refusée'}`,
-        message: `Votre demande de congé du ${new Date(updatedRequest.startDate).toLocaleDateString()} a été ${status === 'APPROVED' ? 'approuvée' : 'refusée'}.`,
-        type: "LEAVE",
-        status,
-        link: "/dashboard/salarie/conges"
-    })
+    // Notify the employee via email
+    if (updatedRequest.user.email) {
+        await sendBrandedEmail({
+            to: updatedRequest.user.email,
+            subject: `Décision : Votre demande de congé (${updatedRequest.type})`,
+            title: `Demande ${status === 'APPROVED' ? 'Approuvée' : 'Refusée'}`,
+            preheader: `Réponse à votre demande de congé`,
+            content: `
+                <p>Bonjour ${updatedRequest.user.firstName || updatedRequest.user.name},</p>
+                <p>Votre demande de congé pour la période du <strong>${new Date(updatedRequest.startDate).toLocaleDateString()}</strong> au <strong>${new Date(updatedRequest.endDate).toLocaleDateString()}</strong> a été examinée.</p>
+                <p>Le statut de votre demande est désormais : 
+                   <strong style="color: ${status === 'APPROVED' ? '#16a34a' : '#dc2626'};">
+                     ${status === 'APPROVED' ? 'APPROUVÉE' : 'REFUSÉE'}
+                   </strong>.
+                </p>
+                <p>Vous pouvez consulter les détails dans votre espace personnel.</p>
+            `,
+            actionUrl: `${process.env.NEXTAUTH_URL}/dashboard/salarie/conges`,
+            actionText: "Accéder à mes demandes"
+        });
+    }
 
     revalidatePath("/dashboard/rh")
     return { success: true, data: updatedRequest }

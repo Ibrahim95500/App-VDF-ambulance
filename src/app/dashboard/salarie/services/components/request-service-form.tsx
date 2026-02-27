@@ -46,15 +46,20 @@ export function RequestServiceForm() {
     })
 
     async function onSubmit(values: z.infer<typeof formSchema>) {
+        console.log("--- UI-TRACE: onSubmit started ---", values);
         try {
             setIsSubmitting(true)
-            await createServiceRequest(values.category, values.subject, values.description)
+            console.log("--- UI-TRACE: Calling createServiceRequest server action ---");
+            const result = await createServiceRequest(values.category, values.subject, values.description)
+            console.log("--- UI-TRACE: createServiceRequest result ---", result);
             toast.success("Votre demande a été envoyée avec succès")
             form.reset()
         } catch (error: any) {
+            console.error("--- UI-TRACE: onSubmit error ---", error);
             toast.error(error.message || "Une erreur est survenue")
         } finally {
             setIsSubmitting(false)
+            console.log("--- UI-TRACE: onSubmit finished ---");
         }
     }
 
