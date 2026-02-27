@@ -1,0 +1,39 @@
+name: Deploy to Hostinger
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to VPS via SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /var/www/vdf-ambulance
+            
+            # Récupérer les dernières modifs
+            git pull origin ${{ github.ref_name }}
+            
+            # Déterminer quel docker-compose utiliser
+            if [ "${{ github.ref_name }}" = "main" ]; then
+              DOCKER_FILE="docker-compose.prod.yml"
+            else
+              DOCKER_FILE="docker-compose.dev.yml"
+            fi
+            
+            # Rebuilder et redémarrer les containers
+            docker compose -f $DOCKER_FILE up -d --build
+            
+            # Nettoyage des images inutiles
+            docker image prune -f

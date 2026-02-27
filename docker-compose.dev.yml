@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  # Base de données de Développement
+  db-dev:
+    image: postgres:15
+    container_name: vdf-db-dev
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER_DEV}
+      POSTGRES_PASSWORD: ${DB_PASSWORD_DEV}
+      POSTGRES_DB: ambulance_db_dev
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+    networks:
+      - vdf-network-dev
+
+  # Application Next.js de Développement
+  app-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: vdf-app-dev
+    restart: always
+    ports:
+      - "8080:3000"
+    environment:
+      DATABASE_URL: postgresql://${DB_USER_DEV}:${DB_PASSWORD_DEV}@db-dev:5432/ambulance_db_dev
+      AUTH_SECRET: ${AUTH_SECRET_DEV}
+      NEXTAUTH_URL: https://dev.vdf-ambulance.fr
+      EMAIL_SERVER: ${EMAIL_SERVER}
+      EMAIL_FROM: ${EMAIL_FROM}
+    depends_on:
+      - db-dev
+    networks:
+      - vdf-network-dev
+
+networks:
+  vdf-network-dev:
+    driver: bridge
+
+volumes:
+  postgres_data_dev:
