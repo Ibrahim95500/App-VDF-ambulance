@@ -50,8 +50,8 @@ export function getBrandedEmailHtml({
   <div style="display:none;font-size:1px;color:#fff;line-height:1px;max-height:0px;max-width:0px;opacity:0;overflow:hidden">${preheader}</div>
   <div class="container">
     <div class="header">
-        <img src="${logoUrl}" alt="VDF Ambulance" style="height: 100px; width: auto; margin-bottom: 10px;">
-        <div style="color: #ffffff; font-size: 14px; font-weight: bold; letter-spacing: 4px; text-transform: uppercase; font-family: sans-serif;">Ambulance</div>
+        <img src="${logoUrl}" alt="VDF Ambulance" style="height: 100px; width: auto; margin-bottom: 5px; display: block; margin-left: auto; margin-right: auto;">
+        <div style="color: #ffffff; font-size: 14px; font-weight: bold; letter-spacing: 5px; text-transform: uppercase; font-family: 'Arial Black', Gadget, sans-serif; text-align: center;">AMBULANCE</div>
     </div>
     <div class="content">
       <h1 class="title">${title}</h1>

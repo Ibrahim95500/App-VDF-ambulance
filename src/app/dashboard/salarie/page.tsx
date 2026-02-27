@@ -2,12 +2,19 @@ export const dynamic = "force-dynamic";
 import { getMyAdvanceRequests } from "@/services/my-requests"
 import { RequestAdvanceForm } from "./request-form"
 import { AdvanceHistoryTable } from "./history-table"
+import { EuroIcon } from "lucide-react"
 
 export default async function SalarieDashboardPage() {
     const myRequests = await getMyAdvanceRequests()
 
     return (
-        <div className="flex flex-col gap-5 lg:gap-7.5 max-w-5xl mx-auto w-full">
+        <div className="flex flex-col gap-5 lg:gap-7.5 max-w-5xl mx-auto w-full px-4 sm:px-0">
+            <div className="flex items-center gap-3 mb-2">
+                <EuroIcon className="size-8 text-secondary" />
+                <h1 className="text-3xl font-bold tracking-tight text-secondary">
+                    Mes Acomptes
+                </h1>
+            </div>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 lg:gap-7.5">
 
                 {/* Left Column: Form */}

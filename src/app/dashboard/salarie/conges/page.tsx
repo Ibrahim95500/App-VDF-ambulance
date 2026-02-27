@@ -11,6 +11,7 @@ import { LeaveBalanceConfig } from './components/leave-balance';
 import { LeaveHistory } from './components/leave-history';
 import { LeaveForm } from './components/leave-form';
 import { getMyLeaveRequests, getMyLeaveBalances } from '@/services/leave-requests';
+import { CalendarIcon } from 'lucide-react';
 
 export default async function CongesPage() {
     const myRequests = await getMyLeaveRequests();
@@ -21,8 +22,11 @@ export default async function CongesPage() {
             <Container>
                 <Toolbar>
                     <ToolbarHeading>
-                        <div className="flex items-center">
-                            <h1 className="text-xl font-medium leading-none text-gray-900 dark:text-gray-100">
+                        <div className="flex items-center gap-2">
+                            <span className="p-1.5 rounded-lg bg-secondary/10 text-secondary">
+                                <CalendarIcon className="size-4" />
+                            </span>
+                            <h1 className="text-xl font-medium leading-none text-secondary">
                                 Absences & Événements
                             </h1>
                         </div>

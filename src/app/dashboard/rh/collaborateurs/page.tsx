@@ -30,10 +30,8 @@ export default async function CollaboratorsPage() {
             <Container>
                 <Toolbar>
                     <ToolbarHeading>
-                        <div className="flex items-center gap-2">
-                            <span className="p-2 rounded-lg bg-secondary/10 text-secondary">
-                                <UsersIcon className="size-5" />
-                            </span>
+                        <div className="flex items-center gap-3">
+                            <UsersIcon className="size-6 text-secondary" />
                             <h1 className="text-xl font-medium leading-none text-secondary">Gestion des Collaborateurs</h1>
                         </div>
                         <ToolbarDescription>
@@ -45,13 +43,19 @@ export default async function CollaboratorsPage() {
 
             <Container className="mt-8 pb-10">
                 <Tabs defaultValue="list" className="w-full">
-                    <TabsList className="grid w-full grid-cols-2 max-w-[400px] mb-8 bg-muted/50 p-1 rounded-xl">
-                        <TabsTrigger value="list" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm flex items-center gap-2 py-2">
+                    <TabsList className="grid w-full grid-cols-2 max-w-[440px] mb-8 bg-muted p-1 rounded-xl">
+                        <TabsTrigger
+                            value="list"
+                            className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-secondary data-[state=active]:shadow-sm flex items-center gap-2 py-2.5 transition-all text-muted-foreground font-medium"
+                        >
                             <UsersIcon className="size-4" />
                             <span className="hidden sm:inline">Liste des Collaborateurs</span>
                             <span className="sm:hidden text-xs">Liste</span>
                         </TabsTrigger>
-                        <TabsTrigger value="add" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm flex items-center gap-2 py-2">
+                        <TabsTrigger
+                            value="add"
+                            className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-secondary data-[state=active]:shadow-sm flex items-center gap-2 py-2.5 transition-all text-muted-foreground font-medium"
+                        >
                             <UserPlusIcon className="size-4" />
                             <span className="hidden sm:inline">Ajouter un Collaborateur</span>
                             <span className="sm:hidden text-xs">Ajouter</span>

@@ -10,6 +10,7 @@ import {
 } from '@/partials/common/toolbar';
 import { getAllLeaveRequests } from '@/services/leave-requests';
 import { LeaveManagementTable } from './components/leave-management-table';
+import { CalendarIcon } from 'lucide-react';
 
 export default async function ManageLeavesPage() {
     const session = await auth()
@@ -36,7 +37,10 @@ export default async function ManageLeavesPage() {
             <Container className="space-y-8">
                 <div className="flex bg-card text-card-foreground flex-col rounded-xl shadow-sm border border-border border-t-4 border-t-secondary pb-5">
                     <div className="px-5 py-4 flex justify-between items-center border-b border-border bg-card">
-                        <h2 className="text-lg font-bold text-secondary">Gestion des Congés</h2>
+                        <div className="flex items-center gap-3">
+                            <CalendarIcon className="size-6 text-secondary" />
+                            <h2 className="text-lg font-bold text-secondary">Gestion des Congés</h2>
+                        </div>
                     </div>
                     <div className="p-0 overflow-x-auto w-full">
                         <LeaveManagementTable initialLeaves={leaves} />
