@@ -28,6 +28,24 @@ export default function LoginPage({ searchParams }: { searchParams?: { error?: s
                         </p>
                     </div>
 
+                    {error === "UserNotFound" && (
+                        <div className="mb-6 p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-md text-center font-medium">
+                            Cet utilisateur (email) n'existe pas dans l'application.
+                        </div>
+                    )}
+
+                    {error === "InvalidPassword" && (
+                        <div className="mb-6 p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-md text-center font-medium">
+                            Mot de passe incorrect. Veuillez vérifier votre saisie.
+                        </div>
+                    )}
+
+                    {error === "AccountDeactivated" && (
+                        <div className="mb-6 p-3 bg-amber-50 border border-amber-200 text-amber-700 text-sm rounded-md text-center font-medium">
+                            Ce compte a été suspendu par l'administration.
+                        </div>
+                    )}
+
                     {error === "CredentialsSignin" && (
                         <div className="mb-6 p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-md text-center font-medium">
                             Identifiants incorrects. Veuillez réessayer.
@@ -46,15 +64,37 @@ export default function LoginPage({ searchParams }: { searchParams?: { error?: s
                         <form
                             action={async (formData) => {
                                 "use server"
+                                const email = formData.get("email") as string;
+                                const password = formData.get("password") as string;
+
                                 try {
+                                    // Pre-check for better error messages
+                                    const { prisma } = await import("@/lib/prisma");
+                                    const user = await prisma.user.findUnique({
+                                        where: { email: email?.trim().toLowerCase() }
+                                    });
+
+                                    if (!user) {
+                                        redirect("/login?error=UserNotFound");
+                                    }
+
+                                    if (user.isActive === false) {
+                                        redirect("/login?error=AccountDeactivated");
+                                    }
+
                                     await signIn("credentials", {
-                                        email: formData.get("email"),
-                                        password: formData.get("password"),
+                                        email: email,
+                                        password: password,
                                         redirectTo: "/dashboard"
                                     })
                                 } catch (error: any) {
                                     if (error instanceof AuthError) {
-                                        redirect("/login?error=CredentialsSignin")
+                                        redirect("/login?error=InvalidPassword")
+                                    }
+
+                                    // Handle internal redirects from Next.js (not really errors)
+                                    if (error.digest?.includes('NEXT_REDIRECT')) {
+                                        throw error;
                                     }
 
                                     // Check for DB connection errors
