@@ -57,7 +57,7 @@ export async function createNotification({
     userId: string,
     title: string,
     message: string,
-    type: "ADVANCE" | "LEAVE",
+    type: "ADVANCE" | "LEAVE" | "SERVICE",
     status?: string,
     link?: string
 }) {

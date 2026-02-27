@@ -71,6 +71,11 @@ export const MENU_SIDEBAR: MenuConfig = [
     icon: CalendarCheck,
     path: '/dashboard/salarie/conges',
   },
+  {
+    title: 'Demandes de Service',
+    icon: LifeBuoy,
+    path: '/dashboard/salarie/services',
+  },
   { heading: 'Espace RH' },
   {
     title: 'Collaborateurs',
@@ -86,6 +91,11 @@ export const MENU_SIDEBAR: MenuConfig = [
     title: 'Gérer Congés',
     icon: CalendarCheck,
     path: '/dashboard/rh/conges',
+  },
+  {
+    title: 'Gérer Services',
+    icon: LifeBuoy,
+    path: '/dashboard/rh/services',
   },
 ];
 

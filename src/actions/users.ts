@@ -101,22 +101,29 @@ export async function createCollaborator(formData: FormData) {
 
             const transporter = nodemailer.createTransport(smtpConfig);
 
+            const { getBrandedEmailHtml } = await import("@/lib/email-templates");
+
             await transporter.sendMail({
                 from: process.env.EMAIL_FROM,
                 to: email,
                 subject: "Vos accès App Ambulance",
-                html: `
-                    <h2>Bienvenue sur App Ambulance, ${firstName} !</h2>
-                    <p>Votre compte a été créé par l'administration RH.</p>
-                    <p>Voici vos informations de connexion par défaut :</p>
-                    <ul>
-                        <li><strong>Email :</strong> ${email}</li>
-                        <li><strong>Mot de passe temporaire :</strong> ${rawPassword}</li>
-                    </ul>
-                    <p>Vous pouvez également choisir de vous connecter directement avec votre compte Google (avec cette même adresse email).</p>
-                    <br>
-                    <p>À bientôt sur <a href="${process.env.NEXTAUTH_URL || 'http://localhost:3000'}">App Ambulance</a> !</p>
-                `
+                html: getBrandedEmailHtml({
+                    title: "Bienvenue chez VDF Ambulance",
+                    preheader: "Vos accès à l'application sont disponibles",
+                    content: `
+                        <p>Bonjour ${firstName},</p>
+                        <p>Votre compte a été créé par l'administration RH avec succès.</p>
+                        <p>Voici vos informations de connexion personnelles :</p>
+                        <div style="background-color: #f8fafc; padding: 15px; border-radius: 8px; margin: 20px 0; border: 1px solid #e2e8f0;">
+                            <p style="margin: 5px 0;"><strong>Email :</strong> ${email}</p>
+                            <p style="margin: 5px 0;"><strong>Mot de passe temporaire :</strong> ${rawPassword}</p>
+                        </div>
+                        <p>Lors de votre première connexion, nous vous recommandons de modifier votre mot de passe pour plus de sécurité.</p>
+                        <p>À très bientôt sur notre plateforme !</p>
+                    `,
+                    actionUrl: process.env.NEXTAUTH_URL || 'https://vdf-ambulance.fr',
+                    actionText: "Se connecter à l'espace"
+                })
             });
         } catch (emailError) {
             console.error("Failed to send email. SMTP is likely misconfigured. Raw Password is:", rawPassword);
