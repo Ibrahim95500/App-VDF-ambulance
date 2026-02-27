@@ -3,9 +3,10 @@ try {
 } catch (e) {
   // Ignore missing dotenv in production
 }
-import { defineConfig } from "prisma/config";
 
-export default defineConfig({
+const { defineConfig } = require("prisma/config");
+
+module.exports = defineConfig({
   schema: "prisma/schema.prisma",
   migrations: {
     path: "prisma/migrations",
