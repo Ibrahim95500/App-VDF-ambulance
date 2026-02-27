@@ -8,7 +8,7 @@ WORKDIR /app
 
 # Installer les dépendances
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN npm ci --legacy-peer-deps
 
 # 2. Reconstruire le code source
 FROM base AS builder
