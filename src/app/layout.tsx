@@ -12,17 +12,21 @@ import { AuthProvider } from '@/providers/auth-provider';
 
 const inter = Inter({ subsets: ['latin'] });
 
+import { PWARegistration } from '@/components/pwa-registration';
+
 import '@/css/styles.css';
 import '@/components/keenicons/assets/styles.css';
 
 export const metadata: Metadata = {
   title: {
-    template: '%s | App Ambulance',
-    default: 'App Ambulance',
+    template: '%s | VDF Ambulance',
+    default: 'VDF Ambulance',
   },
+  description: 'Application de gestion interne VDF Ambulance',
+  manifest: '/manifest.json',
   icons: {
     icon: '/media/app/logo.png',
-    apple: '/media/app/apple-touch-icon.png',
+    apple: '/media/app/logo.png',
   },
 };
 
@@ -40,6 +44,7 @@ export default function RootLayout({
         )}
       >
         <AuthProvider>
+          <PWARegistration />
           <SettingsProvider>
             <ThemeProvider>
               <I18nProvider>

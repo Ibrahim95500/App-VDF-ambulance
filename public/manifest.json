@@ -1,0 +1,22 @@
+{
+    "name": "VDF Ambulance",
+    "short_name": "VDF Ambu",
+    "description": "Application de gestion interne VDF Ambulance",
+    "start_url": "/dashboard",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#2c3e8a",
+    "icons": [
+        {
+            "src": "/media/app/logo.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/media/app/logo.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}
