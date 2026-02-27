@@ -31,22 +31,22 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import Item1 from './notifications/item-1';
-import Item2 from './notifications/item-2';
-import Item3 from './notifications/item-3';
-import Item4 from './notifications/item-4';
-import Item5 from './notifications/item-5';
-import Item6 from './notifications/item-6';
-import Item7 from './notifications/item-7';
-import Item8 from './notifications/item-8';
-import Item9 from './notifications/item-9';
-import Item10 from './notifications/item-10';
-import Item11 from './notifications/item-11';
-import Item12 from './notifications/item-12';
-import Item13 from './notifications/item-13';
-import Item15 from './notifications/item-15';
-import Item16 from './notifications/item-16';
-import Item17 from './notifications/item-17';
+// import Item1 from './notifications/item-1';
+// import Item2 from './notifications/item-2';
+// import Item3 from './notifications/item-3';
+// import Item4 from './notifications/item-4';
+// import Item5 from './notifications/item-5';
+// import Item6 from './notifications/item-6';
+// import Item7 from './notifications/item-7';
+// import Item8 from './notifications/item-8';
+// import Item9 from './notifications/item-9';
+// import Item10 from './notifications/item-10';
+// import Item11 from './notifications/item-11';
+// import Item12 from './notifications/item-12';
+// import Item13 from './notifications/item-13';
+// import Item15 from './notifications/item-15';
+// import Item16 from './notifications/item-16';
+// import Item17 from './notifications/item-17';
 
 export function SheetNotifications({ trigger }: { trigger: ReactNode }) {
   return (
@@ -129,7 +129,8 @@ export function SheetNotifications({ trigger }: { trigger: ReactNode }) {
             {/* All Tab */}
             <TabsContent value="all" className="mt-0">
               <div className="flex flex-col gap-5 overflow-y-auto">
-                <Item1
+                <div className="p-4 text-center text-xs text-muted-foreground">Aucune notification</div>
+                {/* <Item1
                   userName="Joe Lincoln"
                   avatar="300-4.png"
                   description="mentioned you in"
@@ -161,14 +162,15 @@ export function SheetNotifications({ trigger }: { trigger: ReactNode }) {
                   date="1 hour ago"
                   info="Roadmap"
                 />
-                <Item6 />
+                <Item6 /> */}
               </div>
             </TabsContent>
 
             {/* Inbox Tab */}
             <TabsContent value="inbox" className="mt-0">
               <div className="flex flex-col gap-5 overflow-y-auto">
-                <Item10 />
+                <div className="p-4 text-center text-xs text-muted-foreground">Boîte de réception vide</div>
+                {/* <Item10 />
                 <Item11 />
                 <Item12 />
                 <Item13 />
@@ -191,14 +193,15 @@ export function SheetNotifications({ trigger }: { trigger: ReactNode }) {
                   day="topic"
                   date="6 days ago"
                   info="Dev Team"
-                />
+                /> */}
               </div>
             </TabsContent>
 
             {/* Team Tab */}
             <TabsContent value="team" className="mt-0">
               <div className="flex flex-col gap-5 overflow-y-auto">
-                <Item7 />
+                <div className="p-4 text-center text-xs text-muted-foreground">Aucune notification d'équipe</div>
+                {/* <Item7 />
                 <Item5
                   userName="Adrian Vale"
                   avatar="300-6.png"
@@ -229,14 +232,15 @@ export function SheetNotifications({ trigger }: { trigger: ReactNode }) {
                   day=""
                   date="4 days ago"
                   info="Dev Team"
-                />
+                /> */}
               </div>
             </TabsContent>
 
             {/* Following Tab */}
             <TabsContent value="following" className="mt-0">
               <div className="flex flex-col gap-5 overflow-y-auto">
-                <Item9 />
+                <div className="p-4 text-center text-xs text-muted-foreground">Aucun abonnement</div>
+                {/* <Item9 />
                 <Item15 />
                 <Item16 />
                 <Item5
@@ -259,7 +263,7 @@ export function SheetNotifications({ trigger }: { trigger: ReactNode }) {
                   day=""
                   date="4 days ago"
                   info="Dev Team"
-                />
+                /> */}
               </div>
             </TabsContent>
           </Tabs>
