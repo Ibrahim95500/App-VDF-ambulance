@@ -174,9 +174,9 @@ export function CollaboratorsTable({ initialData }: { initialData: User[] }) {
                 </div>
             </div>
 
-            <div className="overflow-x-auto bg-card rounded-xl border border-border shadow-sm">
-                <table className="w-full text-sm text-left align-middle text-muted-foreground">
-                    <thead className="text-xs uppercase bg-muted/50 text-muted-foreground">
+            <div className="overflow-x-auto bg-card rounded-xl border border-border shadow-sm w-full">
+                <table className="w-full text-sm text-left align-middle text-muted-foreground min-w-[1000px]">
+                    <thead className="text-xs uppercase bg-muted/50 text-muted-foreground border-b border-border">
                         <tr>
                             <th scope="col" className="px-5 py-4 font-semibold">Collaborateur</th>
                             <th scope="col" className="px-5 py-4 font-semibold">Contact</th>

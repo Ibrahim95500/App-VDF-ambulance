@@ -78,8 +78,8 @@ export function AcomptesTable({ initialData }: { initialData: AdvanceRequestWith
                 pdfTitle="Liste des Demandes d'Acomptes"
             />
 
-            <div className="overflow-x-auto bg-card rounded-xl border border-border shadow-sm">
-                <table className="w-full text-sm text-left align-middle text-muted-foreground">
+            <div className="overflow-x-auto bg-card rounded-xl border border-border shadow-sm w-full">
+                <table className="w-full text-sm text-left align-middle text-muted-foreground border-collapse min-w-[700px]">
                     <thead className="text-xs uppercase bg-muted/50 text-muted-foreground">
                         <tr>
                             <th scope="col" className="px-4 py-3 font-semibold">Salarié</th>

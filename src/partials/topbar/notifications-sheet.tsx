@@ -65,8 +65,16 @@ export function NotificationsSheet({ trigger }: { trigger: ReactNode }) {
     if (type === 'ADVANCE') return <div className="text-orange-500 font-bold text-xs">€</div>;
     return <Calendar className="size-4 text-blue-500" />;
   };
+  const handleOpenChange = (open: boolean) => {
+    if (open) {
+      fetchNotifications();
+      // On mark comme tout lu quand on ouvre pour décrémenter le compteur de la cloche
+      handleMarkAllAsRead();
+    }
+  };
+
   return (
-    <Sheet>
+    <Sheet onOpenChange={handleOpenChange}>
       <SheetTrigger asChild>{trigger}</SheetTrigger>
       <SheetContent className="p-0 gap-0 sm:w-[500px] sm:max-w-none inset-5 start-auto h-auto rounded-lg p-0 sm:max-w-none [&_[data-slot=sheet-close]]:top-4.5 [&_[data-slot=sheet-close]]:end-5">
         <SheetHeader className="mb-0">
