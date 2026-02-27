@@ -62,9 +62,9 @@ export function Header() {
         {/* HeaderLogo */}
         <div className="flex gap-1 lg:hidden items-center gap-2">
           <Link href="/dashboard" className="shrink-0 flex items-center gap-2">
-            <VdfLogo className="w-10 h-10" />
-            <span className="text-lg font-bold" style={{ color: '#2c3e8a' }}>
-              App Ambulance
+            <VdfLogo className="w-8 h-8" />
+            <span className="text-base font-bold hidden sm:inline" style={{ color: '#2c3e8a' }}>
+              VDF Ambulance
             </span>
           </Link>
           <div className="flex items-center">
