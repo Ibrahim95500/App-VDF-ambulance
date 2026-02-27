@@ -88,14 +88,18 @@ export async function createCollaborator(formData: FormData) {
 
         try {
             // Send email with credentials
-            const transporter = nodemailer.createTransport({
-                host: process.env.EMAIL_SERVER_HOST,
-                port: Number(process.env.EMAIL_SERVER_PORT),
-                auth: {
-                    user: process.env.EMAIL_SERVER_USER,
-                    pass: process.env.EMAIL_SERVER_PASSWORD,
-                }
-            });
+            const smtpConfig = process.env.EMAIL_SERVER
+                ? process.env.EMAIL_SERVER
+                : {
+                    host: process.env.EMAIL_SERVER_HOST,
+                    port: Number(process.env.EMAIL_SERVER_PORT),
+                    auth: {
+                        user: process.env.EMAIL_SERVER_USER,
+                        pass: process.env.EMAIL_SERVER_PASSWORD,
+                    }
+                };
+
+            const transporter = nodemailer.createTransport(smtpConfig);
 
             await transporter.sendMail({
                 from: process.env.EMAIL_FROM,
@@ -272,14 +276,18 @@ export async function requestPasswordReset(formData: FormData) {
 
         console.log(`[RESET] Attempting to send email to ${email} via ${process.env.EMAIL_SERVER_HOST}`);
 
-        const transporter = nodemailer.createTransport({
-            host: process.env.EMAIL_SERVER_HOST,
-            port: Number(process.env.EMAIL_SERVER_PORT),
-            auth: {
-                user: process.env.EMAIL_SERVER_USER,
-                pass: process.env.EMAIL_SERVER_PASSWORD,
-            }
-        });
+        const smtpConfig = process.env.EMAIL_SERVER
+            ? process.env.EMAIL_SERVER
+            : {
+                host: process.env.EMAIL_SERVER_HOST,
+                port: Number(process.env.EMAIL_SERVER_PORT),
+                auth: {
+                    user: process.env.EMAIL_SERVER_USER,
+                    pass: process.env.EMAIL_SERVER_PASSWORD,
+                }
+            };
+
+        const transporter = nodemailer.createTransport(smtpConfig);
 
         const info = await transporter.sendMail({
             from: process.env.EMAIL_FROM,
