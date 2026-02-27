@@ -8,8 +8,13 @@ import { Card, CardContent } from "@/components/ui/card"
 import Link from 'next/link';
 import { VdfLogo } from '@/components/vdf-logo';
 
-export default function LoginPage({ searchParams }: { searchParams?: { error?: string } }) {
-    const error = searchParams?.error;
+export default async function LoginPage({
+    searchParams
+}: {
+    searchParams: Promise<{ error?: string }>
+}) {
+    const params = await searchParams;
+    const error = params?.error;
 
     return (
         <div className="flex grow min-h-screen items-center justify-center bg-gray-50 p-4 w-full">
@@ -88,13 +93,13 @@ export default function LoginPage({ searchParams }: { searchParams?: { error?: s
                                         redirectTo: "/dashboard"
                                     })
                                 } catch (error: any) {
-                                    if (error instanceof AuthError) {
-                                        redirect("/login?error=InvalidPassword")
+                                    // Handle redirects first
+                                    if (error.digest?.includes('NEXT_REDIRECT') || error.message === 'NEXT_REDIRECT') {
+                                        throw error;
                                     }
 
-                                    // Handle internal redirects from Next.js (not really errors)
-                                    if (error.digest?.includes('NEXT_REDIRECT')) {
-                                        throw error;
+                                    if (error instanceof AuthError) {
+                                        redirect("/login?error=InvalidPassword")
                                     }
 
                                     // Check for DB connection errors
