@@ -20,7 +20,8 @@ export function getBrandedEmailHtml({
   actionUrl,
   actionText
 }: EmailTemplateOptions): string {
-  const logoUrl = "https://vdf-ambulance.fr/media/app/logo.png";
+  // Use the new branded logo
+  const logoUrl = 'https://dev.vdf-ambulance.fr/brand/logo-vdf-star.png';
   const primaryColor = "#2c3e8a"; // VDF Blue
   const accentColor = "#f97316";  // VDF Orange
 

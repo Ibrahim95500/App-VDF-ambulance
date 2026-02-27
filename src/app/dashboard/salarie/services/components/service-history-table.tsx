@@ -24,8 +24,8 @@ export function ServiceHistoryTable({ initialData }: { initialData: MyServiceReq
     }
 
     return (
-        <Card className="border-border shadow-sm overflow-hidden">
-            <CardHeader className="bg-muted/30 pb-4">
+        <Card className="border-border shadow-none bg-transparent overflow-hidden">
+            <CardHeader className="pb-4">
                 <CardTitle className="text-xl flex items-center gap-2">
                     <Clock className="size-5 text-muted-foreground" />
                     Historique de mes demandes
@@ -33,7 +33,7 @@ export function ServiceHistoryTable({ initialData }: { initialData: MyServiceReq
             </CardHeader>
             <CardContent className="p-0">
                 <div className="overflow-x-auto">
-                    <Table>
+                    <Table className="min-w-[700px]">
                         <TableHeader>
                             <TableRow className="bg-muted/20">
                                 <TableHead className="font-semibold">Catégorie</TableHead>

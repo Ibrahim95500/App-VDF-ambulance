@@ -140,9 +140,9 @@ export function LeaveManagementTable({ initialLeaves }: { initialLeaves: LeaveRe
                 pdfTitle="Liste des Demandes de Congés"
             />
 
-            <div className="bg-card text-card-foreground rounded-xl shadow-sm border border-border overflow-hidden">
+            <div className="rounded-xl border border-border overflow-hidden">
                 <div className="overflow-x-auto">
-                    <table className="w-full text-sm text-left">
+                    <table className="w-full text-sm text-left align-middle text-muted-foreground border-collapse min-w-[800px]">
                         <thead className="text-xs text-muted-foreground uppercase bg-muted/20 border-b border-border">
                             <tr>
                                 <th className="px-6 py-4 font-medium">Collaborateur</th>

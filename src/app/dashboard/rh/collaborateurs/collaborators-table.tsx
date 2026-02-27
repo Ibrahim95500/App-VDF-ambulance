@@ -132,7 +132,7 @@ export function CollaboratorsTable({ initialData }: { initialData: User[] }) {
                 </Badge>
             </div>
 
-            <div className="bg-card rounded-xl border border-border shadow-sm p-6">
+            <div className="border border-border rounded-xl p-6">
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-4">
                     <div className="flex-1">
                         <TableActions
@@ -174,7 +174,7 @@ export function CollaboratorsTable({ initialData }: { initialData: User[] }) {
                 </div>
             </div>
 
-            <div className="overflow-x-auto bg-card rounded-xl border border-border shadow-sm w-full">
+            <div className="overflow-x-auto border border-border rounded-xl w-full">
                 <table className="w-full text-sm text-left align-middle text-muted-foreground min-w-[1000px]">
                     <thead className="text-xs uppercase bg-muted/50 text-muted-foreground border-b border-border">
                         <tr>

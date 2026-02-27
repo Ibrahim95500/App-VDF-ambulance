@@ -43,27 +43,25 @@ export default async function CollaboratorsPage() {
 
             <Container className="mt-8 pb-10">
                 <Tabs defaultValue="list" className="w-full">
-                    <TabsList className="grid w-full grid-cols-2 max-w-[440px] mb-8 bg-muted p-1 rounded-xl">
+                    <TabsList className="flex items-center gap-4 bg-transparent p-0 mb-8 overflow-x-auto">
                         <TabsTrigger
                             value="list"
-                            className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-secondary data-[state=active]:shadow-sm flex items-center gap-2 py-2.5 transition-all text-muted-foreground font-medium"
+                            className="rounded-xl border border-border data-[state=active]:border-secondary data-[state=active]:bg-secondary/10 data-[state=active]:text-secondary flex items-center gap-2 px-6 py-3 transition-all text-muted-foreground font-bold"
                         >
                             <UsersIcon className="size-4" />
-                            <span className="hidden sm:inline">Liste des Collaborateurs</span>
-                            <span className="sm:hidden text-xs">Liste</span>
+                            <span className="whitespace-nowrap">Liste des Collaborateurs</span>
                         </TabsTrigger>
                         <TabsTrigger
                             value="add"
-                            className="rounded-lg data-[state=active]:bg-white data-[state=active]:text-secondary data-[state=active]:shadow-sm flex items-center gap-2 py-2.5 transition-all text-muted-foreground font-medium"
+                            className="rounded-xl border border-border data-[state=active]:border-secondary data-[state=active]:bg-secondary/10 data-[state=active]:text-secondary flex items-center gap-2 px-6 py-3 transition-all text-muted-foreground font-bold"
                         >
                             <UserPlusIcon className="size-4" />
-                            <span className="hidden sm:inline">Ajouter un Collaborateur</span>
-                            <span className="sm:hidden text-xs">Ajouter</span>
+                            <span className="whitespace-nowrap">Ajouter un Collaborateur</span>
                         </TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="list" className="space-y-6 focus-visible:outline-none focus-visible:ring-0">
-                        <div className="bg-white rounded-xl shadow-sm border border-border border-t-4 border-t-secondary overflow-hidden">
+                        <div className="border border-border border-t-4 border-t-secondary rounded-xl overflow-hidden">
                             <CollaboratorsTable initialData={users as any} />
                         </div>
                     </TabsContent>

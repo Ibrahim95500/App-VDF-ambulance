@@ -35,8 +35,8 @@ export default async function ManageLeavesPage() {
             </Container>
 
             <Container className="space-y-8">
-                <div className="flex bg-card text-card-foreground flex-col rounded-xl shadow-sm border border-border border-t-4 border-t-secondary pb-5">
-                    <div className="px-5 py-4 flex justify-between items-center border-b border-border bg-card">
+                <div className="flex flex-col rounded-xl border border-border border-t-4 border-t-secondary pb-5">
+                    <div className="px-5 py-4 flex justify-between items-center border-b border-border">
                         <div className="flex items-center gap-3">
                             <CalendarIcon className="size-6 text-secondary" />
                             <h2 className="text-lg font-bold text-secondary">Gestion des Congés</h2>

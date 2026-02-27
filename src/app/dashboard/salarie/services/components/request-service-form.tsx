@@ -59,7 +59,7 @@ export function RequestServiceForm() {
     }
 
     return (
-        <Card className="border-border shadow-sm">
+        <Card className="border-border shadow-none bg-transparent">
             <CardHeader className="pb-4">
                 <CardTitle className="text-xl">Nouvelle Demande</CardTitle>
                 <CardDescription>

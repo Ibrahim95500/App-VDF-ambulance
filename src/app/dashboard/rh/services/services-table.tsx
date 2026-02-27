@@ -106,8 +106,8 @@ export function RHServiceRequestsTable({ initialData }: { initialData: GlobalSer
                 pdfTitle="Liste des Demandes de Service"
             />
 
-            <div className="overflow-x-auto bg-card rounded-xl border border-border shadow-sm w-full">
-                <table className="w-full text-sm text-left align-middle text-muted-foreground border-collapse min-w-[700px]">
+            <div className="overflow-x-auto border border-border rounded-xl w-full">
+                <table className="w-full text-sm text-left align-middle text-muted-foreground border-collapse min-w-[900px]">
                     <thead className="text-xs uppercase text-muted-foreground font-bold border-b border-border">
                         <tr>
                             <th scope="col" className="px-4 py-3 font-semibold">Collaborateur</th>

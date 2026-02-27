@@ -68,7 +68,7 @@ export function AdvanceHistoryTable({ initialData }: { initialData: AdvanceReque
             />
 
             <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left align-middle text-muted-foreground">
+                <table className="w-full text-sm text-left align-middle text-muted-foreground min-w-[800px]">
                     <thead className="text-xs uppercase bg-muted/50 text-muted-foreground">
                         <tr>
                             <th scope="col" className="px-5 py-3 font-semibold">Date</th>

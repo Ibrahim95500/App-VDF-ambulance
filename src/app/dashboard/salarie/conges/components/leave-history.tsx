@@ -92,7 +92,7 @@ export function LeaveHistory({ requests }: { requests: LeaveRequest[] }) {
     }
 
     return (
-        <div className="bg-card text-card-foreground flex flex-col rounded-xl shadow-sm border border-border h-full">
+        <div className="flex flex-col rounded-xl border border-border h-full">
             <div className="px-5 py-4 border-b border-border flex justify-between items-center bg-muted/5 rounded-t-xl">
                 <h2 className="text-base font-semibold text-foreground tracking-wide">HISTORIQUE DE MES DEMANDES</h2>
             </div>

@@ -19,7 +19,7 @@ export default async function SalarieDashboardPage() {
 
                 {/* Left Column: Form */}
                 <div className="lg:col-span-1">
-                    <div className="bg-card text-card-foreground flex flex-col rounded-xl shadow-sm border border-secondary/50 border-t-4 border-t-secondary">
+                    <div className="flex flex-col rounded-xl border border-secondary/50 border-t-4 border-t-secondary">
                         <div className="px-5 py-4 border-b border-border">
                             <h2 className="text-base font-semibold text-secondary">Nouvelle demande d'acompte</h2>
                             <p className="text-sm text-muted-foreground mt-1">Saisissez le montant souhaité.</p>
@@ -32,7 +32,7 @@ export default async function SalarieDashboardPage() {
 
                 {/* Right Column: History */}
                 <div className="lg:col-span-2">
-                    <div className="bg-card text-card-foreground flex flex-col rounded-xl shadow-sm border border-secondary/50 border-t-4 border-t-secondary">
+                    <div className="flex flex-col rounded-xl border border-secondary/50 border-t-4 border-t-secondary">
                         <div className="px-5 py-4 border-b border-border">
                             <h2 className="text-base font-semibold text-secondary">Historique de mes demandes</h2>
                         </div>
