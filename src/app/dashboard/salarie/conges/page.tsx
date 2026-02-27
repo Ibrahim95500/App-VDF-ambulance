@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { Fragment } from 'react';
 import { Container } from '@/components/common/container';
 import {

@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { Fragment } from 'react';
 import { auth } from "@/auth"
 import { redirect } from "next/navigation"

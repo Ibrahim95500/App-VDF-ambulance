@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import { getMyAdvanceRequests } from "@/services/my-requests"
 import { RequestAdvanceForm } from "./request-form"
 import { AdvanceHistoryTable } from "./history-table"

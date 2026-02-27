@@ -1,6 +1,8 @@
 import { getAdvanceRequests } from "@/services/advance-request"
 import { AcomptesTable } from "./acomptes-table"
 
+export const dynamic = 'force-dynamic'
+
 export default async function AcomptesPage() {
     const requests = await getAdvanceRequests()
 
