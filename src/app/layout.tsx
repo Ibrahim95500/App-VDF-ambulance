@@ -13,6 +13,7 @@ import { AuthProvider } from '@/providers/auth-provider';
 const inter = Inter({ subsets: ['latin'] });
 
 import { PWARegistration } from '@/components/pwa-registration';
+import { InstallPWAPrompt } from '@/components/install-pwa-prompt';
 
 import '@/css/styles.css';
 import '@/components/keenicons/assets/styles.css';
@@ -45,6 +46,7 @@ export default function RootLayout({
       >
         <AuthProvider>
           <PWARegistration />
+          <InstallPWAPrompt />
           <SettingsProvider>
             <ThemeProvider>
               <I18nProvider>

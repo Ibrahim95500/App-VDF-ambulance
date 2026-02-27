@@ -4,27 +4,27 @@
  */
 
 interface EmailTemplateOptions {
-    title: string;
-    preheader?: string;
-    content: string; // HTML content
-    footerNote?: string;
-    actionUrl?: string;
-    actionText?: string;
+  title: string;
+  preheader?: string;
+  content: string; // HTML content
+  footerNote?: string;
+  actionUrl?: string;
+  actionText?: string;
 }
 
 export function getBrandedEmailHtml({
-    title,
-    preheader = "",
-    content,
-    footerNote = "Ceci est un message automatique, merci de ne pas y répondre directement.",
-    actionUrl,
-    actionText
+  title,
+  preheader = "",
+  content,
+  footerNote = "Ceci est un message automatique, merci de ne pas y répondre directement.",
+  actionUrl,
+  actionText
 }: EmailTemplateOptions): string {
-    const logoUrl = "https://vdf-ambulance.fr/media/app/logo.png"; // Production logo URL for reliability
-    const primaryColor = "#2c3e8a"; // VDF Blue
-    const accentColor = "#f97316";  // VDF Orange
+  const logoUrl = "https://vdf-ambulance.fr/media/app/logo.png"; // Production logo URL for reliability
+  const primaryColor = "#2c3e8a"; // VDF Blue
+  const accentColor = "#f97316";  // VDF Orange
 
-    return `
+  return `
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -66,8 +66,8 @@ export function getBrandedEmailHtml({
 
       <div class="signature">
         <p>Cordialement,</p>
-        <div class="signature-name">Ibrahim Ni-Fa</div>
-        <div>Direction VDF Ambulance</div>
+        <div class="signature-name">Hamid Cheikh</div>
+        <div>Directeur Général - VDF Ambulance</div>
       </div>
     </div>
     <div class="footer">
