@@ -5,24 +5,19 @@ export const authConfig = {
         signIn: "/login",
     },
     callbacks: {
-        async signIn({ user, account, profile }) {
-            // Restriction on Google login requested by user
-            if (account?.provider === "google") {
-                const isAllowedEmail = user.email === "ibrahim.nifa01@gmail.com" || user.email === "ibrahim.nifa01gmail.com";
-                if (!isAllowedEmail) {
-                    return false; // Return false to deny access
-                }
-            }
-            return true;
-        },
         authorized({ auth, request: { nextUrl } }) {
             const isLoggedIn = !!auth?.user
             const isDashboard = nextUrl.pathname.startsWith("/dashboard")
+            const isRoot = nextUrl.pathname === "/"
+            const isLogin = nextUrl.pathname === "/login"
 
-            if (isDashboard) {
-                if (isLoggedIn) return true
+            if (isDashboard || isRoot) {
+                if (isLoggedIn) {
+                    if (isRoot) return Response.redirect(new URL("/dashboard", nextUrl))
+                    return true
+                }
                 return false // Redirect to /login
-            } else if (isLoggedIn && nextUrl.pathname === "/login") {
+            } else if (isLoggedIn && isLogin) {
                 return Response.redirect(new URL("/dashboard", nextUrl))
             }
             return true
