@@ -30,6 +30,7 @@ services:
       NEXTAUTH_URL: https://vdf-ambulance.fr
       EMAIL_SERVER: ${EMAIL_SERVER}
       EMAIL_FROM: ${EMAIL_FROM}
+      AUTH_TRUST_HOST: ${AUTH_TRUST_HOST}
     depends_on:
       - db-prod
     networks:
