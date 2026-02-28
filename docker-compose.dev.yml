@@ -28,9 +28,13 @@ services:
       DATABASE_URL: postgresql://${DB_USER_DEV}:${DB_PASSWORD_DEV}@db-dev:5432/ambulance_db_dev
       AUTH_SECRET: ${AUTH_SECRET_DEV}
       NEXTAUTH_URL: https://dev.vdf-ambulance.fr
-      EMAIL_SERVER: ${EMAIL_SERVER}
-      EMAIL_FROM: ${EMAIL_FROM}
       AUTH_TRUST_HOST: ${AUTH_TRUST_HOST}
+      EMAIL_SERVER_HOST: ${EMAIL_SERVER_HOST}
+      EMAIL_SERVER_PORT: ${EMAIL_SERVER_PORT}
+      EMAIL_SERVER_USER: ${EMAIL_SERVER_USER}
+      EMAIL_SERVER_PASSWORD: ${EMAIL_SERVER_PASSWORD}
+      EMAIL_FROM: ${EMAIL_FROM}
+      EMAIL_ADMIN_NOTIFY: ${EMAIL_ADMIN_NOTIFY}
     depends_on:
       - db-dev
     networks:
