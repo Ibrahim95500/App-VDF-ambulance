@@ -142,12 +142,53 @@ export function RHServiceRequestsTable({ initialData }: { initialData: GlobalSer
                                     {req.status === 'APPROVED' && <Badge variant="outline" className="text-green-600 bg-green-50 border-green-200 text-[10px]">Approuvée</Badge>}
                                     {req.status === 'REJECTED' && <Badge variant="outline" className="text-red-600 bg-red-50 border-red-200 text-[10px]">Refusée</Badge>}
                                 </div>
-                                {req.status === 'PENDING' && (
-                                    <div className="flex gap-1.5">
-                                        <Button size="sm" variant="outline" className="h-7 text-[11px] px-2 text-green-600 border-green-200" disabled={loadingId === req.id} onClick={() => handleUpdateStatus(req.id, "APPROVED")}>Accepter</Button>
-                                        <Button size="sm" variant="outline" className="h-7 text-[11px] px-2 text-red-600 border-red-200" disabled={loadingId === req.id} onClick={() => handleUpdateStatus(req.id, "REJECTED")}>Refuser</Button>
-                                    </div>
-                                )}
+                                <div className="flex items-center gap-1.5">
+                                    {/* Eye button — opens detail dialog */}
+                                    <Dialog>
+                                        <DialogTrigger asChild>
+                                            <Button variant="ghost" size="icon" className="size-7 text-blue-500 hover:text-blue-600 hover:bg-blue-50" onClick={() => setSelectedRequest(req)}>
+                                                <Eye className="size-3.5" />
+                                            </Button>
+                                        </DialogTrigger>
+                                        <DialogContent className="max-w-[90vw] sm:max-w-[500px] border-border shadow-2xl p-0 overflow-hidden bg-background">
+                                            <DialogHeader className="p-6 bg-slate-900 text-white">
+                                                <div className="flex items-center gap-2 text-slate-400 text-[10px] mb-2 uppercase tracking-widest font-bold">
+                                                    <Layout className="size-3" /> Demande de Service • {req.category}
+                                                </div>
+                                                <DialogTitle className="text-xl font-black italic">{req.subject}</DialogTitle>
+                                                <DialogDescription className="text-slate-400 text-xs">
+                                                    Postée le {new Date(req.createdAt).toLocaleDateString('fr-FR')} par {req.user.firstName} {req.user.lastName}
+                                                </DialogDescription>
+                                            </DialogHeader>
+                                            <div className="p-6 space-y-5">
+                                                <div className="space-y-2">
+                                                    <h4 className="text-[10px] font-black text-muted-foreground uppercase tracking-wider flex items-center gap-2">
+                                                        <AlertCircle className="size-3" /> Description
+                                                    </h4>
+                                                    <div className="p-4 bg-muted/30 rounded-xl text-foreground text-sm leading-relaxed border border-border italic">
+                                                        {req.description}
+                                                    </div>
+                                                </div>
+                                                {req.status === 'PENDING' && (
+                                                    <div className="flex gap-3 pt-3 border-t border-border">
+                                                        <Button variant="outline" className="flex-1 h-10 border-red-200 text-red-600 hover:bg-red-50 font-bold text-xs" disabled={loadingId === req.id} onClick={() => handleUpdateStatus(req.id, "REJECTED")}>
+                                                            <XCircle className="mr-2 size-4" /> Refuser
+                                                        </Button>
+                                                        <Button className="flex-1 h-10 bg-green-600 hover:bg-green-700 text-white font-bold text-xs" disabled={loadingId === req.id} onClick={() => handleUpdateStatus(req.id, "APPROVED")}>
+                                                            <CheckCircle2 className="mr-2 size-4" /> Approuver
+                                                        </Button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </DialogContent>
+                                    </Dialog>
+                                    {req.status === 'PENDING' && (
+                                        <div className="flex gap-1.5">
+                                            <Button size="sm" variant="outline" className="h-7 text-[11px] px-2 text-green-600 border-green-200" disabled={loadingId === req.id} onClick={() => handleUpdateStatus(req.id, "APPROVED")}>Accepter</Button>
+                                            <Button size="sm" variant="outline" className="h-7 text-[11px] px-2 text-red-600 border-red-200" disabled={loadingId === req.id} onClick={() => handleUpdateStatus(req.id, "REJECTED")}>Refuser</Button>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>
