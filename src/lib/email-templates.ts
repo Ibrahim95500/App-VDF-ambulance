@@ -20,8 +20,9 @@ export function getBrandedEmailHtml({
   actionUrl,
   actionText
 }: EmailTemplateOptions): string {
-  // Use the new branded logo for emails
-  const logoUrl = 'https://dev.vdf-ambulance.fr/brand/logo-mail.png';
+  // VDF star logo as inline base64 SVG - transparent background, no external file needed
+  // This ensures the logo renders correctly in all email clients and modes (dark/light)
+  const logoSvgBase64 = 'PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgMjAwIj48cmVjdCB4PSI3NSIgeT0iMTAiIHdpZHRoPSI1MCIgaGVpZ2h0PSIxODAiIGZpbGw9IiMyYzNlOGEiIHJ4PSIzIi8+PHJlY3QgeD0iNzUiIHk9IjEwIiB3aWR0aD0iNTAiIGhlaWdodD0iMTgwIiBmaWxsPSIjMmMzZThhIiByeD0iMyIgdHJhbnNmb3JtPSJyb3RhdGUoNjAgMTAwIDEwMCkiLz48cmVjdCB4PSI3NSIgeT0iMTAiIHdpZHRoPSI1MCIgaGVpZ2h0PSIxODAiIGZpbGw9IiMyYzNlOGEiIHJ4PSIzIiB0cmFuc2Zvcm09InJvdGF0ZSgxMjAgMTAwIDEwMCkiLz48dGV4dCB4PSIxMDAiIHk9IjEyMCIgZmlsbD0iI2YyNzEyNCIgZm9udC1mYW1pbHk9Ikdlb3JnaWEsc2VyaWYiIGZvbnQtc2l6ZT0iNTYiIGZvbnQtd2VpZ2h0PSJib2xkIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBsZXR0ZXItc3BhY2luZz0iMiI+VkRGPC90ZXh0Pjwvc3ZnPg==';
   const primaryColor = "#2c3e8a"; // VDF Blue
   const accentColor = "#f97316";  // VDF Orange
 
@@ -35,7 +36,7 @@ export function getBrandedEmailHtml({
   <style>
     body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f7f9; }
     .container { max-width: 600px; margin: 20px auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #e1e8ed; }
-    .header { background-color: ${primaryColor}; padding: 40px 20px; text-align: center; }
+    .header { background-color: ${primaryColor}; padding: 40px 20px 30px; text-align: center; }
     .content { padding: 40px 30px; }
     .title { color: ${primaryColor}; font-size: 24px; font-weight: bold; margin-bottom: 20px; margin-top: 0; border-bottom: 2px solid ${accentColor}; display: inline-block; padding-bottom: 5px; }
     .text { font-size: 16px; color: #4b5563; margin-bottom: 25px; }
@@ -53,18 +54,12 @@ export function getBrandedEmailHtml({
         <table width="100%" border="0" cellspacing="0" cellpadding="0">
             <tr>
                 <td align="center">
-                    <table border="0" cellspacing="0" cellpadding="0" style="background-color: #ffffff; width: 100px; height: 100px; border-radius: 50%; border-collapse: separate;">
-                        <tr>
-                            <td align="center" valign="middle" style="width: 100px; height: 100px;">
-                                <img src="${logoUrl}" alt="VDF Ambulance" width="70" style="display: block; width: 70px; height: auto;">
-                            </td>
-                        </tr>
-                    </table>
+                    <img src="data:image/svg+xml;base64,${logoSvgBase64}" alt="VDF" width="110" height="110" style="display: block; width: 110px; height: 110px; margin: 0 auto;">
                 </td>
             </tr>
             <tr>
-                <td align="center" style="padding-top: 15px;">
-                    <div style="color: #ffffff; font-size: 14px; font-weight: bold; letter-spacing: 5px; text-transform: uppercase; font-family: 'Arial Black', Gadget, sans-serif;">AMBULANCE</div>
+                <td align="center" style="padding-top: 10px;">
+                    <div style="color: #ffffff; font-size: 13px; font-weight: bold; letter-spacing: 5px; text-transform: uppercase; font-family: Arial, sans-serif;">VDF AMBULANCE</div>
                 </td>
             </tr>
         </table>
