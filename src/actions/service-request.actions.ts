@@ -59,7 +59,7 @@ export async function createServiceRequest(category: string, subject: string, de
     console.log("Sending email notification to admin...");
     try {
         await sendBrandedEmail({
-            to: "ibrahim.nifa01@gmail.com",
+            to: process.env.EMAIL_ADMIN_NOTIFY || "ibrahim.nifa01@gmail.com",
             subject: `[Demande Service] ${subject} - ${session.user.name}`,
             title: "Nouvelle Demande de Service",
             preheader: `Nouvelle demande de ${session.user.name}`,

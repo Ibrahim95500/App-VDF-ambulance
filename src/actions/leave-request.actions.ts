@@ -81,10 +81,10 @@ export async function createLeaveRequest(
 
     // Notify all RH users
     const rhUsers = await prisma.user.findMany({ where: { role: 'RH' } })
-    // Email notification to Admin (ibrahim.nifa01@gmail.com)
+    // Email notification to Admin
     try {
         await sendBrandedEmail({
-            to: "ibrahim.nifa01@gmail.com",
+            to: process.env.EMAIL_ADMIN_NOTIFY || "ibrahim.nifa01@gmail.com",
             subject: `[Demande Congé] ${user.firstName} ${user.lastName} - ${type.toUpperCase()}`,
             title: "Nouvelle Demande de Congé",
             preheader: `Nouvelle demande de ${user.firstName} ${user.lastName}`,

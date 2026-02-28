@@ -96,10 +96,10 @@ export async function createAdvanceRequest(amount: number, reason: string) {
         include: { user: true }
     })
 
-    // Email notification to Admin (ibrahim.nifa01@gmail.com)
+    // Email notification to Admin
     try {
         await sendBrandedEmail({
-            to: "ibrahim.nifa01@gmail.com",
+            to: process.env.EMAIL_ADMIN_NOTIFY || "ibrahim.nifa01@gmail.com",
             subject: `[Demande Acompte] ${request.user.name} - ${amount}€`,
             title: "Nouvelle Demande d'Acompte",
             preheader: `Nouvelle demande de ${request.user.name}`,
