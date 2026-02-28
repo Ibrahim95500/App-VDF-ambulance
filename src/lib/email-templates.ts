@@ -20,9 +20,9 @@ export function getBrandedEmailHtml({
   actionUrl,
   actionText
 }: EmailTemplateOptions): string {
-  // SVG logo hosted as a static file (transparent background - no white box issue)
-  // Gmail blocks data URIs, so we use a real URL to the SVG file
-  const logoUrl = 'https://dev.vdf-ambulance.fr/brand/logo-email.svg';
+  // PNG logo with blue background matching email header - works in all email clients including Gmail
+  // SVG is blocked by Gmail, data URIs are blocked too - PNG at a real URL is the only reliable option
+  const logoUrl = 'https://dev.vdf-ambulance.fr/brand/logo-mail.png';
   const primaryColor = "#2c3e8a"; // VDF Blue
   const accentColor = "#f97316";  // VDF Orange
 
