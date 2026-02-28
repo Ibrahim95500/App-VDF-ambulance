@@ -27,6 +27,7 @@ export function NotificationBell() {
 
     return (
         <NotificationsSheet
+            onAllRead={fetchCount}
             trigger={
                 <div className="relative inline-flex">
                     <Button variant="ghost" mode="icon" className="size-9 rounded-full bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 transition-colors shadow-sm">

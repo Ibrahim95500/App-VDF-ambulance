@@ -30,7 +30,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 // Les imports Item1 à Item20 ont été retirés car ils étaient inutilisés et provoquaient des erreurs de build.
 
-export function NotificationsSheet({ trigger }: { trigger: ReactNode }) {
+export function NotificationsSheet({ trigger, onAllRead }: { trigger: ReactNode; onAllRead?: () => void }) {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -52,6 +52,7 @@ export function NotificationsSheet({ trigger }: { trigger: ReactNode }) {
   const handleMarkAllAsRead = async () => {
     await markAllAsRead();
     fetchNotifications();
+    onAllRead?.();
   };
 
   const handleMarkAsRead = async (id: string) => {
