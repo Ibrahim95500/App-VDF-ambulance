@@ -22,7 +22,8 @@ ENV NEXT_TELEMETRY_DISABLED 1
 # Générer le client Prisma
 RUN npx prisma generate
 
-# Build de l'application
+# Build de l'application (limite la RAM à 3GB pour éviter OOM sur VPS)
+ENV NODE_OPTIONS="--max-old-space-size=3072"
 RUN npm run build
 
 # 3. Image de production
