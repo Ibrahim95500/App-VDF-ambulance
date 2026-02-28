@@ -184,7 +184,54 @@ export function CollaboratorsTable({ initialData }: { initialData: User[] }) {
                 </div>
             </div>
 
-            <div className="overflow-x-auto border border-border rounded-xl w-full">
+            {/* Mobile card view */}
+            <div className="md:hidden border border-border rounded-xl overflow-hidden divide-y divide-border">
+                {filteredData.length === 0 ? (
+                    <div className="p-8 text-center text-muted-foreground italic">
+                        {initialData.length === 0 ? "Aucun collaborateur." : "Aucun résultat pour ces filtres."}
+                    </div>
+                ) : paginatedData.map((user) => (
+                    <div key={user.id} className={`p-4 flex gap-3 items-start hover:bg-muted/5 transition-colors ${(user as any).isActive === false ? 'bg-red-50/20' : ''}`}>
+                        {user.image ? (
+                            <img src={user.image} className="w-10 h-10 rounded-full object-cover shrink-0 border border-border" alt="" />
+                        ) : (
+                            <div className={`size-10 rounded-full font-bold flex items-center justify-center shrink-0 border text-sm ${(user as any).isActive === false ? 'bg-red-100 text-red-600 border-red-200' : 'bg-primary/10 text-primary border-primary/20'}`}>
+                                {user.firstName?.charAt(0) || user.email?.charAt(0) || '?'}
+                            </div>
+                        )}
+                        <div className="flex flex-col grow gap-1.5 min-w-0">
+                            <div className="flex items-start justify-between gap-2">
+                                <div className="min-w-0">
+                                    <p className={`font-bold text-sm truncate ${(user as any).isActive === false ? 'text-red-700' : 'text-foreground'}`}>
+                                        {(user.firstName || user.lastName) ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : (user.name || "-")}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                                </div>
+                                {user.role === 'RH' ? (
+                                    <Badge variant="outline" className="text-purple-600 bg-purple-50 border-purple-200 text-[10px] font-bold shrink-0">RH</Badge>
+                                ) : (
+                                    <Badge variant="outline" className="text-secondary bg-secondary/10 border-secondary/20 text-[10px] font-bold shrink-0 text-secondary-foreground">Salarié</Badge>
+                                )}
+                            </div>
+                            <div className="flex items-center justify-between gap-2">
+                                {(user as any).isActive !== false ? (
+                                    <span className="text-[10px] font-bold text-green-600 bg-green-50 border border-green-200 rounded-full px-2 py-0.5">ACTIF</span>
+                                ) : (
+                                    <span className="text-[10px] font-bold text-red-600 bg-red-50 border border-red-200 rounded-full px-2 py-0.5">INACTIF</span>
+                                )}
+                                {(user as any).isActive !== false && (
+                                    <Button size="sm" variant="ghost" className="h-7 text-[11px] text-red-500 hover:text-red-600 hover:bg-red-50" onClick={() => setUserToDeactivate(user as any)}>
+                                        Suspendre
+                                    </Button>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            {/* Desktop table view */}
+            <div className="hidden md:block overflow-x-auto border border-border rounded-xl w-full">
                 <table className="w-full text-sm text-left align-middle text-muted-foreground min-w-[800px]">
                     <thead className="text-xs uppercase text-muted-foreground border-b border-border">
                         <tr>

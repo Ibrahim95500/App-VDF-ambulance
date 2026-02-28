@@ -88,7 +88,50 @@ export function AcomptesTable({ initialData }: { initialData: AdvanceRequestWith
                 pdfTitle="Liste des Demandes d'Acomptes"
             />
 
-            <div className="overflow-x-auto border border-border rounded-xl w-full">
+            {/* Mobile card view */}
+            <div className="md:hidden border border-border rounded-xl overflow-hidden divide-y divide-border">
+                {filteredData.length === 0 ? (
+                    <div className="p-8 text-center text-muted-foreground italic">
+                        {initialData.length === 0 ? "Aucune demande." : "Aucun résultat pour ces filtres."}
+                    </div>
+                ) : paginatedData.map((req) => (
+                    <div key={req.id} className="p-4 flex gap-3 items-start hover:bg-muted/5 transition-colors">
+                        {req.user.image ? (
+                            <img src={req.user.image} className="w-9 h-9 rounded-full object-cover shrink-0 border border-border" alt="" />
+                        ) : (
+                            <div className="size-9 rounded-full bg-primary/10 text-primary font-semibold flex items-center justify-center shrink-0 border border-primary/20 text-sm">
+                                {req.user.name?.charAt(0) || req.user.email?.charAt(0) || '?'}
+                            </div>
+                        )}
+                        <div className="flex flex-col grow gap-1.5 min-w-0">
+                            <div className="flex items-start justify-between gap-2">
+                                <div className="min-w-0">
+                                    <p className="font-semibold text-foreground text-sm truncate">{req.user.name || req.user.email}</p>
+                                    <p className="text-xs text-muted-foreground truncate">{req.user.email}</p>
+                                </div>
+                                <span className="text-base font-bold text-foreground shrink-0">{req.amount} €</span>
+                            </div>
+                            {req.reason && <p className="text-xs text-muted-foreground italic truncate">{req.reason}</p>}
+                            <div className="flex items-center justify-between gap-2">
+                                <div>
+                                    {req.status === 'PENDING' && <Badge variant="outline" className="text-yellow-600 bg-yellow-50 border-yellow-200 text-[10px]">En Attente</Badge>}
+                                    {req.status === 'APPROVED' && <Badge variant="outline" className="text-green-600 bg-green-50 border-green-200 text-[10px]">Approuvé</Badge>}
+                                    {req.status === 'REJECTED' && <Badge variant="outline" className="text-red-600 bg-red-50 border-red-200 text-[10px]">Refusé</Badge>}
+                                </div>
+                                {req.status === 'PENDING' && (
+                                    <div className="flex gap-1.5">
+                                        <Button size="sm" variant="secondary" className="h-7 text-[11px] px-2.5" disabled={loadingId === req.id} onClick={() => handleAction(req.id, "APPROVED")}>Accepter</Button>
+                                        <Button size="sm" variant="destructive" className="h-7 text-[11px] px-2.5" disabled={loadingId === req.id} onClick={() => handleAction(req.id, "REJECTED")}>Refuser</Button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            {/* Desktop table view */}
+            <div className="hidden md:block overflow-x-auto border border-border rounded-xl w-full">
                 <table className="w-full text-sm text-left align-middle text-muted-foreground border-collapse min-w-[800px]">
                     <thead className="text-xs uppercase text-muted-foreground border-b border-border">
                         <tr>

@@ -116,7 +116,46 @@ export function RHServiceRequestsTable({ initialData }: { initialData: GlobalSer
                 pdfTitle="Liste des Demandes de Service"
             />
 
-            <div className="overflow-x-auto border border-border rounded-xl w-full">
+            {/* Mobile card view */}
+            <div className="md:hidden border border-border rounded-xl overflow-hidden divide-y divide-border">
+                {filteredData.length === 0 ? (
+                    <div className="p-8 text-center text-muted-foreground italic">
+                        {initialData.length === 0 ? "Aucune demande." : "Aucun résultat pour ces filtres."}
+                    </div>
+                ) : paginatedData.map((req) => (
+                    <div key={req.id} className="p-4 flex gap-3 items-start hover:bg-muted/5 transition-colors">
+                        <div className="size-9 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center shrink-0 border border-primary/20 text-xs">
+                            {(req.user.firstName?.[0] || 'U')}{(req.user.lastName?.[0] || '')}
+                        </div>
+                        <div className="flex flex-col grow gap-1.5 min-w-0">
+                            <div className="flex items-start justify-between gap-2">
+                                <div className="min-w-0">
+                                    <p className="font-semibold text-foreground text-sm truncate">{req.user.firstName} {req.user.lastName}</p>
+                                    <p className="text-xs text-muted-foreground truncate">{req.user.email}</p>
+                                </div>
+                                <Badge variant="outline" className="text-[10px] font-bold uppercase bg-muted/30 border-border shrink-0">{req.category}</Badge>
+                            </div>
+                            <p className="text-sm font-medium text-foreground truncate">{req.subject}</p>
+                            <div className="flex items-center justify-between gap-2">
+                                <div className="flex items-center gap-1.5">
+                                    {req.status === 'PENDING' && <Badge variant="outline" className="text-yellow-600 bg-yellow-50 border-yellow-200 text-[10px]">En attente</Badge>}
+                                    {req.status === 'APPROVED' && <Badge variant="outline" className="text-green-600 bg-green-50 border-green-200 text-[10px]">Approuvée</Badge>}
+                                    {req.status === 'REJECTED' && <Badge variant="outline" className="text-red-600 bg-red-50 border-red-200 text-[10px]">Refusée</Badge>}
+                                </div>
+                                {req.status === 'PENDING' && (
+                                    <div className="flex gap-1.5">
+                                        <Button size="sm" variant="outline" className="h-7 text-[11px] px-2 text-green-600 border-green-200" disabled={loadingId === req.id} onClick={() => handleUpdateStatus(req.id, "APPROVED")}>Accepter</Button>
+                                        <Button size="sm" variant="outline" className="h-7 text-[11px] px-2 text-red-600 border-red-200" disabled={loadingId === req.id} onClick={() => handleUpdateStatus(req.id, "REJECTED")}>Refuser</Button>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            {/* Desktop table view */}
+            <div className="hidden md:block overflow-x-auto border border-border rounded-xl w-full">
                 <table className="w-full text-sm text-left align-middle text-muted-foreground border-collapse min-w-[800px]">
                     <thead className="text-xs text-muted-foreground uppercase border-b border-border">
                         <tr>

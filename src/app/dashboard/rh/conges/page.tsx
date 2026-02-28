@@ -34,17 +34,9 @@ export default async function ManageLeavesPage() {
                 </Toolbar>
             </Container>
 
-            <Container className="space-y-8">
-                <div className="flex flex-col rounded-xl border border-border border-t-4 border-t-secondary pb-5">
-                    <div className="px-5 py-4 flex justify-between items-center border-b border-border">
-                        <div className="flex items-center gap-3">
-                            <CalendarIcon className="size-6 text-secondary" />
-                            <h2 className="text-lg font-bold text-secondary">Gestion des Congés</h2>
-                        </div>
-                    </div>
-                    <div className="p-0 overflow-x-auto w-full">
-                        <LeaveManagementTable initialLeaves={leaves} />
-                    </div>
+            <Container className="mt-8 pb-10">
+                <div className="border border-border border-t-4 border-t-secondary rounded-xl overflow-hidden">
+                    <LeaveManagementTable initialLeaves={leaves} />
                 </div>
             </Container>
         </Fragment>

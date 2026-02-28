@@ -150,7 +150,44 @@ export function LeaveManagementTable({ initialLeaves }: { initialLeaves: LeaveRe
                 pdfTitle="Liste des Demandes de Congés"
             />
 
-            <div className="rounded-xl border border-border overflow-hidden">
+            {/* Mobile card view */}
+            <div className="md:hidden border border-border rounded-xl overflow-hidden divide-y divide-border">
+                {filteredData.length === 0 ? (
+                    <div className="p-8 text-center text-muted-foreground italic">
+                        {initialLeaves.length === 0 ? "Aucune demande." : "Aucun résultat pour ces filtres."}
+                    </div>
+                ) : paginatedData.map(req => (
+                    <div key={req.id} className="p-4 flex gap-3 items-start hover:bg-muted/5 transition-colors">
+                        {req.user.image ? (
+                            <img src={req.user.image} className="w-9 h-9 rounded-full object-cover shrink-0 border border-border" alt="" />
+                        ) : (
+                            <div className="size-9 rounded-full bg-primary/10 text-primary font-semibold flex items-center justify-center shrink-0 border border-primary/20 text-sm">
+                                {req.user.name?.charAt(0) || req.user.email?.charAt(0) || '?'}
+                            </div>
+                        )}
+                        <div className="flex flex-col grow gap-1.5 min-w-0">
+                            <div className="flex items-start justify-between gap-2">
+                                <div className="min-w-0">
+                                    <p className="font-semibold text-foreground text-sm truncate">{req.user.name || req.user.email}</p>
+                                    <p className="text-xs text-muted-foreground">{formatType(req.type)}</p>
+                                </div>
+                                {getStatusBadge(req.status)}
+                            </div>
+                            <div className="text-xs text-muted-foreground">{formatDates(req)}</div>
+                            {req.reason && <p className="text-xs italic text-muted-foreground truncate">{req.reason}</p>}
+                            {req.status === 'PENDING' && (
+                                <div className="flex gap-2 mt-1">
+                                    <Button size="sm" variant="outline" className="h-7 text-xs text-green-600 border-green-200 hover:bg-green-50" onClick={() => handleAction(req.id, 'APPROVED')} disabled={loadingMap[req.id]}>Accepter</Button>
+                                    <Button size="sm" variant="destructive" className="h-7 text-xs" onClick={() => handleAction(req.id, 'REJECTED')} disabled={loadingMap[req.id]}>Refuser</Button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            {/* Desktop table view */}
+            <div className="hidden md:block rounded-xl border border-border overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm text-left align-middle text-muted-foreground border-collapse min-w-[800px]">
                         <thead className="text-xs uppercase text-muted-foreground border-b border-border">
