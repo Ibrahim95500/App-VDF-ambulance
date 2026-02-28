@@ -138,7 +138,7 @@ export function NotificationsSheet({ trigger, onAllRead }: { trigger: ReactNode;
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="size-6 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-red-500"
+                            className="size-6 opacity-30 group-hover:opacity-100 touch:opacity-100 transition-opacity text-muted-foreground hover:text-red-500"
                             onClick={(e) => {
                               console.log("UI: Dismiss button clicked for ID:", n.id);
                               e.stopPropagation();
