@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <!-- Star of Life - 3 rotated rectangles -->
+  <rect x="75" y="10" width="50" height="180" fill="#2c3e8a" rx="4"/>
+  <rect x="75" y="10" width="50" height="180" fill="#2c3e8a" rx="4" transform="rotate(60 100 100)"/>
+  <rect x="75" y="10" width="50" height="180" fill="#2c3e8a" rx="4" transform="rotate(120 100 100)"/>
+  <!-- VDF text centered -->
+  <text x="100" y="120" fill="#f27124" font-family="Georgia, serif" font-size="56" font-weight="bold" text-anchor="middle" letter-spacing="2">VDF</text>
+</svg>

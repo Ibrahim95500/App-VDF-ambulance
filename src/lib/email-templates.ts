@@ -20,9 +20,9 @@ export function getBrandedEmailHtml({
   actionUrl,
   actionText
 }: EmailTemplateOptions): string {
-  // VDF star logo as inline base64 SVG - transparent background, no external file needed
-  // This ensures the logo renders correctly in all email clients and modes (dark/light)
-  const logoSvgBase64 = 'PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyMDAgMjAwIj48cmVjdCB4PSI3NSIgeT0iMTAiIHdpZHRoPSI1MCIgaGVpZ2h0PSIxODAiIGZpbGw9IiMyYzNlOGEiIHJ4PSIzIi8+PHJlY3QgeD0iNzUiIHk9IjEwIiB3aWR0aD0iNTAiIGhlaWdodD0iMTgwIiBmaWxsPSIjMmMzZThhIiByeD0iMyIgdHJhbnNmb3JtPSJyb3RhdGUoNjAgMTAwIDEwMCkiLz48cmVjdCB4PSI3NSIgeT0iMTAiIHdpZHRoPSI1MCIgaGVpZ2h0PSIxODAiIGZpbGw9IiMyYzNlOGEiIHJ4PSIzIiB0cmFuc2Zvcm09InJvdGF0ZSgxMjAgMTAwIDEwMCkiLz48dGV4dCB4PSIxMDAiIHk9IjEyMCIgZmlsbD0iI2YyNzEyNCIgZm9udC1mYW1pbHk9Ikdlb3JnaWEsc2VyaWYiIGZvbnQtc2l6ZT0iNTYiIGZvbnQtd2VpZ2h0PSJib2xkIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBsZXR0ZXItc3BhY2luZz0iMiI+VkRGPC90ZXh0Pjwvc3ZnPg==';
+  // SVG logo hosted as a static file (transparent background - no white box issue)
+  // Gmail blocks data URIs, so we use a real URL to the SVG file
+  const logoUrl = 'https://dev.vdf-ambulance.fr/brand/logo-email.svg';
   const primaryColor = "#2c3e8a"; // VDF Blue
   const accentColor = "#f97316";  // VDF Orange
 
@@ -54,7 +54,7 @@ export function getBrandedEmailHtml({
         <table width="100%" border="0" cellspacing="0" cellpadding="0">
             <tr>
                 <td align="center">
-                    <img src="data:image/svg+xml;base64,${logoSvgBase64}" alt="VDF" width="110" height="110" style="display: block; width: 110px; height: 110px; margin: 0 auto;">
+                    <img src="${logoUrl}" alt="VDF Ambulance" width="110" height="110" style="display: block; width: 110px; height: 110px; margin: 0 auto;">
                 </td>
             </tr>
             <tr>
