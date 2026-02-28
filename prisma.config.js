@@ -1,17 +1,2 @@
-try {
-  require("dotenv/config");
-} catch (e) {
-  // Ignore missing dotenv in production
-}
-
-const { defineConfig } = require("prisma/config");
-
-module.exports = defineConfig({
-  schema: "prisma/schema.prisma",
-  migrations: {
-    path: "prisma/migrations",
-  },
-  datasource: {
-    url: process.env["DATABASE_URL"],
-  },
-});
+// Note: prisma.config.js is intentionally kept minimal for compatibility.
+// The schema path and datasource are defined in prisma/schema.prisma directly.
