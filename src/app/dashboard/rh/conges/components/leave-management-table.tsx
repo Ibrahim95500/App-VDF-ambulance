@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { updateLeaveRequestStatus } from '@/actions/leave-request.actions';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Loader2, CheckCircle2, XCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { TableActions } from "@/components/common/table-actions";
+import { TablePagination } from "@/components/common/table-pagination";
 import { isWithinInterval, startOfDay, endOfDay } from "date-fns";
 import { DateRange } from "react-day-picker";
 
@@ -34,6 +35,10 @@ export function LeaveManagementTable({ initialLeaves }: { initialLeaves: LeaveRe
     const [searchTerm, setSearchTerm] = useState("");
     const [statusFilter, setStatusFilter] = useState("ALL");
     const [dateRange, setDateRange] = useState<DateRange | undefined>();
+    const [currentPage, setCurrentPage] = useState(1);
+    const PAGE_SIZE = 10;
+
+    useEffect(() => { setCurrentPage(1); }, [searchTerm, statusFilter, dateRange]);
 
     const handleAction = async (id: string, newStatus: 'APPROVED' | 'REJECTED') => {
         setLoadingMap(prev => ({ ...prev, [id]: true }));
@@ -78,6 +83,11 @@ export function LeaveManagementTable({ initialLeaves }: { initialLeaves: LeaveRe
             return true
         })
     }, [initialLeaves, searchTerm, statusFilter, dateRange])
+
+    const paginatedData = useMemo(() => {
+        const start = (currentPage - 1) * PAGE_SIZE
+        return filteredData.slice(start, start + PAGE_SIZE)
+    }, [filteredData, currentPage])
 
     const exportData = useMemo(() => {
         return filteredData.map(req => ({
@@ -161,7 +171,7 @@ export function LeaveManagementTable({ initialLeaves }: { initialLeaves: LeaveRe
                                     </td>
                                 </tr>
                             ) : (
-                                filteredData.map(req => (
+                                paginatedData.map(req => (
                                     <tr key={req.id} className="hover:bg-muted/5 transition-colors">
                                         <td className="px-6 py-4">
                                             <div className="flex items-center gap-3">
@@ -231,6 +241,12 @@ export function LeaveManagementTable({ initialLeaves }: { initialLeaves: LeaveRe
                     </table>
                 </div>
             </div>
+            <TablePagination
+                currentPage={currentPage}
+                totalItems={filteredData.length}
+                pageSize={PAGE_SIZE}
+                onPageChange={setCurrentPage}
+            />
         </div>
     )
 }

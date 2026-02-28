@@ -1,8 +1,9 @@
-"use client"
+'use client'
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { Badge } from "@/components/ui/badge"
 import { TableActions } from "@/components/common/table-actions"
+import { TablePagination } from "@/components/common/table-pagination"
 import { isWithinInterval, startOfDay, endOfDay } from "date-fns"
 import { DateRange } from "react-day-picker"
 
@@ -18,6 +19,10 @@ export function AdvanceHistoryTable({ initialData }: { initialData: AdvanceReque
     const [searchTerm, setSearchTerm] = useState("")
     const [statusFilter, setStatusFilter] = useState("ALL")
     const [dateRange, setDateRange] = useState<DateRange | undefined>()
+    const [currentPage, setCurrentPage] = useState(1)
+    const PAGE_SIZE = 10
+
+    useEffect(() => { setCurrentPage(1) }, [searchTerm, statusFilter, dateRange])
 
     const filteredData = useMemo(() => {
         return initialData.filter(req => {
@@ -39,6 +44,11 @@ export function AdvanceHistoryTable({ initialData }: { initialData: AdvanceReque
             return true
         })
     }, [initialData, searchTerm, statusFilter, dateRange])
+
+    const paginatedData = useMemo(() => {
+        const start = (currentPage - 1) * PAGE_SIZE
+        return filteredData.slice(start, start + PAGE_SIZE)
+    }, [filteredData, currentPage])
 
     const exportData = useMemo(() => {
         return filteredData.map(req => ({
@@ -85,7 +95,7 @@ export function AdvanceHistoryTable({ initialData }: { initialData: AdvanceReque
                                 </td>
                             </tr>
                         ) : (
-                            filteredData.map((req) => (
+                            paginatedData.map((req) => (
                                 <tr key={req.id} className="hover:bg-muted/10 transition-colors">
                                     <td className="px-5 py-4 font-medium text-foreground">
                                         {new Date(req.createdAt).toLocaleDateString('fr-FR')}
@@ -107,6 +117,12 @@ export function AdvanceHistoryTable({ initialData }: { initialData: AdvanceReque
                     </tbody>
                 </table>
             </div>
+            <TablePagination
+                currentPage={currentPage}
+                totalItems={filteredData.length}
+                pageSize={PAGE_SIZE}
+                onPageChange={setCurrentPage}
+            />
         </div>
     )
 }

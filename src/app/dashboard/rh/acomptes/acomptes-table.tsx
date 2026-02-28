@@ -1,12 +1,13 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { AdvanceRequestWithUser } from "@/services/advance-request"
 import { updateRequestStatus } from "@/actions/advance-request.actions"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
 import { TableActions } from "@/components/common/table-actions"
+import { TablePagination } from "@/components/common/table-pagination"
 import { isWithinInterval, startOfDay, endOfDay } from "date-fns"
 import { DateRange } from "react-day-picker"
 
@@ -15,6 +16,10 @@ export function AcomptesTable({ initialData }: { initialData: AdvanceRequestWith
     const [searchTerm, setSearchTerm] = useState("")
     const [statusFilter, setStatusFilter] = useState("ALL")
     const [dateRange, setDateRange] = useState<DateRange | undefined>()
+    const [currentPage, setCurrentPage] = useState(1)
+    const PAGE_SIZE = 10
+
+    useEffect(() => { setCurrentPage(1) }, [searchTerm, statusFilter, dateRange])
 
     const handleAction = async (id: string, status: "APPROVED" | "REJECTED") => {
         try {
@@ -48,6 +53,11 @@ export function AcomptesTable({ initialData }: { initialData: AdvanceRequestWith
             return true
         })
     }, [initialData, searchTerm, statusFilter, dateRange])
+
+    const paginatedData = useMemo(() => {
+        const start = (currentPage - 1) * PAGE_SIZE
+        return filteredData.slice(start, start + PAGE_SIZE)
+    }, [filteredData, currentPage])
 
     const exportData = useMemo(() => {
         return filteredData.map(req => ({
@@ -98,7 +108,7 @@ export function AcomptesTable({ initialData }: { initialData: AdvanceRequestWith
                                 </td>
                             </tr>
                         ) : (
-                            filteredData.map((req) => (
+                            paginatedData.map((req) => (
                                 <tr key={req.id} className="hover:bg-muted/10 transition-colors">
                                     <td className="px-4 py-3">
                                         <div className="flex items-center gap-3">
@@ -161,6 +171,12 @@ export function AcomptesTable({ initialData }: { initialData: AdvanceRequestWith
                     </tbody>
                 </table>
             </div>
+            <TablePagination
+                currentPage={currentPage}
+                totalItems={filteredData.length}
+                pageSize={PAGE_SIZE}
+                onPageChange={setCurrentPage}
+            />
         </div>
     )
 }

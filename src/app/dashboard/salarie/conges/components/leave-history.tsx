@@ -1,9 +1,10 @@
-"use client"
+'use client'
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { LeaveRequest, LeaveType } from '@prisma/client';
 import { TableActions } from "@/components/common/table-actions";
+import { TablePagination } from "@/components/common/table-pagination";
 import { isWithinInterval, startOfDay, endOfDay } from "date-fns";
 import { DateRange } from "react-day-picker";
 
@@ -11,6 +12,10 @@ export function LeaveHistory({ requests }: { requests: LeaveRequest[] }) {
     const [searchTerm, setSearchTerm] = useState("")
     const [statusFilter, setStatusFilter] = useState("ALL")
     const [dateRange, setDateRange] = useState<DateRange | undefined>()
+    const [currentPage, setCurrentPage] = useState(1)
+    const PAGE_SIZE = 10
+
+    useEffect(() => { setCurrentPage(1) }, [searchTerm, statusFilter, dateRange])
 
     const formatType = (type: LeaveType) => {
         if (type === 'CP') return 'Congé payé (CP)';
@@ -40,6 +45,11 @@ export function LeaveHistory({ requests }: { requests: LeaveRequest[] }) {
             return true
         })
     }, [requests, searchTerm, statusFilter, dateRange])
+
+    const paginatedData = useMemo(() => {
+        const start = (currentPage - 1) * PAGE_SIZE
+        return filteredData.slice(start, start + PAGE_SIZE)
+    }, [filteredData, currentPage])
 
     const exportData = useMemo(() => {
         return filteredData.map(req => ({
@@ -126,7 +136,7 @@ export function LeaveHistory({ requests }: { requests: LeaveRequest[] }) {
                                     </td>
                                 </tr>
                             ) : (
-                                filteredData.map((item) => (
+                                paginatedData.map((item) => (
                                     <tr key={item.id} className="hover:bg-muted/10 transition-colors">
                                         <td className="px-4 py-4 font-bold text-foreground">
                                             {formatType(item.type)}
@@ -149,6 +159,12 @@ export function LeaveHistory({ requests }: { requests: LeaveRequest[] }) {
                     </table>
                 </div>
             </div>
+            <TablePagination
+                currentPage={currentPage}
+                totalItems={filteredData.length}
+                pageSize={PAGE_SIZE}
+                onPageChange={setCurrentPage}
+            />
         </div>
     )
 }

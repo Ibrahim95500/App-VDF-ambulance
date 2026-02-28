@@ -1,5 +1,6 @@
 "use client"
 
+import { useState, useMemo } from "react"
 import { MyServiceRequest } from "@/services/my-requests"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -12,8 +13,17 @@ import {
 } from "@/components/ui/table"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { Calendar, MessageSquare, Clock } from "lucide-react"
+import { TablePagination } from "@/components/common/table-pagination"
 
 export function ServiceHistoryTable({ initialData }: { initialData: MyServiceRequest[] }) {
+    const [currentPage, setCurrentPage] = useState(1)
+    const PAGE_SIZE = 10
+
+    const paginatedData = useMemo(() => {
+        const start = (currentPage - 1) * PAGE_SIZE
+        return initialData.slice(start, start + PAGE_SIZE)
+    }, [initialData, currentPage])
+
     if (initialData.length === 0) {
         return (
             <Card className="border-dashed border-2 flex flex-col items-center justify-center p-12 text-center text-muted-foreground">
@@ -43,7 +53,7 @@ export function ServiceHistoryTable({ initialData }: { initialData: MyServiceReq
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {initialData.map((req) => (
+                            {paginatedData.map((req) => (
                                 <TableRow key={req.id} className="hover:bg-muted/10 transition-colors">
                                     <TableCell>
                                         <Badge variant="secondary" className="font-medium">
@@ -76,6 +86,12 @@ export function ServiceHistoryTable({ initialData }: { initialData: MyServiceReq
                     </Table>
                 </div>
             </CardContent>
+            <TablePagination
+                currentPage={currentPage}
+                totalItems={initialData.length}
+                pageSize={PAGE_SIZE}
+                onPageChange={setCurrentPage}
+            />
         </Card>
     )
 }
