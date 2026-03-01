@@ -16,9 +16,9 @@ import {
     DialogFooter
 } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
-import { deactivateUser } from "@/actions/users"
+import { deactivateUser, reactivateUser } from "@/actions/users"
 import { toast } from "sonner"
-import { Trash2Icon, InfoIcon, ShieldCheckIcon, ShieldAlertIcon, UserCheckIcon, UserXIcon, MessageSquareIcon } from "lucide-react"
+import { Trash2Icon, InfoIcon, ShieldCheckIcon, ShieldAlertIcon, UserCheckIcon, UserXIcon, MessageSquareIcon, Eye, RotateCcw } from "lucide-react"
 
 interface User {
     id: string
@@ -49,6 +49,8 @@ export function CollaboratorsTable({ initialData }: { initialData: User[] }) {
     const [userToDeactivate, setUserToDeactivate] = useState<User | null>(null)
     const [reason, setReason] = useState("")
     const [isDeactivating, setIsDeactivating] = useState(false)
+    const [selectedUser, setSelectedUser] = useState<User | null>(null)
+    const [isReactivating, setIsReactivating] = useState<string | null>(null)
 
     const filteredData = useMemo(() => {
         return initialData.filter(user => {
@@ -123,6 +125,19 @@ export function CollaboratorsTable({ initialData }: { initialData: User[] }) {
             toast.error("Une erreur s'est produite lors de la désactivation.")
         } finally {
             setIsDeactivating(false)
+        }
+    }
+
+    const handleReactivate = async (userId: string) => {
+        setIsReactivating(userId)
+        try {
+            const result = await reactivateUser(userId)
+            if (result.success) toast.success(result.success)
+            else if (result.error) toast.error(result.error)
+        } catch {
+            toast.error("Une erreur s'est produite lors de la réactivation.")
+        } finally {
+            setIsReactivating(null)
         }
     }
 
@@ -219,11 +234,21 @@ export function CollaboratorsTable({ initialData }: { initialData: User[] }) {
                                 ) : (
                                     <span className="text-[10px] font-bold text-red-600 bg-red-50 border border-red-200 rounded-full px-2 py-0.5">INACTIF</span>
                                 )}
-                                {(user as any).isActive !== false && (
-                                    <Button size="sm" variant="ghost" className="h-7 text-[11px] text-red-500 hover:text-red-600 hover:bg-red-50" onClick={() => setUserToDeactivate(user as any)}>
-                                        Suspendre
+                                <div className="flex items-center gap-1.5">
+                                    <Button variant="ghost" size="icon" className="size-7 text-blue-500 hover:bg-blue-50" onClick={() => setSelectedUser(user)}>
+                                        <Eye className="size-3.5" />
                                     </Button>
-                                )}
+                                    {(user as any).isActive !== false ? (
+                                        <Button size="sm" variant="ghost" className="h-7 text-[11px] text-red-500 hover:text-red-600 hover:bg-red-50" onClick={() => setUserToDeactivate(user as any)}>
+                                            Suspendre
+                                        </Button>
+                                    ) : (
+                                        <Button size="sm" variant="ghost" className="h-7 text-[11px] text-green-600 hover:text-green-700 hover:bg-green-50" disabled={isReactivating === user.id} onClick={() => handleReactivate(user.id)}>
+                                            <RotateCcw className="size-3 mr-1" />
+                                            Réactiver
+                                        </Button>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -311,19 +336,33 @@ export function CollaboratorsTable({ initialData }: { initialData: User[] }) {
                                         )}
                                     </td>
                                     <td className="px-5 py-4 text-center">
-                                        {(user as any).isActive !== false ? (
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                className="h-8 text-red-500 hover:text-red-600 hover:bg-red-50 transition-colors"
-                                                onClick={() => setUserToDeactivate(user)}
-                                            >
-                                                <Trash2Icon className="w-4 h-4 mr-1.5" />
-                                                Suspendre
+                                        <div className="flex items-center justify-center gap-1">
+                                            <Button variant="ghost" size="icon" className="size-8 text-blue-500 hover:text-blue-600 hover:bg-blue-50" onClick={() => setSelectedUser(user)}>
+                                                <Eye className="w-4 h-4" />
                                             </Button>
-                                        ) : (
-                                            <span className="text-xs text-muted-foreground italic whitespace-nowrap">Accès révoqué</span>
-                                        )}
+                                            {(user as any).isActive !== false ? (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="h-8 text-red-500 hover:text-red-600 hover:bg-red-50 transition-colors"
+                                                    onClick={() => setUserToDeactivate(user)}
+                                                >
+                                                    <Trash2Icon className="w-4 h-4 mr-1.5" />
+                                                    Suspendre
+                                                </Button>
+                                            ) : (
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="h-8 text-green-600 hover:text-green-700 hover:bg-green-50 transition-colors"
+                                                    disabled={isReactivating === user.id}
+                                                    onClick={() => handleReactivate(user.id)}
+                                                >
+                                                    <RotateCcw className="w-4 h-4 mr-1.5" />
+                                                    Réactiver
+                                                </Button>
+                                            )}
+                                        </div>
                                     </td>
                                 </tr>
                             ))
@@ -381,6 +420,70 @@ export function CollaboratorsTable({ initialData }: { initialData: User[] }) {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            {/* Detail Dialog */}
+            <Dialog open={!!selectedUser} onOpenChange={(open) => !open && setSelectedUser(null)}>
+                <DialogContent className="max-w-[90vw] sm:max-w-sm border-border bg-background p-0 overflow-hidden">
+                    <div className="p-5 bg-slate-900 text-white rounded-t-lg">
+                        <div className="flex items-center gap-3">
+                            {selectedUser?.image ? (
+                                <img src={selectedUser.image} className="w-12 h-12 rounded-full object-cover border-2 border-white/20" alt="" />
+                            ) : (
+                                <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg border-2 ${(selectedUser as any)?.isActive === false ? 'bg-red-100/20 text-red-300 border-red-300/30' : 'bg-white/10 text-white border-white/20'}`}>
+                                    {selectedUser?.firstName?.charAt(0) || selectedUser?.email?.charAt(0) || '?'}
+                                </div>
+                            )}
+                            <div>
+                                <p className="font-black text-base">{selectedUser?.firstName} {selectedUser?.lastName}</p>
+                                <p className="text-xs text-slate-400">{selectedUser?.email}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="p-5 space-y-3">
+                        <div className="flex items-center justify-between">
+                            <span className="text-sm text-muted-foreground">Rôle</span>
+                            {selectedUser?.role === 'RH' ? (
+                                <Badge variant="outline" className="text-purple-600 bg-purple-50 border-purple-200">RH / Admin</Badge>
+                            ) : (
+                                <Badge variant="outline" className="text-secondary bg-secondary/10 border-secondary/20">Salarié</Badge>
+                            )}
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <span className="text-sm text-muted-foreground">Statut</span>
+                            {(selectedUser as any)?.isActive !== false ? (
+                                <div className="flex items-center gap-1.5 text-green-600 text-[10px] font-bold bg-green-50 border border-green-200 rounded-full px-2 py-0.5">
+                                    <ShieldCheckIcon className="w-3 h-3" /> ACTIF
+                                </div>
+                            ) : (
+                                <div className="flex items-center gap-1.5 text-red-600 text-[10px] font-bold bg-red-50 border border-red-200 rounded-full px-2 py-0.5">
+                                    <ShieldAlertIcon className="w-3 h-3" /> INACTIF
+                                </div>
+                            )}
+                        </div>
+                        {selectedUser?.phone && (
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm text-muted-foreground">Téléphone</span>
+                                <span className="text-sm font-medium">{selectedUser.phone}</span>
+                            </div>
+                        )}
+                        {selectedUser?.birthDate && (
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm text-muted-foreground">Date de naissance</span>
+                                <span className="text-sm font-medium">{new Date(selectedUser.birthDate).toLocaleDateString('fr-FR')}</span>
+                            </div>
+                        )}
+                        {(selectedUser as any)?.deletionReason && (
+                            <div className="space-y-1">
+                                <span className="text-xs uppercase text-muted-foreground font-bold tracking-wider">Motif de suspension</span>
+                                <p className="text-sm text-red-700 p-3 bg-red-50 rounded-lg border border-red-200 italic">
+                                    {(selectedUser as any).deletionReason}
+                                </p>
+                            </div>
+                        )}
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }
+

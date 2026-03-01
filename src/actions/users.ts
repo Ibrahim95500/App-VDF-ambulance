@@ -399,3 +399,30 @@ export async function deactivateUser(userId: string, reason: string) {
         return { error: `Erreur technique lors de la suspension: ${error.message || 'Erreur inconnue'}` };
     }
 }
+
+export async function reactivateUser(userId: string) {
+    try {
+        const session = await auth();
+        const role = (session?.user as any)?.role;
+
+        if (!session?.user || (role !== "ADMIN" && role !== "RH")) {
+            return { error: "Non autorisé. Seul un RH peut réactiver un compte." };
+        }
+
+        const targetUser = await prisma.user.findUnique({ where: { id: userId } });
+        if (!targetUser) {
+            return { error: "L'utilisateur n'a pas été trouvé." };
+        }
+
+        await prisma.user.update({
+            where: { id: userId },
+            data: { isActive: true, deletionReason: null }
+        });
+
+        revalidatePath("/dashboard/rh/collaborateurs");
+        return { success: `Le compte de ${targetUser.name || targetUser.email} a été réactivé avec succès.` };
+    } catch (error: any) {
+        console.error("Reactivate user error:", error);
+        return { error: `Erreur technique: ${error.message || 'Erreur inconnue'}` };
+    }
+}

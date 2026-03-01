@@ -5,7 +5,14 @@ import { updateLeaveRequestStatus } from '@/actions/leave-request.actions';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, CheckCircle2, XCircle } from 'lucide-react';
+import { Loader2, CheckCircle2, XCircle, Eye } from 'lucide-react';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+} from "@/components/ui/dialog";
 import { useRouter } from 'next/navigation';
 import { TableActions } from "@/components/common/table-actions";
 import { TablePagination } from "@/components/common/table-pagination";
@@ -32,6 +39,7 @@ type LeaveRequestFull = {
 export function LeaveManagementTable({ initialLeaves }: { initialLeaves: LeaveRequestFull[] }) {
     const router = useRouter();
     const [loadingMap, setLoadingMap] = useState<Record<string, boolean>>({});
+    const [selectedLeave, setSelectedLeave] = useState<LeaveRequestFull | null>(null);
     const [searchTerm, setSearchTerm] = useState("");
     const [statusFilter, setStatusFilter] = useState("ALL");
     const [dateRange, setDateRange] = useState<DateRange | undefined>();
@@ -171,7 +179,12 @@ export function LeaveManagementTable({ initialLeaves }: { initialLeaves: LeaveRe
                                     <p className="font-semibold text-foreground text-sm truncate">{req.user.name || req.user.email}</p>
                                     <p className="text-xs text-muted-foreground">{formatType(req.type)}</p>
                                 </div>
-                                {getStatusBadge(req.status)}
+                                <div className="flex items-center gap-1 shrink-0">
+                                    {getStatusBadge(req.status)}
+                                    <Button variant="ghost" size="icon" className="size-7 text-blue-500 hover:bg-blue-50" onClick={() => setSelectedLeave(req)}>
+                                        <Eye className="size-3.5" />
+                                    </Button>
+                                </div>
                             </div>
                             <div className="text-xs text-muted-foreground">{formatDates(req)}</div>
                             {req.reason && <p className="text-xs italic text-muted-foreground truncate">{req.reason}</p>}
@@ -284,6 +297,47 @@ export function LeaveManagementTable({ initialLeaves }: { initialLeaves: LeaveRe
                 pageSize={PAGE_SIZE}
                 onPageChange={setCurrentPage}
             />
+
+            {/* Leave Detail Dialog */}
+            <Dialog open={!!selectedLeave} onOpenChange={(open) => !open && setSelectedLeave(null)}>
+                <DialogContent className="max-w-[90vw] sm:max-w-sm border-border bg-background p-0 overflow-hidden">
+                    <DialogHeader className="p-5 bg-slate-900 text-white">
+                        <div className="text-slate-400 text-[10px] mb-1 uppercase tracking-widest font-bold">
+                            {selectedLeave ? formatType(selectedLeave.type) : ''}
+                        </div>
+                        <DialogTitle className="text-lg font-black italic text-white">
+                            {selectedLeave?.user.name || selectedLeave?.user.email}
+                        </DialogTitle>
+                        <DialogDescription className="text-slate-400 text-xs">
+                            {selectedLeave ? formatDates(selectedLeave) : ''}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="p-5 space-y-3">
+                        <div className="flex items-center justify-between">
+                            <span className="text-sm text-muted-foreground">Statut</span>
+                            {selectedLeave && getStatusBadge(selectedLeave.status)}
+                        </div>
+                        {selectedLeave?.reason && (
+                            <div className="space-y-1">
+                                <span className="text-xs uppercase text-muted-foreground font-bold tracking-wider">Motif</span>
+                                <p className="text-sm text-foreground p-3 bg-muted/30 rounded-lg border border-border italic">
+                                    {selectedLeave.reason}
+                                </p>
+                            </div>
+                        )}
+                        {selectedLeave?.status === 'PENDING' && (
+                            <div className="flex gap-2 pt-2">
+                                <Button size="sm" variant="outline" className="flex-1 text-green-600 border-green-200 hover:bg-green-50" onClick={() => { handleAction(selectedLeave.id, 'APPROVED'); setSelectedLeave(null); }} disabled={loadingMap[selectedLeave.id]}>
+                                    <CheckCircle2 className="w-4 h-4 mr-1.5" /> Accepter
+                                </Button>
+                                <Button size="sm" variant="destructive" className="flex-1" onClick={() => { handleAction(selectedLeave.id, 'REJECTED'); setSelectedLeave(null); }} disabled={loadingMap[selectedLeave.id]}>
+                                    <XCircle className="w-4 h-4 mr-1.5" /> Refuser
+                                </Button>
+                            </div>
+                        )}
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }
