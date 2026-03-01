@@ -95,15 +95,59 @@ export function NotificationsSheet({ trigger, onAllRead }: { trigger: ReactNode;
     <Sheet onOpenChange={handleOpenChange}>
       <SheetTrigger asChild>{trigger}</SheetTrigger>
       <SheetContent className="p-0 gap-0 sm:w-[500px] sm:max-w-none inset-5 start-auto h-auto rounded-lg p-0 sm:max-w-none [&_[data-slot=sheet-close]]:top-4.5 [&_[data-slot=sheet-close]]:end-5">
-        <SheetHeader className="mb-0">
-          <SheetTitle className="p-3">
+        <SheetHeader className="mb-0 flex flex-row items-center justify-between pr-12 pb-2 border-b border-border/50">
+          <SheetTitle className="p-3 pb-0">
             Notifications
           </SheetTitle>
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-7 text-[10px] border-orange-200 text-orange-700 hover:bg-orange-100 font-bold px-2 rounded-full mt-3 dark:border-orange-500/30 dark:text-orange-400 dark:hover:bg-orange-900/30"
+            onClick={async () => {
+              if (!("Notification" in window) || !("serviceWorker" in navigator)) {
+                alert("Ce navigateur ne supporte pas les notifications avancées.");
+                return;
+              }
+
+              try {
+                const permission = await Notification.requestPermission();
+                if (permission === "granted") {
+                  const registration = await navigator.serviceWorker.ready;
+                  let subscription = await registration.pushManager.getSubscription();
+
+                  if (!subscription) {
+                    const publicKey = await getVapidPublicKey();
+                    if (!publicKey) throw new Error("VAPID public key not configured");
+                    const convertedVapidKey = urlBase64ToUint8Array(publicKey);
+
+                    subscription = await registration.pushManager.subscribe({
+                      userVisibleOnly: true,
+                      applicationServerKey: convertedVapidKey
+                    });
+                  }
+
+                  await savePushSubscription(JSON.parse(JSON.stringify(subscription)));
+
+                  new Notification("VDF Ambulance", {
+                    body: "Les notifications sont activées ! 🚀",
+                    icon: "/media/app/logo.png"
+                  });
+                } else if (permission === "denied") {
+                  alert("Notifications bloquées. Veuillez les autoriser dans les réglages de votre navigateur.");
+                }
+              } catch (error) {
+                console.error("Failed to subscribe to Web Push:", error);
+                alert("Une erreur est survenue lors de l'activation des notifications.");
+              }
+            }}
+          >
+            🔔 S'abonner aux alertes
+          </Button>
         </SheetHeader>
         <SheetBody className="p-0">
           <ScrollArea className="h-[calc(100vh-10.5rem)]">
             <Tabs defaultValue="all" className="w-full relative">
-              <TabsList variant="line" className="w-full px-5 mb-5">
+              <TabsList variant="line" className="w-full px-5 mb-5 mt-2">
                 <TabsTrigger value="all">Tout</TabsTrigger>
                 <TabsTrigger value="inbox" className="relative">
                   Non lues
@@ -126,7 +170,7 @@ export function NotificationsSheet({ trigger, onAllRead }: { trigger: ReactNode;
                         key={n.id}
                         className={cn(
                           "group p-4 border-b border-border hover:bg-muted/30 transition-colors flex gap-3 items-start relative",
-                          !n.read && "bg-blue-50/30"
+                          !n.read && "bg-blue-50/30 dark:bg-blue-900/10"
                         )}
                       >
                         <div
@@ -153,46 +197,13 @@ export function NotificationsSheet({ trigger, onAllRead }: { trigger: ReactNode;
                         <div className="flex flex-col items-center gap-2 shrink-0">
                           {!n.read && <div className="size-2 rounded-full bg-orange-500 mt-2" />}
                           <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-7 text-[10px] border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold px-2 rounded-full flex items-center gap-1"
-                            onClick={async () => {
-                              if (!("Notification" in window) || !("serviceWorker" in navigator)) {
-                                alert("Ce navigateur ne supporte pas les notifications avancées.");
-                                return;
-                              }
-
-                              try {
-                                const permission = await Notification.requestPermission();
-                                if (permission === "granted") {
-                                  const registration = await navigator.serviceWorker.ready;
-                                  let subscription = await registration.pushManager.getSubscription();
-
-                                  if (!subscription) {
-                                    const publicKey = await getVapidPublicKey();
-                                    if (!publicKey) throw new Error("VAPID public key not configured");
-                                    const convertedVapidKey = urlBase64ToUint8Array(publicKey);
-
-                                    subscription = await registration.pushManager.subscribe({
-                                      userVisibleOnly: true,
-                                      applicationServerKey: convertedVapidKey
-                                    });
-                                  }
-
-                                  // Save the subscription to the backend
-                                  await savePushSubscription(JSON.parse(JSON.stringify(subscription)));
-
-                                  new Notification("VDF Ambulance", {
-                                    body: "Les notifications sont activées ! 🚀",
-                                    icon: "/media/app/logo.png"
-                                  });
-                                } else if (permission === "denied") {
-                                  alert("Notifications bloquées. Veuillez les autoriser dans les réglages de votre navigateur.");
-                                }
-                              } catch (error) {
-                                console.error("Failed to subscribe to Web Push:", error);
-                                alert("Une erreur est survenue lors de l'activation des notifications.");
-                              }
+                            variant="ghost"
+                            size="icon"
+                            className="size-6 opacity-30 group-hover:opacity-100 touch:opacity-100 transition-opacity text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950"
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              await dismissNotification(n.id);
+                              fetchNotifications();
                             }}
                           >
                             <X size={14} />

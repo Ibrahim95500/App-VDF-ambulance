@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import { createNotification, createManyNotifications } from "./notifications.actions"
+import { sendPushNotification } from "./web-push.actions"
 import { sendBrandedEmail } from "@/lib/mail"
 import { z } from "zod"
 
@@ -35,6 +36,14 @@ export async function updateRequestStatus(requestId: string, status: "APPROVED" 
         status,
         link: "/dashboard/salarie"
     })
+
+    // Send Web Push Notification
+    await sendPushNotification(
+        request.userId,
+        `Demande d'acompte ${status === 'APPROVED' ? 'Approuvée' : 'Refusée'}`,
+        `Votre demande d'un montant de ${request.amount}€ a été ${status === 'APPROVED' ? 'acceptée' : 'refusée'}.`,
+        "/dashboard/salarie"
+    )
 
     revalidatePath('/dashboard/rh/acomptes')
     revalidatePath('/dashboard/salarie')
@@ -125,6 +134,16 @@ export async function createAdvanceRequest(amount: number, reason: string) {
         console.log(`[ACTION] Batch creating ${notifications.length} notifications...`);
         await createManyNotifications(notifications)
         console.log("[ACTION] Notifications created successfully.");
+
+        // Send Push Notifications to RH
+        for (const rh of rhUsers) {
+            await sendPushNotification(
+                rh.id,
+                "Nouvelle demande d'acompte",
+                `${userName} a soumis une demande de ${amount}€.`,
+                "/dashboard/rh/acomptes"
+            )
+        }
 
         // 2. Email notification to Admin
         try {

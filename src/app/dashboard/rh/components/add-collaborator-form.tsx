@@ -86,11 +86,7 @@ export function AddCollaboratorForm() {
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="phone">Téléphone (Français)</Label>
-                            <Input id="phone" name="phone" placeholder="06 12 34 56 78" maxLength={12} pattern="^[0-9\s]+$" />
-                        </div>
+                    <div className="grid grid-cols-1 gap-4">
                         <div className="space-y-2">
                             <Label htmlFor="birthDate">Date de naissance</Label>
                             <Input

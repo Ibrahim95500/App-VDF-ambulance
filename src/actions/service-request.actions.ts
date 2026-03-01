@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 import { createNotification, createManyNotifications } from "./notifications.actions"
+import { sendPushNotification } from "./web-push.actions"
 import { sendBrandedEmail } from "@/lib/mail"
 import { z } from "zod"
 
@@ -66,6 +67,15 @@ export async function createServiceRequest(category: string, subject: string, de
 
     await createManyNotifications(notifications)
 
+    for (const rh of rhUsers) {
+        await sendPushNotification(
+            rh.id,
+            "Nouvelle demande de service",
+            `${userName} a soumis une demande (${category}).`,
+            "/dashboard/rh/services"
+        )
+    }
+
     // 2. Email notification to Admin/RH
     console.log("Sending email notification to admin...");
     try {
@@ -121,6 +131,13 @@ export async function updateServiceRequestStatus(requestId: string, status: "APP
         status,
         link: "/dashboard/salarie/services"
     })
+
+    await sendPushNotification(
+        request.userId,
+        `Demande de service ${status === 'APPROVED' ? 'Approuvée' : 'Refusée'}`,
+        `Votre demande "${request.subject}" a été traitée par la RH.`,
+        "/dashboard/salarie/services"
+    )
 
     // 2. Email notification to the User
     if (request.user.email) {
