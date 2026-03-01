@@ -31,6 +31,7 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
+  DropdownMenuPortal,
 } from '@/components/ui/dropdown-menu';
 import { Switch } from '@/components/ui/switch';
 
@@ -88,6 +89,28 @@ export function UserDropdownMenu({ trigger }: { trigger: ReactNode }) {
               <span>Mon Profil</span>
             </Link>
           </DropdownMenuItem>
+
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger className="flex items-center gap-2 w-full px-2 py-1.5 hover:bg-muted dark:hover:bg-zinc-800 rounded-md cursor-pointer">
+              <Moon className="w-4 h-4 text-muted-foreground" />
+              <span>Affichage (Thème)</span>
+            </DropdownMenuSubTrigger>
+            <DropdownMenuPortal>
+              <DropdownMenuSubContent>
+                <DropdownMenuRadioGroup value={theme} onValueChange={setTheme}>
+                  <DropdownMenuRadioItem value="dark" className="cursor-pointer">
+                    🚑 VDF Origine (Base) / Sombre
+                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="light" className="cursor-pointer">
+                    ☀️ Clair
+                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="system" className="cursor-pointer">
+                    ⚙️ Système
+                  </DropdownMenuRadioItem>
+                </DropdownMenuRadioGroup>
+              </DropdownMenuSubContent>
+            </DropdownMenuPortal>
+          </DropdownMenuSub>
         </div>
 
         <DropdownMenuSeparator />

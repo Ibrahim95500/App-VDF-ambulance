@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Calendar, Settings, Settings2, Shield, Users, Clock, CheckCircle, XCircle, Info, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getNotifications, markAllAsRead, markAsRead, dismissNotification } from '@/actions/notifications.actions';
+import { getVapidPublicKey, savePushSubscription } from '@/actions/web-push.actions';
 import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
 import {
@@ -17,6 +18,22 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+
+function urlBase64ToUint8Array(base64String: string) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding)
+    .replace(/-/g, '+')
+    .replace(/_/g, '/');
+
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
+
 import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Sheet,
@@ -136,20 +153,46 @@ export function NotificationsSheet({ trigger, onAllRead }: { trigger: ReactNode;
                         <div className="flex flex-col items-center gap-2 shrink-0">
                           {!n.read && <div className="size-2 rounded-full bg-orange-500 mt-2" />}
                           <Button
-                            variant="ghost"
-                            size="icon"
-                            className="size-6 opacity-30 group-hover:opacity-100 touch:opacity-100 transition-opacity text-muted-foreground hover:text-red-500"
-                            onClick={(e) => {
-                              console.log("UI: Dismiss button clicked for ID:", n.id);
-                              e.stopPropagation();
-                              dismissNotification(n.id)
-                                .then((res) => {
-                                  console.log("UI: Dismiss success, refreshing list...", res);
-                                  fetchNotifications();
-                                })
-                                .catch(err => {
-                                  console.error("UI: Dismiss failed", err);
-                                });
+                            variant="outline"
+                            size="sm"
+                            className="h-7 text-[10px] border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold px-2 rounded-full flex items-center gap-1"
+                            onClick={async () => {
+                              if (!("Notification" in window) || !("serviceWorker" in navigator)) {
+                                alert("Ce navigateur ne supporte pas les notifications avancées.");
+                                return;
+                              }
+
+                              try {
+                                const permission = await Notification.requestPermission();
+                                if (permission === "granted") {
+                                  const registration = await navigator.serviceWorker.ready;
+                                  let subscription = await registration.pushManager.getSubscription();
+
+                                  if (!subscription) {
+                                    const publicKey = await getVapidPublicKey();
+                                    if (!publicKey) throw new Error("VAPID public key not configured");
+                                    const convertedVapidKey = urlBase64ToUint8Array(publicKey);
+
+                                    subscription = await registration.pushManager.subscribe({
+                                      userVisibleOnly: true,
+                                      applicationServerKey: convertedVapidKey
+                                    });
+                                  }
+
+                                  // Save the subscription to the backend
+                                  await savePushSubscription(JSON.parse(JSON.stringify(subscription)));
+
+                                  new Notification("VDF Ambulance", {
+                                    body: "Les notifications sont activées ! 🚀",
+                                    icon: "/media/app/logo.png"
+                                  });
+                                } else if (permission === "denied") {
+                                  alert("Notifications bloquées. Veuillez les autoriser dans les réglages de votre navigateur.");
+                                }
+                              } catch (error) {
+                                console.error("Failed to subscribe to Web Push:", error);
+                                alert("Une erreur est survenue lors de l'activation des notifications.");
+                              }
                             }}
                           >
                             <X size={14} />

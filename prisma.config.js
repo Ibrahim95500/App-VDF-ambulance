@@ -1,2 +1,8 @@
-// Note: prisma.config.js is intentionally kept minimal for compatibility.
-// The schema path and datasource are defined in prisma/schema.prisma directly.
+require('dotenv/config');
+
+/** @type {import('@prisma/config').PrismaConfig} */
+module.exports = {
+    datasource: {
+        url: process.env.DATABASE_URL,
+    },
+};

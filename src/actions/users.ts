@@ -15,6 +15,7 @@ const CreateCollaboratorSchema = z.object({
     lastName: z.string().min(2, "Le nom doit faire au moins 2 caractères").max(50, "Le nom ne doit pas dépasser 50 caractères"),
     phone: z.string().max(12, "Le numéro de téléphone ne doit pas dépasser 12 caractères").optional(),
     birthDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Format de date invalide (AAAA-MM-JJ)").optional().nullable(),
+    role: z.enum(["SALARIE", "RH"]).default("SALARIE"),
 });
 
 const UpdateProfileSchema = z.object({
@@ -50,13 +51,14 @@ export async function createCollaborator(formData: FormData) {
         lastName: formData.get("lastName"),
         phone: formData.get("phone"),
         birthDate: formData.get("birthDate"),
+        role: formData.get("role") || "SALARIE",
     });
 
     if (!validatedFields.success) {
         return { error: validatedFields.error.issues[0].message };
     }
 
-    const { email, firstName, lastName, phone, birthDate: birthDateStr } = validatedFields.data;
+    const { email, firstName, lastName, phone, birthDate: birthDateStr, role } = validatedFields.data;
 
     try {
         const existingUser = await prisma.user.findUnique({ where: { email } });
@@ -82,7 +84,7 @@ export async function createCollaborator(formData: FormData) {
                 phone,
                 birthDate,
                 password: hashedPassword,
-                role: "SALARIE"
+                role: role as "SALARIE" | "RH"
             }
         });
 
