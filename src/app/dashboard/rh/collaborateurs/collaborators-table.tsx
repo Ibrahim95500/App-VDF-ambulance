@@ -225,7 +225,7 @@ export function CollaboratorsTable({ initialData }: { initialData: User[] }) {
                                 {user.role === 'RH' ? (
                                     <Badge variant="outline" className="text-purple-600 bg-purple-50 border-purple-200 text-[10px] font-bold shrink-0">RH</Badge>
                                 ) : (
-                                    <Badge variant="outline" className="text-secondary bg-secondary/10 border-secondary/20 text-[10px] font-bold shrink-0 text-secondary-foreground">Salarié</Badge>
+                                    <Badge variant="outline" className="text-secondary bg-secondary/10 border-secondary/20 text-[10px] font-bold shrink-0">Salarié</Badge>
                                 )}
                             </div>
                             <div className="flex items-center justify-between gap-2">
@@ -307,7 +307,7 @@ export function CollaboratorsTable({ initialData }: { initialData: User[] }) {
                                         {user.role === 'RH' ? (
                                             <Badge variant="outline" className="text-purple-600 bg-purple-50 border-purple-200 px-3 py-1 text-[10px] font-bold uppercase tracking-wider">RH / Admin</Badge>
                                         ) : (
-                                            <Badge variant="outline" className="text-secondary bg-secondary/10 border-secondary/20 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-secondary-foreground">Salarié</Badge>
+                                            <Badge variant="outline" className="text-secondary bg-secondary/10 border-secondary/20 px-3 py-1 text-[10px] font-bold uppercase tracking-wider">Salarié</Badge>
                                         )}
                                     </td>
                                     <td className="px-5 py-4 text-center">

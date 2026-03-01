@@ -11,7 +11,7 @@ export interface BadgeProps extends React.HTMLAttributes<HTMLDivElement>, Varian
 
 export interface BadgeButtonProps
   extends React.ButtonHTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof badgeButtonVariants> {
+  VariantProps<typeof badgeButtonVariants> {
   asChild?: boolean;
 }
 
@@ -29,7 +29,7 @@ const badgeVariants = cva(
         warning:
           'bg-[var(--color-warning-accent,var(--color-yellow-500))] text-[var(--color-warning-foreground,var(--color-white))]',
         info: 'bg-[var(--color-info-accent,var(--color-violet-500))] text-[var(--color-info-foreground,var(--color-white))]',
-        outline: 'bg-transparent border border-border text-secondary-foreground',
+        outline: 'bg-transparent border border-border text-foreground',
         destructive: 'bg-destructive text-destructive-foreground',
       },
       appearance: {
@@ -63,7 +63,7 @@ const badgeVariants = cva(
       {
         variant: 'secondary',
         appearance: 'light',
-        className: 'bg-secondary dark:bg-secondary/50 text-secondary-foreground',
+        className: 'bg-secondary dark:bg-secondary/50 text-foreground',
       },
       {
         variant: 'success',
@@ -129,7 +129,7 @@ const badgeVariants = cva(
       {
         variant: 'secondary',
         appearance: 'ghost',
-        className: 'text-secondary-foreground',
+        className: 'text-secondary',
       },
       {
         variant: 'success',

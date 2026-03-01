@@ -70,9 +70,15 @@ export async function sendPushNotification(userId: string, title: string, messag
                     p256dh: sub.p256dh,
                     auth: sub.auth
                 }
-            }
+            };
+            const options = {
+                TTL: 24 * 60 * 60, // 24 hours
+                headers: {
+                    'Urgency': 'high'
+                }
+            };
 
-            return webpush.sendNotification(pushSubscription, payload).catch((error) => {
+            return webpush.sendNotification(pushSubscription, payload, options).catch((error) => {
                 if (error.statusCode === 404 || error.statusCode === 410) {
                     // Subscription has expired or is no longer valid
                     removePromises.push(
