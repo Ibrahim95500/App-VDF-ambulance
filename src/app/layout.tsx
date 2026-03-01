@@ -1,4 +1,4 @@
-import { ReactNode, Suspense } from 'react';
+import { ReactNode, Suspense, useEffect, useState } from 'react';
 import { Inter } from 'next/font/google';
 import { cn } from '@/lib/utils';
 import { SettingsProvider } from '@/providers/settings-provider';
