@@ -31,16 +31,21 @@ export function RequestAdvanceForm() {
 
         try {
             setLoading(true)
-            await createAdvanceRequest(Number(amount), reason)
+            const result = await createAdvanceRequest(Number(amount), reason)
+
+            if (result && !result.success) {
+                toast.error(result.error || "Erreur lors de l'envoi de la demande.", {
+                    duration: 6000,
+                })
+                return
+            }
+
             toast.success("Demande d'acompte envoyée avec succès !")
             setAmount("")
             setReason("")
         } catch (error: any) {
-            // Handle the specific "already requested" error from the server
-            const errorMessage = error.message || "Erreur lors de l'envoi de la demande."
-            toast.error(errorMessage, {
-                duration: 6000,
-            })
+            // Unexpected network or runtime error
+            toast.error("Une erreur inattendue est survenue.")
         } finally {
             setLoading(false)
         }
