@@ -49,14 +49,14 @@ export default async function CollaboratorsPage() {
                             className="rounded-xl border border-border data-[state=active]:border-secondary data-[state=active]:bg-secondary/10 data-[state=active]:text-secondary flex items-center gap-2 px-3 py-2 sm:px-6 sm:py-3 transition-all text-muted-foreground font-bold min-w-0"
                         >
                             <UsersIcon className="size-4 shrink-0" />
-                            <span className="truncate"><span className="hidden sm:inline">Liste des </span>Collaborateurs</span>
+                            <span className="truncate text-xs sm:text-sm">Collaborateurs</span>
                         </TabsTrigger>
                         <TabsTrigger
                             value="add"
                             className="rounded-xl border border-border data-[state=active]:border-secondary data-[state=active]:bg-secondary/10 data-[state=active]:text-secondary flex items-center gap-2 px-3 py-2 sm:px-6 sm:py-3 transition-all text-muted-foreground font-bold min-w-0"
                         >
                             <UserPlusIcon className="size-4 shrink-0" />
-                            <span className="truncate"><span className="hidden sm:inline">Ajouter un </span>Collaborateur</span>
+                            <span className="truncate text-xs sm:text-sm">Ajouter Collaborateur</span>
                         </TabsTrigger>
                     </TabsList>
 
