@@ -1,6 +1,7 @@
 {
     "name": "VDF Ambulance",
     "short_name": "VDF Ambu",
+    "id": "/",
     "description": "Application de gestion interne VDF Ambulance",
     "start_url": "/dashboard",
     "display": "standalone",

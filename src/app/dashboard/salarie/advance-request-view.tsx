@@ -11,12 +11,23 @@ interface AdvanceRequestViewProps {
 
 export function AdvanceRequestView({ myRequests }: AdvanceRequestViewProps) {
     const [submissionError, setSubmissionError] = useState<string | null>(null)
+    const [mounted, setMounted] = useState(false)
+
+    useEffect(() => {
+        setMounted(true)
+    }, [])
 
     // Target Month logic
     const today = new Date()
     const targetDate = new Date(today.getFullYear(), today.getMonth() + 1, 1)
     const targetMonthName = targetDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
     const isLocked = today.getDate() > 15
+
+    if (!mounted) {
+        return <div className="min-h-[400px] flex items-center justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-secondary"></div>
+        </div>
+    }
 
     return (
         <div className="flex flex-col gap-5 lg:gap-7.5 max-w-5xl mx-auto w-full px-4 sm:px-0">

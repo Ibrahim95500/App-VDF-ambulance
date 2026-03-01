@@ -28,13 +28,6 @@ export function NotificationBell({ initialCount = 0 }: { initialCount?: number }
         // or for regular polling
         const interval = setInterval(fetchCount, 60000);
 
-        // Request Push Notification Permissions
-        if (typeof window !== "undefined" && "Notification" in window) {
-            if (Notification.permission === "default") {
-                Notification.requestPermission();
-            }
-        }
-
         return () => clearInterval(interval);
     }, []);
 

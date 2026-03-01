@@ -197,8 +197,35 @@ export function NotificationsSheet({ trigger, onAllRead }: { trigger: ReactNode;
             </Tabs>
           </ScrollArea>
         </SheetBody>
-        <SheetFooter className="border-t border-border p-5 flex items-center justify-end">
-          <Button variant="outline" size="sm" onClick={handleMarkAllAsRead}>Tout marquer comme lu</Button>
+        <SheetFooter className="border-t border-border p-4 flex flex-col gap-3">
+          <div className="flex items-center justify-between w-full">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-[11px] text-blue-600 hover:text-blue-700 hover:bg-blue-50 font-bold"
+              onClick={async () => {
+                if (!("Notification" in window)) {
+                  alert("Ce navigateur ne supporte pas les notifications.");
+                  return;
+                }
+
+                const permission = await Notification.requestPermission();
+                if (permission === "granted") {
+                  new Notification("VDF Ambulance", {
+                    body: "Les notifications sont activées ! 🚀",
+                    icon: "/media/app/logo.png"
+                  });
+                } else if (permission === "denied") {
+                  alert("Notifications bloquées. Veuillez les autoriser dans les réglages de votre navigateur.");
+                }
+              }}
+            >
+              Tester les notifications
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleMarkAllAsRead} className="text-[11px] font-bold">
+              Tout marquer comme lu
+            </Button>
+          </div>
         </SheetFooter>
       </SheetContent>
     </Sheet>
