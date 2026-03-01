@@ -42,6 +42,10 @@ export function Header() {
   const pathname = usePathname();
   const mobileMode = useIsMobile();
   const { data: session } = useSession();
+  const [imgError, setImgError] = useState(false);
+
+  // Reset error state when session changes (e.g. after image upload)
+  useEffect(() => { setImgError(false) }, [(session?.user as any)?.image])
 
   const scrollPosition = useScrollPosition();
   const headerSticky: boolean = scrollPosition > 0;
@@ -103,11 +107,12 @@ export function Header() {
           <NotificationBell />
           <UserDropdownMenu trigger={
             <div className="size-9 rounded-full border-2 border-green-500 shrink-0 cursor-pointer overflow-hidden flex items-center justify-center bg-primary/10 text-primary font-bold text-xs">
-              {(session?.user as any)?.image ? (
+              {(session?.user as any)?.image && !imgError ? (
                 <img
                   className="w-full h-full object-cover"
                   src={(session?.user as any).image}
                   alt="User Avatar"
+                  onError={() => setImgError(true)}
                 />
               ) : (
                 <span>{session?.user?.name?.charAt(0) || session?.user?.email?.charAt(0) || '?'}</span>
