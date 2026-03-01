@@ -81,7 +81,20 @@ export async function createLeaveRequest(
 
     // Notify all RH users
     const rhUsers = await prisma.user.findMany({ where: { role: 'RH' } })
-    // Email notification to Admin
+    // 1. In-app notifications for RH
+    const rhUsers = await prisma.user.findMany({ where: { role: 'RH' } })
+    for (const rh of rhUsers) {
+        await createNotification({
+            userId: rh.id,
+            title: "Nouvelle demande de congé",
+            message: `${user.firstName} ${user.lastName} a soumis une demande (${type.toUpperCase()}).`,
+            type: "LEAVE",
+            status: "PENDING",
+            link: "/dashboard/rh"
+        })
+    }
+
+    // 2. Email notification to Admin
     try {
         await sendBrandedEmail({
             to: "ibrahim.nifa01@gmail.com",
@@ -122,27 +135,15 @@ export async function updateLeaveRequestStatus(requestId: string, status: 'APPRO
         include: { user: true }
     })
 
-    // Notify the employee via email
-    if (updatedRequest.user.email) {
-        await sendBrandedEmail({
-            to: updatedRequest.user.email,
-            subject: `Décision : Votre demande de congé (${updatedRequest.type})`,
-            title: `Demande ${status === 'APPROVED' ? 'Approuvée' : 'Refusée'}`,
-            preheader: `Réponse à votre demande de congé`,
-            content: `
-                <p>Bonjour ${updatedRequest.user.firstName || updatedRequest.user.name},</p>
-                <p>Votre demande de congé pour la période du <strong>${new Date(updatedRequest.startDate).toLocaleDateString()}</strong> au <strong>${new Date(updatedRequest.endDate).toLocaleDateString()}</strong> a été examinée.</p>
-                <p>Le statut de votre demande est désormais : 
-                   <strong style="color: ${status === 'APPROVED' ? '#16a34a' : '#dc2626'};">
-                     ${status === 'APPROVED' ? 'APPROUVÉE' : 'REFUSÉE'}
-                   </strong>.
-                </p>
-                <p>Vous pouvez consulter les détails dans votre espace personnel.</p>
-            `,
-            actionUrl: `${process.env.NEXTAUTH_URL}/dashboard/salarie/conges`,
-            actionText: "Accéder à mes demandes"
-        });
-    }
+    // Notify the employee in-app
+    await createNotification({
+        userId: updatedRequest.userId,
+        title: `Demande de congé ${status === 'APPROVED' ? 'Approuvée' : 'Refusée'}`,
+        message: `Votre demande de congé (${updatedRequest.type}) du ${new Date(updatedRequest.startDate).toLocaleDateString()} a été traitée.`,
+        type: "LEAVE",
+        status: status as RequestStatus,
+        link: "/dashboard/salarie/conges"
+    })
 
     revalidatePath("/dashboard/rh")
     return { success: true, data: updatedRequest }

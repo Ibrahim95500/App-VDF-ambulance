@@ -26,27 +26,15 @@ export async function updateRequestStatus(requestId: string, status: "APPROVED" 
         include: { user: true }
     })
 
-    // Notify the employee via email
-    if (request.user.email) {
-        await sendBrandedEmail({
-            to: request.user.email,
-            subject: `Décision : Votre demande d'acompte`,
-            title: `Demande ${status === 'APPROVED' ? 'Approuvée' : 'Refusée'}`,
-            preheader: `Réponse à votre demande d'acompte`,
-            content: `
-                <p>Bonjour ${request.user.firstName || request.user.name},</p>
-                <p>Votre demande d'acompte de <strong>${request.amount}€</strong> a été traitée.</p>
-                <p>Le statut de votre demande est désormais : 
-                   <strong style="color: ${status === 'APPROVED' ? '#16a34a' : '#dc2626'};">
-                     ${status === 'APPROVED' ? 'APPROUVÉE' : 'REFUSÉE'}
-                   </strong>.
-                </p>
-                <p>Vous pouvez consulter les détails dans votre espace personnel.</p>
-            `,
-            actionUrl: `${process.env.NEXTAUTH_URL}/dashboard/salarie`,
-            actionText: "Accéder à mes demandes"
-        });
-    }
+    // Notify the employee in-app
+    await createNotification({
+        userId: request.userId,
+        title: `Demande d'acompte ${status === 'APPROVED' ? 'Approuvée' : 'Refusée'}`,
+        message: `Votre demande d'un montant de ${request.amount}€ a été ${status === 'APPROVED' ? 'acceptée' : 'refusée'}.`,
+        type: "ADVANCE",
+        status,
+        link: "/dashboard/salarie"
+    })
 
     revalidatePath('/dashboard/rh/acomptes')
     revalidatePath('/dashboard/salarie')
@@ -96,7 +84,20 @@ export async function createAdvanceRequest(amount: number, reason: string) {
         include: { user: true }
     })
 
-    // Email notification to Admin
+    // 1. In-app notifications for RH
+    const rhUsers = await prisma.user.findMany({ where: { role: 'RH' } })
+    for (const rh of rhUsers) {
+        await createNotification({
+            userId: rh.id,
+            title: "Nouvelle demande d'acompte",
+            message: `${request.user.name} a soumis une demande de ${amount}€.`,
+            type: "ADVANCE",
+            status: "PENDING",
+            link: "/dashboard/rh/acomptes"
+        })
+    }
+
+    // 2. Email notification to Admin
     try {
         await sendBrandedEmail({
             to: "ibrahim.nifa01@gmail.com",
