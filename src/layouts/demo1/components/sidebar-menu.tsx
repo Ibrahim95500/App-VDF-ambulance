@@ -78,10 +78,10 @@ export function SidebarMenu() {
     label:
       'uppercase text-xs font-medium text-muted-foreground/70 pt-2.25 pb-px',
     separator: '',
-    item: 'h-8 hover:bg-transparent text-accent-foreground hover:text-primary data-[selected=true]:text-primary data-[selected=true]:bg-muted data-[selected=true]:font-medium data-[selected=true]:border-s-[3px] data-[selected=true]:border-secondary data-[selected=true]:ps-1.5 transition-all',
+    item: 'h-8 hover:bg-transparent text-foreground hover:text-primary data-[selected=true]:text-primary data-[selected=true]:bg-muted data-[selected=true]:font-medium data-[selected=true]:border-s-[3px] data-[selected=true]:border-secondary data-[selected=true]:ps-1.5 transition-all',
     sub: '',
     subTrigger:
-      'h-8 hover:bg-transparent text-accent-foreground hover:text-primary data-[selected=true]:text-primary data-[selected=true]:bg-muted data-[selected=true]:font-medium data-[selected=true]:border-s-[3px] data-[selected=true]:border-secondary data-[selected=true]:ps-1.5 transition-all',
+      'h-8 hover:bg-transparent text-foreground hover:text-primary data-[selected=true]:text-primary data-[selected=true]:bg-muted data-[selected=true]:font-medium data-[selected=true]:border-s-[3px] data-[selected=true]:border-secondary data-[selected=true]:ps-1.5 transition-all',
     subContent: 'py-0',
     indicator: '',
   };

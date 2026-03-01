@@ -4,13 +4,15 @@ import { prisma as db } from "@/lib/prisma"
 import { auth } from "@/auth"
 import webpush from "web-push"
 
-if (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY && process.env.VAPID_SUBJECT) {
-    webpush.setVapidDetails(
-        process.env.VAPID_SUBJECT,
-        process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
-        process.env.VAPID_PRIVATE_KEY
-    )
-}
+const vapidPublic = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || "BAI_PkE59fsaJPoOTDp1ueGcfAJ2LM_11e9R6egnWeCfXlgy187bohGv2yRK96LPyTSAOWfsJfRSCYcWCUsJVgc"
+const vapidPrivate = process.env.VAPID_PRIVATE_KEY || "f236x3mFmH2u0sC59U-yIfdEaYfO2zHq8S7Z_K8gP-c"
+const vapidSubject = process.env.VAPID_SUBJECT || "mailto:ibrahim.nifa01@gmail.com"
+
+webpush.setVapidDetails(
+    vapidSubject,
+    vapidPublic,
+    vapidPrivate
+)
 
 export async function savePushSubscription(subscription: any) {
     try {
