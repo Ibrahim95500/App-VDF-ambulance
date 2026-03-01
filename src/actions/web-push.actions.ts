@@ -73,9 +73,7 @@ export async function sendPushNotification(userId: string, title: string, messag
             };
             const options = {
                 TTL: 24 * 60 * 60, // 24 hours
-                headers: {
-                    'Urgency': 'high'
-                }
+                urgency: 'high' as const
             };
 
             return webpush.sendNotification(pushSubscription, payload, options).catch((error) => {
