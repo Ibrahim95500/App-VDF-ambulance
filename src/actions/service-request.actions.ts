@@ -41,18 +41,30 @@ export async function createServiceRequest(category: string, subject: string, de
     })
     console.log("Request created in DB:", request.id);
 
-    // 1. In-app notifications for RH
+    // 1. In-app notifications for RH & Employee
     const rhUsers = await prisma.user.findMany({ where: { role: 'RH' } })
     const userName = session.user.name || "Utilisateur";
 
-    await createManyNotifications(rhUsers.map(rh => ({
+    const notifications: any[] = rhUsers.map(rh => ({
         userId: rh.id,
         title: "Nouvelle demande de service",
         message: `${userName} a soumis une demande (${category}).`,
         type: "SERVICE",
         status: "PENDING",
         link: "/dashboard/rh/services"
-    })))
+    }));
+
+    // Add self-notification for the employee
+    notifications.push({
+        userId: session.user.id,
+        title: "Demande de service soumise",
+        message: `Votre demande (${category}) a été envoyée aux RH.`,
+        type: "SERVICE",
+        status: "PENDING",
+        link: "/dashboard/salarie/services"
+    });
+
+    await createManyNotifications(notifications)
 
     // 2. Email notification to Admin/RH
     console.log("Sending email notification to admin...");

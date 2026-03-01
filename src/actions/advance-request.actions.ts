@@ -84,18 +84,30 @@ export async function createAdvanceRequest(amount: number, reason: string) {
         include: { user: true }
     })
 
-    // 1. In-app notifications for RH
+    // 1. In-app notifications for RH & Employee
     const rhUsers = await prisma.user.findMany({ where: { role: 'RH' } })
     const userName = request.user.name || `${request.user.firstName || ''} ${request.user.lastName || ''}`.trim() || request.user.email || "Utilisateur";
 
-    await createManyNotifications(rhUsers.map(rh => ({
+    const notifications: any[] = rhUsers.map(rh => ({
         userId: rh.id,
         title: "Nouvelle demande d'acompte",
         message: `${userName} a soumis une demande de ${amount}€.`,
         type: "ADVANCE",
         status: "PENDING",
         link: "/dashboard/rh/acomptes"
-    })))
+    }));
+
+    // Add notification for the employee themselves
+    notifications.push({
+        userId: session.user.id,
+        title: "Demande d'acompte soumise",
+        message: `Votre demande de ${amount}€ a été envoyée aux RH.`,
+        type: "ADVANCE",
+        status: "PENDING",
+        link: "/dashboard/salarie"
+    });
+
+    await createManyNotifications(notifications)
 
     // 2. Email notification to Admin
     try {

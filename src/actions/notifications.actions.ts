@@ -39,7 +39,7 @@ export async function markAsRead(notificationId: string) {
         where: { id: notificationId },
         data: { read: true }
     })
-    revalidatePath('/')
+    revalidatePath('/', 'layout')
 }
 
 export async function dismissNotification(notificationId: string) {
@@ -50,7 +50,7 @@ export async function dismissNotification(notificationId: string) {
             data: { dismissed: true }
         })
         console.log("Notification dismissed in DB:", result.id);
-        revalidatePath('/')
+        revalidatePath('/', 'layout')
         return { success: true };
     } catch (err) {
         console.error("Failed to dismiss notification:", err);
@@ -66,7 +66,7 @@ export async function markAllAsRead() {
         where: { userId: session.user.id, dismissed: false },
         data: { read: true }
     })
-    revalidatePath('/')
+    revalidatePath('/', 'layout')
 }
 
 export async function createNotification({
@@ -94,7 +94,7 @@ export async function createNotification({
             link
         }
     })
-    revalidatePath('/')
+    revalidatePath('/', 'layout')
 }
 
 export async function createManyNotifications(notifications: {
@@ -107,9 +107,11 @@ export async function createManyNotifications(notifications: {
 }[]) {
     if (notifications.length === 0) return
 
-    await prisma.notification.createMany({
-        data: notifications
-    })
+    // use a transaction to ensure all notifications are created
+    // and default values like cuid() are generated correctly
+    await prisma.$transaction(
+        notifications.map(n => prisma.notification.create({ data: n }))
+    )
 
-    revalidatePath('/')
+    revalidatePath('/', 'layout')
 }

@@ -79,18 +79,30 @@ export async function createLeaveRequest(
         }
     })
 
-    // 1. In-app notifications for RH
+    // 1. In-app notifications for RH & Employee
     const rhUsers = await prisma.user.findMany({ where: { role: 'RH' } })
     const userName = user.name || `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email || "Utilisateur";
 
-    await createManyNotifications(rhUsers.map(rh => ({
+    const notifications: any[] = rhUsers.map(rh => ({
         userId: rh.id,
         title: "Nouvelle demande de congé",
         message: `${userName} a soumis une demande (${type.toUpperCase()}).`,
         type: "LEAVE",
         status: "PENDING",
         link: "/dashboard/rh"
-    })))
+    }));
+
+    // Add self-notification for the employee
+    notifications.push({
+        userId: user.id,
+        title: "Demande de congé soumise",
+        message: `Votre demande (${type.toUpperCase()}) a été envoyée aux RH.`,
+        type: "LEAVE",
+        status: "PENDING",
+        link: "/dashboard/salarie/conges"
+    });
+
+    await createManyNotifications(notifications)
 
     // 2. Email notification to Admin
     try {
