@@ -79,8 +79,6 @@ export async function createLeaveRequest(
         }
     })
 
-    // Notify all RH users
-    const rhUsers = await prisma.user.findMany({ where: { role: 'RH' } })
     // 1. In-app notifications for RH
     const rhUsers = await prisma.user.findMany({ where: { role: 'RH' } })
     for (const rh of rhUsers) {
