@@ -2,6 +2,7 @@ import { ReactNode } from 'react';
 import { Demo1Layout } from '@/layouts/demo1/layout';
 import { auth } from '@/auth';
 import { redirect } from 'next/navigation';
+import { getUnreadNotificationsCount } from '@/actions/notifications.actions';
 
 export default async function DashboardLayout({
     children,
@@ -14,5 +15,7 @@ export default async function DashboardLayout({
         redirect('/login');
     }
 
-    return <Demo1Layout>{children}</Demo1Layout>;
+    const unreadCount = await getUnreadNotificationsCount();
+
+    return <Demo1Layout notificationsCount={unreadCount}>{children}</Demo1Layout>;
 }

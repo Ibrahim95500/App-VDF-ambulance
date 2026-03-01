@@ -36,7 +36,7 @@ import { MegaMenu } from './mega-menu';
 import { SidebarMenu } from './sidebar-menu';
 import { VdfLogo } from '@/components/vdf-logo';
 
-export function Header() {
+export function Header({ notificationsCount = 0 }: { notificationsCount?: number }) {
   const [isSidebarSheetOpen, setIsSidebarSheetOpen] = useState(false);
 
   const pathname = usePathname();
@@ -104,7 +104,7 @@ export function Header() {
 
         {/* HeaderTopbar */}
         <div className="flex items-center gap-3">
-          <NotificationBell />
+          <NotificationBell initialCount={notificationsCount} />
           <UserDropdownMenu trigger={
             <div className="size-9 rounded-full border-2 border-green-500 shrink-0 cursor-pointer overflow-hidden flex items-center justify-center bg-primary/10 text-primary font-bold text-xs">
               {(session?.user as any)?.image && !imgError ? (

@@ -6,8 +6,13 @@ import { Button } from '@/components/ui/button';
 import { NotificationsSheet } from './notifications-sheet';
 import { getUnreadNotificationsCount } from '@/actions/notifications.actions';
 
-export function NotificationBell() {
-    const [count, setCount] = useState(0);
+export function NotificationBell({ initialCount = 0 }: { initialCount?: number }) {
+    const [count, setCount] = useState(initialCount);
+
+    // Sync count with initialCount prop (from server revalidation)
+    useEffect(() => {
+        setCount(initialCount);
+    }, [initialCount]);
 
     const fetchCount = async () => {
         try {
@@ -19,8 +24,8 @@ export function NotificationBell() {
     };
 
     useEffect(() => {
-        fetchCount();
-        // Poll every 1 minute for basic real-time feel if needed
+        // Only fetch if we're not using the initialCount from revalidation
+        // or for regular polling
         const interval = setInterval(fetchCount, 60000);
         return () => clearInterval(interval);
     }, []);

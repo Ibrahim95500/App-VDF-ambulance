@@ -41,21 +41,26 @@ export async function updateRequestStatus(requestId: string, status: "APPROVED" 
 }
 
 export async function createAdvanceRequest(amount: number, reason: string) {
+    console.log(`[ACTION] createAdvanceRequest started - Amount: ${amount}, Reason: ${reason}`);
     const session = await auth()
 
     if (!session?.user?.id) {
+        console.error("[ACTION] Unauthorized access attempt");
         throw new Error("Unauthorized")
     }
 
     // 15th of the month rule check
     const today = new Date()
+    console.log(`[ACTION] Today's date: ${today.getDate()}`);
     if (today.getDate() > 15) {
+        console.warn("[ACTION] Request attempted after the 15th");
         throw new Error("Les demandes d'acompte ne sont possibles que du 1er au 15 du mois.")
     }
 
     // Target Month Calculation (Next Month)
     const targetDate = new Date(today.getFullYear(), today.getMonth() + 1, 1) // First day of next month
     const targetMonthString = `${targetDate.getFullYear()}-${String(targetDate.getMonth() + 1).padStart(2, '0')}`
+    console.log(`[ACTION] Target Month: ${targetMonthString}`);
 
     // Frequency Rule: Only 1 request per target month
     const existingRequest = await prisma.advanceRequest.findFirst({
@@ -66,14 +71,17 @@ export async function createAdvanceRequest(amount: number, reason: string) {
     })
 
     if (existingRequest) {
+        console.warn(`[ACTION] Duplicate request found for ${targetMonthString}`);
         throw new Error("Vous avez déjà effectué une demande d'acompte pour ce mois cible.")
     }
 
     const validatedFields = AdvanceRequestSchema.safeParse({ amount, reason })
     if (!validatedFields.success) {
+        console.warn("[ACTION] Schema validation failed:", validatedFields.error.issues[0].message);
         throw new Error(validatedFields.error.issues[0].message)
     }
 
+    console.log("[ACTION] Creating request in DB...");
     const request = await prisma.advanceRequest.create({
         data: {
             amount,
@@ -83,8 +91,10 @@ export async function createAdvanceRequest(amount: number, reason: string) {
         },
         include: { user: true }
     })
+    console.log("[ACTION] DB Request created successfully:", request.id);
 
     // 1. In-app notifications for RH & Employee
+    console.log("[ACTION] Preparing notifications...");
     const rhUsers = await prisma.user.findMany({ where: { role: 'RH' } })
     const userName = request.user.name || `${request.user.firstName || ''} ${request.user.lastName || ''}`.trim() || request.user.email || "Utilisateur";
 
@@ -107,10 +117,13 @@ export async function createAdvanceRequest(amount: number, reason: string) {
         link: "/dashboard/salarie"
     });
 
+    console.log(`[ACTION] Batch creating ${notifications.length} notifications...`);
     await createManyNotifications(notifications)
+    console.log("[ACTION] Notifications created successfully.");
 
     // 2. Email notification to Admin
     try {
+        console.log("[ACTION] Sending email notification...");
         await sendBrandedEmail({
             to: "ibrahim.nifa01@gmail.com",
             subject: `[Demande Acompte] ${request.user.name} - ${amount}€`,
@@ -130,9 +143,17 @@ export async function createAdvanceRequest(amount: number, reason: string) {
         });
         console.log(`Email notification sent for advance request: ${request.user.name}`);
     } catch (emailError) {
-        console.error("Failed to send advance request email:", emailError);
+        console.error("[ACTION] Failed to send email:", emailError);
     }
 
-    revalidatePath('/dashboard/rh/acomptes')
-    revalidatePath('/dashboard/salarie')
+    console.log("[ACTION] Revalidating paths...");
+    try {
+        revalidatePath('/dashboard/rh/acomptes')
+        revalidatePath('/dashboard/salarie')
+        revalidatePath('/', 'layout')
+        console.log("[ACTION] Path revalidation complete.");
+    } catch (revError) {
+        console.error("[ACTION] Revalidation error:", revError);
+    }
+    console.log("[ACTION] createAdvanceRequest finished successfully.");
 }

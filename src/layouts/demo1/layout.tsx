@@ -7,7 +7,7 @@ import { Footer } from './components/footer';
 import { Header } from './components/header';
 import { Sidebar } from './components/sidebar';
 
-export function Demo1Layout({ children }: { children: ReactNode }) {
+export function Demo1Layout({ children, notificationsCount = 0 }: { children: ReactNode, notificationsCount?: number }) {
   const isMobile = useIsMobile();
   const { settings, setOption } = useSettings();
 
@@ -54,7 +54,7 @@ export function Demo1Layout({ children }: { children: ReactNode }) {
       {!isMobile && <Sidebar />}
 
       <div className="wrapper flex grow flex-col">
-        <Header />
+        <Header notificationsCount={notificationsCount} />
 
         <main className="grow pt-5" role="content">
           {children}
