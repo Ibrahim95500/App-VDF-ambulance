@@ -36,7 +36,11 @@ export function RequestAdvanceForm() {
             setAmount("")
             setReason("")
         } catch (error: any) {
-            toast.error(error.message || "Erreur lors de l'envoi de la demande.")
+            // Handle the specific "already requested" error from the server
+            const errorMessage = error.message || "Erreur lors de l'envoi de la demande."
+            toast.error(errorMessage, {
+                duration: 6000,
+            })
         } finally {
             setLoading(false)
         }
@@ -50,8 +54,15 @@ export function RequestAdvanceForm() {
                 </div>
             )}
 
-            <div className="bg-orange-50 text-orange-700 p-4 rounded-lg border border-orange-200 text-sm">
-                La demande d'acompte que vous formulez aujourd'hui sera déduite de votre prochain salaire : <strong>{targetMonthName}</strong>.
+            <div className="flex flex-col gap-2">
+                <div className="bg-orange-50 text-orange-700 p-4 rounded-lg border border-orange-200 text-sm">
+                    La demande d'acompte que vous formulez aujourd'hui sera déduite de votre prochain salaire : <strong>{targetMonthName}</strong>.
+                </div>
+
+                <div className="bg-blue-50 text-blue-700 p-3 rounded-lg border border-blue-100 text-[12px] flex items-start gap-2">
+                    <span className="shrink-0 font-bold">ℹ️</span>
+                    <span>Vous avez droit à <strong>une seule demande</strong> par mois cible. Si vous avez déjà soumis une demande pour {targetMonthName}, elle ne pourra pas être modifiée ici.</span>
+                </div>
             </div>
 
             <div className="flex flex-col gap-1">

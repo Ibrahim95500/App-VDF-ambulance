@@ -72,7 +72,8 @@ export async function createAdvanceRequest(amount: number, reason: string) {
 
     if (existingRequest) {
         console.warn(`[ACTION] Duplicate request found for ${targetMonthString}`);
-        throw new Error("Vous avez déjà effectué une demande d'acompte pour ce mois cible.")
+        const monthName = targetDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+        throw new Error(`Vous avez déjà effectué une demande d'acompte qui sera déduite sur le salaire de ${monthName}. Une seule demande par mois est autorisée.`)
     }
 
     const validatedFields = AdvanceRequestSchema.safeParse({ amount, reason })
