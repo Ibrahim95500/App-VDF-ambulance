@@ -3,7 +3,7 @@
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
-import { createNotification } from "./notifications.actions"
+import { createNotification, createManyNotifications } from "./notifications.actions"
 import { sendBrandedEmail } from "@/lib/mail"
 import { z } from "zod"
 
@@ -43,17 +43,16 @@ export async function createServiceRequest(category: string, subject: string, de
 
     // 1. In-app notifications for RH
     const rhUsers = await prisma.user.findMany({ where: { role: 'RH' } })
-    console.log(`Notifying ${rhUsers.length} RH users in-app`);
-    for (const rh of rhUsers) {
-        await createNotification({
-            userId: rh.id,
-            title: "Nouvelle demande de service",
-            message: `${session.user.name} a soumis une demande (${category}).`,
-            type: "SERVICE",
-            status: "PENDING",
-            link: "/dashboard/rh/services"
-        })
-    }
+    const userName = session.user.name || "Utilisateur";
+
+    await createManyNotifications(rhUsers.map(rh => ({
+        userId: rh.id,
+        title: "Nouvelle demande de service",
+        message: `${userName} a soumis une demande (${category}).`,
+        type: "SERVICE",
+        status: "PENDING",
+        link: "/dashboard/rh/services"
+    })))
 
     // 2. Email notification to Admin/RH
     console.log("Sending email notification to admin...");

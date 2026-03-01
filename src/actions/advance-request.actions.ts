@@ -3,7 +3,7 @@
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
-import { createNotification } from "./notifications.actions"
+import { createNotification, createManyNotifications } from "./notifications.actions"
 import { sendBrandedEmail } from "@/lib/mail"
 import { z } from "zod"
 
@@ -86,16 +86,16 @@ export async function createAdvanceRequest(amount: number, reason: string) {
 
     // 1. In-app notifications for RH
     const rhUsers = await prisma.user.findMany({ where: { role: 'RH' } })
-    for (const rh of rhUsers) {
-        await createNotification({
-            userId: rh.id,
-            title: "Nouvelle demande d'acompte",
-            message: `${request.user.name} a soumis une demande de ${amount}€.`,
-            type: "ADVANCE",
-            status: "PENDING",
-            link: "/dashboard/rh/acomptes"
-        })
-    }
+    const userName = request.user.name || `${request.user.firstName || ''} ${request.user.lastName || ''}`.trim() || request.user.email || "Utilisateur";
+
+    await createManyNotifications(rhUsers.map(rh => ({
+        userId: rh.id,
+        title: "Nouvelle demande d'acompte",
+        message: `${userName} a soumis une demande de ${amount}€.`,
+        type: "ADVANCE",
+        status: "PENDING",
+        link: "/dashboard/rh/acomptes"
+    })))
 
     // 2. Email notification to Admin
     try {

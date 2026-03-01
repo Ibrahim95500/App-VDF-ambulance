@@ -96,3 +96,20 @@ export async function createNotification({
     })
     revalidatePath('/')
 }
+
+export async function createManyNotifications(notifications: {
+    userId: string,
+    title: string,
+    message: string,
+    type: "ADVANCE" | "LEAVE" | "SERVICE",
+    status?: string,
+    link?: string
+}[]) {
+    if (notifications.length === 0) return
+
+    await prisma.notification.createMany({
+        data: notifications
+    })
+
+    revalidatePath('/')
+}

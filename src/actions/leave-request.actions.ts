@@ -4,7 +4,7 @@ import { auth } from "@/auth"
 import prisma from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 import { LeaveType, RequestStatus } from "@prisma/client"
-import { createNotification } from "./notifications.actions"
+import { createNotification, createManyNotifications } from "./notifications.actions"
 import { sendBrandedEmail } from "@/lib/mail"
 import { z } from "zod"
 
@@ -81,16 +81,16 @@ export async function createLeaveRequest(
 
     // 1. In-app notifications for RH
     const rhUsers = await prisma.user.findMany({ where: { role: 'RH' } })
-    for (const rh of rhUsers) {
-        await createNotification({
-            userId: rh.id,
-            title: "Nouvelle demande de congé",
-            message: `${user.firstName} ${user.lastName} a soumis une demande (${type.toUpperCase()}).`,
-            type: "LEAVE",
-            status: "PENDING",
-            link: "/dashboard/rh"
-        })
-    }
+    const userName = user.name || `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email || "Utilisateur";
+
+    await createManyNotifications(rhUsers.map(rh => ({
+        userId: rh.id,
+        title: "Nouvelle demande de congé",
+        message: `${userName} a soumis une demande (${type.toUpperCase()}).`,
+        type: "LEAVE",
+        status: "PENDING",
+        link: "/dashboard/rh"
+    })))
 
     // 2. Email notification to Admin
     try {
