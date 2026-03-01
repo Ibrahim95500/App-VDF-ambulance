@@ -41,7 +41,7 @@ export async function savePushSubscription(subscription: any) {
 }
 
 export async function getVapidPublicKey() {
-    return process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+    return process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || "BAI_PkE59fsaJPoOTDp1ueGcfAJ2LM_11e9R6egnWeCfXlgy187bohGv2yRK96LPyTSAOWfsJfRSCYcWCUsJVgc"
 }
 
 export async function sendPushNotification(userId: string, title: string, message: string, url: string = "/") {

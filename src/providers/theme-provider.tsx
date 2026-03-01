@@ -11,9 +11,9 @@ export function ThemeProvider({
   return (
     <NextThemesProvider
       attribute="class"
-      defaultTheme="system"
+      defaultTheme="dark"
       storageKey="nextjs-theme"
-      enableSystem
+      enableSystem={false}
       disableTransitionOnChange
       enableColorScheme
     >

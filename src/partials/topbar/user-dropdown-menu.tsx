@@ -104,9 +104,6 @@ export function UserDropdownMenu({ trigger }: { trigger: ReactNode }) {
                   <DropdownMenuRadioItem value="light" className="cursor-pointer">
                     ☀️ Clair
                   </DropdownMenuRadioItem>
-                  <DropdownMenuRadioItem value="system" className="cursor-pointer">
-                    ⚙️ Système
-                  </DropdownMenuRadioItem>
                 </DropdownMenuRadioGroup>
               </DropdownMenuSubContent>
             </DropdownMenuPortal>

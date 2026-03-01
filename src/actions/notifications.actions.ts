@@ -50,7 +50,6 @@ export async function dismissNotification(notificationId: string) {
             data: { dismissed: true }
         })
         console.log("Notification dismissed in DB:", result.id);
-        revalidatePath('/', 'layout')
         return { success: true };
     } catch (err) {
         console.error("Failed to dismiss notification:", err);
