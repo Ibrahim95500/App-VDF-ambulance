@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { ShieldAlert, Info, EuroIcon } from "lucide-react"
+import { ShieldAlert, Info, EuroIcon, X } from "lucide-react"
 import { RequestAdvanceForm } from "./request-form"
 import { AdvanceHistoryTable } from "./history-table"
 
@@ -30,9 +30,17 @@ export function AdvanceRequestView({ myRequests }: AdvanceRequestViewProps) {
             {/* Error & Info Alerts at the TOP */}
             <div className="flex flex-col gap-3">
                 {submissionError && (
-                    <div className="bg-red-50 text-red-700 p-4 rounded-lg border border-red-200 text-sm font-semibold flex items-start gap-3 animate-in fade-in slide-in-from-top-2">
-                        <ShieldAlert className="size-5 shrink-0 mt-0.5" />
-                        <p>{submissionError}</p>
+                    <div className="bg-red-50 text-red-700 p-4 rounded-lg border border-red-200 text-sm font-semibold flex items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2">
+                        <div className="flex items-start gap-3">
+                            <ShieldAlert className="size-5 shrink-0 mt-0.5" />
+                            <p>{submissionError}</p>
+                        </div>
+                        <button
+                            onClick={() => setSubmissionError(null)}
+                            className="text-red-400 hover:text-red-700 transition-colors"
+                        >
+                            <X className="size-5" />
+                        </button>
                     </div>
                 )}
 
@@ -57,7 +65,7 @@ export function AdvanceRequestView({ myRequests }: AdvanceRequestViewProps) {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 lg:gap-7.5">
                 {/* Left Column: Form */}
                 <div className="lg:col-span-1">
-                    <div className="flex flex-col rounded-xl border border-secondary/50 border-t-4 border-t-secondary bg-white">
+                    <div className="flex flex-col rounded-xl border border-secondary/50 border-t-4 border-t-secondary">
                         <div className="px-5 py-4 border-b border-border">
                             <h2 className="text-base font-semibold text-secondary">Nouvelle demande d'acompte</h2>
                             <p className="text-sm text-muted-foreground mt-1">Saisissez le montant souhaité.</p>
@@ -75,7 +83,7 @@ export function AdvanceRequestView({ myRequests }: AdvanceRequestViewProps) {
 
                 {/* Right Column: History */}
                 <div className="lg:col-span-2">
-                    <div className="flex flex-col rounded-xl border border-secondary/50 border-t-4 border-t-secondary bg-white">
+                    <div className="flex flex-col rounded-xl border border-secondary/50 border-t-4 border-t-secondary">
                         <div className="px-5 py-4 border-b border-border">
                             <h2 className="text-base font-semibold text-secondary">Historique de mes demandes</h2>
                         </div>
