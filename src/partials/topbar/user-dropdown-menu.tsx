@@ -99,7 +99,7 @@ export function UserDropdownMenu({ trigger }: { trigger: ReactNode }) {
               <DropdownMenuSubContent>
                 <DropdownMenuRadioGroup value={theme} onValueChange={setTheme}>
                   <DropdownMenuRadioItem value="dark" className="cursor-pointer">
-                    🚑 VDF Origine (Base) / Sombre
+                    🌙 Sombre
                   </DropdownMenuRadioItem>
                   <DropdownMenuRadioItem value="light" className="cursor-pointer">
                     ☀️ Clair
