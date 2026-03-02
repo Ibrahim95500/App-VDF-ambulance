@@ -8,9 +8,12 @@ async function main() {
     const rhPassword = process.env.RH_ADMIN_PASSWORD || 'VDF_Ambu_2026_Secure_Db'
     const hashedPassword = await bcrypt.hash(rhPassword, 10)
 
+    const rhFirstName = process.env.RH_ADMIN_FIRST_NAME || 'Hamid';
+    const rhLastName = process.env.RH_ADMIN_LAST_NAME || 'CHEIKH';
+
     // Define the list of users to be seeded
     const testUsers = [
-        { email: rhEmail, password: rhPassword, role: 'RH' as Role, firstName: 'Admin', lastName: 'VDF' }, // Use environment variables for RH admin
+        { email: rhEmail, password: rhPassword, role: 'RH' as Role, firstName: rhFirstName, lastName: rhLastName }, // Use environment variables for RH admin
         { email: 'salarie@vdf.fr', password: 'password123', role: 'USER' as Role, firstName: 'Utilisateur', lastName: 'Test' },
         { email: 'hamid@vdf.fr', password: 'password123', role: 'USER' as Role, firstName: 'Hamid', lastName: 'Ambulancier' },
     ];
