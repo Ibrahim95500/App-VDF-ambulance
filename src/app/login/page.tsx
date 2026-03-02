@@ -17,8 +17,16 @@ export default async function LoginPage({
     const error = params?.error;
 
     return (
-        <div className="flex grow min-h-screen items-center justify-center bg-gray-50 p-4 w-full">
-            <Card className="w-full max-w-md border-gray-200 shadow-lg rounded-2xl overflow-hidden">
+        <div
+            className="flex grow min-h-screen items-center justify-center bg-gray-50 p-4 w-full relative"
+            style={{
+                backgroundImage: 'url("/media/app/login-bg.png")',
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+            }}
+        >
+            <div className="absolute inset-0 bg-black/60 dark:bg-black/80"></div>
+            <Card className="w-full max-w-md border-gray-200 shadow-2xl rounded-2xl overflow-hidden relative z-10">
                 <div className="h-2 w-full bg-gradient-to-r from-blue-600 to-orange-500"></div>
                 <CardContent className="p-8 sm:p-10">
                     <div className="flex flex-col items-center text-center mb-8">

@@ -56,7 +56,7 @@ import { type MenuConfig } from './types';
 
 export const MENU_SIDEBAR: MenuConfig = [
   {
-    title: 'Tableau de bord',
+    title: 'Dashboard VDF Ambulance',
     icon: LayoutGrid,
     path: '/dashboard',
   },
