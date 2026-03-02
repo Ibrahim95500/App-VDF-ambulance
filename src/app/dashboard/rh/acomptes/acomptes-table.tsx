@@ -10,6 +10,8 @@ import { TableActions } from "@/components/common/table-actions"
 import { TablePagination } from "@/components/common/table-pagination"
 import { isWithinInterval, startOfDay, endOfDay } from "date-fns"
 import { DateRange } from "react-day-picker"
+import { Loader2, CheckCircle2, XCircle, Eye } from "lucide-react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 
 export function AcomptesTable({ initialData }: { initialData: AdvanceRequestWithUser[] }) {
     const [loadingId, setLoadingId] = useState<string | null>(null)
@@ -17,6 +19,7 @@ export function AcomptesTable({ initialData }: { initialData: AdvanceRequestWith
     const [statusFilter, setStatusFilter] = useState("ALL")
     const [dateRange, setDateRange] = useState<DateRange | undefined>()
     const [currentPage, setCurrentPage] = useState(1)
+    const [selectedRequest, setSelectedRequest] = useState<AdvanceRequestWithUser | null>(null)
     const PAGE_SIZE = 10
 
     useEffect(() => { setCurrentPage(1) }, [searchTerm, statusFilter, dateRange])
@@ -118,12 +121,17 @@ export function AcomptesTable({ initialData }: { initialData: AdvanceRequestWith
                                     {req.status === 'APPROVED' && <Badge variant="outline" className="text-green-600 bg-green-50 border-green-200 text-[10px]">Approuvé</Badge>}
                                     {req.status === 'REJECTED' && <Badge variant="outline" className="text-red-600 bg-red-50 border-red-200 text-[10px]">Refusé</Badge>}
                                 </div>
-                                {req.status === 'PENDING' && (
-                                    <div className="flex gap-1.5">
-                                        <Button size="sm" variant="secondary" className="h-7 text-[11px] px-2.5" disabled={loadingId === req.id} onClick={() => handleAction(req.id, "APPROVED")}>Accepter</Button>
-                                        <Button size="sm" variant="destructive" className="h-7 text-[11px] px-2.5" disabled={loadingId === req.id} onClick={() => handleAction(req.id, "REJECTED")}>Refuser</Button>
-                                    </div>
-                                )}
+                                <div className="flex items-center gap-1.5">
+                                    <Button variant="ghost" size="icon" className="size-7 text-blue-500 hover:bg-blue-50" onClick={() => setSelectedRequest(req)}>
+                                        <Eye className="size-3.5" />
+                                    </Button>
+                                    {req.status === 'PENDING' && (
+                                        <>
+                                            <Button size="sm" variant="secondary" className="h-7 text-[11px] px-2.5" disabled={loadingId === req.id} onClick={() => handleAction(req.id, "APPROVED")}>Accepter</Button>
+                                            <Button size="sm" variant="destructive" className="h-7 text-[11px] px-2.5" disabled={loadingId === req.id} onClick={() => handleAction(req.id, "REJECTED")}>Refuser</Button>
+                                        </>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -183,30 +191,41 @@ export function AcomptesTable({ initialData }: { initialData: AdvanceRequestWith
                                         {req.status === 'REJECTED' && <Badge variant="outline" className="text-red-600 bg-red-50 border-red-200">Refusé</Badge>}
                                     </td>
                                     <td className="px-4 py-3 text-right">
-                                        {req.status === 'PENDING' ? (
-                                            <div className="flex gap-1.5 justify-end">
-                                                <Button
-                                                    size="sm"
-                                                    variant="secondary"
-                                                    className="h-7 text-[11px] px-2.5"
-                                                    disabled={loadingId === req.id}
-                                                    onClick={() => handleAction(req.id, "APPROVED")}
-                                                >
-                                                    Accepter
-                                                </Button>
-                                                <Button
-                                                    size="sm"
-                                                    variant="destructive"
-                                                    className="h-7 text-[11px] px-2.5"
-                                                    disabled={loadingId === req.id}
-                                                    onClick={() => handleAction(req.id, "REJECTED")}
-                                                >
-                                                    Refuser
-                                                </Button>
-                                            </div>
-                                        ) : (
-                                            <span className="text-[10px] italic text-muted-foreground">Traité</span>
-                                        )}
+                                        <div className="flex items-center justify-end gap-2">
+                                            <Button
+                                                size="icon"
+                                                variant="ghost"
+                                                onClick={() => setSelectedRequest(req)}
+                                                className="h-8 w-8 text-blue-500 hover:text-blue-600 hover:bg-blue-50"
+                                                title="Détails"
+                                            >
+                                                <Eye className="w-4 h-4" />
+                                            </Button>
+                                            {req.status === 'PENDING' ? (
+                                                <>
+                                                    <Button
+                                                        size="icon"
+                                                        variant="outline"
+                                                        className="h-8 w-8 text-green-600 border-green-200 hover:bg-green-50"
+                                                        disabled={loadingId === req.id}
+                                                        onClick={() => handleAction(req.id, "APPROVED")}
+                                                    >
+                                                        {loadingId === req.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                                                    </Button>
+                                                    <Button
+                                                        size="icon"
+                                                        variant="outline"
+                                                        className="h-8 w-8 text-red-600 border-red-200 hover:bg-red-50"
+                                                        disabled={loadingId === req.id}
+                                                        onClick={() => handleAction(req.id, "REJECTED")}
+                                                    >
+                                                        {loadingId === req.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4" />}
+                                                    </Button>
+                                                </>
+                                            ) : (
+                                                <span className="text-[10px] italic text-muted-foreground ml-2">Traité</span>
+                                            )}
+                                        </div>
                                     </td>
                                 </tr>
                             ))
@@ -220,6 +239,53 @@ export function AcomptesTable({ initialData }: { initialData: AdvanceRequestWith
                 pageSize={PAGE_SIZE}
                 onPageChange={setCurrentPage}
             />
+
+            {/* Advance Request Detail Dialog */}
+            <Dialog open={!!selectedRequest} onOpenChange={(open) => !open && setSelectedRequest(null)}>
+                <DialogContent className="max-w-[90vw] sm:max-w-sm border-border bg-background p-0 gap-0 overflow-hidden">
+                    <DialogHeader className="p-5 bg-slate-900 text-white">
+                        <div className="text-slate-400 text-[10px] mb-1 uppercase tracking-widest font-bold">
+                            Acompte
+                        </div>
+                        <DialogTitle className="text-lg font-black italic text-white">
+                            {selectedRequest?.user.name || selectedRequest?.user.email}
+                        </DialogTitle>
+                        <DialogDescription className="text-slate-400 text-xs">
+                            Date: {selectedRequest ? new Date(selectedRequest.createdAt).toLocaleDateString('fr-FR') : ''}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="p-5 space-y-3">
+                        <div className="flex items-center justify-between">
+                            <span className="text-sm text-muted-foreground">Montant</span>
+                            <span className="font-bold text-foreground">{selectedRequest?.amount} €</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <span className="text-sm text-muted-foreground">Statut</span>
+                            {selectedRequest?.status === 'APPROVED' && <Badge className="bg-green-100 text-green-700 hover:bg-green-200">Approuvé</Badge>}
+                            {selectedRequest?.status === 'REJECTED' && <Badge className="bg-red-100 text-red-700 hover:bg-red-200">Refusé</Badge>}
+                            {selectedRequest?.status === 'PENDING' && <Badge variant="secondary" className="bg-blue-100 text-blue-700 hover:bg-blue-200">En attente</Badge>}
+                        </div>
+                        {selectedRequest?.reason && (
+                            <div className="space-y-1">
+                                <span className="text-xs uppercase text-muted-foreground font-bold tracking-wider">Motif</span>
+                                <p className="text-sm text-foreground p-3 bg-muted/30 rounded-lg border border-border italic">
+                                    {selectedRequest.reason}
+                                </p>
+                            </div>
+                        )}
+                        {selectedRequest?.status === 'PENDING' && (
+                            <div className="flex gap-2 pt-2">
+                                <Button size="sm" variant="outline" className="flex-1 text-green-600 border-green-200 hover:bg-green-50" onClick={() => { handleAction(selectedRequest.id, 'APPROVED'); setSelectedRequest(null); }} disabled={loadingId === selectedRequest.id}>
+                                    <CheckCircle2 className="w-4 h-4 mr-1.5" /> Accepter
+                                </Button>
+                                <Button size="sm" variant="destructive" className="flex-1" onClick={() => { handleAction(selectedRequest.id, 'REJECTED'); setSelectedRequest(null); }} disabled={loadingId === selectedRequest.id}>
+                                    <XCircle className="w-4 h-4 mr-1.5" /> Refuser
+                                </Button>
+                            </div>
+                        )}
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }

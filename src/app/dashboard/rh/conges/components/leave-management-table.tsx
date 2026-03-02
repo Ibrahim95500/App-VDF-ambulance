@@ -253,9 +253,18 @@ export function LeaveManagementTable({ initialLeaves }: { initialLeaves: LeaveRe
                                             {getStatusBadge(req.status)}
                                         </td>
                                         <td className="px-6 py-4 text-right">
-                                            {req.status === 'PENDING' ? (
-                                                <div className="flex items-center justify-end gap-2">
-                                                    {loadingMap[req.id] ? (
+                                            <div className="flex items-center justify-end gap-2">
+                                                <Button
+                                                    size="icon"
+                                                    variant="ghost"
+                                                    onClick={() => setSelectedLeave(req)}
+                                                    className="h-8 w-8 text-blue-500 hover:text-blue-600 hover:bg-blue-50"
+                                                    title="Détails"
+                                                >
+                                                    <Eye className="w-4 h-4" />
+                                                </Button>
+                                                {req.status === 'PENDING' ? (
+                                                    loadingMap[req.id] ? (
                                                         <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
                                                     ) : (
                                                         <>
@@ -278,11 +287,11 @@ export function LeaveManagementTable({ initialLeaves }: { initialLeaves: LeaveRe
                                                                 <XCircle className="w-5 h-5" />
                                                             </Button>
                                                         </>
-                                                    )}
-                                                </div>
-                                            ) : (
-                                                <span className="text-[10px] font-semibold text-muted-foreground uppercase opacity-50">Clôturé</span>
-                                            )}
+                                                    )
+                                                ) : (
+                                                    <span className="text-[10px] font-semibold text-muted-foreground uppercase opacity-50 ml-2">Clôturé</span>
+                                                )}
+                                            </div>
                                         </td>
                                     </tr>
                                 ))
@@ -300,7 +309,7 @@ export function LeaveManagementTable({ initialLeaves }: { initialLeaves: LeaveRe
 
             {/* Leave Detail Dialog */}
             <Dialog open={!!selectedLeave} onOpenChange={(open) => !open && setSelectedLeave(null)}>
-                <DialogContent className="max-w-[90vw] sm:max-w-sm border-border bg-background p-0 overflow-hidden">
+                <DialogContent className="max-w-[90vw] sm:max-w-sm border-border bg-background p-0 gap-0 overflow-hidden">
                     <DialogHeader className="p-5 bg-slate-900 text-white">
                         <div className="text-slate-400 text-[10px] mb-1 uppercase tracking-widest font-bold">
                             {selectedLeave ? formatType(selectedLeave.type) : ''}

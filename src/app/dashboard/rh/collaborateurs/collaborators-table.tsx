@@ -423,11 +423,11 @@ export function CollaboratorsTable({ initialData }: { initialData: User[] }) {
 
             {/* Detail Dialog */}
             <Dialog open={!!selectedUser} onOpenChange={(open) => !open && setSelectedUser(null)}>
-                <DialogContent className="max-w-[90vw] sm:max-w-sm border-border bg-background p-0 overflow-hidden">
-                    <DialogHeader className="p-0">
+                <DialogContent className="max-w-[90vw] sm:max-w-sm border-border bg-background p-0 gap-0 overflow-hidden">
+                    <DialogHeader className="p-0 m-0">
                         <DialogTitle className="sr-only">Détails de {selectedUser?.firstName} {selectedUser?.lastName}</DialogTitle>
                     </DialogHeader>
-                    <div className="p-5 bg-slate-900 text-white rounded-t-lg">
+                    <div className="p-5 bg-slate-900 text-white">
                         <div className="flex items-center gap-3">
                             {selectedUser?.image ? (
                                 <img src={selectedUser.image} className="w-12 h-12 rounded-full object-cover border-2 border-white/20" alt="" />

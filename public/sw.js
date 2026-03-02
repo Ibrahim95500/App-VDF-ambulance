@@ -1,4 +1,4 @@
-const CACHE_NAME = 'vdf-ambulance-v1';
+const CACHE_NAME = 'vdf-ambulance-v2';
 const ASSETS_TO_CACHE = [
     '/',
     '/manifest.json',
@@ -30,10 +30,32 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+    // Only handle GET requests
+    if (event.request.method !== 'GET') return;
+
+    // Ignore Chrome extensions or other non-http requests
+    if (!event.request.url.startsWith('http')) return;
+
     event.respondWith(
-        caches.match(event.request).then((response) => {
-            return response || fetch(event.request);
-        })
+        fetch(event.request)
+            .then((response) => {
+                // Return fresh network response as priority
+                // Optionally we could cache it, but Next.js does its own cache.
+                // We'll cache only the essential assets to avoid bloating storage with old chunks.
+                return response;
+            })
+            .catch(() => {
+                // On network failure (offline), try looking in the cache
+                return caches.match(event.request).then((cachedResponse) => {
+                    if (cachedResponse) {
+                        return cachedResponse;
+                    }
+                    // If it's a page navigation request and we're offline, return root.
+                    if (event.request.mode === 'navigate') {
+                        return caches.match('/');
+                    }
+                });
+            })
     );
 });
 

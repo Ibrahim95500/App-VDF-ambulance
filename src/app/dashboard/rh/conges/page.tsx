@@ -26,7 +26,10 @@ export default async function ManageLeavesPage() {
             <Container>
                 <Toolbar>
                     <ToolbarHeading>
-                        <h1 className="text-xl font-medium leading-none text-secondary">Gestion des Congés</h1>
+                        <div className="flex items-center gap-3">
+                            <CalendarIcon className="size-6 text-secondary" />
+                            <h1 className="text-xl font-medium leading-none text-secondary">Gestion des Congés</h1>
+                        </div>
                         <ToolbarDescription>
                             Gérez, validez ou refusez les demandes de congés et d'absences de vos collaborateurs.
                         </ToolbarDescription>
