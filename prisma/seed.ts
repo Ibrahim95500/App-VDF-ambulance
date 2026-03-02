@@ -6,24 +6,34 @@ async function main() {
     const rhPassword = process.env.RH_ADMIN_PASSWORD || 'VDF_Ambu_2026_Secure_Db'
     const hashedPassword = await bcrypt.hash(rhPassword, 10)
 
-    const existingRH = await prisma.user.findUnique({
-        where: { email: rhEmail }
-    })
+    // Define the list of users to be seeded
+    const testUsers = [
+        { email: rhEmail, password: rhPassword, role: 'RH', firstName: 'Admin', lastName: 'VDF' }, // Use environment variables for RH admin
+        { email: 'salarie@vdf.fr', password: 'password123', role: 'USER', firstName: 'Utilisateur', lastName: 'Test' },
+        { email: 'hamid@vdf.fr', password: 'password123', role: 'USER', firstName: 'Hamid', lastName: 'Ambulancier' },
+    ];
 
-    if (!existingRH) {
-        await prisma.user.create({
-            data: {
-                email: rhEmail,
-                name: 'Admin RH',
-                role: 'RH',
-                password: hashedPassword,
-                firstName: 'Admin',
-                lastName: 'VDF'
-            }
-        })
-        console.log(`Created RH user: ${rhEmail} with default password.`)
-    } else {
-        console.log(`RH user ${rhEmail} already exists.`)
+    for (const userData of testUsers) {
+        const existingUser = await prisma.user.findUnique({
+            where: { email: userData.email }
+        });
+
+        if (!existingUser) {
+            const userHashedPassword = userData.email === rhEmail ? hashedPassword : await bcrypt.hash(userData.password, 10);
+            await prisma.user.create({
+                data: {
+                    email: userData.email,
+                    name: `${userData.firstName} ${userData.lastName}`,
+                    role: userData.role,
+                    password: userHashedPassword,
+                    firstName: userData.firstName,
+                    lastName: userData.lastName
+                }
+            });
+            console.log(`Created user: ${userData.email} with role ${userData.role}.`);
+        } else {
+            console.log(`User ${userData.email} already exists.`);
+        }
     }
 }
 
