@@ -22,11 +22,9 @@ export default async function CongesPage() {
             <Container>
                 <Toolbar>
                     <ToolbarHeading>
-                        <div className="flex items-center gap-2">
-                            <span className="p-1.5 rounded-lg bg-secondary/10 text-secondary">
-                                <CalendarIcon className="size-4" />
-                            </span>
-                            <h1 className="text-xl font-medium leading-none text-secondary">
+                        <div className="flex items-center gap-3 mb-2">
+                            <CalendarIcon className="size-8 text-secondary" />
+                            <h1 className="text-3xl font-bold tracking-tight text-secondary">
                                 Absences & Événements
                             </h1>
                         </div>

@@ -84,12 +84,12 @@ export function LeaveHistory({ requests }: { requests: LeaveRequest[] }) {
         const start = new Date(req.startDate).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
         const end = new Date(req.endDate).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
         if (start === end) {
-            return <span>{start} <span className="text-[10px] text-muted-foreground uppercase">{req.startAmPm}</span></span>
+            return <span><span className="font-semibold">{start}</span> <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-medium">{req.startAmPm}</span></span>
         }
         return (
-            <div className="flex flex-col text-xs">
-                <span><span className="text-muted-foreground">Du</span> {start} <span className="text-[10px] uppercase">{req.startAmPm}</span></span>
-                <span><span className="text-muted-foreground">Au</span> {end} <span className="text-[10px] uppercase">{req.endAmPm}</span></span>
+            <div className="flex flex-col text-xs gap-0.5">
+                <span><span className="text-slate-500 dark:text-slate-400">Du</span> <span className="font-semibold">{start}</span> <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-medium">{req.startAmPm}</span></span>
+                <span><span className="text-slate-500 dark:text-slate-400">Au</span> <span className="font-semibold">{end}</span> <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-medium">{req.endAmPm}</span></span>
             </div>
         )
     }
@@ -121,7 +121,7 @@ export function LeaveHistory({ requests }: { requests: LeaveRequest[] }) {
                         <div key={item.id} className="py-3 flex items-center justify-between gap-3">
                             <div className="flex flex-col gap-1 min-w-0">
                                 <p className="font-bold text-foreground text-sm">{formatType(item.type)}</p>
-                                <div className="text-xs text-muted-foreground">{formatDates(item)}</div>
+                                <div className="text-xs text-slate-700 dark:text-slate-300">{formatDates(item)}</div>
                             </div>
                             <div className="flex items-center gap-2 shrink-0">
                                 {getStatusBadge(item.status)}
