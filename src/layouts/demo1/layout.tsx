@@ -1,11 +1,12 @@
 'use client';
 
 import { ReactNode, useEffect } from 'react';
-import { useIsMobile } from '@/hooks/use-mobile';
 import { useSettings } from '@/providers/settings-provider';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { Footer } from './components/footer';
 import { Header } from './components/header';
 import { Sidebar } from './components/sidebar';
+import { BottomTabBar } from './components/bottom-tab-bar';
 
 export function Demo1Layout({ children, notificationsCount = 0 }: { children: ReactNode, notificationsCount?: number }) {
   const isMobile = useIsMobile();
@@ -53,7 +54,7 @@ export function Demo1Layout({ children, notificationsCount = 0 }: { children: Re
     <>
       {!isMobile && <Sidebar />}
 
-      <div className="wrapper flex grow flex-col">
+      <div className="wrapper flex grow flex-col pb-20 lg:pb-0">
         <Header notificationsCount={notificationsCount} />
 
         <main className="grow pt-5" role="content">
@@ -62,6 +63,8 @@ export function Demo1Layout({ children, notificationsCount = 0 }: { children: Re
 
         <Footer />
       </div>
+
+      <BottomTabBar />
     </>
   );
 }

@@ -72,30 +72,7 @@ export function Header({ notificationsCount = 0 }: { notificationsCount?: number
             </span>
           </Link>
           <div className="flex items-center">
-            {mobileMode && (
-              <Sheet
-                open={isSidebarSheetOpen}
-                onOpenChange={setIsSidebarSheetOpen}
-              >
-                <SheetTrigger asChild>
-                  <Button variant="ghost" mode="icon">
-                    <Menu className="text-muted-foreground/70" />
-                  </Button>
-                </SheetTrigger>
-                <SheetContent
-                  className="p-0 gap-0 w-[275px]"
-                  side="left"
-                  close={false}
-                >
-                  <SheetHeader className="p-0 space-y-0">
-                    <SheetTitle className="sr-only">Menu principal</SheetTitle>
-                  </SheetHeader>
-                  <SheetBody className="p-0 overflow-y-auto">
-                    <SidebarMenu />
-                  </SheetBody>
-                </SheetContent>
-              </Sheet>
-            )}
+            {/* Hamburger menu removed in v2 for Bottom Tab Bar */}
           </div>
         </div>
 

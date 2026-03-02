@@ -1,5 +1,7 @@
-import { prisma } from '../src/lib/prisma'
+import { PrismaClient, Role } from '@prisma/client'
 import bcrypt from 'bcryptjs'
+
+const prisma = new PrismaClient()
 
 async function main() {
     const rhEmail = process.env.RH_ADMIN_EMAIL || 'admin@ambulance.com'
@@ -8,9 +10,9 @@ async function main() {
 
     // Define the list of users to be seeded
     const testUsers = [
-        { email: rhEmail, password: rhPassword, role: 'RH', firstName: 'Admin', lastName: 'VDF' }, // Use environment variables for RH admin
-        { email: 'salarie@vdf.fr', password: 'password123', role: 'USER', firstName: 'Utilisateur', lastName: 'Test' },
-        { email: 'hamid@vdf.fr', password: 'password123', role: 'USER', firstName: 'Hamid', lastName: 'Ambulancier' },
+        { email: rhEmail, password: rhPassword, role: 'RH' as Role, firstName: 'Admin', lastName: 'VDF' }, // Use environment variables for RH admin
+        { email: 'salarie@vdf.fr', password: 'password123', role: 'USER' as Role, firstName: 'Utilisateur', lastName: 'Test' },
+        { email: 'hamid@vdf.fr', password: 'password123', role: 'USER' as Role, firstName: 'Hamid', lastName: 'Ambulancier' },
     ];
 
     for (const userData of testUsers) {
@@ -23,7 +25,7 @@ async function main() {
             await prisma.user.create({
                 data: {
                     email: userData.email,
-                    name: `${userData.firstName} ${userData.lastName}`,
+                    name: `${userData.firstName} ${userData.lastName} `,
                     role: userData.role,
                     password: userHashedPassword,
                     firstName: userData.firstName,
