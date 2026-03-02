@@ -18,15 +18,20 @@ export function Breadcrumb() {
   }
 
   return (
-    <div className="flex items-center gap-1.25 text-xs lg:text-sm font-medium mb-2.5 lg:mb-0">
+    <div className="flex items-center gap-1.25 text-sm lg:text-base font-medium mb-2.5 lg:mb-0">
       {items.map((item, index) => {
         const last = index === items.length - 1;
         const active = item.path ? isActive(item.path) : false;
 
+        const isDashboardTitle = item.title === 'Dashboard VDF Ambulance';
+
         return (
           <Fragment key={`root-${index}`}>
             <span
-              className={cn(active ? 'text-mono' : 'text-secondary-foreground')}
+              className={cn(
+                active ? 'text-mono' : 'text-secondary-foreground',
+                isDashboardTitle && "text-xl sm:text-2xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-blue-600 tracking-tight leading-none px-1"
+              )}
               key={`item-${index}`}
             >
               {item.title}

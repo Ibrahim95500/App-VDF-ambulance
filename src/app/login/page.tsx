@@ -20,7 +20,7 @@ export default async function LoginPage({
         <div
             className="flex grow min-h-screen items-center justify-center bg-gray-50 p-4 w-full relative"
             style={{
-                backgroundImage: 'url("/media/app/login-bg.png")',
+                backgroundImage: 'url("/media/app/login-bg.jpg")',
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
             }}
