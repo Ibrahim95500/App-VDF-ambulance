@@ -166,16 +166,19 @@ export function AdvanceHistoryTable({ initialData }: { initialData: AdvanceReque
 
             {/* Detail dialog */}
             <Dialog open={!!selectedReq} onOpenChange={(open) => !open && setSelectedReq(null)}>
-                <DialogContent className="max-w-[90vw] sm:max-w-sm border-border bg-background">
-                    <DialogHeader>
-                        <DialogTitle className="text-secondary text-lg font-bold">
-                            {selectedReq?.amount} € — Acompte
+                <DialogContent className="max-w-[90vw] sm:max-w-sm border-border bg-background p-0 overflow-hidden">
+                    <DialogHeader className="p-5 bg-slate-900 text-white">
+                        <div className="text-slate-400 text-[10px] mb-1 uppercase tracking-widest font-bold">
+                            Acompte
+                        </div>
+                        <DialogTitle className="text-lg font-black italic text-white">
+                            {selectedReq?.amount} €
                         </DialogTitle>
-                        <DialogDescription className="text-xs text-muted-foreground">
+                        <DialogDescription className="text-slate-400 text-xs">
                             Soumis le {selectedReq ? new Date(selectedReq.createdAt).toLocaleDateString('fr-FR') : ''}
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="space-y-3 pt-1">
+                    <div className="p-5 space-y-4">
                         <div className="flex items-center justify-between">
                             <span className="text-sm text-muted-foreground">Statut</span>
                             {selectedReq && getStatusBadge(selectedReq.status)}

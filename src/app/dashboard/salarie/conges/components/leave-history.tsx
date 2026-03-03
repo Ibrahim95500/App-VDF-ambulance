@@ -183,16 +183,19 @@ export function LeaveHistory({ requests }: { requests: LeaveRequest[] }) {
 
             {/* Detail dialog */}
             <Dialog open={!!selectedItem} onOpenChange={(open) => !open && setSelectedItem(null)}>
-                <DialogContent className="max-w-[90vw] sm:max-w-sm border-border bg-background">
-                    <DialogHeader>
-                        <DialogTitle className="text-secondary text-lg font-bold">
+                <DialogContent className="max-w-[90vw] sm:max-w-sm border-border bg-background p-0 overflow-hidden">
+                    <DialogHeader className="p-5 bg-slate-900 text-white">
+                        <div className="text-slate-400 text-[10px] mb-1 uppercase tracking-widest font-bold">
+                            Demande d'absence
+                        </div>
+                        <DialogTitle className="text-lg font-black italic text-white">
                             {selectedItem ? formatType(selectedItem.type) : ''}
                         </DialogTitle>
-                        <DialogDescription className="text-xs text-muted-foreground">
+                        <DialogDescription className="text-slate-400 text-xs">
                             {selectedItem && <span>{formatDates(selectedItem)}</span>}
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="space-y-3 pt-1">
+                    <div className="p-5 space-y-4">
                         <div className="flex items-center justify-between">
                             <span className="text-sm text-muted-foreground">Statut</span>
                             {selectedItem && getStatusBadge(selectedItem.status)}
@@ -209,8 +212,8 @@ export function LeaveHistory({ requests }: { requests: LeaveRequest[] }) {
                             <div className="space-y-1">
                                 <span className="text-xs uppercase text-muted-foreground font-bold tracking-wider">Commentaire de la Direction</span>
                                 <p className={`text-sm p-3 rounded-lg border italic ${selectedItem.status === 'APPROVED' ? 'bg-green-50 text-green-900 border-green-200' :
-                                        selectedItem.status === 'REJECTED' ? 'bg-red-50 text-red-900 border-red-200' :
-                                            'bg-muted text-foreground border-border'
+                                    selectedItem.status === 'REJECTED' ? 'bg-red-50 text-red-900 border-red-200' :
+                                        'bg-muted text-foreground border-border'
                                     }`}>
                                     "{selectedItem.adminComment}"
                                 </p>

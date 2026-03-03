@@ -65,7 +65,7 @@ export function TableActions({
 
     return (
         <div className="flex flex-col md:flex-row gap-4 mb-6 items-center justify-between">
-            <div className="flex flex-1 flex-col md:flex-row gap-3 w-full">
+            <div className="flex flex-1 flex-wrap gap-3 w-full">
                 {/* Search */}
                 {onSearch && (
                     <div className="relative w-full md:max-w-xs">

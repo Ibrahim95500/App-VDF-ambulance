@@ -17,15 +17,17 @@ export default async function RHServicesPage() {
         <Fragment>
             <Container>
                 <Toolbar>
-                    <ToolbarHeading>
+                    <div className="flex flex-col gap-2">
                         <div className="flex items-center gap-3">
-                            <BriefcaseIcon className="size-6 text-secondary" />
-                            <h1 className="text-xl font-medium leading-none text-secondary">Gestion des Demandes de Service</h1>
+                            <BriefcaseIcon className="size-8 text-secondary" />
+                            <h1 className="text-3xl font-bold tracking-tight text-secondary">
+                                Gestion des Demandes de Service
+                            </h1>
                         </div>
-                        <ToolbarDescription>
+                        <p className="text-muted-foreground ml-[2.75rem]">
                             Consultez, approuvez ou refusez les demandes de service soumises par vos collaborateurs.
-                        </ToolbarDescription>
-                    </ToolbarHeading>
+                        </p>
+                    </div>
                 </Toolbar>
             </Container>
 

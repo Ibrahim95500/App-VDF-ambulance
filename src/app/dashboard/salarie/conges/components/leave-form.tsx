@@ -57,8 +57,8 @@ export function LeaveForm() {
     };
 
     return (
-        <div className="flex flex-col rounded-xl border border-border h-full">
-            <div className="px-5 py-4 border-b border-border bg-muted/5 rounded-t-xl">
+        <div className="flex flex-col rounded-xl border border-secondary/50 border-t-4 border-t-secondary h-full">
+            <div className="px-5 py-4 border-b border-border flex justify-between items-center bg-muted/5 rounded-t-xl">
                 <h2 className="text-base font-semibold text-foreground uppercase tracking-wide">
                     Nouvelle Absence <span className="text-primary font-normal normal-case text-sm">- Création en cours</span>
                 </h2>
