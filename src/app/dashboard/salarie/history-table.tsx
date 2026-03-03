@@ -7,7 +7,7 @@ import { TableActions } from "@/components/common/table-actions"
 import { TablePagination } from "@/components/common/table-pagination"
 import { isWithinInterval, startOfDay, endOfDay } from "date-fns"
 import { DateRange } from "react-day-picker"
-import { Eye } from "lucide-react"
+import { Eye, MessageSquareQuote } from "lucide-react"
 import {
     Dialog,
     DialogContent,
@@ -22,6 +22,7 @@ interface AdvanceRequest {
     reason: string | null
     status: string
     createdAt: Date
+    adminComment?: string | null
 }
 
 export function AdvanceHistoryTable({ initialData }: { initialData: AdvanceRequest[] }) {
@@ -140,7 +141,14 @@ export function AdvanceHistoryTable({ initialData }: { initialData: AdvanceReque
                                         {req.reason || "-"}
                                     </td>
                                     <td className="px-5 py-4 text-right">
-                                        {getStatusBadge(req.status)}
+                                        <div className="flex items-center justify-end gap-2">
+                                            {req.adminComment && (
+                                                <span title="Un commentaire a été laissé">
+                                                    <MessageSquareQuote className="size-4 text-muted-foreground opacity-70" />
+                                                </span>
+                                            )}
+                                            {getStatusBadge(req.status)}
+                                        </div>
                                     </td>
                                 </tr>
                             ))
@@ -177,6 +185,17 @@ export function AdvanceHistoryTable({ initialData }: { initialData: AdvanceReque
                                 <span className="text-xs uppercase text-muted-foreground font-bold tracking-wider">Motif</span>
                                 <p className="text-sm text-foreground p-3 bg-muted/30 rounded-lg border border-border italic">
                                     {selectedReq.reason}
+                                </p>
+                            </div>
+                        )}
+                        {selectedReq?.adminComment && (
+                            <div className="space-y-1">
+                                <span className="text-xs uppercase text-muted-foreground font-bold tracking-wider">Commentaire de la Direction</span>
+                                <p className={`text-sm p-3 rounded-lg border italic ${selectedReq.status === 'APPROVED' ? 'bg-green-50 text-green-900 border-green-200' :
+                                    selectedReq.status === 'REJECTED' ? 'bg-red-50 text-red-900 border-red-200' :
+                                        'bg-muted text-foreground border-border'
+                                    }`}>
+                                    "{selectedReq.adminComment}"
                                 </p>
                             </div>
                         )}

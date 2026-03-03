@@ -5,14 +5,16 @@ import { updateLeaveRequestStatus } from '@/actions/leave-request.actions';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, CheckCircle2, XCircle, Eye } from 'lucide-react';
+import { Loader2, CheckCircle2, XCircle, Eye, MessageSquareQuote } from 'lucide-react';
 import {
     Dialog,
     DialogContent,
     DialogHeader,
     DialogTitle,
     DialogDescription,
+    DialogFooter
 } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import { useRouter } from 'next/navigation';
 import { TableActions } from "@/components/common/table-actions";
 import { TablePagination } from "@/components/common/table-pagination";
@@ -40,6 +42,8 @@ export function LeaveManagementTable({ initialLeaves }: { initialLeaves: LeaveRe
     const router = useRouter();
     const [loadingMap, setLoadingMap] = useState<Record<string, boolean>>({});
     const [selectedLeave, setSelectedLeave] = useState<LeaveRequestFull | null>(null);
+    const [processingAction, setProcessingAction] = useState<{ id: string, status: "APPROVED" | "REJECTED", request: LeaveRequestFull } | null>(null);
+    const [adminComment, setAdminComment] = useState("");
     const [searchTerm, setSearchTerm] = useState("");
     const [statusFilter, setStatusFilter] = useState("ALL");
     const [dateRange, setDateRange] = useState<DateRange | undefined>();
@@ -48,11 +52,21 @@ export function LeaveManagementTable({ initialLeaves }: { initialLeaves: LeaveRe
 
     useEffect(() => { setCurrentPage(1); }, [searchTerm, statusFilter, dateRange]);
 
-    const handleAction = async (id: string, newStatus: 'APPROVED' | 'REJECTED') => {
+    const initiateAction = (req: LeaveRequestFull, status: "APPROVED" | "REJECTED") => {
+        setProcessingAction({ id: req.id, status, request: req });
+        setAdminComment("");
+        setSelectedLeave(null); // Close details dialog if open
+    };
+
+    const confirmAction = async () => {
+        if (!processingAction) return;
+        const id = processingAction.id;
+        const newStatus = processingAction.status;
         setLoadingMap(prev => ({ ...prev, [id]: true }));
         try {
-            await updateLeaveRequestStatus(id, newStatus);
+            await updateLeaveRequestStatus(id, newStatus, adminComment.trim() || undefined);
             toast.success(newStatus === 'APPROVED' ? "Demande validée" : "Demande refusée");
+            setProcessingAction(null);
             router.refresh();
         } catch (error: any) {
             toast.error(error.message || "Une erreur est survenue");
@@ -190,8 +204,8 @@ export function LeaveManagementTable({ initialLeaves }: { initialLeaves: LeaveRe
                             {req.reason && <p className="text-xs italic text-muted-foreground truncate">{req.reason}</p>}
                             {req.status === 'PENDING' && (
                                 <div className="flex gap-2 mt-1">
-                                    <Button size="sm" variant="outline" className="h-7 text-xs text-green-600 border-green-200 hover:bg-green-50" onClick={() => handleAction(req.id, 'APPROVED')} disabled={loadingMap[req.id]}>Accepter</Button>
-                                    <Button size="sm" variant="destructive" className="h-7 text-xs" onClick={() => handleAction(req.id, 'REJECTED')} disabled={loadingMap[req.id]}>Refuser</Button>
+                                    <Button size="sm" variant="outline" className="h-7 text-xs text-green-600 border-green-200 hover:bg-green-50" onClick={() => initiateAction(req, 'APPROVED')} disabled={loadingMap[req.id]}>Accepter</Button>
+                                    <Button size="sm" variant="destructive" className="h-7 text-xs" onClick={() => initiateAction(req, 'REJECTED')} disabled={loadingMap[req.id]}>Refuser</Button>
                                 </div>
                             )}
                         </div>
@@ -271,7 +285,7 @@ export function LeaveManagementTable({ initialLeaves }: { initialLeaves: LeaveRe
                                                             <Button
                                                                 size="icon"
                                                                 variant="outline"
-                                                                onClick={() => handleAction(req.id, 'APPROVED')}
+                                                                onClick={() => initiateAction(req, 'APPROVED')}
                                                                 className="h-8 w-8 text-green-600 border-green-200 hover:bg-green-50 hover:text-green-700"
                                                                 title="Accepter"
                                                             >
@@ -280,7 +294,7 @@ export function LeaveManagementTable({ initialLeaves }: { initialLeaves: LeaveRe
                                                             <Button
                                                                 size="icon"
                                                                 variant="outline"
-                                                                onClick={() => handleAction(req.id, 'REJECTED')}
+                                                                onClick={() => initiateAction(req, 'REJECTED')}
                                                                 className="h-8 w-8 text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700"
                                                                 title="Refuser"
                                                             >
@@ -336,15 +350,63 @@ export function LeaveManagementTable({ initialLeaves }: { initialLeaves: LeaveRe
                         )}
                         {selectedLeave?.status === 'PENDING' && (
                             <div className="flex gap-2 pt-2">
-                                <Button size="sm" variant="outline" className="flex-1 text-green-600 border-green-200 hover:bg-green-50" onClick={() => { handleAction(selectedLeave.id, 'APPROVED'); setSelectedLeave(null); }} disabled={loadingMap[selectedLeave.id]}>
+                                <Button size="sm" variant="outline" className="flex-1 text-green-600 border-green-200 hover:bg-green-50" onClick={() => initiateAction(selectedLeave, 'APPROVED')} disabled={loadingMap[selectedLeave.id]}>
                                     <CheckCircle2 className="w-4 h-4 mr-1.5" /> Accepter
                                 </Button>
-                                <Button size="sm" variant="destructive" className="flex-1" onClick={() => { handleAction(selectedLeave.id, 'REJECTED'); setSelectedLeave(null); }} disabled={loadingMap[selectedLeave.id]}>
+                                <Button size="sm" variant="destructive" className="flex-1" onClick={() => initiateAction(selectedLeave, 'REJECTED')} disabled={loadingMap[selectedLeave.id]}>
                                     <XCircle className="w-4 h-4 mr-1.5" /> Refuser
                                 </Button>
                             </div>
                         )}
                     </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* Validation/Rejection Comment Dialog */}
+            <Dialog open={!!processingAction} onOpenChange={(open) => !open && setProcessingAction(null)}>
+                <DialogContent className="max-w-[90vw] sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            {processingAction?.status === 'APPROVED' ? (
+                                <><CheckCircle2 className="w-5 h-5 text-green-600" /> Confirmer l'approbation</>
+                            ) : (
+                                <><XCircle className="w-5 h-5 text-red-600" /> Confirmer le refus</>
+                            )}
+                        </DialogTitle>
+                        <DialogDescription>
+                            Demande de congé pour {processingAction?.request.user.name || processingAction?.request.user.email}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4 space-y-4">
+                        <div className="space-y-2">
+                            <label htmlFor="adminComment" className="text-sm font-medium flex items-center gap-2">
+                                <MessageSquareQuote className="w-4 h-4 text-muted-foreground" />
+                                Commentaire pour le collaborateur (optionnel)
+                            </label>
+                            <Textarea
+                                id="adminComment"
+                                placeholder={`Ex: ${processingAction?.status === 'APPROVED' ? 'Bonnes vacances !' : 'Effectif trop réduit sur cette période.'}`}
+                                value={adminComment}
+                                onChange={(e) => setAdminComment(e.target.value)}
+                                className="resize-none"
+                                rows={3}
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter className="gap-2 sm:gap-0">
+                        <Button variant="ghost" onClick={() => setProcessingAction(null)}>
+                            Annuler
+                        </Button>
+                        <Button
+                            variant={processingAction?.status === 'APPROVED' ? "default" : "destructive"}
+                            className={processingAction?.status === 'APPROVED' ? "bg-green-600 hover:bg-green-700 text-white" : ""}
+                            disabled={loadingMap[processingAction?.id || '']}
+                            onClick={confirmAction}
+                        >
+                            {loadingMap[processingAction?.id || ''] && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+                            {processingAction?.status === 'APPROVED' ? "Confirmer l'approbation" : "Confirmer le refus"}
+                        </Button>
+                    </DialogFooter>
                 </DialogContent>
             </Dialog>
         </div>

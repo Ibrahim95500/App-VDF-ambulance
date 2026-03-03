@@ -8,7 +8,7 @@ import { TableActions } from "@/components/common/table-actions";
 import { TablePagination } from "@/components/common/table-pagination";
 import { isWithinInterval, startOfDay, endOfDay } from "date-fns";
 import { DateRange } from "react-day-picker";
-import { Eye } from 'lucide-react';
+import { Eye, MessageSquareQuote } from 'lucide-react';
 import {
     Dialog,
     DialogContent,
@@ -156,8 +156,16 @@ export function LeaveHistory({ requests }: { requests: LeaveRequest[] }) {
                                     <tr key={item.id} className="hover:bg-muted/10 transition-colors">
                                         <td className="px-4 py-4 font-bold text-foreground">{formatType(item.type)}</td>
                                         <td className="px-4 py-4">{formatDates(item)}</td>
-                                        <td className="px-4 py-4 max-w-[150px] truncate" title={item.reason || ""}>{item.reason || "-"}</td>
-                                        <td className="px-4 py-4 text-right">{getStatusBadge(item.status)}</td>
+                                        <td className="px-4 py-4 text-right">
+                                            <div className="flex items-center justify-end gap-2">
+                                                {item.adminComment && (
+                                                    <span title="Un commentaire a été laissé">
+                                                        <MessageSquareQuote className="size-4 text-muted-foreground opacity-70" />
+                                                    </span>
+                                                )}
+                                                {getStatusBadge(item.status)}
+                                            </div>
+                                        </td>
                                     </tr>
                                 ))
                             )}
@@ -194,6 +202,17 @@ export function LeaveHistory({ requests }: { requests: LeaveRequest[] }) {
                                 <span className="text-xs uppercase text-muted-foreground font-bold tracking-wider">Motif</span>
                                 <p className="text-sm text-foreground p-3 bg-muted/30 rounded-lg border border-border italic">
                                     {selectedItem.reason}
+                                </p>
+                            </div>
+                        )}
+                        {selectedItem?.adminComment && (
+                            <div className="space-y-1">
+                                <span className="text-xs uppercase text-muted-foreground font-bold tracking-wider">Commentaire de la Direction</span>
+                                <p className={`text-sm p-3 rounded-lg border italic ${selectedItem.status === 'APPROVED' ? 'bg-green-50 text-green-900 border-green-200' :
+                                        selectedItem.status === 'REJECTED' ? 'bg-red-50 text-red-900 border-red-200' :
+                                            'bg-muted text-foreground border-border'
+                                    }`}>
+                                    "{selectedItem.adminComment}"
                                 </p>
                             </div>
                         )}

@@ -10,8 +10,9 @@ import { TableActions } from "@/components/common/table-actions"
 import { TablePagination } from "@/components/common/table-pagination"
 import { isWithinInterval, startOfDay, endOfDay } from "date-fns"
 import { DateRange } from "react-day-picker"
-import { Loader2, CheckCircle2, XCircle, Eye } from "lucide-react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
+import { Loader2, CheckCircle2, XCircle, Eye, MessageSquareQuote } from "lucide-react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
+import { Textarea } from "@/components/ui/textarea"
 
 export function AcomptesTable({ initialData }: { initialData: AdvanceRequestWithUser[] }) {
     const [loadingId, setLoadingId] = useState<string | null>(null)
@@ -20,15 +21,26 @@ export function AcomptesTable({ initialData }: { initialData: AdvanceRequestWith
     const [dateRange, setDateRange] = useState<DateRange | undefined>()
     const [currentPage, setCurrentPage] = useState(1)
     const [selectedRequest, setSelectedRequest] = useState<AdvanceRequestWithUser | null>(null)
+    const [processingAction, setProcessingAction] = useState<{ id: string, status: "APPROVED" | "REJECTED", request: AdvanceRequestWithUser } | null>(null)
+    const [adminComment, setAdminComment] = useState("")
+
     const PAGE_SIZE = 10
 
     useEffect(() => { setCurrentPage(1) }, [searchTerm, statusFilter, dateRange])
 
-    const handleAction = async (id: string, status: "APPROVED" | "REJECTED") => {
+    const initiateAction = (req: AdvanceRequestWithUser, status: "APPROVED" | "REJECTED") => {
+        setProcessingAction({ id: req.id, status, request: req })
+        setAdminComment("")
+        setSelectedRequest(null) // Close details dialog if open
+    }
+
+    const confirmAction = async () => {
+        if (!processingAction) return;
         try {
-            setLoadingId(id)
-            await updateRequestStatus(id, status)
-            toast.success(`Demande ${status === 'APPROVED' ? 'Approuvée' : 'Refusée'}`)
+            setLoadingId(processingAction.id)
+            await updateRequestStatus(processingAction.id, processingAction.status, adminComment.trim() || undefined)
+            toast.success(`Demande ${processingAction.status === 'APPROVED' ? 'Approuvée' : 'Refusée'}`)
+            setProcessingAction(null)
         } catch (error: any) {
             toast.error(error.message || "Une erreur est survenue")
         } finally {
@@ -127,8 +139,8 @@ export function AcomptesTable({ initialData }: { initialData: AdvanceRequestWith
                                     </Button>
                                     {req.status === 'PENDING' && (
                                         <>
-                                            <Button size="sm" variant="secondary" className="h-7 text-[11px] px-2.5" disabled={loadingId === req.id} onClick={() => handleAction(req.id, "APPROVED")}>Accepter</Button>
-                                            <Button size="sm" variant="destructive" className="h-7 text-[11px] px-2.5" disabled={loadingId === req.id} onClick={() => handleAction(req.id, "REJECTED")}>Refuser</Button>
+                                            <Button size="sm" variant="secondary" className="h-7 text-[11px] px-2.5" disabled={loadingId === req.id} onClick={() => initiateAction(req, "APPROVED")}>Accepter</Button>
+                                            <Button size="sm" variant="destructive" className="h-7 text-[11px] px-2.5" disabled={loadingId === req.id} onClick={() => initiateAction(req, "REJECTED")}>Refuser</Button>
                                         </>
                                     )}
                                 </div>
@@ -208,7 +220,7 @@ export function AcomptesTable({ initialData }: { initialData: AdvanceRequestWith
                                                         variant="outline"
                                                         className="h-8 w-8 text-green-600 border-green-200 hover:bg-green-50"
                                                         disabled={loadingId === req.id}
-                                                        onClick={() => handleAction(req.id, "APPROVED")}
+                                                        onClick={() => initiateAction(req, "APPROVED")}
                                                     >
                                                         {loadingId === req.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
                                                     </Button>
@@ -217,7 +229,7 @@ export function AcomptesTable({ initialData }: { initialData: AdvanceRequestWith
                                                         variant="outline"
                                                         className="h-8 w-8 text-red-600 border-red-200 hover:bg-red-50"
                                                         disabled={loadingId === req.id}
-                                                        onClick={() => handleAction(req.id, "REJECTED")}
+                                                        onClick={() => initiateAction(req, "REJECTED")}
                                                     >
                                                         {loadingId === req.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4" />}
                                                     </Button>
@@ -275,15 +287,63 @@ export function AcomptesTable({ initialData }: { initialData: AdvanceRequestWith
                         )}
                         {selectedRequest?.status === 'PENDING' && (
                             <div className="flex gap-2 pt-2">
-                                <Button size="sm" variant="outline" className="flex-1 text-green-600 border-green-200 hover:bg-green-50" onClick={() => { handleAction(selectedRequest.id, 'APPROVED'); setSelectedRequest(null); }} disabled={loadingId === selectedRequest.id}>
+                                <Button size="sm" variant="outline" className="flex-1 text-green-600 border-green-200 hover:bg-green-50" onClick={() => initiateAction(selectedRequest, 'APPROVED')} disabled={loadingId === selectedRequest.id}>
                                     <CheckCircle2 className="w-4 h-4 mr-1.5" /> Accepter
                                 </Button>
-                                <Button size="sm" variant="destructive" className="flex-1" onClick={() => { handleAction(selectedRequest.id, 'REJECTED'); setSelectedRequest(null); }} disabled={loadingId === selectedRequest.id}>
+                                <Button size="sm" variant="destructive" className="flex-1" onClick={() => initiateAction(selectedRequest, 'REJECTED')} disabled={loadingId === selectedRequest.id}>
                                     <XCircle className="w-4 h-4 mr-1.5" /> Refuser
                                 </Button>
                             </div>
                         )}
                     </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* Validation/Rejection Comment Dialog */}
+            <Dialog open={!!processingAction} onOpenChange={(open) => !open && setProcessingAction(null)}>
+                <DialogContent className="max-w-[90vw] sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            {processingAction?.status === 'APPROVED' ? (
+                                <><CheckCircle2 className="w-5 h-5 text-green-600" /> Confirmer l'approbation</>
+                            ) : (
+                                <><XCircle className="w-5 h-5 text-red-600" /> Confirmer le refus</>
+                            )}
+                        </DialogTitle>
+                        <DialogDescription>
+                            Demande de {processingAction?.request.amount}€ par {processingAction?.request.user.name || processingAction?.request.user.email}
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4 space-y-4">
+                        <div className="space-y-2">
+                            <label htmlFor="adminComment" className="text-sm font-medium flex items-center gap-2">
+                                <MessageSquareQuote className="w-4 h-4 text-muted-foreground" />
+                                Commentaire pour le collaborateur (optionnel)
+                            </label>
+                            <Textarea
+                                id="adminComment"
+                                placeholder={`Ex: ${processingAction?.status === 'APPROVED' ? 'Validé exceptionnellement ce mois-ci.' : 'Plafond mensuel atteint ou période incorrecte.'}`}
+                                value={adminComment}
+                                onChange={(e) => setAdminComment(e.target.value)}
+                                className="resize-none"
+                                rows={3}
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter className="gap-2 sm:gap-0">
+                        <Button variant="ghost" onClick={() => setProcessingAction(null)}>
+                            Annuler
+                        </Button>
+                        <Button
+                            variant={processingAction?.status === 'APPROVED' ? "default" : "destructive"}
+                            className={processingAction?.status === 'APPROVED' ? "bg-green-600 hover:bg-green-700 text-white" : ""}
+                            disabled={loadingId === processingAction?.id}
+                            onClick={confirmAction}
+                        >
+                            {loadingId === processingAction?.id && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+                            {processingAction?.status === 'APPROVED' ? "Confirmer l'approbation" : "Confirmer le refus"}
+                        </Button>
+                    </DialogFooter>
                 </DialogContent>
             </Dialog>
         </div>

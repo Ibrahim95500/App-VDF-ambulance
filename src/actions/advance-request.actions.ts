@@ -13,7 +13,7 @@ const AdvanceRequestSchema = z.object({
     reason: z.string().max(500, "Le motif ne doit pas dépasser 500 caractères").optional(),
 });
 
-export async function updateRequestStatus(requestId: string, status: "APPROVED" | "REJECTED") {
+export async function updateRequestStatus(requestId: string, status: "APPROVED" | "REJECTED", comment?: string) {
     const session = await auth()
 
     // Security check: Only RH can approve/reject
@@ -23,7 +23,7 @@ export async function updateRequestStatus(requestId: string, status: "APPROVED" 
 
     const request = await prisma.advanceRequest.update({
         where: { id: requestId },
-        data: { status },
+        data: { status, adminComment: comment },
         include: { user: true }
     })
 

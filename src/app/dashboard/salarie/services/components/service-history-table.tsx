@@ -4,7 +4,7 @@ import { useState, useMemo } from "react"
 import { MyServiceRequest } from "@/services/my-requests"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Calendar, MessageSquare, Eye } from "lucide-react"
+import { Calendar, MessageSquare, Eye, MessageSquareQuote } from "lucide-react"
 import { TablePagination } from "@/components/common/table-pagination"
 import {
     Dialog,
@@ -92,7 +92,16 @@ export function ServiceHistoryTable({ initialData }: { initialData: MyServiceReq
                                         {new Date(req.createdAt).toLocaleDateString('fr-FR')}
                                     </div>
                                 </td>
-                                <td className="px-5 py-4 text-right">{getStatusBadge(req.status)}</td>
+                                <td className="px-5 py-4 text-right">
+                                    <div className="flex items-center justify-end gap-2">
+                                        {req.adminComment && (
+                                            <span title="Un commentaire a été laissé">
+                                                <MessageSquareQuote className="size-4 text-muted-foreground opacity-70" />
+                                            </span>
+                                        )}
+                                        {getStatusBadge(req.status)}
+                                    </div>
+                                </td>
                             </tr>
                         ))}
                     </tbody>
@@ -128,6 +137,17 @@ export function ServiceHistoryTable({ initialData }: { initialData: MyServiceReq
                                 <span className="text-xs uppercase text-muted-foreground font-bold tracking-wider">Description</span>
                                 <p className="text-sm text-foreground p-3 bg-muted/30 rounded-lg border border-border italic">
                                     {selectedReq.description}
+                                </p>
+                            </div>
+                        )}
+                        {selectedReq?.adminComment && (
+                            <div className="space-y-1">
+                                <span className="text-xs uppercase text-muted-foreground font-bold tracking-wider">Commentaire de la Direction</span>
+                                <p className={`text-sm p-3 rounded-lg border italic ${selectedReq.status === 'APPROVED' ? 'bg-green-50 text-green-900 border-green-200' :
+                                        selectedReq.status === 'REJECTED' ? 'bg-red-50 text-red-900 border-red-200' :
+                                            'bg-muted text-foreground border-border'
+                                    }`}>
+                                    "{selectedReq.adminComment}"
                                 </p>
                             </div>
                         )}

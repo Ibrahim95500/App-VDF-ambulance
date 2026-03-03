@@ -132,7 +132,7 @@ export async function createLeaveRequest(
     return { success: true, data: request }
 }
 
-export async function updateLeaveRequestStatus(requestId: string, status: 'APPROVED' | 'REJECTED') {
+export async function updateLeaveRequestStatus(requestId: string, status: 'APPROVED' | 'REJECTED', comment?: string) {
     const session = await auth()
 
     if (!session?.user || (session.user as any).role !== "RH") {
@@ -141,7 +141,7 @@ export async function updateLeaveRequestStatus(requestId: string, status: 'APPRO
 
     const updatedRequest = await prisma.leaveRequest.update({
         where: { id: requestId },
-        data: { status: status as RequestStatus },
+        data: { status: status as RequestStatus, adminComment: comment },
         include: { user: true }
     })
 

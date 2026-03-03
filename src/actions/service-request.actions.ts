@@ -112,13 +112,13 @@ export async function createServiceRequest(category: string, subject: string, de
 /**
  * Update service request status (Approve/Reject)
  */
-export async function updateServiceRequestStatus(requestId: string, status: "APPROVED" | "REJECTED") {
+export async function updateServiceRequestStatus(requestId: string, status: "APPROVED" | "REJECTED", comment?: string) {
     const session = await auth()
     if ((session?.user as any)?.role !== "RH") throw new Error("Unauthorized")
 
     const request = await prisma.serviceRequest.update({
         where: { id: requestId },
-        data: { status },
+        data: { status, adminComment: comment },
         include: { user: true }
     })
 

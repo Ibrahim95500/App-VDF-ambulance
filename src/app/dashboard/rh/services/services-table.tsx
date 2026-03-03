@@ -12,7 +12,8 @@ import {
     Smartphone,
     Layout,
     Clock,
-    AlertCircle
+    AlertCircle,
+    MessageSquareQuote
 } from "lucide-react"
 import { updateServiceRequestStatus } from "@/actions/service-request.actions"
 import { toast } from "sonner"
@@ -23,7 +24,9 @@ import {
     DialogHeader,
     DialogTitle,
     DialogTrigger,
+    DialogFooter
 } from "@/components/ui/dialog"
+import { Textarea } from "@/components/ui/textarea"
 import { TableActions } from "@/components/common/table-actions"
 import { TablePagination } from "@/components/common/table-pagination"
 import { isWithinInterval, startOfDay, endOfDay } from "date-fns"
@@ -32,6 +35,9 @@ import { DateRange } from "react-day-picker"
 export function RHServiceRequestsTable({ initialData }: { initialData: GlobalServiceRequest[] }) {
     const [loadingId, setLoadingId] = useState<string | null>(null)
     const [selectedRequest, setSelectedRequest] = useState<GlobalServiceRequest | null>(null)
+    const [processingAction, setProcessingAction] = useState<{ id: string, status: "APPROVED" | "REJECTED", request: GlobalServiceRequest } | null>(null)
+    const [adminComment, setAdminComment] = useState("")
+
     const [searchTerm, setSearchTerm] = useState("")
     const [statusFilter, setStatusFilter] = useState("ALL")
     const [dateRange, setDateRange] = useState<DateRange | undefined>()
@@ -40,11 +46,21 @@ export function RHServiceRequestsTable({ initialData }: { initialData: GlobalSer
 
     useEffect(() => { setCurrentPage(1) }, [searchTerm, statusFilter, dateRange])
 
-    const handleUpdateStatus = async (id: string, status: "APPROVED" | "REJECTED") => {
+    const initiateUpdateStatus = (req: GlobalServiceRequest, status: "APPROVED" | "REJECTED") => {
+        setProcessingAction({ id: req.id, status, request: req })
+        setAdminComment("")
+        // If the details dialog is open (via Trigger), we might close it by forcing a state, but Trigger handles its own open state unless controlled.
+        // For now, this just opens the confirmation dialog over it.
+    }
+
+    const confirmUpdateStatus = async () => {
+        if (!processingAction) return;
         try {
-            setLoadingId(id)
-            await updateServiceRequestStatus(id, status)
-            toast.success(`Demande ${status === 'APPROVED' ? 'approuvée' : 'refusée'} avec succès`)
+            setLoadingId(processingAction.id)
+            await updateServiceRequestStatus(processingAction.id, processingAction.status, adminComment.trim() || undefined)
+            toast.success(`Demande ${processingAction.status === 'APPROVED' ? 'approuvée' : 'refusée'} avec succès`)
+            setProcessingAction(null)
+            // also close details dialog by simulating a click or relying on user context since it will rerender with new status.
         } catch (error: any) {
             toast.error(error.message || "Une erreur est survenue")
         } finally {
@@ -171,10 +187,10 @@ export function RHServiceRequestsTable({ initialData }: { initialData: GlobalSer
                                                 </div>
                                                 {req.status === 'PENDING' && (
                                                     <div className="flex gap-3 pt-3 border-t border-border">
-                                                        <Button variant="outline" className="flex-1 h-10 border-red-200 text-red-600 hover:bg-red-50 font-bold text-xs" disabled={loadingId === req.id} onClick={() => handleUpdateStatus(req.id, "REJECTED")}>
+                                                        <Button variant="outline" className="flex-1 h-10 border-red-200 text-red-600 hover:bg-red-50 font-bold text-xs" disabled={loadingId === req.id} onClick={() => initiateUpdateStatus(req, "REJECTED")}>
                                                             <XCircle className="mr-2 size-4" /> Refuser
                                                         </Button>
-                                                        <Button className="flex-1 h-10 bg-green-600 hover:bg-green-700 text-white font-bold text-xs" disabled={loadingId === req.id} onClick={() => handleUpdateStatus(req.id, "APPROVED")}>
+                                                        <Button className="flex-1 h-10 bg-green-600 hover:bg-green-700 text-white font-bold text-xs" disabled={loadingId === req.id} onClick={() => initiateUpdateStatus(req, "APPROVED")}>
                                                             <CheckCircle2 className="mr-2 size-4" /> Approuver
                                                         </Button>
                                                     </div>
@@ -184,8 +200,8 @@ export function RHServiceRequestsTable({ initialData }: { initialData: GlobalSer
                                     </Dialog>
                                     {req.status === 'PENDING' && (
                                         <div className="flex gap-1.5">
-                                            <Button size="sm" variant="outline" className="h-7 text-[11px] px-2 text-green-600 border-green-200" disabled={loadingId === req.id} onClick={() => handleUpdateStatus(req.id, "APPROVED")}>Accepter</Button>
-                                            <Button size="sm" variant="outline" className="h-7 text-[11px] px-2 text-red-600 border-red-200" disabled={loadingId === req.id} onClick={() => handleUpdateStatus(req.id, "REJECTED")}>Refuser</Button>
+                                            <Button size="sm" variant="outline" className="h-7 text-[11px] px-2 text-green-600 border-green-200" disabled={loadingId === req.id} onClick={() => initiateUpdateStatus(req, "APPROVED")}>Accepter</Button>
+                                            <Button size="sm" variant="outline" className="h-7 text-[11px] px-2 text-red-600 border-red-200" disabled={loadingId === req.id} onClick={() => initiateUpdateStatus(req, "REJECTED")}>Refuser</Button>
                                         </div>
                                     )}
                                 </div>
@@ -284,14 +300,14 @@ export function RHServiceRequestsTable({ initialData }: { initialData: GlobalSer
                                                                 variant="outline"
                                                                 className="flex-1 h-10 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 font-bold text-xs"
                                                                 disabled={loadingId === req.id}
-                                                                onClick={() => handleUpdateStatus(req.id, "REJECTED")}
+                                                                onClick={() => initiateUpdateStatus(req, "REJECTED")}
                                                             >
                                                                 <XCircle className="mr-2 size-4" /> Refuser
                                                             </Button>
                                                             <Button
                                                                 className="flex-1 h-10 bg-green-600 hover:bg-green-700 text-white font-bold text-xs shadow-lg shadow-green-200"
                                                                 disabled={loadingId === req.id}
-                                                                onClick={() => handleUpdateStatus(req.id, "APPROVED")}
+                                                                onClick={() => initiateUpdateStatus(req, "APPROVED")}
                                                             >
                                                                 <CheckCircle2 className="mr-2 size-4" /> Approuver
                                                             </Button>
@@ -307,7 +323,7 @@ export function RHServiceRequestsTable({ initialData }: { initialData: GlobalSer
                                                         size="icon"
                                                         className="size-8 text-green-600 border-green-200 bg-green-50 hover:bg-green-100 hover:text-green-700 shadow-sm"
                                                         disabled={loadingId === req.id}
-                                                        onClick={() => handleUpdateStatus(req.id, "APPROVED")}
+                                                        onClick={() => initiateUpdateStatus(req, "APPROVED")}
                                                     >
                                                         <CheckCircle2 className="size-4" />
                                                     </Button>
@@ -316,7 +332,7 @@ export function RHServiceRequestsTable({ initialData }: { initialData: GlobalSer
                                                         size="icon"
                                                         className="size-8 text-red-600 border-red-200 bg-red-50 hover:bg-red-100 hover:text-red-700 shadow-sm"
                                                         disabled={loadingId === req.id}
-                                                        onClick={() => handleUpdateStatus(req.id, "REJECTED")}
+                                                        onClick={() => initiateUpdateStatus(req, "REJECTED")}
                                                     >
                                                         <XCircle className="size-4" />
                                                     </Button>
@@ -343,6 +359,54 @@ export function RHServiceRequestsTable({ initialData }: { initialData: GlobalSer
                 pageSize={PAGE_SIZE}
                 onPageChange={setCurrentPage}
             />
+
+            {/* Validation/Rejection Comment Dialog */}
+            <Dialog open={!!processingAction} onOpenChange={(open) => !open && setProcessingAction(null)}>
+                <DialogContent className="max-w-[90vw] sm:max-w-md" style={{ zIndex: 100 }}>
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            {processingAction?.status === 'APPROVED' ? (
+                                <><CheckCircle2 className="w-5 h-5 text-green-600" /> Confirmer l'approbation</>
+                            ) : (
+                                <><XCircle className="w-5 h-5 text-red-600" /> Confirmer le refus</>
+                            )}
+                        </DialogTitle>
+                        <DialogDescription>
+                            Demande de service pour {processingAction?.request.user.firstName} {processingAction?.request.user.lastName} ({processingAction?.request.category})
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4 space-y-4">
+                        <div className="space-y-2">
+                            <label htmlFor="adminComment" className="text-sm font-medium flex items-center gap-2">
+                                <MessageSquareQuote className="w-4 h-4 text-muted-foreground" />
+                                Commentaire pour le collaborateur (optionnel)
+                            </label>
+                            <Textarea
+                                id="adminComment"
+                                placeholder={`Ex: ${processingAction?.status === 'APPROVED' ? 'Demande prise en compte avec succès.' : 'Nous ne pouvons pas accéder à cette requête actuellement.'}`}
+                                value={adminComment}
+                                onChange={(e) => setAdminComment(e.target.value)}
+                                className="resize-none"
+                                rows={3}
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter className="gap-2 sm:gap-0">
+                        <Button variant="ghost" onClick={() => setProcessingAction(null)}>
+                            Annuler
+                        </Button>
+                        <Button
+                            variant={processingAction?.status === 'APPROVED' ? "default" : "destructive"}
+                            className={processingAction?.status === 'APPROVED' ? "bg-green-600 hover:bg-green-700 text-white" : ""}
+                            disabled={loadingId === processingAction?.id}
+                            onClick={confirmUpdateStatus}
+                        >
+                            {loadingId === processingAction?.id && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+                            {processingAction?.status === 'APPROVED' ? "Confirmer l'approbation" : "Confirmer le refus"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     )
 }
