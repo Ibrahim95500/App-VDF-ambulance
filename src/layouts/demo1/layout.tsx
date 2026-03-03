@@ -54,7 +54,7 @@ export function Demo1Layout({ children, notificationsCount = 0 }: { children: Re
     <>
       {!isMobile && <Sidebar />}
 
-      <div className="wrapper flex grow flex-col pb-20 lg:pb-0">
+      <div className="wrapper flex grow flex-col pb-[calc(6rem+env(safe-area-inset-bottom))] lg:pb-0">
         <Header notificationsCount={notificationsCount} />
 
         <main className="grow pt-5" role="content">
