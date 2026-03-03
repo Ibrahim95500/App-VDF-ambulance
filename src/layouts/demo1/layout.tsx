@@ -54,13 +54,14 @@ export function Demo1Layout({ children, notificationsCount = 0 }: { children: Re
     <>
       {!isMobile && <Sidebar />}
 
-      <div
-        className="wrapper flex grow flex-col lg:pb-0"
-        style={{ paddingBottom: isMobile ? 'calc(6rem + env(safe-area-inset-bottom))' : undefined }}
-      >
+      <div className="wrapper flex grow flex-col lg:pb-0">
         <Header notificationsCount={notificationsCount} />
 
-        <main className="grow pt-5" role="content">
+        <main
+          className="grow pt-5"
+          role="content"
+          style={{ paddingBottom: isMobile ? 'calc(6rem + env(safe-area-inset-bottom))' : undefined }}
+        >
           {children}
         </main>
 
