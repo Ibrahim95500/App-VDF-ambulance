@@ -335,7 +335,7 @@ export function AcomptesTable({ initialData }: { initialData: AdvanceRequestWith
                             Annuler
                         </Button>
                         <Button
-                            variant={processingAction?.status === 'APPROVED' ? "default" : "destructive"}
+                            variant={processingAction?.status === 'APPROVED' ? "primary" : "destructive"}
                             className={processingAction?.status === 'APPROVED' ? "bg-green-600 hover:bg-green-700 text-white" : ""}
                             disabled={loadingId === processingAction?.id}
                             onClick={confirmAction}

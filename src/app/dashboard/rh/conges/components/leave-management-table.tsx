@@ -398,7 +398,7 @@ export function LeaveManagementTable({ initialLeaves }: { initialLeaves: LeaveRe
                             Annuler
                         </Button>
                         <Button
-                            variant={processingAction?.status === 'APPROVED' ? "default" : "destructive"}
+                            variant={processingAction?.status === 'APPROVED' ? "primary" : "destructive"}
                             className={processingAction?.status === 'APPROVED' ? "bg-green-600 hover:bg-green-700 text-white" : ""}
                             disabled={loadingMap[processingAction?.id || '']}
                             onClick={confirmAction}

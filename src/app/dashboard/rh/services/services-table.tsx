@@ -13,7 +13,8 @@ import {
     Layout,
     Clock,
     AlertCircle,
-    MessageSquareQuote
+    MessageSquareQuote,
+    Loader2
 } from "lucide-react"
 import { updateServiceRequestStatus } from "@/actions/service-request.actions"
 import { toast } from "sonner"
@@ -396,7 +397,7 @@ export function RHServiceRequestsTable({ initialData }: { initialData: GlobalSer
                             Annuler
                         </Button>
                         <Button
-                            variant={processingAction?.status === 'APPROVED' ? "default" : "destructive"}
+                            variant={processingAction?.status === 'APPROVED' ? "primary" : "destructive"}
                             className={processingAction?.status === 'APPROVED' ? "bg-green-600 hover:bg-green-700 text-white" : ""}
                             disabled={loadingId === processingAction?.id}
                             onClick={confirmUpdateStatus}
