@@ -41,7 +41,7 @@ export default async function RHDashboard() {
                     <ToolbarHeading>
                         <div className="flex items-center gap-2">
                             <Home className="w-5 h-5 text-secondary" />
-                            <h1 className="text-xl font-medium leading-none text-secondary">Espace RH</h1>
+                            <h1 className="text-xl font-medium leading-none text-foreground">Espace RH</h1>
                         </div>
                         <ToolbarDescription>
                             Bienvenue {(session.user as any).name || session.user.email}

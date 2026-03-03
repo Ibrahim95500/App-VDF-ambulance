@@ -37,7 +37,7 @@ export default async function ProfilePage() {
                     <ToolbarHeading>
                         <div className="flex items-center gap-2">
                             <UserIcon className="w-5 h-5 text-secondary" />
-                            <h1 className="text-xl font-medium leading-none text-secondary">Mon Profil</h1>
+                            <h1 className="text-xl font-medium leading-none text-foreground">Mon Profil</h1>
                         </div>
                         <ToolbarDescription>
                             Gérez vos informations personnelles et la sécurité de votre compte.

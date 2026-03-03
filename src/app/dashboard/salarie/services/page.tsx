@@ -4,7 +4,7 @@ import { getMyServiceRequests } from "@/services/my-requests"
 import { RequestServiceForm } from "./components/request-service-form"
 import { ServiceHistoryTable } from "./components/service-history-table"
 import { Container } from "@/components/common/container"
-import { BriefcaseIcon } from "lucide-react"
+import { LifeBuoy } from "lucide-react"
 
 export default async function SalarieServicesPage() {
     const initialData = await getMyServiceRequests()
@@ -13,8 +13,8 @@ export default async function SalarieServicesPage() {
         <Container className="py-8 space-y-8">
             <div className="flex flex-col gap-2">
                 <div className="flex items-center gap-3">
-                    <BriefcaseIcon className="size-8 text-secondary" />
-                    <h1 className="text-3xl font-bold tracking-tight text-secondary">
+                    <LifeBuoy className="size-8 text-secondary" />
+                    <h1 className="text-3xl font-bold tracking-tight text-foreground">
                         Demandes de Service
                     </h1>
                 </div>
