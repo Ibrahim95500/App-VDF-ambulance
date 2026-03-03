@@ -35,7 +35,8 @@ export default async function ProfilePage() {
             <Container>
                 <Toolbar>
                     <ToolbarHeading>
-                        <div className="flex items-center">
+                        <div className="flex items-center gap-2">
+                            <UserIcon className="w-5 h-5 text-secondary" />
                             <h1 className="text-xl font-medium leading-none text-secondary">Mon Profil</h1>
                         </div>
                         <ToolbarDescription>

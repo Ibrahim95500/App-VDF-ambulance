@@ -20,7 +20,7 @@ export function BottomTabBar() {
     const navItems = isRH
         ? [
             { label: 'Accueil', href: '/dashboard/rh', icon: Home },
-            { label: 'Demandes', href: '/dashboard/rh/conges', icon: LayoutList },
+            { label: 'Congés', href: '/dashboard/rh/conges', icon: CalendarClock },
             { label: 'Acomptes', href: '/dashboard/rh/acomptes', icon: Euro },
             { label: 'Équipe', href: '/dashboard/rh/collaborateurs', icon: Users },
             { label: 'Profil', href: '/dashboard/profil', icon: User },

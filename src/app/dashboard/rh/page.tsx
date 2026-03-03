@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { getAdvanceRequests } from '@/services/advance-request';
 import { getAllLeaveRequests } from '@/services/leave-requests';
 import Link from 'next/link';
+import { Home } from 'lucide-react';
 
 export default async function RHDashboard() {
     const session = await auth()
@@ -38,7 +39,8 @@ export default async function RHDashboard() {
             <Container>
                 <Toolbar>
                     <ToolbarHeading>
-                        <div className="flex items-center">
+                        <div className="flex items-center gap-2">
+                            <Home className="w-5 h-5 text-secondary" />
                             <h1 className="text-xl font-medium leading-none text-secondary">Espace RH</h1>
                         </div>
                         <ToolbarDescription>
