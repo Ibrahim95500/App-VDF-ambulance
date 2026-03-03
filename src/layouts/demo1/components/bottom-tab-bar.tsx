@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { Home, CalendarClock, Euro, Users, User, LayoutList } from 'lucide-react';
+import { Home, CalendarClock, Euro, Users, User, LayoutList, LifeBuoy } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -26,9 +26,9 @@ export function BottomTabBar() {
             { label: 'Profil', href: '/dashboard/profil', icon: User },
         ]
         : [
-            { label: 'Accueil', href: '/dashboard/salarie', icon: Home },
+            { label: 'Acomptes', href: '/dashboard/salarie', icon: Euro },
             { label: 'Congés', href: '/dashboard/salarie/conges', icon: CalendarClock },
-            { label: 'Acomptes', href: '/dashboard/salarie/services', icon: Euro },
+            { label: 'Services', href: '/dashboard/salarie/services', icon: LifeBuoy },
             { label: 'Profil', href: '/dashboard/profil', icon: User },
         ];
 
