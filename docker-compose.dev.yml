@@ -40,9 +40,37 @@ services:
     networks:
       - vdf-network-dev
 
+  # Automatisation n8n
+  n8n:
+    image: docker.n8n.io/n8nio/n8n
+    container_name: vdf-n8n
+    restart: always
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_HOST=n8n.vdf-ambulance.fr
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+      - NODE_ENV=development
+      - WEBHOOK_URL=https://n8n.vdf-ambulance.fr/
+      # DB connexion (utilise la même BDD que l'app !)
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_DATABASE=ambulance_db_dev
+      - DB_POSTGRESDB_HOST=db-dev
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_USER=${DB_USER_DEV}
+      - DB_POSTGRESDB_PASSWORD=${DB_PASSWORD_DEV}
+    volumes:
+      - n8n_data:/home/node/.n8n
+    networks:
+      - vdf-network-dev
+    depends_on:
+      - db-dev
+
 networks:
   vdf-network-dev:
     driver: bridge
 
 volumes:
   postgres_data_dev:
+  n8n_data:
