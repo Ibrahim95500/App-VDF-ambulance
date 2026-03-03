@@ -1,12 +1,6 @@
 export const dynamic = "force-dynamic";
 import { Fragment } from 'react';
 import { Container } from '@/components/common/container';
-import {
-    Toolbar,
-    ToolbarActions,
-    ToolbarDescription,
-    ToolbarHeading,
-} from '@/partials/common/toolbar';
 import { LeaveBalanceConfig } from './components/leave-balance';
 import { LeaveHistory } from './components/leave-history';
 import { LeaveForm } from './components/leave-form';
@@ -19,20 +13,18 @@ export default async function CongesPage() {
 
     return (
         <Fragment>
-            <Container>
-                <Toolbar>
-                    <ToolbarHeading>
-                        <div className="flex items-center gap-3 mb-2">
-                            <CalendarIcon className="size-8 text-secondary" />
-                            <h1 className="text-3xl font-bold tracking-tight text-foreground">
-                                Absences & Événements
-                            </h1>
-                        </div>
-                        <ToolbarDescription>
-                            Gérez vos soldes de congés, soumettez de nouvelles demandes et consultez votre historique.
-                        </ToolbarDescription>
-                    </ToolbarHeading>
-                </Toolbar>
+            <Container className="pt-8">
+                <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-3">
+                        <CalendarIcon className="size-8 text-secondary" />
+                        <h1 className="text-3xl font-bold tracking-tight text-secondary">
+                            Absences & Événements
+                        </h1>
+                    </div>
+                    <p className="text-muted-foreground ml-[2.75rem]">
+                        Gérez vos soldes de congés, soumettez de nouvelles demandes et consultez votre historique.
+                    </p>
+                </div>
             </Container>
 
             <Container className="mt-8">

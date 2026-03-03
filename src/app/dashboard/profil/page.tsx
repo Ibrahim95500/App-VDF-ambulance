@@ -3,11 +3,6 @@ import { Fragment } from "react";
 
 export const dynamic = 'force-dynamic';
 import { Container } from "@/components/common/container";
-import {
-    Toolbar,
-    ToolbarDescription,
-    ToolbarHeading,
-} from '@/partials/common/toolbar';
 import { ProfileForm } from "./profile-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UserIcon, MailIcon, ShieldCheckIcon, PhoneIcon, CalendarIcon } from "lucide-react";
@@ -32,18 +27,18 @@ export default async function ProfilePage() {
 
     return (
         <Fragment>
-            <Container>
-                <Toolbar>
-                    <ToolbarHeading>
-                        <div className="flex items-center gap-2">
-                            <UserIcon className="w-5 h-5 text-secondary" />
-                            <h1 className="text-xl font-medium leading-none text-foreground">Mon Profil</h1>
-                        </div>
-                        <ToolbarDescription>
-                            Gérez vos informations personnelles et la sécurité de votre compte.
-                        </ToolbarDescription>
-                    </ToolbarHeading>
-                </Toolbar>
+            <Container className="pt-8">
+                <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-3">
+                        <UserIcon className="size-8 text-secondary" />
+                        <h1 className="text-3xl font-bold tracking-tight text-secondary">
+                            Mon Profil
+                        </h1>
+                    </div>
+                    <p className="text-muted-foreground ml-[2.75rem]">
+                        Gérez vos informations personnelles et la sécurité de votre compte.
+                    </p>
+                </div>
             </Container>
 
             <Container>

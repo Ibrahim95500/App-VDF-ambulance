@@ -3,12 +3,6 @@ import { Fragment } from 'react';
 import { auth } from "@/auth"
 import { redirect } from "next/navigation"
 import { Container } from '@/components/common/container';
-import {
-    Toolbar,
-    ToolbarActions,
-    ToolbarDescription,
-    ToolbarHeading,
-} from '@/partials/common/toolbar';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { getAdvanceRequests } from '@/services/advance-request';
@@ -36,18 +30,18 @@ export default async function RHDashboard() {
 
     return (
         <Fragment>
-            <Container>
-                <Toolbar>
-                    <ToolbarHeading>
-                        <div className="flex items-center gap-2">
-                            <Home className="w-5 h-5 text-secondary" />
-                            <h1 className="text-xl font-medium leading-none text-foreground">Espace RH</h1>
-                        </div>
-                        <ToolbarDescription>
-                            Bienvenue {(session.user as any).name || session.user.email}
-                        </ToolbarDescription>
-                    </ToolbarHeading>
-                </Toolbar>
+            <Container className="pt-8">
+                <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-3">
+                        <Home className="size-8 text-secondary" />
+                        <h1 className="text-3xl font-bold tracking-tight text-secondary">
+                            Espace RH
+                        </h1>
+                    </div>
+                    <p className="text-muted-foreground ml-[2.75rem]">
+                        Bienvenue {(session.user as any).name || session.user.email}
+                    </p>
+                </div>
             </Container>
 
             <Container>

@@ -14,11 +14,11 @@ export default async function SalarieServicesPage() {
             <div className="flex flex-col gap-2">
                 <div className="flex items-center gap-3">
                     <LifeBuoy className="size-8 text-secondary" />
-                    <h1 className="text-3xl font-bold tracking-tight text-foreground">
+                    <h1 className="text-3xl font-bold tracking-tight text-secondary">
                         Demandes de Service
                     </h1>
                 </div>
-                <p className="text-muted-foreground ml-14">
+                <p className="text-muted-foreground ml-[2.75rem]">
                     Soumettez et suivez vos demandes de matériel, RH ou autres besoins.
                 </p>
             </div>
