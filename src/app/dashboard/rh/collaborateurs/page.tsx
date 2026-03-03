@@ -3,12 +3,6 @@ import { Fragment } from 'react';
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { Container } from '@/components/common/container';
-import {
-    Toolbar,
-    ToolbarDescription,
-    ToolbarHeading,
-} from '@/partials/common/toolbar';
-import { getAllLeaveRequests } from '@/services/leave-requests';
 import { AddCollaboratorForm } from '../components/add-collaborator-form';
 import { CollaboratorsTable } from './collaborators-table';
 import { getAllUsers } from '@/services/users';
@@ -27,18 +21,18 @@ export default async function CollaboratorsPage() {
 
     return (
         <Fragment>
-            <Container>
-                <Toolbar>
-                    <ToolbarHeading>
-                        <div className="flex items-center gap-3">
-                            <UsersIcon className="size-6 text-secondary" />
-                            <h1 className="text-xl font-medium leading-none text-secondary">Gestion des Collaborateurs</h1>
-                        </div>
-                        <ToolbarDescription>
-                            Administrez les accès et coordonnez votre équipe d'ambulanciers.
-                        </ToolbarDescription>
-                    </ToolbarHeading>
-                </Toolbar>
+            <Container className="pt-8">
+                <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-3">
+                        <UsersIcon className="size-8 text-secondary" />
+                        <h1 className="text-3xl font-bold tracking-tight text-secondary">
+                            Gestion des Collaborateurs
+                        </h1>
+                    </div>
+                    <p className="text-muted-foreground ml-[2.75rem]">
+                        Administrez les accès et coordonnez votre équipe d'ambulanciers.
+                    </p>
+                </div>
             </Container>
 
             <Container className="mt-8 pb-10">

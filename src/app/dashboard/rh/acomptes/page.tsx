@@ -3,11 +3,6 @@ import { Fragment } from 'react';
 import { getAdvanceRequests } from "@/services/advance-request"
 import { AcomptesTable } from "./acomptes-table"
 import { Container } from '@/components/common/container';
-import {
-    Toolbar,
-    ToolbarDescription,
-    ToolbarHeading,
-} from '@/partials/common/toolbar';
 import { EuroIcon } from "lucide-react"
 
 export default async function AcomptesPage() {
@@ -15,18 +10,18 @@ export default async function AcomptesPage() {
 
     return (
         <Fragment>
-            <Container>
-                <Toolbar>
-                    <ToolbarHeading>
-                        <div className="flex items-center gap-3">
-                            <EuroIcon className="size-6 text-secondary" />
-                            <h1 className="text-xl font-medium leading-none text-secondary">Gestion des Acomptes</h1>
-                        </div>
-                        <ToolbarDescription>
-                            Gérez les demandes d'avances sur salaire de vos collaborateurs.
-                        </ToolbarDescription>
-                    </ToolbarHeading>
-                </Toolbar>
+            <Container className="pt-8">
+                <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-3">
+                        <EuroIcon className="size-8 text-secondary" />
+                        <h1 className="text-3xl font-bold tracking-tight text-secondary">
+                            Gestion des Acomptes
+                        </h1>
+                    </div>
+                    <p className="text-muted-foreground ml-[2.75rem]">
+                        Gérez les demandes d'avances sur salaire de vos collaborateurs.
+                    </p>
+                </div>
             </Container>
 
             <Container className="mt-8 pb-10">
