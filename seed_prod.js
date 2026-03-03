@@ -1,15 +1,10 @@
-const { Pool } = require('pg');
-const { PrismaPg } = require('@prisma/adapter-pg');
 const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcryptjs');
 
-const connectionString = process.env.DATABASE_URL;
-const pool = new Pool({ connectionString });
-const adapter = new PrismaPg(pool);
-const prisma = new PrismaClient({ adapter });
+const prisma = new PrismaClient();
 
 async function main() {
-    console.log('--- Démarrage de la Graine de Production (VDF Ambulance) ---');
+    console.log('--- Démarrage de la Graine de Production (VDF Ambulance) NATIVE ---');
 
     const rhEmail = process.env.RH_ADMIN_EMAIL || 'admin@ambulance.com';
     const rhPassword = process.env.RH_ADMIN_PASSWORD || 'VDF_Ambu_2026_Secure_Db';
