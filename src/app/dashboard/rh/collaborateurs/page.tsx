@@ -6,6 +6,7 @@ import { Container } from '@/components/common/container';
 import { AddCollaboratorForm } from '../components/add-collaborator-form';
 import { CollaboratorsTable } from './collaborators-table';
 import { getAllUsers } from '@/services/users';
+import { getAllServiceRequests } from '@/services/service-request';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserPlusIcon, UsersIcon } from "lucide-react";
 
@@ -18,6 +19,7 @@ export default async function CollaboratorsPage() {
     }
 
     const users = await getAllUsers();
+    const services = await getAllServiceRequests();
 
     return (
         <Fragment>
@@ -56,7 +58,7 @@ export default async function CollaboratorsPage() {
 
                     <TabsContent value="list" className="space-y-6 focus-visible:outline-none focus-visible:ring-0">
                         <div className="border border-border border-t-4 border-t-secondary rounded-xl overflow-hidden">
-                            <CollaboratorsTable initialData={users as any} />
+                            <CollaboratorsTable initialData={users as any} services={services as any} />
                         </div>
                     </TabsContent>
 

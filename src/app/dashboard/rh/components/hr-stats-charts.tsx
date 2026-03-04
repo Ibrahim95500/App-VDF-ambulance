@@ -14,11 +14,12 @@ interface StatProps {
     requestsByCategory: { name: string, value: number }[];
     requestsByUser: { name: string, value: number }[];
     requestsByMonth: { name: string, value: number }[];
+    hideUserTab?: boolean;
 }
 
 const COLORS = ['#2563eb', '#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe', '#dbeafe', '#eff6ff', '#1e40af'];
 
-export function HRStatsCharts({ requestsByCategory, requestsByUser, requestsByMonth }: StatProps) {
+export function HRStatsCharts({ requestsByCategory, requestsByUser, requestsByMonth, hideUserTab = false }: StatProps) {
     const [activeTab, setActiveTab] = useState<'category' | 'user' | 'month'>('category');
 
     return (
@@ -37,15 +38,17 @@ export function HRStatsCharts({ requestsByCategory, requestsByUser, requestsByMo
                         <PieChartIcon className="w-4 h-4 mr-2" />
                         Par Thématique
                     </Button>
-                    <Button
-                        size="sm"
-                        variant={activeTab === 'user' ? 'secondary' : 'outline'}
-                        onClick={() => setActiveTab('user')}
-                        className="flex-shrink-0"
-                    >
-                        <BarChart3 className="w-4 h-4 mr-2" />
-                        Par Salarié
-                    </Button>
+                    {!hideUserTab && (
+                        <Button
+                            size="sm"
+                            variant={activeTab === 'user' ? 'secondary' : 'outline'}
+                            onClick={() => setActiveTab('user')}
+                            className="flex-shrink-0"
+                        >
+                            <BarChart3 className="w-4 h-4 mr-2" />
+                            Par Salarié
+                        </Button>
+                    )}
                     <Button
                         size="sm"
                         variant={activeTab === 'month' ? 'secondary' : 'outline'}

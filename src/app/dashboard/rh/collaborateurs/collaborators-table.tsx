@@ -5,7 +5,8 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { TableActions } from "@/components/common/table-actions"
 import { TablePagination } from "@/components/common/table-pagination"
-import { isWithinInterval, startOfDay, endOfDay } from "date-fns"
+import { isWithinInterval, startOfDay, endOfDay, format } from "date-fns"
+import { fr } from "date-fns/locale"
 import { DateRange } from "react-day-picker"
 import {
     Dialog,
@@ -19,6 +20,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { deactivateUser, reactivateUser } from "@/actions/users"
 import { toast } from "sonner"
 import { Trash2Icon, InfoIcon, ShieldCheckIcon, ShieldAlertIcon, UserCheckIcon, UserXIcon, MessageSquareIcon, Eye, RotateCcw } from "lucide-react"
+import { HRStatsCharts } from "../components/hr-stats-charts"
 
 interface User {
     id: string
@@ -35,7 +37,7 @@ interface User {
     deletionReason?: string | null
 }
 
-export function CollaboratorsTable({ initialData }: { initialData: User[] }) {
+export function CollaboratorsTable({ initialData, services = [] }: { initialData: User[], services?: any[] }) {
     const [searchTerm, setSearchTerm] = useState("")
     const [roleFilter, setRoleFilter] = useState("ALL")
     const [statusFilter, setStatusFilter] = useState("ALL")
@@ -51,6 +53,28 @@ export function CollaboratorsTable({ initialData }: { initialData: User[] }) {
     const [isDeactivating, setIsDeactivating] = useState(false)
     const [selectedUser, setSelectedUser] = useState<User | null>(null)
     const [isReactivating, setIsReactivating] = useState<string | null>(null)
+
+    const userStats = useMemo(() => {
+        if (!selectedUser) return null;
+        const userServices = services.filter(s => s.userId === selectedUser.id);
+        const categoryCounts: Record<string, number> = {}
+        const monthCounts: Record<string, number> = {}
+
+        const sortedServices = [...userServices].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+        sortedServices.forEach(req => {
+            const cat = req.category || 'Non catégorisé'
+            categoryCounts[cat] = (categoryCounts[cat] || 0) + 1
+            const date = new Date(req.createdAt)
+            const monthYearStr = format(date, 'MMM yyyy', { locale: fr })
+            const monthYear = monthYearStr.charAt(0).toUpperCase() + monthYearStr.slice(1)
+            monthCounts[monthYear] = (monthCounts[monthYear] || 0) + 1
+        })
+
+        return {
+            requestsByCategory: Object.entries(categoryCounts).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value),
+            requestsByMonth: Object.keys(monthCounts).map(name => ({ name, value: monthCounts[name] }))
+        }
+    }, [selectedUser, services]);
 
     const filteredData = useMemo(() => {
         return initialData.filter(user => {
@@ -423,7 +447,7 @@ export function CollaboratorsTable({ initialData }: { initialData: User[] }) {
 
             {/* Detail Dialog */}
             <Dialog open={!!selectedUser} onOpenChange={(open) => !open && setSelectedUser(null)}>
-                <DialogContent className="max-w-[90vw] sm:max-w-sm border-border bg-background p-0 gap-0 overflow-hidden">
+                <DialogContent className="max-w-[90vw] sm:max-w-xl border-border bg-background p-0 gap-0 overflow-y-auto max-h-[90vh] pb-8">
                     <DialogHeader className="p-0 m-0">
                         <DialogTitle className="sr-only">Détails de {selectedUser?.firstName} {selectedUser?.lastName}</DialogTitle>
                     </DialogHeader>
@@ -481,6 +505,18 @@ export function CollaboratorsTable({ initialData }: { initialData: User[] }) {
                                 <p className="text-sm text-red-700 p-3 bg-red-50 rounded-lg border border-red-200 italic">
                                     {(selectedUser as any).deletionReason}
                                 </p>
+                            </div>
+                        )}
+
+                        {userStats && (userStats.requestsByCategory.length > 0 || userStats.requestsByMonth.length > 0) && (
+                            <div className="pt-4 mt-4 border-t border-border">
+                                <span className="text-xs uppercase text-muted-foreground font-bold tracking-wider mb-2 block">Statistiques Personnelles</span>
+                                <HRStatsCharts
+                                    requestsByCategory={userStats.requestsByCategory}
+                                    requestsByUser={[]}
+                                    requestsByMonth={userStats.requestsByMonth}
+                                    hideUserTab
+                                />
                             </div>
                         )}
                     </div>
