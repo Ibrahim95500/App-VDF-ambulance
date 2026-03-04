@@ -106,7 +106,7 @@ export function HRStatsCharts({
                                         ))}
                                     </Pie>
                                     <Tooltip
-                                        formatter={(value: any) => [`${value} demande(s)`, 'Total']}
+                                        formatter={(value: any, name: any) => [`${value}`, `Total ${name}`]}
                                         contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                                     />
                                 </PieChart>
@@ -136,7 +136,7 @@ export function HRStatsCharts({
                                     <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} allowDecimals={false} />
                                     <Tooltip
                                         cursor={{ fill: 'rgba(0,0,0,0.05)' }}
-                                        formatter={(value: any) => [`${value} demande(s)`, 'Total']}
+                                        formatter={(value: any, name: any) => [`${value}`, `Total pour ${name}`]}
                                         contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                                     />
                                     <Bar dataKey="value" fill="#3b82f6" radius={[4, 4, 0, 0]} maxBarSize={40} />
@@ -158,7 +158,7 @@ export function HRStatsCharts({
                                     <XAxis dataKey="name" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
                                     <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} allowDecimals={false} />
                                     <Tooltip
-                                        formatter={(value: any) => [`${value} demande(s)`, 'Total']}
+                                        formatter={(value: any, name: any) => [`${value} demande(s)`, 'Volume']}
                                         contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                                     />
                                     <Line type="monotone" dataKey="value" stroke="#2563eb" strokeWidth={3} dot={{ r: 4, fill: '#2563eb', strokeWidth: 2, stroke: 'white' }} activeDot={{ r: 6 }} />
