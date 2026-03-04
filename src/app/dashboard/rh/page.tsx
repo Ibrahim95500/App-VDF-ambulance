@@ -113,62 +113,54 @@ export default async function RHDashboard() {
 
             <Container>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
-                    {/* Advance Requests Card */}
-                    <Card className="border-secondary/50 shadow-sm border-t-4 border-t-secondary">
-                        <CardHeader className="pb-3 border-b border-border">
-                            <CardTitle className="text-base font-semibold">Demandes d'Acompte en Attente</CardTitle>
-                            <CardDescription>
-                                {pendingRequests.length} demande(s) nécessite(nt) votre attention.
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent className="p-0">
-                            <div className="flex flex-col">
-                                {pendingRequests.length === 0 ? (
-                                    <div className="flex flex-col items-center justify-center p-8 bg-muted/20 text-muted-foreground text-sm italic">
-                                        Aucune demande en attente de validation.
-                                    </div>
-                                ) : (
-                                    <div className="divide-y divide-border">
-                                        {pendingRequests.slice(0, 4).map((req) => (
-                                            <div key={req.id} className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors">
-                                                <div className="flex items-center gap-3">
-                                                    {req.user.image ? (
-                                                        <img src={req.user.image} className="w-8 h-8 rounded-full bg-border" alt="" />
-                                                    ) : (
-                                                        <div className="w-8 h-8 flex items-center justify-center bg-primary/10 text-primary font-semibold rounded-full border border-primary/20 text-xs">
-                                                            {req.user.name?.charAt(0) || req.user.email?.charAt(0) || '?'}
+                    {/* Colonne de gauche: Acomptes */}
+                    <div className="flex flex-col gap-8">
+                        {/* Advance Requests Card */}
+                        <Card className="border-secondary/50 shadow-sm border-t-4 border-t-secondary">
+                            <CardHeader className="pb-3 border-b border-border">
+                                <CardTitle className="text-base font-semibold">Demandes d'Acompte en Attente</CardTitle>
+                                <CardDescription>
+                                    {pendingRequests.length} demande(s) nécessite(nt) votre attention.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="p-0">
+                                <div className="flex flex-col">
+                                    {pendingRequests.length === 0 ? (
+                                        <div className="flex flex-col items-center justify-center p-8 bg-muted/20 text-muted-foreground text-sm italic">
+                                            Aucune demande en attente de validation.
+                                        </div>
+                                    ) : (
+                                        <div className="divide-y divide-border">
+                                            {pendingRequests.slice(0, 4).map((req) => (
+                                                <div key={req.id} className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors">
+                                                    <div className="flex items-center gap-3">
+                                                        {req.user.image ? (
+                                                            <img src={req.user.image} className="w-8 h-8 rounded-full bg-border" alt="" />
+                                                        ) : (
+                                                            <div className="w-8 h-8 flex items-center justify-center bg-primary/10 text-primary font-semibold rounded-full border border-primary/20 text-xs">
+                                                                {req.user.name?.charAt(0) || req.user.email?.charAt(0) || '?'}
+                                                            </div>
+                                                        )}
+                                                        <div className="flex flex-col">
+                                                            <span className="text-sm font-medium text-foreground">{req.user.name || req.user.email}</span>
+                                                            <span className="text-xs text-muted-foreground">{new Date(req.createdAt).toLocaleDateString('fr-FR')}</span>
                                                         </div>
-                                                    )}
-                                                    <div className="flex flex-col">
-                                                        <span className="text-sm font-medium text-foreground">{req.user.name || req.user.email}</span>
-                                                        <span className="text-xs text-muted-foreground">{new Date(req.createdAt).toLocaleDateString('fr-FR')}</span>
                                                     </div>
+                                                    <span className="text-sm font-bold text-foreground">{req.amount} €</span>
                                                 </div>
-                                                <span className="text-sm font-bold text-foreground">{req.amount} €</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                            <div className="p-4 border-t border-border bg-muted/10 rounded-b-xl flex justify-center">
-                                <Link href="/dashboard/rh/acomptes">
-                                    <Button variant="outline" size="sm" className="w-full max-w-[200px]">
-                                        Voir toutes les demandes
-                                    </Button>
-                                </Link>
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    {/* Statistiques des demandes de l'entreprise */}
-                    <div className="w-full space-y-8">
-                        <HRStatsCharts
-                            requestsByCategory={requestsByCategory}
-                            requestsByUser={requestsByUser}
-                            requestsByMonth={requestsByMonth}
-                            title="Statistiques des Demandes (Services)"
-                            description="Analyse des demandes de services RH, logistique, etc."
-                        />
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="p-4 border-t border-border bg-muted/10 rounded-b-xl flex justify-center">
+                                    <Link href="/dashboard/rh/acomptes">
+                                        <Button variant="outline" size="sm" className="w-full max-w-[200px]">
+                                            Voir toutes les demandes
+                                        </Button>
+                                    </Link>
+                                </div>
+                            </CardContent>
+                        </Card>
 
                         <HRStatsCharts
                             requestsByCategory={advanceByCategory}
@@ -177,6 +169,17 @@ export default async function RHDashboard() {
                             title="Statistiques des Acomptes"
                             description="Analyse financière des demandes d'acomptes."
                             categoryLabel="Par Statut"
+                        />
+                    </div>
+
+                    {/* Colonne de droite: Services */}
+                    <div className="flex flex-col gap-8">
+                        <HRStatsCharts
+                            requestsByCategory={requestsByCategory}
+                            requestsByUser={requestsByUser}
+                            requestsByMonth={requestsByMonth}
+                            title="Statistiques des Demandes (Services)"
+                            description="Analyse des demandes de services RH, logistique, etc."
                         />
                     </div>
 

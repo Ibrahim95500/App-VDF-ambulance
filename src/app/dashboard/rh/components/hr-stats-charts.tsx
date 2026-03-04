@@ -18,9 +18,19 @@ interface StatProps {
     categoryLabel?: string;
     title?: string;
     description?: string;
+    colors?: string[];
 }
 
-const COLORS = ['#2563eb', '#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe', '#dbeafe', '#eff6ff', '#1e40af'];
+const DEFAULT_COLORS = [
+    '#3b82f6', // blue-500
+    '#f59e0b', // amber-500
+    '#10b981', // emerald-500
+    '#ef4444', // red-500
+    '#8b5cf6', // violet-500
+    '#ec4899', // pink-500
+    '#06b6d4', // cyan-500
+    '#f97316'  // orange-500
+];
 
 export function HRStatsCharts({
     requestsByCategory,
@@ -29,7 +39,8 @@ export function HRStatsCharts({
     hideUserTab = false,
     categoryLabel = "Par Thématique",
     title = "Statistiques des Demandes",
-    description = "Analyse complète des demandes de vos collaborateurs."
+    description = "Analyse complète des demandes de vos collaborateurs.",
+    colors = DEFAULT_COLORS
 }: StatProps) {
     const [activeTab, setActiveTab] = useState<'category' | 'user' | 'month'>('category');
 
@@ -91,7 +102,7 @@ export function HRStatsCharts({
                                         dataKey="value"
                                     >
                                         {requestsByCategory.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                            <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
                                         ))}
                                     </Pie>
                                     <Tooltip
@@ -104,7 +115,7 @@ export function HRStatsCharts({
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-4 text-xs">
                             {requestsByCategory.map((entry, index) => (
                                 <div key={entry.name} className="flex items-center gap-2">
-                                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }} />
+                                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: colors[index % colors.length] }} />
                                     <span className="truncate max-w-[120px]" title={entry.name}>{entry.name} ({entry.value})</span>
                                 </div>
                             ))}
