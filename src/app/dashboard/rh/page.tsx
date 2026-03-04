@@ -7,8 +7,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { getAdvanceRequests } from '@/services/advance-request';
 import { getAllLeaveRequests } from '@/services/leave-requests';
+import { getAllServiceRequests } from '@/services/service-request';
 import Link from 'next/link';
 import { Home } from 'lucide-react';
+import { HRStatsCharts } from './components/hr-stats-charts';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 export default async function RHDashboard() {
     const session = await auth()
@@ -21,6 +25,37 @@ export default async function RHDashboard() {
 
     const allLeaves = await getAllLeaveRequests()
     const pendingLeaves = allLeaves.filter(req => req.status === 'PENDING')
+
+    const allServices = await getAllServiceRequests()
+
+    // Aggregate data for charts
+    const categoryCounts: Record<string, number> = {}
+    const userCounts: Record<string, number> = {}
+    const monthCounts: Record<string, number> = {}
+
+    const sortedServices = [...allServices].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+
+    sortedServices.forEach(req => {
+        // Category
+        const cat = req.category || 'Non catégorisé'
+        categoryCounts[cat] = (categoryCounts[cat] || 0) + 1
+
+        // User
+        const userName = req.user.firstName && req.user.lastName
+            ? `${req.user.firstName} ${req.user.lastName}`
+            : req.user.name || req.user.email || 'Inconnu'
+        userCounts[userName] = (userCounts[userName] || 0) + 1
+
+        // Month
+        const date = new Date(req.createdAt)
+        const monthYearStr = format(date, 'MMM yyyy', { locale: fr })
+        const monthYear = monthYearStr.charAt(0).toUpperCase() + monthYearStr.slice(1)
+        monthCounts[monthYear] = (monthCounts[monthYear] || 0) + 1
+    })
+
+    const requestsByCategory = Object.entries(categoryCounts).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value)
+    const requestsByUser = Object.entries(userCounts).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value)
+    const requestsByMonth = Object.keys(monthCounts).map(name => ({ name, value: monthCounts[name] }))
 
     const formatLeaveType = (type: string) => {
         if (type === 'CP') return 'Congé payé (CP)';
@@ -45,9 +80,9 @@ export default async function RHDashboard() {
             </Container>
 
             <Container>
-                <div className="grid grid-cols-1 lg:grid-cols-1 gap-8 mt-8">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
                     {/* Advance Requests Card */}
-                    <Card className="border-secondary/50 shadow-sm border-t-4 border-t-secondary lg:w-1/2">
+                    <Card className="border-secondary/50 shadow-sm border-t-4 border-t-secondary">
                         <CardHeader className="pb-3 border-b border-border">
                             <CardTitle className="text-base font-semibold">Demandes d'Acompte en Attente</CardTitle>
                             <CardDescription>
@@ -92,6 +127,15 @@ export default async function RHDashboard() {
                             </div>
                         </CardContent>
                     </Card>
+
+                    {/* Statistiques des demandes de l'entreprise */}
+                    <div className="w-full">
+                        <HRStatsCharts
+                            requestsByCategory={requestsByCategory}
+                            requestsByUser={requestsByUser}
+                            requestsByMonth={requestsByMonth}
+                        />
+                    </div>
 
                     {/* Leave Requests Card (Hidden for now as requested by client) */}
                 </div>

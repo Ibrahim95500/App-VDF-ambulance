@@ -91,10 +91,13 @@ export function RequestServiceForm() {
                                             </SelectTrigger>
                                         </FormControl>
                                         <SelectContent>
-                                            <SelectItem value="RH">Ressources Humaines (RH)</SelectItem>
-                                            <SelectItem value="MATERIEL">Matériel / Équipement</SelectItem>
-                                            <SelectItem value="PLANNING">Planning / Horaires</SelectItem>
-                                            <SelectItem value="AUTRE">Autre besoin</SelectItem>
+                                            <SelectItem value="Attestation">Demande d'attestation</SelectItem>
+                                            <SelectItem value="Mutuelle">Demande de mutuelle</SelectItem>
+                                            <SelectItem value="Visite médicale">Demande de visite médicale</SelectItem>
+                                            <SelectItem value="Formation">Demande de formation</SelectItem>
+                                            <SelectItem value="Équipement">Demande d'équipement / tenue</SelectItem>
+                                            <SelectItem value="Véhicule / Logistique">Demande liée au véhicule / Logistique</SelectItem>
+                                            <SelectItem value="Autre demande RH">Autre demande RH</SelectItem>
                                         </SelectContent>
                                     </Select>
                                     <FormMessage />
