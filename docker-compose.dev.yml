@@ -77,6 +77,7 @@ services:
     environment:
       - WHATSAPP_DEFAULT_ENGINE=WEBJS
       - WAHA_PRINT_QR=True
+      - WAHA_API_KEY=vdf-waha-secret-2026
     volumes:
       - waha_sessions:/app/.sessions
     networks:
