@@ -15,18 +15,29 @@ interface StatProps {
     requestsByUser: { name: string, value: number }[];
     requestsByMonth: { name: string, value: number }[];
     hideUserTab?: boolean;
+    categoryLabel?: string;
+    title?: string;
+    description?: string;
 }
 
 const COLORS = ['#2563eb', '#3b82f6', '#60a5fa', '#93c5fd', '#bfdbfe', '#dbeafe', '#eff6ff', '#1e40af'];
 
-export function HRStatsCharts({ requestsByCategory, requestsByUser, requestsByMonth, hideUserTab = false }: StatProps) {
+export function HRStatsCharts({
+    requestsByCategory,
+    requestsByUser,
+    requestsByMonth,
+    hideUserTab = false,
+    categoryLabel = "Par Thématique",
+    title = "Statistiques des Demandes",
+    description = "Analyse complète des demandes de vos collaborateurs."
+}: StatProps) {
     const [activeTab, setActiveTab] = useState<'category' | 'user' | 'month'>('category');
 
     return (
         <Card className="border-secondary/50 shadow-sm border-t-4 border-t-secondary w-full">
             <CardHeader className="pb-3 border-b border-border">
-                <CardTitle className="text-base font-semibold">Statistiques des Demandes</CardTitle>
-                <CardDescription>Analyse complète des demandes de vos collaborateurs.</CardDescription>
+                <CardTitle className="text-base font-semibold">{title}</CardTitle>
+                <CardDescription>{description}</CardDescription>
 
                 <div className="flex gap-2 pt-2 overflow-x-auto pb-1 scrollbar-hide">
                     <Button
@@ -36,7 +47,7 @@ export function HRStatsCharts({ requestsByCategory, requestsByUser, requestsByMo
                         className="flex-shrink-0"
                     >
                         <PieChartIcon className="w-4 h-4 mr-2" />
-                        Par Thématique
+                        {categoryLabel}
                     </Button>
                     {!hideUserTab && (
                         <Button

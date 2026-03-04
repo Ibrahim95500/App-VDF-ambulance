@@ -8,11 +8,13 @@ import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
 import { TableActions } from "@/components/common/table-actions"
 import { TablePagination } from "@/components/common/table-pagination"
-import { isWithinInterval, startOfDay, endOfDay } from "date-fns"
+import { isWithinInterval, startOfDay, endOfDay, format } from "date-fns"
+import { fr } from "date-fns/locale"
 import { DateRange } from "react-day-picker"
 import { Loader2, CheckCircle2, XCircle, Eye, MessageSquareQuote } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
+import { HRStatsCharts } from "../components/hr-stats-charts"
 
 export function AcomptesTable({ initialData }: { initialData: AdvanceRequestWithUser[] }) {
     const [loadingId, setLoadingId] = useState<string | null>(null)
@@ -47,6 +49,36 @@ export function AcomptesTable({ initialData }: { initialData: AdvanceRequestWith
             setLoadingId(null)
         }
     }
+
+    const userStats = useMemo(() => {
+        if (!selectedRequest) return null;
+        const userRequests = initialData.filter(req => req.userId === selectedRequest.userId);
+
+        const statusCounts: Record<string, number> = {}
+        const monthCounts: Record<string, number> = {}
+
+        const sortedRequests = [...userRequests].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+
+        sortedRequests.forEach(req => {
+            const statusMap: Record<string, string> = {
+                'PENDING': 'En attente',
+                'APPROVED': 'Approuvé',
+                'REJECTED': 'Refusé'
+            };
+            const status = statusMap[req.status] || req.status;
+            statusCounts[status] = (statusCounts[status] || 0) + 1
+
+            const date = new Date(req.createdAt)
+            const monthYearStr = format(date, 'MMM yyyy', { locale: fr })
+            const monthYear = monthYearStr.charAt(0).toUpperCase() + monthYearStr.slice(1)
+            monthCounts[monthYear] = (monthCounts[monthYear] || 0) + 1
+        })
+
+        return {
+            requestsByCategory: Object.entries(statusCounts).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value),
+            requestsByMonth: Object.keys(monthCounts).map(name => ({ name, value: monthCounts[name] }))
+        }
+    }, [selectedRequest, initialData]);
 
     const filteredData = useMemo(() => {
         return initialData.filter(req => {
@@ -254,7 +286,7 @@ export function AcomptesTable({ initialData }: { initialData: AdvanceRequestWith
 
             {/* Advance Request Detail Dialog */}
             <Dialog open={!!selectedRequest} onOpenChange={(open) => !open && setSelectedRequest(null)}>
-                <DialogContent className="max-w-[90vw] sm:max-w-sm border-border bg-background p-0 gap-0 overflow-hidden">
+                <DialogContent className="max-w-[90vw] sm:max-w-xl border-border bg-background p-0 gap-0 overflow-y-auto max-h-[90vh] pb-8">
                     <DialogHeader className="p-5 bg-slate-900 text-white">
                         <div className="text-slate-400 text-[10px] mb-1 uppercase tracking-widest font-bold">
                             Acompte
@@ -293,6 +325,21 @@ export function AcomptesTable({ initialData }: { initialData: AdvanceRequestWith
                                 <Button size="sm" variant="destructive" className="flex-1" onClick={() => initiateAction(selectedRequest, 'REJECTED')} disabled={loadingId === selectedRequest.id}>
                                     <XCircle className="w-4 h-4 mr-1.5" /> Refuser
                                 </Button>
+                            </div>
+                        )}
+
+                        {userStats && (userStats.requestsByCategory.length > 0 || userStats.requestsByMonth.length > 0) && (
+                            <div className="pt-4 mt-4 border-t border-border">
+                                <span className="text-xs uppercase text-muted-foreground font-bold tracking-wider mb-2 block">Statistiques Personnelles d'Acomptes</span>
+                                <HRStatsCharts
+                                    requestsByCategory={userStats.requestsByCategory}
+                                    requestsByUser={[]}
+                                    requestsByMonth={userStats.requestsByMonth}
+                                    hideUserTab
+                                    categoryLabel="Par Statut"
+                                    title="Historique des Acomptes"
+                                    description="Analyse des demandes d'acomptes précédentes de ce salarié."
+                                />
                             </div>
                         )}
                     </div>

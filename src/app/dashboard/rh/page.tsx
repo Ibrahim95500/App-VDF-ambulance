@@ -57,6 +57,38 @@ export default async function RHDashboard() {
     const requestsByUser = Object.entries(userCounts).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value)
     const requestsByMonth = Object.keys(monthCounts).map(name => ({ name, value: monthCounts[name] }))
 
+    // Aggregate data for Advance Requests charts
+    const advanceStatusCounts: Record<string, number> = {}
+    const advanceUserCounts: Record<string, number> = {}
+    const advanceMonthCounts: Record<string, number> = {}
+
+    const sortedAdvances = [...allRequests].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+
+    sortedAdvances.forEach(req => {
+        // Status mapping
+        const statusMap: Record<string, string> = {
+            'PENDING': 'En attente',
+            'APPROVED': 'Approuvé',
+            'REJECTED': 'Refusé'
+        };
+        const status = statusMap[req.status] || req.status;
+        advanceStatusCounts[status] = (advanceStatusCounts[status] || 0) + 1
+
+        // User
+        const userName = req.user.name || req.user.email || 'Inconnu'
+        advanceUserCounts[userName] = (advanceUserCounts[userName] || 0) + 1
+
+        // Month
+        const date = new Date(req.createdAt)
+        const monthYearStr = format(date, 'MMM yyyy', { locale: fr })
+        const monthYear = monthYearStr.charAt(0).toUpperCase() + monthYearStr.slice(1)
+        advanceMonthCounts[monthYear] = (advanceMonthCounts[monthYear] || 0) + 1
+    })
+
+    const advanceByCategory = Object.entries(advanceStatusCounts).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value)
+    const advanceByUser = Object.entries(advanceUserCounts).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value)
+    const advanceByMonth = Object.keys(advanceMonthCounts).map(name => ({ name, value: advanceMonthCounts[name] }))
+
     const formatLeaveType = (type: string) => {
         if (type === 'CP') return 'Congé payé (CP)';
         if (type === 'MA') return 'Maladie (MA)';
@@ -129,11 +161,22 @@ export default async function RHDashboard() {
                     </Card>
 
                     {/* Statistiques des demandes de l'entreprise */}
-                    <div className="w-full">
+                    <div className="w-full space-y-8">
                         <HRStatsCharts
                             requestsByCategory={requestsByCategory}
                             requestsByUser={requestsByUser}
                             requestsByMonth={requestsByMonth}
+                            title="Statistiques des Demandes (Services)"
+                            description="Analyse des demandes de services RH, logistique, etc."
+                        />
+
+                        <HRStatsCharts
+                            requestsByCategory={advanceByCategory}
+                            requestsByUser={advanceByUser}
+                            requestsByMonth={advanceByMonth}
+                            title="Statistiques des Acomptes"
+                            description="Analyse financière des demandes d'acomptes."
+                            categoryLabel="Par Statut"
                         />
                     </div>
 
