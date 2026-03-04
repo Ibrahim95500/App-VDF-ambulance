@@ -20,7 +20,7 @@ export function BottomTabBar() {
     const navItems = isRH
         ? [
             { label: 'Accueil', href: '/dashboard/rh', icon: Home },
-            { label: 'Congés', href: '/dashboard/rh/conges', icon: CalendarClock },
+            // { label: 'Congés', href: '/dashboard/rh/conges', icon: CalendarClock },
             { label: 'Acomptes', href: '/dashboard/rh/acomptes', icon: Euro },
             { label: 'Services', href: '/dashboard/rh/services', icon: LifeBuoy },
             { label: 'Équipe', href: '/dashboard/rh/collaborateurs', icon: Users },
@@ -28,7 +28,7 @@ export function BottomTabBar() {
         ]
         : [
             { label: 'Acomptes', href: '/dashboard/salarie', icon: Euro },
-            { label: 'Congés', href: '/dashboard/salarie/conges', icon: CalendarClock },
+            // { label: 'Congés', href: '/dashboard/salarie/conges', icon: CalendarClock },
             { label: 'Services', href: '/dashboard/salarie/services', icon: LifeBuoy },
             { label: 'Profil', href: '/dashboard/profil', icon: User },
         ];

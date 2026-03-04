@@ -66,11 +66,11 @@ export const MENU_SIDEBAR: MenuConfig = [
     icon: Euro,
     path: '/dashboard/salarie',
   },
-  {
-    title: 'Congés & Absences',
-    icon: CalendarCheck,
-    path: '/dashboard/salarie/conges',
-  },
+  // {
+  //   title: 'Congés & Absences',
+  //   icon: CalendarCheck,
+  //   path: '/dashboard/salarie/conges',
+  // },
   {
     title: 'Demandes de Service',
     icon: LifeBuoy,
@@ -87,11 +87,11 @@ export const MENU_SIDEBAR: MenuConfig = [
     icon: Euro,
     path: '/dashboard/rh/acomptes',
   },
-  {
-    title: 'Gérer Congés',
-    icon: CalendarCheck,
-    path: '/dashboard/rh/conges',
-  },
+  // {
+  //   title: 'Gérer Congés',
+  //   icon: CalendarCheck,
+  //   path: '/dashboard/rh/conges',
+  // },
   {
     title: 'Gérer Services',
     icon: LifeBuoy,
