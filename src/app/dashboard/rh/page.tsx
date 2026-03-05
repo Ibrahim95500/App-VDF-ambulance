@@ -31,6 +31,7 @@ export default async function RHDashboard() {
     const pendingServices = allServices.filter(req => req.status === 'PENDING')
 
     const allAppointments = await getAppointmentRequests()
+    const pendingAppointments = allAppointments.filter(req => req.status === 'PENDING')
 
     // Aggregate data for charts
     const categoryCounts: Record<string, number> = {}
@@ -265,6 +266,58 @@ export default async function RHDashboard() {
                         <h2 className="text-xl font-bold mb-4 text-foreground flex items-center gap-2">
                             Demandes de Rendez-vous et convocation
                         </h2>
+
+                        {/* Appointment Requests Card */}
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                            <Card className="border-secondary/50 shadow-sm border-t-4 border-t-secondary">
+                                <CardHeader className="pb-3 border-b border-border">
+                                    <CardTitle className="text-base font-semibold">Rendez-vous en Attente</CardTitle>
+                                    <CardDescription>
+                                        {pendingAppointments.length} demande(s) nécessite(nt) votre attention.
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent className="p-0">
+                                    <div className="flex flex-col">
+                                        {pendingAppointments.length === 0 ? (
+                                            <div className="flex flex-col items-center justify-center p-8 bg-muted/20 text-muted-foreground text-sm italic">
+                                                Aucune demande en attente de validation.
+                                            </div>
+                                        ) : (
+                                            <div className="divide-y divide-border">
+                                                {pendingAppointments.slice(0, 4).map((req) => (
+                                                    <div key={req.id} className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors">
+                                                        <div className="flex items-center gap-3">
+                                                            {(req.user as any).image ? (
+                                                                <img src={(req.user as any).image} className="w-8 h-8 rounded-full bg-border" alt="" />
+                                                            ) : (
+                                                                <div className="w-8 h-8 flex items-center justify-center bg-primary/10 text-primary font-semibold rounded-full border border-primary/20 text-xs">
+                                                                    {req.user.name?.charAt(0) || req.user.email?.charAt(0) || '?'}
+                                                                </div>
+                                                            )}
+                                                            <div className="flex flex-col">
+                                                                <span className="text-sm font-medium text-foreground">
+                                                                    {req.user.firstName && req.user.lastName ? `${req.user.firstName} ${req.user.lastName}` : (req.user.name || req.user.email)}
+                                                                </span>
+                                                                <span className="text-xs text-muted-foreground">{new Date(req.createdAt).toLocaleDateString('fr-FR')}</span>
+                                                            </div>
+                                                        </div>
+                                                        <span className="text-[10px] font-semibold px-2 py-1 bg-muted rounded-md border border-border">{(req as any).reason || '-'}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div className="p-4 border-t border-border bg-muted/10 rounded-b-xl flex justify-center">
+                                        <Link href="/dashboard/rh/rendez-vous">
+                                            <Button variant="outline" size="sm" className="w-full max-w-[200px]">
+                                                Voir toutes les demandes
+                                            </Button>
+                                        </Link>
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        </div>
+
                         <HRStatsCharts
                             requestsByCategory={rdvByStatus}
                             requestsByUser={rdvByUser}
