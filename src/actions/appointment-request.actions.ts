@@ -427,12 +427,12 @@ export async function submitRescheduleReply(
                     content: `
                         <p>Bonjour <strong>${employeeName}</strong>,</p>
                         ${accepted
-                            ? `<p>Votre demande de report de rendez-vous a été <strong style="color:#16a34a;">acceptée</strong>.</p>
+                            ? `<p>La date de votre rendez-vous a été <strong style="color:#16a34a;">mise à jour</strong>.</p>
                                <div style="background-color: #f0fdf4; padding: 20px; border-radius: 8px; border: 1px solid #bbf7d0; margin: 20px 0;">
                                    <p><strong>Nouvelle date validée :</strong> ${newAppointmentDate ? format(new Date(newAppointmentDate), "dd MMMM yyyy 'à' HH:mm", { locale: fr }) : 'Voir dans l\'application'}</p>
                                    ${message ? `<p><strong>Message de la RH :</strong> <em>${message}</em></p>` : ''}
                                </div>`
-                            : `<p>Votre demande de report de rendez-vous a été <strong style="color:#dc2626;">refusée</strong>. La date initiale est maintenue.</p>
+                            : `<p>La demande de modification de rendez-vous a été <strong style="color:#dc2626;">refusée</strong>. La date fixée précédemment est maintenue.</p>
                                <div style="background-color: #fef2f2; padding: 20px; border-radius: 8px; border: 1px solid #fecaca; margin: 20px 0;">
                                    ${message ? `<p><strong>Justification de la RH :</strong> <em>${message}</em></p>` : ''}
                                </div>`

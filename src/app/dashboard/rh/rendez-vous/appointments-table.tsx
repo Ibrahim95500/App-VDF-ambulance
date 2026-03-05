@@ -603,6 +603,40 @@ export function AppointmentsTable({ initialData }: { initialData: RequestWithUse
                             </div>
                         )}
 
+                        {/* Action Area pour les RDV Approuvés (Action RH : Modifier ou Annuler a posteriori) */}
+                        {actionType === 'NONE' && selectedRequest?.status === 'APPROVED' && selectedRequest?.rescheduleStatus !== 'PENDING' && rescheduleAction === 'NONE' && (
+                            <div className="flex gap-2 pt-2 border-t border-border mt-4">
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="flex-1 text-blue-600 border-blue-200 hover:bg-blue-50"
+                                    onClick={() => {
+                                        setRescheduleAction('ACCEPT')
+                                        // Pré-remplir avec la date actuelle du RDV si on veut juste la reporter
+                                        if (selectedRequest.appointmentDate) {
+                                            const d = new Date(selectedRequest.appointmentDate);
+                                            const localDate = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+                                            setAppointmentDate(localDate);
+                                        }
+                                    }}
+                                >
+                                    <CalendarIcon className="w-4 h-4 mr-1.5" /> Reporter le RDV
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    variant="destructive"
+                                    className="flex-1"
+                                    onClick={() => {
+                                        if (confirm('Êtes-vous sûr de vouloir annuler ce rendez-vous ? L\'action est irréversible.')) {
+                                            initiateAction(selectedRequest, 'REJECTED')
+                                        }
+                                    }}
+                                >
+                                    <XCircle className="w-4 h-4 mr-1.5" /> Annuler le RDV
+                                </Button>
+                            </div>
+                        )}
+
                         {rescheduleAction !== 'NONE' && (
                             <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
                                 <div className={`p-5 rounded-xl border ${rescheduleAction === 'ACCEPT' ? 'bg-green-50/50 border-green-200 shadow-sm shadow-green-100/20' : 'bg-red-50/50 border-red-200 shadow-sm shadow-red-100/20'

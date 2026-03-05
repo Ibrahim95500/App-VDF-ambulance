@@ -353,59 +353,87 @@ export function AppointmentHistoryTable({ initialData }: { initialData: Appointm
                             </div>
                         )}
 
-                        {/* Formulaire de report ou Status en attente */}
+                        {/* Formulaire de report ou Status en attente ou Bloqué */}
                         {selectedReq?.status === 'APPROVED' && (
                             <div className="pt-2">
-                                {selectedReq.rescheduleStatus === 'PENDING' ? (
-                                    <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 p-3 rounded-xl text-sm flex items-center justify-center gap-2">
-                                        <Loader2 className="w-4 h-4 animate-spin text-yellow-600" />
-                                        <span>Demande de report en attente de validation RH</span>
-                                    </div>
-                                ) : isNegotiating ? (
-                                    <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl space-y-3">
-                                        <h5 className="text-sm font-bold flex items-center gap-2 text-slate-800">
-                                            <ArrowRightLeft className="w-4 h-4" /> Proposer un report
-                                        </h5>
-                                        <div>
-                                            <label className="text-xs font-semibold text-slate-600 mb-1 block">Nouvelle Date et Heure souhaitée</label>
-                                            <Input
-                                                type="datetime-local"
-                                                value={newProposedDate}
-                                                onChange={(e) => setNewProposedDate(e.target.value)}
-                                                className="bg-white text-slate-900 border-slate-300 focus-visible:ring-blue-500 [&::-webkit-calendar-picker-indicator]:opacity-100"
-                                                style={{ colorScheme: 'light', color: '#111827', backgroundColor: '#ffffff' }}
-                                                disabled={isSubmitting}
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="text-xs font-semibold text-slate-600 mb-1 block">Motif du report (Optionnel)</label>
-                                            <Textarea
-                                                placeholder="Pourquoi demandez-vous à décaler ?"
-                                                value={negotiationMessage}
-                                                onChange={(e) => setNegotiationMessage(e.target.value)}
-                                                className="bg-white resize-none h-20"
-                                                disabled={isSubmitting}
-                                            />
-                                        </div>
-                                        <div className="flex justify-end gap-2 pt-2">
-                                            <Button variant="outline" size="sm" onClick={() => setIsNegotiating(false)} disabled={isSubmitting} className="bg-white text-slate-800 hover:bg-slate-100 border-slate-300 font-medium">
-                                                Annuler
-                                            </Button>
-                                            <Button size="sm" onClick={handleRescheduleSubmit} disabled={isSubmitting} className="bg-blue-600 hover:bg-blue-700 text-white">
-                                                {isSubmitting && <Loader2 className="w-3 h-3 animate-spin mr-2" />}
-                                                Envoyer
-                                            </Button>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <Button
-                                        variant="outline"
-                                        className="w-full border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 hover:text-blue-800"
-                                        onClick={() => setIsNegotiating(true)}
-                                    >
-                                        <ArrowRightLeft className="w-4 h-4 mr-2" /> Demander un report
-                                    </Button>
-                                )}
+                                {(() => {
+                                    // Check if the last action in history is a rejection by HR
+                                    const history = selectedReq.rescheduleHistory as any[] || [];
+                                    const lastAction = history.length > 0 ? history[history.length - 1] : null;
+                                    const isBlocked = lastAction && lastAction.actor === 'RH' && lastAction.action === 'REJECT';
+
+                                    if (isBlocked) {
+                                        return (
+                                            <div className="bg-red-50 border border-red-200 text-red-800 p-4 rounded-xl text-sm flex flex-col items-center justify-center gap-2 text-center">
+                                                <div className="flex items-center gap-2 font-bold mb-1">
+                                                    <span className="text-xl">🛑</span>
+                                                    <span>Action Impossible</span>
+                                                </div>
+                                                <p>La Direction a refusé votre contre-proposition.</p>
+                                                <p className="font-semibold mt-1">La date du rendez-vous est maintenue au {format(new Date(selectedReq.appointmentDate!), "dd/MM/yyyy 'à' HH:mm", { locale: fr })} et ne peut plus être modifiée.</p>
+                                            </div>
+                                        );
+                                    }
+
+                                    if (selectedReq.rescheduleStatus === 'PENDING') {
+                                        return (
+                                            <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 p-3 rounded-xl text-sm flex items-center justify-center gap-2">
+                                                <Loader2 className="w-4 h-4 animate-spin text-yellow-600" />
+                                                <span>Demande de report en attente de validation RH</span>
+                                            </div>
+                                        );
+                                    }
+
+                                    if (isNegotiating) {
+                                        return (
+                                            <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl space-y-3">
+                                                <h5 className="text-sm font-bold flex items-center gap-2 text-slate-800">
+                                                    <ArrowRightLeft className="w-4 h-4" /> Proposer un report
+                                                </h5>
+                                                <div>
+                                                    <label className="text-xs font-semibold text-slate-600 mb-1 block">Nouvelle Date et Heure souhaitée</label>
+                                                    <Input
+                                                        type="datetime-local"
+                                                        value={newProposedDate}
+                                                        onChange={(e) => setNewProposedDate(e.target.value)}
+                                                        className="bg-white text-slate-900 border-slate-300 focus-visible:ring-blue-500 [&::-webkit-calendar-picker-indicator]:opacity-100"
+                                                        style={{ colorScheme: 'light', color: '#111827', backgroundColor: '#ffffff' }}
+                                                        disabled={isSubmitting}
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="text-xs font-semibold text-slate-600 mb-1 block">Motif du report (Optionnel)</label>
+                                                    <Textarea
+                                                        placeholder="Pourquoi demandez-vous à décaler ?"
+                                                        value={negotiationMessage}
+                                                        onChange={(e) => setNegotiationMessage(e.target.value)}
+                                                        className="bg-white resize-none h-20"
+                                                        disabled={isSubmitting}
+                                                    />
+                                                </div>
+                                                <div className="flex justify-end gap-2 pt-2">
+                                                    <Button variant="outline" size="sm" onClick={() => setIsNegotiating(false)} disabled={isSubmitting} className="bg-white text-slate-800 hover:bg-slate-100 border-slate-300 font-medium">
+                                                        Annuler
+                                                    </Button>
+                                                    <Button size="sm" onClick={handleRescheduleSubmit} disabled={isSubmitting} className="bg-blue-600 hover:bg-blue-700 text-white">
+                                                        {isSubmitting && <Loader2 className="w-3 h-3 animate-spin mr-2" />}
+                                                        Envoyer
+                                                    </Button>
+                                                </div>
+                                            </div>
+                                        );
+                                    }
+
+                                    return (
+                                        <Button
+                                            variant="outline"
+                                            className="w-full border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 hover:text-blue-800 mt-2"
+                                            onClick={() => setIsNegotiating(true)}
+                                        >
+                                            <ArrowRightLeft className="w-4 h-4 mr-2" /> Demander un report
+                                        </Button>
+                                    );
+                                })()}
                             </div>
                         )}
                     </div>
