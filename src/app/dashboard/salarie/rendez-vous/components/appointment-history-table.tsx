@@ -251,8 +251,8 @@ export function AppointmentHistoryTable({ initialData }: { initialData: Appointm
 
             {/* Detail dialog */}
             <Dialog open={!!selectedReq} onOpenChange={(open) => !open && setSelectedReq(null)}>
-                <DialogContent className="max-w-[90vw] sm:max-w-md border-border bg-background p-0 overflow-hidden">
-                    <DialogHeader className="p-5 bg-slate-900 text-white">
+                <DialogContent className="max-w-[92vw] sm:max-w-md border-border bg-background p-0 overflow-hidden flex flex-col max-h-[92dvh]">
+                    <DialogHeader className="p-5 bg-slate-900 text-white shrink-0">
                         <div className="text-slate-400 text-[10px] mb-1 uppercase tracking-widest font-bold">
                             Demande de Rendez-vous
                         </div>
@@ -261,7 +261,7 @@ export function AppointmentHistoryTable({ initialData }: { initialData: Appointm
                             <Calendar className="w-3 h-3" /> Demandé le {selectedReq ? format(new Date(selectedReq.createdAt), 'dd MMMM yyyy', { locale: fr }) : ''}
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="p-5 space-y-4">
+                    <div className="p-5 space-y-4 overflow-y-auto flex-1">
                         <div className="flex items-center justify-between pb-3 border-b border-border">
                             <span className="text-sm font-semibold text-muted-foreground">Statut</span>
                             {selectedReq && getStatusBadge(selectedReq.status)}

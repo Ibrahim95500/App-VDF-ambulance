@@ -464,8 +464,8 @@ export function AppointmentsTable({ initialData }: { initialData: RequestWithUse
                     }
                 }}
             >
-                <DialogContent className="max-w-[90vw] sm:max-w-xl border-border bg-background p-0 gap-0 overflow-y-auto max-h-[90vh]">
-                    <DialogHeader className="p-5 bg-slate-900 text-white border-b border-slate-800">
+                <DialogContent className="max-w-[92vw] sm:max-w-xl border-border bg-background p-0 gap-0 flex flex-col max-h-[92dvh]">
+                    <DialogHeader className="p-5 bg-slate-900 text-white border-b border-slate-800 shrink-0">
                         <div className="flex justify-between items-start pr-8">
                             <div>
                                 <div className="text-slate-400 text-[10px] mb-1 uppercase tracking-widest font-bold">
@@ -482,7 +482,7 @@ export function AppointmentsTable({ initialData }: { initialData: RequestWithUse
                         </div>
                     </DialogHeader>
 
-                    <div className="p-5 space-y-6">
+                    <div className="p-5 space-y-6 overflow-y-auto flex-1">
                         {/* Context & Description */}
                         {selectedRequest?.description && (
                             <div className="space-y-2">
