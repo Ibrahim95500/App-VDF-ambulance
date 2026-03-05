@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { getAdvanceRequests } from '@/services/advance-request';
 import { getAllLeaveRequests } from '@/services/leave-requests';
 import { getAllServiceRequests } from '@/services/service-request';
+import { getAppointmentRequests } from '@/services/appointment-request';
 import Link from 'next/link';
 import { Home } from 'lucide-react';
 import { HRStatsCharts } from './components/hr-stats-charts';
@@ -28,6 +29,8 @@ export default async function RHDashboard() {
 
     const allServices = await getAllServiceRequests()
     const pendingServices = allServices.filter(req => req.status === 'PENDING')
+
+    const allAppointments = await getAppointmentRequests()
 
     // Aggregate data for charts
     const categoryCounts: Record<string, number> = {}
@@ -57,6 +60,28 @@ export default async function RHDashboard() {
     const requestsByCategory = Object.entries(categoryCounts).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value)
     const requestsByUser = Object.entries(userCounts).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value)
     const requestsByMonth = Object.keys(monthCounts).map(name => ({ name, value: monthCounts[name] }))
+
+    // Aggregate data for Rendez-vous charts
+    const rdvStatusCounts: Record<string, number> = {}
+    const rdvUserCounts: Record<string, { rdv: number, convocation: number }> = {}
+    const rdvMonthCounts: Record<string, number> = {}
+    const sortedAppointments = [...allAppointments].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+    sortedAppointments.forEach(req => {
+        const statusMap: Record<string, string> = { 'PENDING': 'En attente', 'APPROVED': 'Approuvé', 'REJECTED': 'Refusé' }
+        rdvStatusCounts[statusMap[req.status] || req.status] = (rdvStatusCounts[statusMap[req.status] || req.status] || 0) + 1
+        const uName = (req.user as any)?.firstName && (req.user as any)?.lastName
+            ? `${(req.user as any).firstName} ${(req.user as any).lastName}`
+            : ((req.user as any)?.email || 'Inconnu')
+        if (!rdvUserCounts[uName]) rdvUserCounts[uName] = { rdv: 0, convocation: 0 }
+        if ((req as any).type === 'CONVOCATION') rdvUserCounts[uName].convocation += 1
+        else rdvUserCounts[uName].rdv += 1
+        const mYStr = format(new Date(req.createdAt), 'MMM yyyy', { locale: fr })
+        const mY = mYStr.charAt(0).toUpperCase() + mYStr.slice(1)
+        rdvMonthCounts[mY] = (rdvMonthCounts[mY] || 0) + 1
+    })
+    const rdvByStatus = Object.entries(rdvStatusCounts).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value)
+    const rdvByUser = Object.entries(rdvUserCounts).map(([name, counts]) => ({ name, ...counts })).sort((a, b) => (b.rdv + b.convocation) - (a.rdv + a.convocation))
+    const rdvByMonth = Object.keys(rdvMonthCounts).map(name => ({ name, value: rdvMonthCounts[name] }))
 
     // Aggregate data for Advance Requests charts
     const advanceStatusCounts: Record<string, number> = {}
@@ -233,6 +258,21 @@ export default async function RHDashboard() {
 
                     {/* Leave Requests Card (Hidden for now as requested by client) */}
                 </div>
+
+                {/* Statistiques Rendez-vous */}
+                {allAppointments.length > 0 && (
+                    <div className="mt-8">
+                        <HRStatsCharts
+                            requestsByCategory={rdvByStatus}
+                            requestsByUser={rdvByUser}
+                            requestsByMonth={rdvByMonth}
+                            hideUserTab={false}
+                            categoryLabel="Par Statut"
+                            title="Indicateurs de Rendez-vous"
+                            description="RDV salariés et convocations RH — statuts, par salarié et évolution mensuelle."
+                        />
+                    </div>
+                )}
             </Container>
         </Fragment>
     )

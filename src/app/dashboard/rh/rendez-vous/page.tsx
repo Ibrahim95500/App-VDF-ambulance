@@ -82,20 +82,6 @@ export default async function RHRendezvousPage() {
             </Container>
 
             <Container>
-                {allRequests.length > 0 && (
-                    <div className="mb-8">
-                        <HRStatsCharts
-                            requestsByCategory={requestsByStatus}
-                            requestsByUser={requestsByUser}
-                            requestsByMonth={requestsByMonth}
-                            hideUserTab={false}
-                            categoryLabel="Par Statut"
-                            title="Indicateurs de Rendez-vous"
-                            description="Visualisez les motifs, les statuts et l'évolution globale."
-                        />
-                    </div>
-                )}
-
                 <div className="mb-8">
                     <AppointmentsTable initialData={allRequests} />
                 </div>
