@@ -372,8 +372,8 @@ export function AppointmentHistoryTable({ initialData }: { initialData: Appointm
                                                 type="datetime-local"
                                                 value={newProposedDate}
                                                 onChange={(e) => setNewProposedDate(e.target.value)}
-                                                className="bg-white text-slate-900 border-slate-300 focus-visible:ring-blue-500 [&::-webkit-calendar-picker-indicator]:dark:invert-0 [&::-webkit-calendar-picker-indicator]:opacity-100"
-                                                style={{ colorScheme: 'light' }}
+                                                className="bg-white text-slate-900 border-slate-300 focus-visible:ring-blue-500 [&::-webkit-calendar-picker-indicator]:opacity-100"
+                                                style={{ colorScheme: 'light', color: '#111827', backgroundColor: '#ffffff' }}
                                                 disabled={isSubmitting}
                                             />
                                         </div>
