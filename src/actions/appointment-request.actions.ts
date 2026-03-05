@@ -235,6 +235,36 @@ export async function createConvocationAction(
             "/dashboard/salarie/rendez-vous"
         )
 
+        // Envoyer le mail au salarié convoqué
+        try {
+            const employee = await prisma.user.findUnique({ where: { id: userId }, select: { email: true, firstName: true, lastName: true } })
+            if (employee?.email) {
+                const employeeName = [employee.firstName, employee.lastName].filter(Boolean).join(' ') || employee.email
+                const modeLabel = appointmentMode === 'TELEPHONE' ? 'Par Téléphone' : 'Au Bureau'
+                await sendBrandedEmail({
+                    to: employee.email,
+                    subject: `[Convocation] ${reason} - ${format(new Date(appointmentDate), "dd/MM/yyyy 'à' HH:mm")}`,
+                    title: "Convocation RH",
+                    preheader: `Vous êtes convoqué(e) le ${format(new Date(appointmentDate), "dd/MM/yyyy")}`,
+                    content: `
+                        <p>Bonjour <strong>${employeeName}</strong>,</p>
+                        <p>Vous êtes convoqué(e) par la Direction des Ressources Humaines.</p>
+                        <div style="background-color: #eff6ff; padding: 20px; border-radius: 8px; border: 1px solid #bfdbfe; margin: 20px 0;">
+                            <p><strong>Motif :</strong> ${reason}</p>
+                            <p><strong>Date et Heure :</strong> ${format(new Date(appointmentDate), "dd MMMM yyyy 'à' HH:mm", { locale: fr })}</p>
+                            <p><strong>Modalité :</strong> ${modeLabel}</p>
+                            ${adminComment ? `<p><strong>Message de la RH :</strong> <em>${adminComment}</em></p>` : ''}
+                        </div>
+                        <p style="font-size: 13px; color: #6b7280;">Veuillez vous préparer en conséquence et vous connecter à l'application pour plus de détails.</p>
+                    `,
+                    actionUrl: `${process.env.NEXTAUTH_URL}/dashboard/salarie/rendez-vous`,
+                    actionText: "Voir ma convocation"
+                })
+            }
+        } catch (emailError) {
+            console.error("Failed to send convocation email to employee:", emailError)
+        }
+
         revalidatePath("/dashboard/rh/rendez-vous")
         revalidatePath("/dashboard/salarie/rendez-vous")
         return { success: true }
@@ -286,6 +316,28 @@ export async function submitRescheduleRequest(
             )
         }
 
+        // Mail à la RH pour signaler la demande de report
+        try {
+            await sendBrandedEmail({
+                to: process.env.EMAIL_ADMIN_NOTIFY || "",
+                subject: `[Report RDV] ${userName} propose une nouvelle date`,
+                title: "Demande de Report de Rendez-vous",
+                preheader: `${userName} souhaite reporter son rendez-vous`,
+                content: `
+                    <p>Un(e) collaborateur/trice souhaite reporter son rendez-vous.</p>
+                    <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; margin: 20px 0;">
+                        <p><strong>Collaborateur :</strong> ${userName}</p>
+                        <p><strong>Nouvelle date proposée :</strong> ${format(proposedDate, "dd MMMM yyyy 'à' HH:mm", { locale: fr })}</p>
+                        ${message ? `<p><strong>Message :</strong> <em>${message}</em></p>` : ''}
+                    </div>
+                `,
+                actionUrl: `${process.env.NEXTAUTH_URL}/dashboard/rh/rendez-vous`,
+                actionText: "Voir la demande de report"
+            })
+        } catch (emailError) {
+            console.error("Failed to send reschedule request email to RH:", emailError)
+        }
+
         revalidatePath("/dashboard/rh/rendez-vous")
         revalidatePath("/dashboard/salarie/rendez-vous")
         return { success: true }
@@ -331,6 +383,40 @@ export async function submitRescheduleReply(
             action === 'ACCEPT' ? `Votre nouvelle date a été validée.` : `Votre demande de report a été refusée, la date initiale est maintenue.`,
             "/dashboard/salarie/rendez-vous"
         )
+
+        // Mail au salarié pour le résultat de sa demande de report
+        try {
+            const employee = await prisma.user.findUnique({ where: { id: updatedRequest.userId }, select: { email: true, firstName: true, lastName: true } })
+            if (employee?.email) {
+                const employeeName = [employee.firstName, employee.lastName].filter(Boolean).join(' ') || employee.email
+                const accepted = action === 'ACCEPT'
+                await sendBrandedEmail({
+                    to: employee.email,
+                    subject: `[Report RDV] ${accepted ? 'Accepté' : 'Refusé'} - ${employeeName}`,
+                    title: accepted ? "Report Accepté ✅" : "Report Refusé ❌",
+                    preheader: accepted ? "Votre nouvelle date a été validée" : "Votre demande de report a été refusée",
+                    content: `
+                        <p>Bonjour <strong>${employeeName}</strong>,</p>
+                        ${accepted
+                            ? `<p>Votre demande de report de rendez-vous a été <strong style="color:#16a34a;">acceptée</strong>.</p>
+                               <div style="background-color: #f0fdf4; padding: 20px; border-radius: 8px; border: 1px solid #bbf7d0; margin: 20px 0;">
+                                   <p><strong>Nouvelle date validée :</strong> ${newAppointmentDate ? format(new Date(newAppointmentDate), "dd MMMM yyyy 'à' HH:mm", { locale: fr }) : 'Voir dans l\'application'}</p>
+                                   ${message ? `<p><strong>Message de la RH :</strong> <em>${message}</em></p>` : ''}
+                               </div>`
+                            : `<p>Votre demande de report de rendez-vous a été <strong style="color:#dc2626;">refusée</strong>. La date initiale est maintenue.</p>
+                               <div style="background-color: #fef2f2; padding: 20px; border-radius: 8px; border: 1px solid #fecaca; margin: 20px 0;">
+                                   ${message ? `<p><strong>Justification de la RH :</strong> <em>${message}</em></p>` : ''}
+                               </div>`
+                        }
+                        <p style="font-size: 13px; color: #6b7280;">Connectez-vous à l'application pour consulter les détails de votre rendez-vous.</p>
+                    `,
+                    actionUrl: `${process.env.NEXTAUTH_URL}/dashboard/salarie/rendez-vous`,
+                    actionText: "Voir mon rendez-vous"
+                })
+            }
+        } catch (emailError) {
+            console.error("Failed to send reschedule reply email to employee:", emailError)
+        }
 
         revalidatePath("/dashboard/rh/rendez-vous")
         revalidatePath("/dashboard/salarie/rendez-vous")
