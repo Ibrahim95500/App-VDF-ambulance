@@ -66,7 +66,7 @@ export function AppointmentHistoryTable({ initialData }: { initialData: Appointm
 
     const exportData = useMemo(() => {
         return filteredData.map(req => ({
-            "Date de demande": new Date(req.createdAt).toLocaleDateString('fr-FR'),
+            "Date de demande": format(new Date(req.createdAt), 'dd/MM/yyyy'),
             "Motif": req.reason || "-",
             "RDV Prévu": req.appointmentDate ? format(new Date(req.appointmentDate), "dd/MM/yyyy HH:mm") : "-",
             "Statut": req.status === 'PENDING' ? 'En Attente' : req.status === 'APPROVED' ? 'Approuvée' : 'Refusée'
@@ -105,7 +105,7 @@ export function AppointmentHistoryTable({ initialData }: { initialData: Appointm
                                 <div className="flex flex-col gap-1 min-w-0">
                                     <p className="font-bold text-foreground text-sm truncate">{req.reason}</p>
                                     <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
-                                        <Calendar className="size-3" /> Demandé le {new Date(req.createdAt).toLocaleDateString('fr-FR')}
+                                        <Calendar className="size-3" /> Demandé le {format(new Date(req.createdAt), 'dd/MM/yyyy')}
                                     </div>
                                 </div>
                                 {getStatusBadge(req.status)}
@@ -160,7 +160,7 @@ export function AppointmentHistoryTable({ initialData }: { initialData: Appointm
                                 paginatedData.map((req) => (
                                     <tr key={req.id} className="hover:bg-muted/10 transition-colors">
                                         <td className="px-5 py-4 font-medium text-foreground whitespace-nowrap">
-                                            {new Date(req.createdAt).toLocaleDateString('fr-FR')}
+                                            {format(new Date(req.createdAt), 'dd/MM/yyyy')}
                                         </td>
                                         <td className="px-5 py-4 font-bold text-foreground">
                                             <span className="max-w-[200px] block truncate" title={req.reason || ""}>
@@ -222,7 +222,7 @@ export function AppointmentHistoryTable({ initialData }: { initialData: Appointm
                         </div>
                         <DialogTitle className="text-lg font-black text-white">{selectedReq?.reason}</DialogTitle>
                         <DialogDescription className="text-slate-400 text-xs flex items-center gap-1 mt-1">
-                            <Calendar className="w-3 h-3" /> Demandé le {selectedReq ? new Date(selectedReq.createdAt).toLocaleDateString('fr-FR') : ''}
+                            <Calendar className="w-3 h-3" /> Demandé le {selectedReq ? format(new Date(selectedReq.createdAt), 'dd MMMM yyyy', { locale: fr }) : ''}
                         </DialogDescription>
                     </DialogHeader>
                     <div className="p-5 space-y-4">

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -18,6 +18,7 @@ import { Loader2 } from "lucide-react"
 
 export function RequestAppointmentForm() {
     const [isSubmitting, setIsSubmitting] = useState(false)
+    const formRef = useRef<HTMLFormElement>(null)
 
     async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault()
@@ -37,7 +38,7 @@ export function RequestAppointmentForm() {
                 toast.error(result.error)
             } else {
                 toast.success("Votre demande de rendez-vous a été envoyée avec succès")
-                event.currentTarget.reset()
+                if (formRef.current) formRef.current.reset()
             }
         } catch (error: any) {
             toast.error(error.message || "Une erreur est survenue")
@@ -55,7 +56,7 @@ export function RequestAppointmentForm() {
                 </CardDescription>
             </CardHeader>
             <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-5">
+                <form ref={formRef} onSubmit={handleSubmit} className="space-y-5">
                     <div className="space-y-2">
                         <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                             Motif du rendez-vous

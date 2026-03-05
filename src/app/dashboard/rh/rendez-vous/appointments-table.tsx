@@ -373,7 +373,7 @@ export function AppointmentsTable({ initialData }: { initialData: RequestWithUse
             >
                 <DialogContent className="max-w-[90vw] sm:max-w-xl border-border bg-background p-0 gap-0 overflow-y-auto max-h-[90vh]">
                     <DialogHeader className="p-5 bg-slate-900 text-white border-b border-slate-800">
-                        <div className="flex justify-between items-start">
+                        <div className="flex justify-between items-start pr-8">
                             <div>
                                 <div className="text-slate-400 text-[10px] mb-1 uppercase tracking-widest font-bold">
                                     Demande de Rendez-vous
@@ -466,13 +466,13 @@ export function AppointmentsTable({ initialData }: { initialData: RequestWithUse
                                                         required
                                                         value={appointmentDate}
                                                         onChange={(e) => setAppointmentDate(e.target.value)}
-                                                        className="bg-white border-green-200 focus-visible:ring-green-500"
+                                                        className="bg-white text-gray-900 border-green-200 focus-visible:ring-green-500"
                                                     />
                                                 </div>
                                                 <div className="space-y-2">
                                                     <label className="text-xs font-semibold text-green-900">Mode d'entretien *</label>
                                                     <Select value={appointmentMode} onValueChange={setAppointmentMode}>
-                                                        <SelectTrigger className="bg-white border-green-200 focus:ring-green-500">
+                                                        <SelectTrigger className="bg-white text-gray-900 border-green-200 focus:ring-green-500">
                                                             <SelectValue />
                                                         </SelectTrigger>
                                                         <SelectContent>
@@ -490,7 +490,7 @@ export function AppointmentsTable({ initialData }: { initialData: RequestWithUse
                                             </label>
                                             <Textarea
                                                 placeholder={actionType === 'APPROVED' ? "Ex: Veuillez préparer vos documents." : "Ex: Ce motif nécessite d'en parler préalablement avec votre manager."}
-                                                className={`min-h-[80px] bg-white resize-none ${actionType === 'APPROVED' ? 'border-green-200 focus-visible:ring-green-500' : 'border-red-200 focus-visible:ring-red-500'
+                                                className={`min-h-[80px] bg-white text-gray-900 resize-none ${actionType === 'APPROVED' ? 'border-green-200 focus-visible:ring-green-500' : 'border-red-200 focus-visible:ring-red-500'
                                                     }`}
                                                 value={adminComment}
                                                 onChange={(e) => setAdminComment(e.target.value)}
