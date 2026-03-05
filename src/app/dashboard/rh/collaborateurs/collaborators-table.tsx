@@ -19,8 +19,11 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { deactivateUser, reactivateUser } from "@/actions/users"
 import { toast } from "sonner"
-import { Trash2Icon, InfoIcon, ShieldCheckIcon, ShieldAlertIcon, UserCheckIcon, UserXIcon, MessageSquareIcon, Eye, RotateCcw } from "lucide-react"
+import { Trash2Icon, InfoIcon, ShieldCheckIcon, ShieldAlertIcon, UserCheckIcon, UserXIcon, MessageSquareIcon, Eye, RotateCcw, Calendar, Loader2 } from "lucide-react"
 import { HRStatsCharts } from "../components/hr-stats-charts"
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { createConvocationAction } from "@/actions/appointment-request.actions"
 
 interface User {
     id: string
@@ -53,6 +56,47 @@ export function CollaboratorsTable({ initialData, services = [] }: { initialData
     const [isDeactivating, setIsDeactivating] = useState(false)
     const [selectedUser, setSelectedUser] = useState<User | null>(null)
     const [isReactivating, setIsReactivating] = useState<string | null>(null)
+
+    // Convocation state
+    const [isConvoking, setIsConvoking] = useState(false)
+    const [convocReason, setConvocReason] = useState("")
+    const [convocDate, setConvocDate] = useState("")
+    const [convocMode, setConvocMode] = useState("BUREAU")
+    const [convocDesc, setConvocDesc] = useState("")
+    const [convocSubmitting, setConvocSubmitting] = useState(false)
+
+    const reasonOptions = [
+        "Point d'étape / Bilan",
+        "Incident de transport",
+        "Avertissement ou Sanction",
+        "Gestion d'un conflit",
+        "Évaluation annuelle",
+        "Retour d'arrêt maladie",
+        "Modification du contrat",
+        "Autre métier"
+    ];
+
+    const handleConvocation = async () => {
+        if (!selectedUser || !convocReason || !convocDate) {
+            toast.error("Veuillez remplir les champs: Motif et Date.");
+            return;
+        }
+        try {
+            setConvocSubmitting(true);
+            const result = await createConvocationAction(selectedUser.id, convocReason, new Date(convocDate), convocMode, convocDesc);
+            if (result.error) {
+                toast.error(result.error);
+            } else {
+                toast.success("Convocation envoyée avec succès.");
+                setIsConvoking(false);
+                setConvocReason(""); setConvocDate(""); setConvocMode("BUREAU"); setConvocDesc("");
+            }
+        } catch {
+            toast.error("Une erreur est survenue.");
+        } finally {
+            setConvocSubmitting(false);
+        }
+    }
 
     const userStats = useMemo(() => {
         if (!selectedUser) return null;
@@ -505,6 +549,52 @@ export function CollaboratorsTable({ initialData, services = [] }: { initialData
                                 <p className="text-sm text-red-700 p-3 bg-red-50 rounded-lg border border-red-200 italic">
                                     {(selectedUser as any).deletionReason}
                                 </p>
+                            </div>
+                        )}
+
+                        {!isConvoking && selectedUser?.role === 'SALARIE' && (selectedUser as any)?.isActive !== false && (
+                            <div className="pt-4 border-t border-border">
+                                <button
+                                    onClick={() => setIsConvoking(true)}
+                                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 text-sm font-bold transition-colors"
+                                >
+                                    <Calendar className="w-4 h-4" /> Convoquer ce salarié
+                                </button>
+                            </div>
+                        )}
+
+                        {isConvoking && (
+                            <div className="pt-4 border-t border-border space-y-3 animate-in fade-in duration-200">
+                                <p className="text-xs font-bold uppercase text-blue-700 tracking-wider">Nouvelle Convocation</p>
+                                <Select value={convocReason} onValueChange={setConvocReason} disabled={convocSubmitting}>
+                                    <SelectTrigger className="text-sm"><SelectValue placeholder="Motif *" /></SelectTrigger>
+                                    <SelectContent>
+                                        {reasonOptions.map((r, i) => <SelectItem key={i} value={r}>{r}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
+                                <Input
+                                    type="datetime-local"
+                                    value={convocDate}
+                                    onChange={(e) => setConvocDate(e.target.value)}
+                                    className="text-sm [&::-webkit-calendar-picker-indicator]:dark:invert-0"
+                                    style={{ colorScheme: 'light' }}
+                                    disabled={convocSubmitting}
+                                />
+                                <Select value={convocMode} onValueChange={setConvocMode} disabled={convocSubmitting}>
+                                    <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="BUREAU">Au Bureau</SelectItem>
+                                        <SelectItem value="TELEPHONE">Par Téléphone</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <Textarea placeholder="Message pour le salarié (Optionnel)" value={convocDesc} onChange={(e) => setConvocDesc(e.target.value)} className="min-h-[80px] resize-none text-sm" disabled={convocSubmitting} />
+                                <div className="flex gap-2 justify-end">
+                                    <Button variant="outline" size="sm" onClick={() => setIsConvoking(false)} disabled={convocSubmitting} className="border-slate-300 text-slate-700 font-medium">Annuler</Button>
+                                    <Button size="sm" onClick={handleConvocation} disabled={convocSubmitting} className="bg-blue-600 hover:bg-blue-700 text-white">
+                                        {convocSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Calendar className="w-4 h-4 mr-1" />}
+                                        Envoyer
+                                    </Button>
+                                </div>
                             </div>
                         )}
 

@@ -83,10 +83,10 @@ export function ConvocationFab({ employees }: { employees: UserForConvocation[] 
         <>
             <Button
                 onClick={() => setOpen(true)}
-                className="fixed bottom-6 right-6 md:bottom-8 md:right-8 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg shadow-blue-500/30 px-6 font-bold z-50 flex items-center gap-2 group transition-all hover:scale-105 active:scale-95"
+                className="fixed bottom-6 right-4 md:bottom-8 md:right-8 h-12 sm:h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg shadow-blue-500/30 px-4 sm:px-6 font-bold z-50 flex items-center gap-2 group transition-all hover:scale-105 active:scale-95 text-sm sm:text-base"
             >
-                <Plus className="w-6 h-6 group-hover:rotate-90 transition-transform duration-300" />
-                <span className="hidden sm:inline">Nouvelle Convocation</span>
+                <Plus className="w-5 h-5 sm:w-6 sm:h-6 group-hover:rotate-90 transition-transform duration-300 shrink-0" />
+                <span>Nouvelle Convocation</span>
             </Button>
 
             <Dialog open={open} onOpenChange={setOpen}>

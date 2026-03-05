@@ -12,7 +12,7 @@ import { BarChart3, PieChartIcon, TrendingUp } from 'lucide-react';
 
 interface StatProps {
     requestsByCategory: { name: string, value: number }[];
-    requestsByUser: { name: string, value: number }[];
+    requestsByUser: { name: string, value?: number, rdv?: number, convocation?: number }[];
     requestsByMonth: { name: string, value: number }[];
     hideUserTab?: boolean;
     categoryLabel?: string;
@@ -136,13 +136,38 @@ export function HRStatsCharts({
                                     <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} allowDecimals={false} />
                                     <Tooltip
                                         cursor={{ fill: 'rgba(0,0,0,0.05)' }}
-                                        formatter={(value: any, name: any) => [`${value}`, `Total pour ${name}`]}
-                                        contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                                        content={({ active, payload, label }) => {
+                                            if (active && payload && payload.length) {
+                                                return (
+                                                    <div className="bg-white border border-slate-200 shadow-md rounded-lg p-3 text-sm">
+                                                        <p className="font-bold text-slate-800 mb-1">{label}</p>
+                                                        {payload.map((p: any, i: number) => (
+                                                            <p key={i} style={{ color: p.fill }} className="font-semibold">
+                                                                {p.name} : {p.value}
+                                                            </p>
+                                                        ))}
+                                                    </div>
+                                                );
+                                            }
+                                            return null;
+                                        }}
                                     />
-                                    <Bar dataKey="value" fill="#3b82f6" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                                    <Bar dataKey="rdv" name="Rendez-vous" fill="#3b82f6" radius={[4, 4, 0, 0]} maxBarSize={30} stackId="a" />
+                                    <Bar dataKey="convocation" name="Convocation" fill="#8b5cf6" radius={[4, 4, 0, 0]} maxBarSize={30} stackId="a" />
                                 </BarChart>
                             </ResponsiveContainer>
                         )}
+                        {/* Custom Legend */}
+                        <div className="flex items-center justify-center gap-4 mt-2 text-xs">
+                            <div className="flex items-center gap-1.5">
+                                <div className="w-3 h-3 rounded-sm bg-blue-500" />
+                                <span>Rendez-vous (Salarié)</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                                <div className="w-3 h-3 rounded-sm bg-violet-500" />
+                                <span>Convocation (RH)</span>
+                            </div>
+                        </div>
                     </div>
                 )}
 

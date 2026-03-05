@@ -28,7 +28,7 @@ export default async function RHRendezvousPage() {
 
     // Aggregate data for charts
     const statusCounts: Record<string, number> = {}
-    const reasonCounts: Record<string, number> = {}
+    const userCounts: Record<string, { rdv: number, convocation: number }> = {}
     const monthCounts: Record<string, number> = {}
 
     const sortedRequests = [...allRequests].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
@@ -43,9 +43,16 @@ export default async function RHRendezvousPage() {
         const status = statusMap[req.status] || req.status;
         statusCounts[status] = (statusCounts[status] || 0) + 1
 
-        // Reason
-        const reason = req.reason || 'Autre'
-        reasonCounts[reason] = (reasonCounts[reason] || 0) + 1
+        // By Employee Name
+        const userName = (req.user as any)?.firstName && (req.user as any)?.lastName
+            ? `${(req.user as any).firstName} ${(req.user as any).lastName}`
+            : ((req.user as any)?.email || 'Inconnu');
+        if (!userCounts[userName]) userCounts[userName] = { rdv: 0, convocation: 0 };
+        if ((req as any).type === 'CONVOCATION') {
+            userCounts[userName].convocation += 1;
+        } else {
+            userCounts[userName].rdv += 1;
+        }
 
         // Month
         const date = new Date(req.createdAt)
@@ -55,7 +62,7 @@ export default async function RHRendezvousPage() {
     })
 
     const requestsByStatus = Object.entries(statusCounts).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value)
-    const requestsByReason = Object.entries(reasonCounts).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value)
+    const requestsByUser = Object.entries(userCounts).map(([name, counts]) => ({ name, ...counts })).sort((a, b) => (b.rdv + b.convocation) - (a.rdv + a.convocation))
     const requestsByMonth = Object.keys(monthCounts).map(name => ({ name, value: monthCounts[name] }))
 
     return (
