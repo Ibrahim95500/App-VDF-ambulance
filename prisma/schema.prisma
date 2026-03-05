@@ -50,6 +50,7 @@ model User {
   requests      AdvanceRequest[]
   leaveRequests  LeaveRequest[]
   serviceRequests ServiceRequest[]
+  appointmentRequests AppointmentRequest[]
   notifications  Notification[]
   sessions       Session[]
 
@@ -157,4 +158,19 @@ enum LeaveType {
   CP
   MA
   CSS
+}
+
+model AppointmentRequest {
+  id              String        @id @default(cuid())
+  userId          String
+  reason          String
+  description     String?       @db.Text
+  status          RequestStatus @default(PENDING)
+  appointmentDate DateTime?
+  appointmentMode String?       // e.g., "BUREAU", "TELEPHONE"
+  adminComment    String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
