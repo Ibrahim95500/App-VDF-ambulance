@@ -1,10 +1,13 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Calendar, MessageSquare, Eye, MessageSquareQuote, MapPin, Phone } from "lucide-react"
 import { TablePagination } from "@/components/common/table-pagination"
+import { TableActions } from "@/components/common/table-actions"
+import { isWithinInterval, startOfDay, endOfDay } from "date-fns"
+import { DateRange } from "react-day-picker"
 import {
     Dialog,
     DialogContent,
@@ -17,14 +20,34 @@ import { fr } from "date-fns/locale"
 import { AppointmentRequest } from "@prisma/client"
 
 export function AppointmentHistoryTable({ initialData }: { initialData: AppointmentRequest[] }) {
+    const [searchTerm, setSearchTerm] = useState("")
+    const [statusFilter, setStatusFilter] = useState("ALL")
+    const [dateRange, setDateRange] = useState<DateRange | undefined>()
     const [currentPage, setCurrentPage] = useState(1)
     const [selectedReq, setSelectedReq] = useState<AppointmentRequest | null>(null)
     const PAGE_SIZE = 10
 
+    useEffect(() => { setCurrentPage(1) }, [searchTerm, statusFilter, dateRange])
+
+    const filteredData = useMemo(() => {
+        return initialData.filter(req => {
+            const searchStr = `${req.reason}`.toLowerCase()
+            if (searchTerm && !searchStr.includes(searchTerm.toLowerCase())) return false
+            if (statusFilter !== "ALL" && req.status !== statusFilter) return false
+            if (dateRange?.from) {
+                const reqDate = new Date(req.createdAt)
+                const start = startOfDay(dateRange.from)
+                const end = dateRange.to ? endOfDay(dateRange.to) : endOfDay(dateRange.from)
+                if (!isWithinInterval(reqDate, { start, end })) return false
+            }
+            return true
+        })
+    }, [initialData, searchTerm, statusFilter, dateRange])
+
     const paginatedData = useMemo(() => {
         const start = (currentPage - 1) * PAGE_SIZE
-        return initialData.slice(start, start + PAGE_SIZE)
-    }, [initialData, currentPage])
+        return filteredData.slice(start, start + PAGE_SIZE)
+    }, [filteredData, currentPage])
 
     const getStatusBadge = (status: string) => {
         if (status === 'APPROVED') return <Badge variant="outline" className="text-green-600 bg-green-50 border-green-200">Approuvée</Badge>
@@ -41,101 +64,154 @@ export function AppointmentHistoryTable({ initialData }: { initialData: Appointm
         )
     }
 
+    const exportData = useMemo(() => {
+        return filteredData.map(req => ({
+            "Date de demande": new Date(req.createdAt).toLocaleDateString('fr-FR'),
+            "Motif": req.reason || "-",
+            "RDV Prévu": req.appointmentDate ? format(new Date(req.appointmentDate), "dd/MM/yyyy HH:mm") : "-",
+            "Statut": req.status === 'PENDING' ? 'En Attente' : req.status === 'APPROVED' ? 'Approuvée' : 'Refusée'
+        }))
+    }, [filteredData])
+
+    const statusOptions = [
+        { label: "En Attente", value: "PENDING" },
+        { label: "Approuvé", value: "APPROVED" },
+        { label: "Refusé", value: "REJECTED" }
+    ]
+
     return (
-        <div className="flex flex-col rounded-xl border border-secondary/50 border-t-4 border-t-secondary overflow-hidden">
-            <div className="px-5 py-4 border-b border-border bg-muted/5">
-                <h2 className="text-base font-semibold text-secondary tracking-wide">HISTORIQUE DE MES DEMANDES</h2>
-            </div>
+        <div className="flex flex-col">
+            <TableActions
+                data={exportData}
+                onSearch={setSearchTerm}
+                onStatusChange={setStatusFilter}
+                onDateRangeChange={setDateRange}
+                statusOptions={statusOptions}
+                filename="mes_rendez_vous"
+                pdfTitle="Historique de mes Demandes de Rendez-vous"
+            />
 
             {/* Mobile card view */}
-            <div className="md:hidden divide-y divide-border px-4">
-                {paginatedData.map((req) => (
-                    <div key={req.id} className="py-3 flex items-center justify-between gap-3">
-                        <div className="flex flex-col gap-1 min-w-0">
-                            <p className="font-bold text-foreground text-sm truncate">{req.reason}</p>
-                            <div className="flex flex-col gap-0.5 mt-1">
-                                <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                                    <Calendar className="size-3" />Demandé le {new Date(req.createdAt).toLocaleDateString('fr-FR')}
-                                </span>
-                                {req.status === 'APPROVED' && req.appointmentDate && (
-                                    <span className="flex items-center gap-1.5 text-xs text-green-600 font-medium ml-4 mt-0.5">
-                                        ↳ Prévu: {format(new Date(req.appointmentDate), "dd MMM yyyy 'à' HH:mm", { locale: fr })}
-                                    </span>
-                                )}
+            <div className="md:hidden border border-border rounded-xl overflow-hidden divide-y divide-border mt-4">
+                {paginatedData.length === 0 ? (
+                    <div className="p-8 text-center text-muted-foreground flex flex-col items-center justify-center bg-background">
+                        <MessageSquareQuote className="h-8 w-8 mb-3 opacity-20" />
+                        <p>Aucune demande trouvée</p>
+                    </div>
+                ) : (
+                    paginatedData.map((req) => (
+                        <div key={req.id} className="p-4 bg-background">
+                            <div className="flex justify-between items-start mb-3">
+                                <div className="flex flex-col gap-1 min-w-0">
+                                    <p className="font-bold text-foreground text-sm truncate">{req.reason}</p>
+                                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
+                                        <Calendar className="size-3" /> Demandé le {new Date(req.createdAt).toLocaleDateString('fr-FR')}
+                                    </div>
+                                </div>
+                                {getStatusBadge(req.status)}
+                            </div>
+
+                            {req.status === 'APPROVED' && req.appointmentDate && (
+                                <div className="space-y-2 mb-4 bg-green-50 p-3 rounded-lg border border-green-100">
+                                    <div className="flex justify-between text-sm">
+                                        <span className="text-green-700 font-semibold">RDV Prévu:</span>
+                                        <span className="font-bold text-green-700">
+                                            {format(new Date(req.appointmentDate), "dd MMM yyyy 'à' HH:mm", { locale: fr })}
+                                        </span>
+                                    </div>
+                                </div>
+                            )}
+
+                            <div className="flex items-center justify-end gap-2">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="flex-1 text-blue-600 hover:text-blue-700 hover:bg-blue-50 bg-white"
+                                    onClick={() => setSelectedReq(req)}
+                                >
+                                    <Eye className="w-4 h-4 mr-2" /> Détails
+                                </Button>
                             </div>
                         </div>
-                        <div className="flex items-center gap-2 shrink-0">
-                            {getStatusBadge(req.status)}
-                            <Button variant="ghost" size="icon" className="size-7 text-blue-500 hover:bg-blue-50" onClick={() => setSelectedReq(req)}>
-                                <Eye className="size-3.5" />
-                            </Button>
-                        </div>
-                    </div>
-                ))}
+                    ))
+                )}
             </div>
 
             {/* Desktop table view */}
-            <div className="hidden md:block overflow-x-auto">
-                <table className="w-full text-sm text-left align-middle text-muted-foreground min-w-[600px]">
-                    <thead className="text-xs uppercase bg-muted/20 text-muted-foreground border-b border-border">
-                        <tr>
-                            <th className="px-5 py-3 font-semibold">Motif</th>
-                            <th className="px-5 py-3 font-semibold text-center">Date Demande</th>
-                            <th className="px-5 py-3 font-semibold text-center">RDV Prévu</th>
-                            <th className="px-5 py-3 font-semibold text-right">Statut</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border">
-                        {paginatedData.map((req) => (
-                            <tr key={req.id} className="hover:bg-muted/10 transition-colors">
-                                <td className="px-5 py-4 font-bold text-foreground whitespace-nowrap">
-                                    {req.reason}
-                                </td>
-                                <td className="px-5 py-4 text-center text-muted-foreground text-sm">
-                                    <div className="flex items-center justify-center gap-1.5">
-                                        <Calendar className="size-3" />
-                                        {new Date(req.createdAt).toLocaleDateString('fr-FR')}
-                                    </div>
-                                </td>
-                                <td className="px-5 py-4 text-center">
-                                    {req.status === 'APPROVED' && req.appointmentDate ? (
-                                        <div className="flex flex-col items-center">
-                                            <span className="text-green-600 font-semibold text-xs bg-green-50 px-2 py-0.5 rounded border border-green-200 block whitespace-nowrap">
-                                                {format(new Date(req.appointmentDate), "dd MMM yyyy", { locale: fr })}
-                                            </span>
-                                            <span className="text-[10px] font-bold text-muted-foreground mt-0.5">
-                                                {format(new Date(req.appointmentDate), "HH:mm")}
-                                            </span>
-                                        </div>
-                                    ) : (
-                                        <span className="text-muted-foreground/50 italic">-</span>
-                                    )}
-                                </td>
-                                <td className="px-5 py-4 text-right">
-                                    <div className="flex items-center justify-end gap-2">
-                                        {req.adminComment && (
-                                            <span title="Un commentaire a été laissé">
-                                                <MessageSquareQuote className="size-4 text-muted-foreground opacity-70" />
-                                            </span>
-                                        )}
-                                        {getStatusBadge(req.status)}
-                                        <Button variant="ghost" size="icon" className="size-7 text-blue-500 hover:bg-blue-50 ml-2" onClick={() => setSelectedReq(req)}>
-                                            <Eye className="size-3.5" />
-                                        </Button>
-                                    </div>
-                                </td>
+            <div className="hidden md:block rounded-xl border border-border bg-background overflow-hidden mt-4">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-sm text-left align-middle text-muted-foreground min-w-[600px]">
+                        <thead className="text-xs uppercase bg-muted/20 text-muted-foreground border-b border-border">
+                            <tr>
+                                <th className="px-5 py-3 font-semibold">Date Demande</th>
+                                <th className="px-5 py-3 font-semibold">Motif</th>
+                                <th className="px-5 py-3 font-semibold text-center">RDV Prévu</th>
+                                <th className="px-5 py-3 font-semibold text-right">Statut</th>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
+                        </thead>
+                        <tbody className="divide-y divide-border">
+                            {paginatedData.length === 0 ? (
+                                <tr>
+                                    <td colSpan={4} className="px-5 py-8 text-center text-muted-foreground italic">
+                                        Aucune demande de rendez-vous trouvée.
+                                    </td>
+                                </tr>
+                            ) : (
+                                paginatedData.map((req) => (
+                                    <tr key={req.id} className="hover:bg-muted/10 transition-colors">
+                                        <td className="px-5 py-4 font-medium text-foreground whitespace-nowrap">
+                                            {new Date(req.createdAt).toLocaleDateString('fr-FR')}
+                                        </td>
+                                        <td className="px-5 py-4 font-bold text-foreground">
+                                            <span className="max-w-[200px] block truncate" title={req.reason || ""}>
+                                                {req.reason}
+                                            </span>
+                                        </td>
+                                        <td className="px-5 py-4 text-center">
+                                            {req.status === 'APPROVED' && req.appointmentDate ? (
+                                                <div className="flex flex-col items-center">
+                                                    <span className="text-green-600 font-semibold text-xs bg-green-50 px-2 py-0.5 rounded border border-green-200 block whitespace-nowrap">
+                                                        {format(new Date(req.appointmentDate), "dd MMM yyyy", { locale: fr })}
+                                                    </span>
+                                                    <span className="text-[10px] font-bold text-muted-foreground mt-0.5">
+                                                        {format(new Date(req.appointmentDate), "HH:mm")}
+                                                    </span>
+                                                </div>
+                                            ) : (
+                                                <span className="text-muted-foreground/50 italic">-</span>
+                                            )}
+                                        </td>
+                                        <td className="px-5 py-4 text-right">
+                                            <div className="flex items-center justify-end gap-2">
+                                                {req.adminComment && (
+                                                    <span title="Un commentaire a été laissé">
+                                                        <MessageSquareQuote className="size-4 text-muted-foreground opacity-70" />
+                                                    </span>
+                                                )}
+                                                {getStatusBadge(req.status)}
+                                                <Button variant="ghost" size="icon" className="size-8 text-blue-500 hover:text-blue-600 hover:bg-blue-50 ml-2" onClick={() => setSelectedReq(req)}>
+                                                    <Eye className="size-4" />
+                                                </Button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
 
-            <TablePagination
-                currentPage={currentPage}
-                totalItems={initialData.length}
-                pageSize={PAGE_SIZE}
-                onPageChange={setCurrentPage}
-            />
+                {filteredData.length > 0 && (
+                    <div className="border-t border-border bg-muted/20">
+                        <TablePagination
+                            currentPage={currentPage}
+                            totalItems={filteredData.length}
+                            pageSize={PAGE_SIZE}
+                            onPageChange={setCurrentPage}
+                        />
+                    </div>
+                )}
+            </div>
 
             {/* Detail dialog */}
             <Dialog open={!!selectedReq} onOpenChange={(open) => !open && setSelectedReq(null)}>

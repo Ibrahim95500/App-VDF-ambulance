@@ -9,6 +9,7 @@ import {
   Briefcase,
   Building,
   CalendarCheck,
+  CalendarRange,
   Captions,
   CheckCircle,
   Code,
@@ -66,6 +67,11 @@ export const MENU_SIDEBAR: MenuConfig = [
     icon: Euro,
     path: '/dashboard/salarie',
   },
+  {
+    title: 'Rendez-vous',
+    icon: CalendarRange,
+    path: '/dashboard/salarie/rendez-vous',
+  },
   // {
   //   title: 'Congés & Absences',
   //   icon: CalendarCheck,
@@ -86,6 +92,11 @@ export const MENU_SIDEBAR: MenuConfig = [
     title: 'Acomptes (Global)',
     icon: Euro,
     path: '/dashboard/rh/acomptes',
+  },
+  {
+    title: 'Gérer Rendez-vous',
+    icon: CalendarRange,
+    path: '/dashboard/rh/rendez-vous',
   },
   // {
   //   title: 'Gérer Congés',

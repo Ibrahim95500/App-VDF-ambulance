@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { TablePagination } from "@/components/common/table-pagination"
+import { TableActions } from "@/components/common/table-actions"
 import { Loader2, CheckCircle2, XCircle, Eye, MessageSquareQuote, Search, Calendar, Phone, MapPin } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
@@ -16,8 +17,9 @@ import {
     DialogTitle,
     DialogDescription,
 } from "@/components/ui/dialog"
-import { format } from "date-fns"
+import { isWithinInterval, startOfDay, endOfDay, format } from "date-fns"
 import { fr } from "date-fns/locale"
+import { DateRange } from "react-day-picker"
 import { toast } from "sonner"
 import { updateAppointmentStatus } from "@/actions/appointment-request.actions"
 
@@ -39,6 +41,7 @@ export function AppointmentsTable({ initialData }: { initialData: RequestWithUse
     // Filtres
     const [searchTerm, setSearchTerm] = useState("")
     const [statusFilter, setStatusFilter] = useState<string>("ALL")
+    const [dateRange, setDateRange] = useState<DateRange | undefined>()
     const [currentPage, setCurrentPage] = useState(1)
     const PAGE_SIZE = 10
 
@@ -57,9 +60,19 @@ export function AppointmentsTable({ initialData }: { initialData: RequestWithUse
                 (req.reason?.toLowerCase() || '').includes(searchTerm.toLowerCase())
 
             const matchesStatus = statusFilter === "ALL" || req.status === statusFilter
-            return matchesSearch && matchesStatus
+
+            // Date filter
+            let matchesDate = true
+            if (dateRange?.from) {
+                const reqDate = new Date(req.createdAt)
+                const start = startOfDay(dateRange.from)
+                const end = dateRange.to ? endOfDay(dateRange.to) : endOfDay(dateRange.from)
+                matchesDate = isWithinInterval(reqDate, { start, end })
+            }
+
+            return matchesSearch && matchesStatus && matchesDate
         }).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-    }, [initialData, searchTerm, statusFilter])
+    }, [initialData, searchTerm, statusFilter, dateRange])
 
     const paginatedData = useMemo(() => {
         const start = (currentPage - 1) * PAGE_SIZE
@@ -114,43 +127,134 @@ export function AppointmentsTable({ initialData }: { initialData: RequestWithUse
         }
     }
 
+    const exportData = useMemo(() => {
+        return filteredData.map(req => ({
+            "Salarié": req.user.firstName && req.user.lastName ? `${req.user.firstName} ${req.user.lastName}` : (req.user.name || req.user.email),
+            "Email": req.user.email,
+            "Motif": req.reason || "-",
+            "Date de demande": new Date(req.createdAt).toLocaleDateString('fr-FR'),
+            "Statut": req.status === 'PENDING' ? 'En Attente' : req.status === 'APPROVED' ? 'Approuvée' : 'Refusée'
+        }))
+    }, [filteredData])
+
+    const statusOptions = [
+        { label: "En Attente", value: "PENDING" },
+        { label: "Approuvé", value: "APPROVED" },
+        { label: "Refusé", value: "REJECTED" }
+    ]
+
     return (
-        <div className="space-y-4">
-            {/* Controles: Recherche & Filtres */}
-            <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
-                <div className="relative w-full sm:w-72">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                        placeholder="Rechercher (nom, email, motif)..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-9 bg-background"
-                    />
-                </div>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="w-full sm:w-48 bg-background">
-                        <SelectValue placeholder="Filtrer par statut" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="ALL">Tous les statuts</SelectItem>
-                        <SelectItem value="PENDING">En attente</SelectItem>
-                        <SelectItem value="APPROVED">Approuvé</SelectItem>
-                        <SelectItem value="REJECTED">Refusé</SelectItem>
-                    </SelectContent>
-                </Select>
+        <div className="flex flex-col">
+            <TableActions
+                data={exportData}
+                onSearch={setSearchTerm}
+                onStatusChange={setStatusFilter}
+                onDateRangeChange={setDateRange}
+                statusOptions={statusOptions}
+                filename="rendezvous_global"
+                pdfTitle="Liste des Demandes de Rendez-vous"
+            />
+
+            {/* Mobile card view */}
+            <div className="md:hidden border border-border rounded-xl overflow-hidden divide-y divide-border mt-4">
+                {paginatedData.length === 0 ? (
+                    <div className="p-8 text-center text-muted-foreground flex flex-col items-center justify-center bg-background">
+                        <MessageSquareQuote className="h-8 w-8 mb-3 opacity-20" />
+                        <p>Aucune demande trouvée</p>
+                    </div>
+                ) : (
+                    paginatedData.map((req) => (
+                        <div key={req.id} className="p-4 bg-background">
+                            <div className="flex justify-between items-start mb-3">
+                                <div className="flex items-center gap-3">
+                                    {req.user.image ? (
+                                        <img src={req.user.image} className="w-10 h-10 rounded-full border border-border object-cover" alt="" />
+                                    ) : (
+                                        <div className="w-10 h-10 flex items-center justify-center bg-primary/10 text-primary font-bold rounded-full border border-primary/20 text-sm">
+                                            {req.user.firstName?.charAt(0) || req.user.name?.charAt(0) || req.user.email?.charAt(0) || '?'}
+                                        </div>
+                                    )}
+                                    <div className="flex flex-col">
+                                        <span className="font-bold text-sm text-foreground">
+                                            {req.user.firstName && req.user.lastName ? `${req.user.firstName} ${req.user.lastName}` : (req.user.name || "-")}
+                                        </span>
+                                        <span className="text-xs text-muted-foreground">{req.user.email}</span>
+                                    </div>
+                                </div>
+                                {getStatusBadge(req.status)}
+                            </div>
+
+                            <div className="space-y-2 mb-4 bg-muted/30 p-3 rounded-lg border border-border/50">
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-muted-foreground">Motif:</span>
+                                    <span className="font-semibold text-foreground text-right">{req.reason}</span>
+                                </div>
+                                <div className="flex justify-between text-sm">
+                                    <span className="text-muted-foreground">Date:</span>
+                                    <span className="font-medium text-foreground">
+                                        {format(new Date(req.createdAt), 'dd MMM yyyy', { locale: fr })}
+                                    </span>
+                                </div>
+                                {req.status === 'APPROVED' && req.appointmentDate && (
+                                    <div className="flex justify-between text-sm border-t border-border/50 pt-2 mt-2">
+                                        <span className="text-green-700 font-semibold">RDV Prévu:</span>
+                                        <span className="font-bold text-green-700">
+                                            {format(new Date(req.appointmentDate), "dd/MM/yyyy HH:mm")}
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="flex items-center justify-end gap-2">
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="flex-1 text-blue-600 hover:text-blue-700 hover:bg-blue-50 bg-white"
+                                    onClick={() => {
+                                        setSelectedRequest(req)
+                                        setActionType('NONE')
+                                    }}
+                                >
+                                    <Eye className="w-4 h-4 mr-2" />
+                                    Détails
+                                </Button>
+                                {req.status === 'PENDING' && (
+                                    <>
+                                        <Button
+                                            size="sm"
+                                            className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                                            onClick={() => initiateAction(req, 'APPROVED')}
+                                            disabled={loadingId === req.id}
+                                        >
+                                            <CheckCircle2 className="w-4 h-4 mr-1.5" /> Accepter
+                                        </Button>
+                                        <Button
+                                            size="sm"
+                                            className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                                            onClick={() => initiateAction(req, 'REJECTED')}
+                                            disabled={loadingId === req.id}
+                                        >
+                                            <XCircle className="w-4 h-4 mr-1.5" /> Refuser
+                                        </Button>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    ))
+                )}
             </div>
 
-            {/* Table */}
-            <div className="rounded-md border border-border bg-background overflow-hidden">
+            {/* Desktop table view */}
+            <div className="hidden md:block rounded-xl border border-border bg-background overflow-hidden mt-4">
                 <div className="overflow-x-auto">
-                    <table className="w-full text-sm text-left">
-                        <thead className="bg-muted/50 text-muted-foreground border-b border-border">
+                    <table className="w-full text-sm text-left align-middle text-muted-foreground">
+                        <thead className="text-xs uppercase bg-muted/20 text-muted-foreground border-b border-border">
                             <tr>
-                                <th className="px-4 py-3 font-medium">Salarié</th>
-                                <th className="px-4 py-3 font-medium">Motif</th>
-                                <th className="px-4 py-3 font-medium hidden md:table-cell">Date Demande</th>
-                                <th className="px-4 py-3 font-medium">Statut</th>
-                                <th className="px-4 py-3 font-medium text-right">Actions</th>
+                                <th className="px-4 py-3 font-semibold">Salarié</th>
+                                <th className="px-4 py-3 font-semibold">Motif</th>
+                                <th className="px-4 py-3 font-semibold text-center">Date Demande</th>
+                                <th className="px-4 py-3 font-semibold text-center">Statut</th>
+                                <th className="px-4 py-3 font-semibold text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-border">
@@ -162,29 +266,29 @@ export function AppointmentsTable({ initialData }: { initialData: RequestWithUse
                                 </tr>
                             ) : (
                                 paginatedData.map((req) => (
-                                    <tr key={req.id} className="hover:bg-muted/30 transition-colors group">
+                                    <tr key={req.id} className="hover:bg-muted/10 transition-colors group">
                                         <td className="px-4 py-3">
                                             <div className="flex items-center gap-3">
                                                 {req.user.image ? (
-                                                    <img src={req.user.image} className="w-8 h-8 rounded-full bg-border" alt="" />
+                                                    <img src={req.user.image} className="w-8 h-8 rounded-full bg-border object-cover" alt="" />
                                                 ) : (
                                                     <div className="w-8 h-8 flex items-center justify-center bg-primary/10 text-primary font-semibold rounded-full border border-primary/20 text-xs shrink-0">
                                                         {req.user.firstName?.charAt(0) || req.user.name?.charAt(0) || req.user.email?.charAt(0) || '?'}
                                                     </div>
                                                 )}
                                                 <div className="flex flex-col min-w-0">
-                                                    <span className="font-medium text-foreground truncate">
+                                                    <span className="font-medium text-foreground leading-none">
                                                         {req.user.firstName && req.user.lastName
                                                             ? `${req.user.firstName} ${req.user.lastName}`
-                                                            : req.user.name || req.user.email}
+                                                            : req.user.name || "-"}
                                                     </span>
-                                                    <span className="text-xs text-muted-foreground truncate">{req.user.email}</span>
+                                                    <span className="text-[10px] text-muted-foreground mt-1 truncate">{req.user.email}</span>
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="px-4 py-3">
+                                        <td className="px-4 py-3 font-bold text-foreground">
                                             <div className="flex flex-col">
-                                                <span className="font-semibold text-foreground truncate max-w-[200px]">{req.reason}</span>
+                                                <span className="max-w-[200px] truncate" title={req.reason || ""}>{req.reason}</span>
                                                 {req.status === 'APPROVED' && req.appointmentDate && (
                                                     <span className="text-[10px] text-green-600 font-bold mt-0.5 whitespace-nowrap">
                                                         🗓️ {format(new Date(req.appointmentDate), "dd/MM/yyyy HH:mm")}
@@ -192,44 +296,47 @@ export function AppointmentsTable({ initialData }: { initialData: RequestWithUse
                                                 )}
                                             </div>
                                         </td>
-                                        <td className="px-4 py-3 text-muted-foreground hidden md:table-cell whitespace-nowrap">
+                                        <td className="px-4 py-3 text-center">
                                             {format(new Date(req.createdAt), 'dd MMM yyyy', { locale: fr })}
                                         </td>
-                                        <td className="px-4 py-3 whitespace-nowrap">
+                                        <td className="px-4 py-3 text-center text-[11px]">
                                             {getStatusBadge(req.status)}
                                         </td>
-                                        <td className="px-4 py-3">
+                                        <td className="px-4 py-3 text-right">
                                             <div className="flex items-center justify-end gap-2">
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
-                                                    className="h-8 w-8 text-blue-500 hover:bg-blue-50"
+                                                    className="h-8 w-8 text-blue-500 hover:text-blue-600 hover:bg-blue-50"
                                                     onClick={() => {
                                                         setSelectedRequest(req)
                                                         setActionType('NONE')
                                                     }}
+                                                    title="Détails"
                                                 >
-                                                    <Eye className="h-4 w-4" />
+                                                    <Eye className="w-4 h-4" />
                                                 </Button>
                                                 {req.status === 'PENDING' && (
                                                     <>
                                                         <Button
                                                             variant="ghost"
                                                             size="icon"
-                                                            className="h-8 w-8 text-green-600 hover:bg-green-50"
+                                                            className="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50"
                                                             onClick={() => initiateAction(req, 'APPROVED')}
                                                             disabled={loadingId === req.id}
+                                                            title="Accepter"
                                                         >
-                                                            <CheckCircle2 className="h-4 w-4" />
+                                                            <CheckCircle2 className="w-4 h-4" />
                                                         </Button>
                                                         <Button
                                                             variant="ghost"
                                                             size="icon"
-                                                            className="h-8 w-8 text-red-600 hover:bg-red-50"
+                                                            className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
                                                             onClick={() => initiateAction(req, 'REJECTED')}
                                                             disabled={loadingId === req.id}
+                                                            title="Refuser"
                                                         >
-                                                            <XCircle className="h-4 w-4" />
+                                                            <XCircle className="w-4 h-4" />
                                                         </Button>
                                                     </>
                                                 )}

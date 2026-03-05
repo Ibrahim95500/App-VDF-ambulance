@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { Home, CalendarClock, Euro, Users, User, LayoutList, LifeBuoy } from 'lucide-react';
+import { Home, CalendarClock, Euro, Users, User, LayoutList, LifeBuoy, CalendarRange } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -16,12 +16,12 @@ export function BottomTabBar() {
     // Desktop: hidden.
     if (!isMobile) return null;
 
-    // Define navigation items based on role
     const navItems = isRH
         ? [
             { label: 'Accueil', href: '/dashboard/rh', icon: Home },
             // { label: 'Congés', href: '/dashboard/rh/conges', icon: CalendarClock },
             { label: 'Acomptes', href: '/dashboard/rh/acomptes', icon: Euro },
+            { label: 'Rendez-vous', href: '/dashboard/rh/rendez-vous', icon: CalendarRange },
             { label: 'Services', href: '/dashboard/rh/services', icon: LifeBuoy },
             { label: 'Équipe', href: '/dashboard/rh/collaborateurs', icon: Users },
             { label: 'Profil', href: '/dashboard/profil', icon: User },
@@ -29,6 +29,7 @@ export function BottomTabBar() {
         : [
             { label: 'Acomptes', href: '/dashboard/salarie', icon: Euro },
             // { label: 'Congés', href: '/dashboard/salarie/conges', icon: CalendarClock },
+            { label: 'Rendez-vous', href: '/dashboard/salarie/rendez-vous', icon: CalendarRange },
             { label: 'Services', href: '/dashboard/salarie/services', icon: LifeBuoy },
             { label: 'Profil', href: '/dashboard/profil', icon: User },
         ];
