@@ -45,6 +45,34 @@ export async function updateRequestStatus(requestId: string, status: "APPROVED" 
         "/dashboard/salarie"
     )
 
+    // Email au salarié
+    if (request.user.email) {
+        try {
+            const employeeName = [request.user.firstName, request.user.lastName].filter(Boolean).join(' ') || request.user.name || request.user.email
+            const approved = status === 'APPROVED'
+            await sendBrandedEmail({
+                to: request.user.email,
+                subject: `[Acompte] Votre demande de ${request.amount}€ a été ${approved ? 'approuvée' : 'refusée'}`,
+                title: approved ? "Acompte Approuvé ✅" : "Acompte Refusé ❌",
+                preheader: `Réponse à votre demande d'acompte de ${request.amount}€`,
+                content: `
+                    <p>Bonjour <strong>${employeeName}</strong>,</p>
+                    <p>Votre demande d'acompte a été examinée par la Direction RH.</p>
+                    <div style="background-color: ${approved ? '#f0fdf4' : '#fef2f2'}; padding: 20px; border-radius: 8px; border: 1px solid ${approved ? '#bbf7d0' : '#fecaca'}; margin: 20px 0;">
+                        <p><strong>Montant demandé :</strong> ${request.amount}€</p>
+                        <p><strong>Décision :</strong> <span style="color: ${approved ? '#16a34a' : '#dc2626'}; font-weight: bold;">${approved ? 'APPROUVÉE' : 'REFUSÉE'}</span></p>
+                        ${comment ? `<p><strong>${approved ? 'Commentaire' : 'Motif du refus'} :</strong> <em>${comment}</em></p>` : ''}
+                    </div>
+                    <p style="font-size: 13px; color: #6b7280;">Connectez-vous à l'application pour consulter les détails.</p>
+                `,
+                actionUrl: `${process.env.NEXTAUTH_URL}/dashboard/salarie`,
+                actionText: "Voir mon espace"
+            })
+        } catch (emailError) {
+            console.error("Failed to send advance status email to employee:", emailError)
+        }
+    }
+
     revalidatePath('/dashboard/rh/acomptes')
     revalidatePath('/dashboard/salarie')
 }
