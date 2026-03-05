@@ -86,7 +86,7 @@ export default async function RHRendezvousPage() {
                     <div className="mb-8">
                         <HRStatsCharts
                             requestsByCategory={requestsByStatus}
-                            requestsByUser={requestsByReason}
+                            requestsByUser={requestsByUser}
                             requestsByMonth={requestsByMonth}
                             hideUserTab={false}
                             categoryLabel="Par Statut"
