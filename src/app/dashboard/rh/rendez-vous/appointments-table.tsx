@@ -412,8 +412,8 @@ export function AppointmentsTable({ initialData }: { initialData: RequestWithUse
                                                     <Calendar className="size-4" />
                                                 </div>
                                                 <div className="flex flex-col">
-                                                    <span className="text-[10px] uppercase text-green-600/70 font-semibold mb-0.5">Date et Heure</span>
-                                                    <span className="text-xs font-bold text-green-800">
+                                                    <span className="text-[10px] uppercase text-green-700/80 font-bold mb-0.5">Date et Heure</span>
+                                                    <span className="text-xs font-bold text-green-900">
                                                         {format(new Date(selectedRequest.appointmentDate), "dd MMM yyyy 'à' HH:mm", { locale: fr })}
                                                     </span>
                                                 </div>
@@ -423,8 +423,8 @@ export function AppointmentsTable({ initialData }: { initialData: RequestWithUse
                                                     {selectedRequest.appointmentMode === 'TELEPHONE' ? <Phone className="size-4" /> : <MapPin className="size-4" />}
                                                 </div>
                                                 <div className="flex flex-col">
-                                                    <span className="text-[10px] uppercase text-blue-600/70 font-semibold mb-0.5">Mode d'entretien</span>
-                                                    <span className="text-xs font-bold text-blue-800">
+                                                    <span className="text-[10px] uppercase text-blue-700/80 font-bold mb-0.5">Mode d'entretien</span>
+                                                    <span className="text-xs font-bold text-blue-900">
                                                         {selectedRequest.appointmentMode === 'TELEPHONE' ? 'Par Téléphone' : 'Au Bureau'}
                                                     </span>
                                                 </div>
@@ -467,6 +467,7 @@ export function AppointmentsTable({ initialData }: { initialData: RequestWithUse
                                                         value={appointmentDate}
                                                         onChange={(e) => setAppointmentDate(e.target.value)}
                                                         className="bg-white text-gray-900 border-green-200 focus-visible:ring-green-500"
+                                                        style={{ colorScheme: 'light' }}
                                                     />
                                                 </div>
                                                 <div className="space-y-2">
@@ -503,7 +504,7 @@ export function AppointmentsTable({ initialData }: { initialData: RequestWithUse
                                                 type="button"
                                                 onClick={() => setActionType('NONE')}
                                                 disabled={loadingId === selectedRequest?.id}
-                                                className="bg-white"
+                                                className="bg-white text-gray-900 hover:bg-gray-50 border-gray-200"
                                             >
                                                 Annuler
                                             </Button>
