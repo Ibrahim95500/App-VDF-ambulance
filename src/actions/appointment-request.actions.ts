@@ -17,6 +17,18 @@ import { sendBrandedEmail } from "@/lib/mail"
 import { format } from "date-fns"
 import { fr } from "date-fns/locale"
 
+/** Formate une date en heure locale France (Europe/Paris) pour les messages de notification */
+function formatParis(date: Date | string, withTime = true): string {
+    const d = typeof date === 'string' ? new Date(date) : date
+    return d.toLocaleString('fr-FR', {
+        timeZone: 'Europe/Paris',
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        ...(withTime ? { hour: '2-digit', minute: '2-digit' } : {})
+    })
+}
+
 export async function submitAppointmentRequest(formData: FormData) {
     try {
         const session = await auth()
@@ -147,7 +159,7 @@ export async function updateAppointmentStatus(
         if (updatedRequest.user.email) {
             try {
                 const modeText = appointmentMode === 'TELEPHONE' ? 'par téléphone' : 'au bureau';
-                const dateText = appointmentDate ? format(new Date(appointmentDate), "EEEE d MMMM yyyy 'à' HH:mm", { locale: fr }) : '';
+                const dateText = appointmentDate ? formatParis(new Date(appointmentDate)) : '';
 
                 await sendBrandedEmail({
                     to: updatedRequest.user.email,
@@ -222,7 +234,7 @@ export async function createConvocationAction(
         await createNotification({
             userId,
             title: "Nouvelle Convocation",
-            message: `Vous êtes convoqué(e) par la Direction RH (${reason}) le ${format(new Date(appointmentDate), "dd/MM/yyyy HH:mm")}.`,
+            message: `Vous êtes convoqué(e) par la Direction RH (${reason}) le ${formatParis(new Date(appointmentDate))}.`,
             type: "SERVICE",
             status: "APPROVED",
             link: "/dashboard/salarie/rendez-vous"
@@ -231,7 +243,7 @@ export async function createConvocationAction(
         await sendPushNotification(
             userId,
             "Nouvelle Convocation",
-            `Vous êtes convoqué(e) par la Direction RH (${reason}) le ${format(new Date(appointmentDate), "dd/MM/yyyy")}.`,
+            `Vous êtes convoqué(e) par la Direction RH (${reason}) le ${formatParis(new Date(appointmentDate), false)}.`,
             "/dashboard/salarie/rendez-vous"
         )
 
@@ -243,15 +255,15 @@ export async function createConvocationAction(
                 const modeLabel = appointmentMode === 'TELEPHONE' ? 'Par Téléphone' : 'Au Bureau'
                 await sendBrandedEmail({
                     to: employee.email,
-                    subject: `[Convocation] ${reason} - ${format(new Date(appointmentDate), "dd/MM/yyyy 'à' HH:mm")}`,
+                    subject: `[Convocation] ${reason} - ${formatParis(new Date(appointmentDate))}`,
                     title: "Convocation RH",
-                    preheader: `Vous êtes convoqué(e) le ${format(new Date(appointmentDate), "dd/MM/yyyy")}`,
+                    preheader: `Vous êtes convoqué(e) le ${formatParis(new Date(appointmentDate), false)}`,
                     content: `
                         <p>Bonjour <strong>${employeeName}</strong>,</p>
                         <p>Vous êtes convoqué(e) par la Direction des Ressources Humaines.</p>
                         <div style="background-color: #eff6ff; padding: 20px; border-radius: 8px; border: 1px solid #bfdbfe; margin: 20px 0;">
                             <p><strong>Motif :</strong> ${reason}</p>
-                            <p><strong>Date et Heure :</strong> ${format(new Date(appointmentDate), "dd MMMM yyyy 'à' HH:mm", { locale: fr })}</p>
+                            <p><strong>Date et Heure :</strong> ${formatParis(new Date(appointmentDate))}</p>
                             <p><strong>Modalité :</strong> ${modeLabel}</p>
                             ${adminComment ? `<p><strong>Message de la RH :</strong> <em>${adminComment}</em></p>` : ''}
                         </div>
@@ -299,7 +311,7 @@ export async function submitRescheduleRequest(
         const notifications: any[] = rhUsers.map(rh => ({
             userId: rh.id,
             title: "Demande de report",
-            message: `${userName} souhaite reporter son rendez-vous au ${format(proposedDate, "dd/MM/yyyy HH:mm")}.`,
+            message: `${userName} souhaite reporter son rendez-vous au ${formatParis(proposedDate)}.`,
             type: "SERVICE",
             status: "PENDING",
             link: "/dashboard/rh/rendez-vous"
@@ -327,7 +339,7 @@ export async function submitRescheduleRequest(
                     <p>Un(e) collaborateur/trice souhaite reporter son rendez-vous.</p>
                     <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; margin: 20px 0;">
                         <p><strong>Collaborateur :</strong> ${userName}</p>
-                        <p><strong>Nouvelle date proposée :</strong> ${format(proposedDate, "dd MMMM yyyy 'à' HH:mm", { locale: fr })}</p>
+                        <p><strong>Nouvelle date proposée :</strong> ${formatParis(proposedDate)}</p>
                         ${message ? `<p><strong>Message :</strong> <em>${message}</em></p>` : ''}
                     </div>
                 `,
