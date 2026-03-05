@@ -160,17 +160,32 @@ enum LeaveType {
   CSS
 }
 
-model AppointmentRequest {
-  id              String        @id @default(cuid())
-  userId          String
-  reason          String
-  description     String?       @db.Text
-  status          RequestStatus @default(PENDING)
-  appointmentDate DateTime?
-  appointmentMode String?       // e.g., "BUREAU", "TELEPHONE"
-  adminComment    String?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+enum AppointmentType {
+  RENDEZ_VOUS
+  CONVOCATION
+}
 
-  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+enum RescheduleStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+model AppointmentRequest {
+  id              String           @id @default(cuid())
+  userId          String
+  type            AppointmentType  @default(RENDEZ_VOUS)
+  initiator       Role             @default(SALARIE)
+  reason          String
+  description     String?          @db.Text
+  status          RequestStatus    @default(PENDING)
+  appointmentDate DateTime?
+  appointmentMode String?          // e.g., "BUREAU", "TELEPHONE"
+  adminComment    String?
+  rescheduleStatus RescheduleStatus?
+  rescheduleHistory Json?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

@@ -3,7 +3,11 @@
 import { useState, useMemo, useEffect } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Calendar, MessageSquare, Eye, MessageSquareQuote, MapPin, Phone } from "lucide-react"
+import { Calendar, MessageSquare, Eye, MessageSquareQuote, MapPin, Phone, Loader2, ArrowRightLeft } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { toast } from "sonner"
+import { submitRescheduleRequest } from "@/actions/appointment-request.actions"
 import { TablePagination } from "@/components/common/table-pagination"
 import { TableActions } from "@/components/common/table-actions"
 import { isWithinInterval, startOfDay, endOfDay } from "date-fns"
@@ -24,7 +28,11 @@ export function AppointmentHistoryTable({ initialData }: { initialData: Appointm
     const [statusFilter, setStatusFilter] = useState("ALL")
     const [dateRange, setDateRange] = useState<DateRange | undefined>()
     const [currentPage, setCurrentPage] = useState(1)
-    const [selectedReq, setSelectedReq] = useState<AppointmentRequest | null>(null)
+    const [selectedReq, setSelectedReq] = useState<AppointmentRequest | any>(null)
+    const [isNegotiating, setIsNegotiating] = useState(false)
+    const [newProposedDate, setNewProposedDate] = useState("")
+    const [negotiationMessage, setNegotiationMessage] = useState("")
+    const [isSubmitting, setIsSubmitting] = useState(false)
     const PAGE_SIZE = 10
 
     useEffect(() => { setCurrentPage(1) }, [searchTerm, statusFilter, dateRange])
@@ -53,6 +61,34 @@ export function AppointmentHistoryTable({ initialData }: { initialData: Appointm
         if (status === 'APPROVED') return <Badge variant="outline" className="text-green-600 bg-green-50 border-green-200">Approuvée</Badge>
         if (status === 'REJECTED') return <Badge variant="outline" className="text-red-600 bg-red-50 border-red-200">Refusée</Badge>
         return <Badge variant="outline" className="text-yellow-600 bg-yellow-50 border-yellow-200">En attente</Badge>
+    }
+
+    const handleRescheduleSubmit = async () => {
+        if (!selectedReq) return;
+        if (!newProposedDate) {
+            toast.error("Veuillez sélectionner une date et une heure.");
+            return;
+        }
+
+        try {
+            setIsSubmitting(true);
+            const result = await submitRescheduleRequest(selectedReq.id, new Date(newProposedDate), negotiationMessage);
+
+            if (result.error) {
+                toast.error(result.error);
+            } else {
+                toast.success("Demande de report envoyée avec succès.");
+                // Update local state optimistic
+                setSelectedReq({ ...selectedReq, rescheduleStatus: 'PENDING' });
+                setIsNegotiating(false);
+                setNewProposedDate("");
+                setNegotiationMessage("");
+            }
+        } catch (error: any) {
+            toast.error("Une erreur est survenue.");
+        } finally {
+            setIsSubmitting(false);
+        }
     }
 
     if (initialData.length === 0) {
@@ -282,6 +318,94 @@ export function AppointmentHistoryTable({ initialData }: { initialData: Appointm
                                     }`}>
                                     "{selectedReq.adminComment}"
                                 </p>
+                            </div>
+                        )}
+
+                        {/* Historique des reports */}
+                        {selectedReq && selectedReq.rescheduleHistory && Array.isArray(selectedReq.rescheduleHistory) && selectedReq.rescheduleHistory.length > 0 && (
+                            <div className="space-y-2 pt-2 border-t border-border">
+                                <span className="text-xs uppercase text-muted-foreground font-bold tracking-wider">Historique des échanges</span>
+                                <div className="space-y-3 pl-2 border-l-2 border-slate-200">
+                                    {(selectedReq.rescheduleHistory as any[]).map((event: any, idx: number) => (
+                                        <div key={idx} className="relative pl-4">
+                                            <div className="absolute -left-[21px] top-1 h-3 w-3 rounded-full bg-slate-300 border-2 border-white" />
+                                            <p className="text-xs font-semibold text-slate-700">
+                                                {event.actor === 'SALARIE' ? 'Vous' : 'La Direction RH'} {' a '}
+                                                {event.action === 'PROPOSE' ? 'proposé une nouvelle date' :
+                                                    event.action === 'ACCEPT' ? 'accepté le report' : 'refusé le report'}
+                                            </p>
+                                            <span className="text-[10px] text-slate-500">
+                                                {format(new Date(event.date), "dd MMM yyyy 'à' HH:mm", { locale: fr })}
+                                            </span>
+                                            {event.proposedDate && (
+                                                <p className="text-sm text-slate-900 font-bold mt-1">
+                                                    Nouvelle date : <span className="text-blue-600">{format(new Date(event.proposedDate), "dd/MM/yyyy HH:mm", { locale: fr })}</span>
+                                                </p>
+                                            )}
+                                            {event.message && (
+                                                <p className="text-xs italic text-slate-600 bg-slate-50 p-2 rounded mt-1 border border-slate-100">
+                                                    "{event.message}"
+                                                </p>
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Formulaire de report ou Status en attente */}
+                        {selectedReq?.status === 'APPROVED' && (
+                            <div className="pt-2">
+                                {selectedReq.rescheduleStatus === 'PENDING' ? (
+                                    <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 p-3 rounded-xl text-sm flex items-center justify-center gap-2">
+                                        <Loader2 className="w-4 h-4 animate-spin text-yellow-600" />
+                                        <span>Demande de report en attente de validation RH</span>
+                                    </div>
+                                ) : isNegotiating ? (
+                                    <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl space-y-3">
+                                        <h5 className="text-sm font-bold flex items-center gap-2 text-slate-800">
+                                            <ArrowRightLeft className="w-4 h-4" /> Proposer un report
+                                        </h5>
+                                        <div>
+                                            <label className="text-xs font-semibold text-slate-600 mb-1 block">Nouvelle Date et Heure souhaitée</label>
+                                            <Input
+                                                type="datetime-local"
+                                                value={newProposedDate}
+                                                onChange={(e) => setNewProposedDate(e.target.value)}
+                                                className="bg-white text-slate-900 border-slate-300 focus-visible:ring-blue-500 [&::-webkit-calendar-picker-indicator]:dark:invert-0 [&::-webkit-calendar-picker-indicator]:opacity-100"
+                                                style={{ colorScheme: 'light' }}
+                                                disabled={isSubmitting}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="text-xs font-semibold text-slate-600 mb-1 block">Motif du report (Optionnel)</label>
+                                            <Textarea
+                                                placeholder="Pourquoi demandez-vous à décaler ?"
+                                                value={negotiationMessage}
+                                                onChange={(e) => setNegotiationMessage(e.target.value)}
+                                                className="bg-white resize-none h-20"
+                                                disabled={isSubmitting}
+                                            />
+                                        </div>
+                                        <div className="flex justify-end gap-2 pt-2">
+                                            <Button variant="outline" size="sm" onClick={() => setIsNegotiating(false)} disabled={isSubmitting} className="bg-white text-slate-800 hover:bg-slate-100 border-slate-300 font-medium">
+                                                Annuler
+                                            </Button>
+                                            <Button size="sm" onClick={handleRescheduleSubmit} disabled={isSubmitting} className="bg-blue-600 hover:bg-blue-700 text-white">
+                                                {isSubmitting && <Loader2 className="w-3 h-3 animate-spin mr-2" />}
+                                                Envoyer
+                                            </Button>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <Button
+                                        variant="outline"
+                                        className="w-full border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 hover:text-blue-800"
+                                        onClick={() => setIsNegotiating(true)}
+                                    >
+                                        <ArrowRightLeft className="w-4 h-4 mr-2" /> Demander un report
+                                    </Button>
+                                )}
                             </div>
                         )}
                     </div>

@@ -8,8 +8,10 @@ import { getAppointmentRequests } from '@/services/appointment-request';
 import { CalendarRange } from 'lucide-react';
 import { HRStatsCharts } from '../components/hr-stats-charts';
 import { AppointmentsTable } from './appointments-table';
+import { ConvocationFab } from './components/convocation-fab';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { prisma } from '@/lib/prisma';
 
 export default async function RHRendezvousPage() {
     const session = await auth()
@@ -18,6 +20,11 @@ export default async function RHRendezvousPage() {
     }
 
     const allRequests = await getAppointmentRequests()
+    const employees = await prisma.user.findMany({
+        where: { role: 'SALARIE' },
+        select: { id: true, firstName: true, lastName: true, email: true },
+        orderBy: { firstName: 'asc' }
+    });
 
     // Aggregate data for charts
     const statusCounts: Record<string, number> = {}
@@ -86,6 +93,8 @@ export default async function RHRendezvousPage() {
                     <AppointmentsTable initialData={allRequests} />
                 </div>
             </Container>
+
+            <ConvocationFab employees={employees} />
         </Fragment>
     )
 }

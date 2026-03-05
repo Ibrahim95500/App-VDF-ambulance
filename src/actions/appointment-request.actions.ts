@@ -6,7 +6,10 @@ import { revalidatePath } from "next/cache"
 import { RequestStatus } from "@prisma/client"
 import {
     createAppointmentRequest,
-    updateAppointmentRequestStatus
+    updateAppointmentRequestStatus,
+    requestReschedule,
+    replyToReschedule,
+    RescheduleEvent
 } from "@/services/appointment-request"
 import { createNotification, createManyNotifications } from "./notifications.actions"
 import { sendPushNotification } from "./web-push.actions"
@@ -187,6 +190,153 @@ export async function updateAppointmentStatus(
         return { success: true }
     } catch (error: any) {
         console.error("Update AppointmentStatus error:", error)
+        return { error: error.message || "Une erreur est survenue" }
+    }
+}
+
+export async function createConvocationAction(
+    userId: string,
+    reason: string,
+    appointmentDate: Date,
+    appointmentMode: string,
+    adminComment: string
+) {
+    try {
+        const session = await auth()
+        if (!session?.user || (session.user as any).role !== "RH") {
+            throw new Error("Non autorisé")
+        }
+
+        const request = await createAppointmentRequest({
+            userId,
+            reason,
+            type: 'CONVOCATION',
+            initiator: 'RH',
+            status: 'APPROVED', // A convocation is directly set as approved/scheduled
+            appointmentDate,
+            appointmentMode,
+            adminComment: adminComment || undefined
+        })
+
+        // Notifications
+        await createNotification({
+            userId,
+            title: "Nouvelle Convocation",
+            message: `Vous êtes convoqué(e) par la Direction RH (${reason}) le ${format(new Date(appointmentDate), "dd/MM/yyyy HH:mm")}.`,
+            type: "SERVICE",
+            status: "APPROVED",
+            link: "/dashboard/salarie/rendez-vous"
+        })
+
+        await sendPushNotification(
+            userId,
+            "Nouvelle Convocation",
+            `Vous êtes convoqué(e) par la Direction RH (${reason}) le ${format(new Date(appointmentDate), "dd/MM/yyyy")}.`,
+            "/dashboard/salarie/rendez-vous"
+        )
+
+        revalidatePath("/dashboard/rh/rendez-vous")
+        revalidatePath("/dashboard/salarie/rendez-vous")
+        return { success: true }
+    } catch (error: any) {
+        console.error("Create Convocation error:", error)
+        return { error: error.message || "Une erreur est survenue" }
+    }
+}
+
+export async function submitRescheduleRequest(
+    id: string,
+    proposedDate: Date,
+    message: string
+) {
+    try {
+        const session = await auth()
+        if (!session?.user?.id) throw new Error("Non autorisé")
+
+        const event: RescheduleEvent = {
+            date: new Date().toISOString(),
+            actor: 'SALARIE',
+            action: 'PROPOSE',
+            proposedDate: proposedDate.toISOString(),
+            message
+        }
+
+        await requestReschedule(id, proposedDate, message, event)
+
+        const rhUsers = await prisma.user.findMany({ where: { role: 'RH' } })
+        const userName = session.user.name || session.user.email || "Utilisateur"
+
+        const notifications: any[] = rhUsers.map(rh => ({
+            userId: rh.id,
+            title: "Demande de report",
+            message: `${userName} souhaite reporter son rendez-vous au ${format(proposedDate, "dd/MM/yyyy HH:mm")}.`,
+            type: "SERVICE",
+            status: "PENDING",
+            link: "/dashboard/rh/rendez-vous"
+        }))
+
+        await createManyNotifications(notifications)
+
+        for (const rh of rhUsers) {
+            await sendPushNotification(
+                rh.id,
+                "Demande de report de rendez-vous",
+                `${userName} propose une nouvelle date.`,
+                "/dashboard/rh/rendez-vous"
+            )
+        }
+
+        revalidatePath("/dashboard/rh/rendez-vous")
+        revalidatePath("/dashboard/salarie/rendez-vous")
+        return { success: true }
+    } catch (error: any) {
+        console.error("Submit Reschedule Request error:", error)
+        return { error: error.message || "Une erreur est survenue" }
+    }
+}
+
+export async function submitRescheduleReply(
+    id: string,
+    action: 'ACCEPT' | 'REJECT',
+    message: string,
+    newAppointmentDate?: Date
+) {
+    try {
+        const session = await auth()
+        if (!session?.user || (session.user as any).role !== "RH") {
+            throw new Error("Non autorisé")
+        }
+
+        const event: RescheduleEvent = {
+            date: new Date().toISOString(),
+            actor: 'RH',
+            action,
+            message
+        }
+
+        const updatedRequest = await replyToReschedule(id, action, event, newAppointmentDate)
+
+        await createNotification({
+            userId: updatedRequest.userId,
+            title: `Report de rendez-vous ${action === 'ACCEPT' ? 'Accepté' : 'Refusé'}`,
+            message: action === 'ACCEPT' ? `Votre nouvelle date a été validée.` : `Votre demande de report a été refusée, la date initiale est maintenue.`,
+            type: "SERVICE",
+            status: action === 'ACCEPT' ? 'APPROVED' : 'REJECTED',
+            link: "/dashboard/salarie/rendez-vous"
+        })
+
+        await sendPushNotification(
+            updatedRequest.userId,
+            `Report de rendez-vous ${action === 'ACCEPT' ? 'Accepté' : 'Refusé'}`,
+            action === 'ACCEPT' ? `Votre nouvelle date a été validée.` : `Votre demande de report a été refusée, la date initiale est maintenue.`,
+            "/dashboard/salarie/rendez-vous"
+        )
+
+        revalidatePath("/dashboard/rh/rendez-vous")
+        revalidatePath("/dashboard/salarie/rendez-vous")
+        return { success: true }
+    } catch (error: any) {
+        console.error("Submit Reschedule Reply error:", error)
         return { error: error.message || "Une erreur est survenue" }
     }
 }
