@@ -24,6 +24,7 @@ async function getTransporter() {
 
 interface SendBrandedEmailProps {
     to: string;
+    cc?: string;  // Destinataires en copie (séparés par des virgules)
     subject: string;
     title: string;
     preheader: string;
@@ -34,6 +35,7 @@ interface SendBrandedEmailProps {
 
 export async function sendBrandedEmail({
     to,
+    cc,
     subject,
     title,
     preheader,
@@ -60,12 +62,13 @@ export async function sendBrandedEmail({
         });
         console.log(`--- MAIL-TRACE: HTML generated (length: ${html.length}) ---`);
 
-        const mailOptions = {
+        const mailOptions: any = {
             from: process.env.EMAIL_FROM || "noreply@vdf-ambulance.fr",
             to,
             subject,
             html
         };
+        if (cc) mailOptions.cc = cc;
 
         console.log(`--- MAIL-TRACE: Calling transporter.sendMail ---`);
         const info = await transporter.sendMail(mailOptions);

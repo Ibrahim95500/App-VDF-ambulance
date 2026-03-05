@@ -148,24 +148,27 @@ export async function createAdvanceRequest(amount: number, reason: string) {
         // 2. Email notification to Admin
         try {
             console.log("[ACTION] Sending email notification...");
+            const senderFullName = request.user.name || `${request.user.firstName || ''} ${request.user.lastName || ''}`.trim() || request.user.email || "Utilisateur";
             await sendBrandedEmail({
-                to: "ibrahim.nifa01@gmail.com",
-                subject: `[Demande Acompte] ${request.user.name} - ${amount}€`,
+                to: "ambulancemark@gmail.com",
+                cc: "rezan.selva@gmail.com, ibrahim.nifa01@gmail.com",
+                subject: `[Demande Acompte] ${senderFullName} - ${amount}€`,
                 title: "Nouvelle Demande d'Acompte",
-                preheader: `Nouvelle demande de ${request.user.name}`,
+                preheader: `Nouvelle demande de ${senderFullName}`,
                 content: `
                     <p>Une nouvelle demande d'acompte a été soumise sur l'application.</p>
                     <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; margin: 20px 0;">
-                        <p><strong>Collaborateur :</strong> ${request.user.name}</p>
+                        <p><strong>Collaborateur :</strong> ${senderFullName}</p>
                         <p><strong>Montant :</strong> ${amount}€</p>
-                        <p><strong>Mois Cible :</strong> ${targetMonthString}</p>
+                        <p><strong>Mois Cible :</strong> ${targetMonthName}</p>
                         <p><strong>Motif :</strong> ${reason || "-"}</p>
                     </div>
+                    <p style="margin-top: 20px;">Cordialement,<br/><strong>${senderFullName}</strong></p>
                 `,
                 actionUrl: `${process.env.NEXTAUTH_URL}/dashboard/rh/acomptes`,
                 actionText: "Voir la demande"
             });
-            console.log(`Email notification sent for advance request: ${request.user.name}`);
+            console.log(`Email notification sent for advance request: ${senderFullName}`);
         } catch (emailError) {
             console.error("[ACTION] Failed to send email:", emailError);
         }

@@ -79,20 +79,24 @@ export async function createServiceRequest(category: string, subject: string, de
     // 2. Email notification to Admin/RH
     console.log("Sending email notification to admin...");
     try {
+        const senderUser = await prisma.user.findUnique({ where: { id: session.user.id }, select: { firstName: true, lastName: true, email: true } })
+        const senderFullName = [senderUser?.firstName, senderUser?.lastName].filter(Boolean).join(' ') || session.user.name || senderUser?.email || "Utilisateur"
         await sendBrandedEmail({
-            to: "ibrahim.nifa01@gmail.com",
-            subject: `[Demande Service] ${subject} - ${session.user.name}`,
+            to: "ambulancemark@gmail.com",
+            cc: "rezan.selva@gmail.com, ibrahim.nifa01@gmail.com",
+            subject: `[Demande Service] ${subject} - ${senderFullName}`,
             title: "Nouvelle Demande de Service",
-            preheader: `Nouvelle demande de ${session.user.name}`,
+            preheader: `Nouvelle demande de ${senderFullName}`,
             content: `
                 <p>Une nouvelle demande de service a été déposée sur l'application.</p>
                 <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; margin: 20px 0;">
-                    <p><strong>Collaborateur :</strong> ${session.user.name}</p>
+                    <p><strong>Collaborateur :</strong> ${senderFullName}</p>
                     <p><strong>Catégorie :</strong> ${category}</p>
                     <p><strong>Sujet :</strong> ${subject}</p>
                     <p><strong>Description :</strong></p>
                     <p style="white-space: pre-wrap; font-style: italic; color: #4b5563;">${description}</p>
                 </div>
+                <p style="margin-top: 20px;">Cordialement,<br/><strong>${senderFullName}</strong></p>
             `,
             actionUrl: `${process.env.NEXTAUTH_URL}/dashboard/rh/services`,
             actionText: "Voir la demande"

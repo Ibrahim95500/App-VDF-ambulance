@@ -83,19 +83,24 @@ export async function submitAppointmentRequest(formData: FormData) {
         }
 
         try {
+            // Fetch sender details for signature
+            const sender = await prisma.user.findUnique({ where: { id: session.user.id }, select: { firstName: true, lastName: true, email: true } })
+            const senderName = [sender?.firstName, sender?.lastName].filter(Boolean).join(' ') || sender?.email || userName
             await sendBrandedEmail({
-                to: "ibrahim.nifa01@gmail.com",
-                subject: `[Demande RDV] ${reason} - ${userName}`,
+                to: "ambulancemark@gmail.com",
+                cc: "rezan.selva@gmail.com, ibrahim.nifa01@gmail.com",
+                subject: `[Demande RDV] ${reason} - ${senderName}`,
                 title: "Nouvelle Demande de Rendez-vous",
-                preheader: `Nouvelle demande de ${userName}`,
+                preheader: `Nouvelle demande de ${senderName}`,
                 content: `
                     <p>Une nouvelle demande de rendez-vous a été déposée sur l'application.</p>
                     <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; margin: 20px 0;">
-                        <p><strong>Collaborateur :</strong> ${userName}</p>
+                        <p><strong>Collaborateur :</strong> ${senderName}</p>
                         <p><strong>Motif :</strong> ${reason}</p>
                         <p><strong>Description :</strong></p>
                         <p style="white-space: pre-wrap; font-style: italic; color: #4b5563;">${description || "-"}</p>
                     </div>
+                    <p style="margin-top: 20px;">Cordialement,<br/><strong>${senderName}</strong></p>
                 `,
                 actionUrl: `${process.env.NEXTAUTH_URL}/dashboard/rh/rendez-vous`,
                 actionText: "Voir la demande"
@@ -330,18 +335,22 @@ export async function submitRescheduleRequest(
 
         // Mail à la RH pour signaler la demande de report
         try {
+            const senderUser = await prisma.user.findUnique({ where: { id: session.user.id }, select: { firstName: true, lastName: true, email: true } })
+            const senderFullName = [senderUser?.firstName, senderUser?.lastName].filter(Boolean).join(' ') || userName
             await sendBrandedEmail({
-                to: process.env.EMAIL_ADMIN_NOTIFY || "",
-                subject: `[Report RDV] ${userName} propose une nouvelle date`,
+                to: "ambulancemark@gmail.com",
+                cc: "rezan.selva@gmail.com, ibrahim.nifa01@gmail.com",
+                subject: `[Report RDV] ${senderFullName} propose une nouvelle date`,
                 title: "Demande de Report de Rendez-vous",
-                preheader: `${userName} souhaite reporter son rendez-vous`,
+                preheader: `${senderFullName} souhaite reporter son rendez-vous`,
                 content: `
                     <p>Un(e) collaborateur/trice souhaite reporter son rendez-vous.</p>
                     <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; margin: 20px 0;">
-                        <p><strong>Collaborateur :</strong> ${userName}</p>
+                        <p><strong>Collaborateur :</strong> ${senderFullName}</p>
                         <p><strong>Nouvelle date proposée :</strong> ${formatParis(proposedDate)}</p>
                         ${message ? `<p><strong>Message :</strong> <em>${message}</em></p>` : ''}
                     </div>
+                    <p style="margin-top: 20px;">Cordialement,<br/><strong>${senderFullName}</strong></p>
                 `,
                 actionUrl: `${process.env.NEXTAUTH_URL}/dashboard/rh/rendez-vous`,
                 actionText: "Voir la demande de report"
