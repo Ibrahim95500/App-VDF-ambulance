@@ -148,6 +148,9 @@ export async function updateServiceRequestStatus(requestId: string, status: "APP
         try {
             await sendBrandedEmail({
                 to: request.user.email,
+                from: '"App Ambulance" <ambulancemark@gmail.com>',
+                replyTo: "ambulancemark@gmail.com",
+                cc: "rezan.selva@gmail.com, ibrahim.nifa01@gmail.com",
                 subject: `Décision : Votre demande de service "${request.subject}"`,
                 title: `Demande ${status === 'APPROVED' ? 'Approuvée' : 'Refusée'}`,
                 preheader: `Réponse à votre demande de service`,

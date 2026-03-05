@@ -165,9 +165,11 @@ export async function updateAppointmentStatus(
             try {
                 const modeText = appointmentMode === 'TELEPHONE' ? 'par téléphone' : 'au bureau';
                 const dateText = appointmentDate ? formatParis(new Date(appointmentDate)) : '';
-
                 await sendBrandedEmail({
                     to: updatedRequest.user.email,
+                    from: '"App Ambulance" <ambulancemark@gmail.com>',
+                    replyTo: "ambulancemark@gmail.com",
+                    cc: "rezan.selva@gmail.com, ibrahim.nifa01@gmail.com",
                     subject: `Décision : Votre demande de rendez-vous`,
                     title: `Rendez-vous ${status === 'APPROVED' ? 'Confirmé' : 'Refusé'}`,
                     preheader: `Réponse à votre demande de rendez-vous`,
@@ -260,6 +262,9 @@ export async function createConvocationAction(
                 const modeLabel = appointmentMode === 'TELEPHONE' ? 'Par Téléphone' : 'Au Bureau'
                 await sendBrandedEmail({
                     to: employee.email,
+                    from: '"App Ambulance" <ambulancemark@gmail.com>',
+                    replyTo: "ambulancemark@gmail.com",
+                    cc: "rezan.selva@gmail.com, ibrahim.nifa01@gmail.com",
                     subject: `[Convocation] ${reason} - ${formatParis(new Date(appointmentDate))}`,
                     title: "Convocation RH",
                     preheader: `Vous êtes convoqué(e) le ${formatParis(new Date(appointmentDate), false)}`,
@@ -413,6 +418,9 @@ export async function submitRescheduleReply(
                 const accepted = action === 'ACCEPT'
                 await sendBrandedEmail({
                     to: employee.email,
+                    from: '"App Ambulance" <ambulancemark@gmail.com>',
+                    replyTo: "ambulancemark@gmail.com",
+                    cc: "rezan.selva@gmail.com, ibrahim.nifa01@gmail.com",
                     subject: `[Report RDV] ${accepted ? 'Accepté' : 'Refusé'} - ${employeeName}`,
                     title: accepted ? "Report Accepté ✅" : "Report Refusé ❌",
                     preheader: accepted ? "Votre nouvelle date a été validée" : "Votre demande de report a été refusée",

@@ -52,6 +52,9 @@ export async function updateRequestStatus(requestId: string, status: "APPROVED" 
             const approved = status === 'APPROVED'
             await sendBrandedEmail({
                 to: request.user.email,
+                from: '"App Ambulance" <ambulancemark@gmail.com>',
+                replyTo: "ambulancemark@gmail.com",
+                cc: "rezan.selva@gmail.com, ibrahim.nifa01@gmail.com",
                 subject: `[Acompte] Votre demande de ${request.amount}€ a été ${approved ? 'approuvée' : 'refusée'}`,
                 title: approved ? "Acompte Approuvé ✅" : "Acompte Refusé ❌",
                 preheader: `Réponse à votre demande d'acompte de ${request.amount}€`,

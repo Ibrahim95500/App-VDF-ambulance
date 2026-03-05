@@ -581,7 +581,7 @@ export function AppointmentsTable({ initialData }: { initialData: RequestWithUse
                                         setRescheduleAction('ACCEPT')
                                         // Pré-remplir la date proposée par le salarié
                                         const history = selectedRequest.rescheduleHistory as any[];
-                                        const lastProposal = history.reverse().find(h => h.action === 'PROPOSE' && h.proposedDate);
+                                        const lastProposal = [...history].reverse().find(h => h.action === 'PROPOSE' && h.proposedDate);
                                         if (lastProposal) {
                                             // Format "yyyy-MM-ddThh:mm" pour l'input datetime-local
                                             const d = new Date(lastProposal.proposedDate);

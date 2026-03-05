@@ -24,6 +24,8 @@ async function getTransporter() {
 
 interface SendBrandedEmailProps {
     to: string;
+    from?: string; // Permet de forcer l'expéditeur
+    replyTo?: string; // Permet de set le replyTo
     cc?: string;  // Destinataires en copie (séparés par des virgules)
     subject: string;
     title: string;
@@ -35,6 +37,8 @@ interface SendBrandedEmailProps {
 
 export async function sendBrandedEmail({
     to,
+    from,
+    replyTo,
     cc,
     subject,
     title,
@@ -63,11 +67,12 @@ export async function sendBrandedEmail({
         console.log(`--- MAIL-TRACE: HTML generated (length: ${html.length}) ---`);
 
         const mailOptions: any = {
-            from: process.env.EMAIL_FROM || "noreply@vdf-ambulance.fr",
+            from: from || process.env.EMAIL_FROM || "noreply@vdf-ambulance.fr",
             to,
             subject,
             html
         };
+        if (replyTo) mailOptions.replyTo = replyTo;
         if (cc) mailOptions.cc = cc;
 
         console.log(`--- MAIL-TRACE: Calling transporter.sendMail ---`);

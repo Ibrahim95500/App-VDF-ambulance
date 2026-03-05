@@ -261,7 +261,10 @@ export default async function RHDashboard() {
 
                 {/* Statistiques Rendez-vous */}
                 {allAppointments.length > 0 && (
-                    <div className="mt-8">
+                    <div className="mt-12">
+                        <h2 className="text-xl font-bold mb-4 text-foreground flex items-center gap-2">
+                            Demandes de Rendez-vous et convocation
+                        </h2>
                         <HRStatsCharts
                             requestsByCategory={rdvByStatus}
                             requestsByUser={rdvByUser}

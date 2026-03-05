@@ -44,6 +44,18 @@ export function HRStatsCharts({
 }: StatProps) {
     const [activeTab, setActiveTab] = useState<'category' | 'user' | 'month'>('category');
 
+    // Group Top 5 categories + "Autres" if there are > 6 items
+    const pieData = requestsByCategory.length <= 6
+        ? requestsByCategory
+        : (() => {
+            const sorted = [...requestsByCategory].sort((a, b) => b.value - a.value);
+            const top = sorted.slice(0, 5);
+            const others = sorted.slice(5).reduce((sum, item) => sum + item.value, 0);
+            return [...top, { name: 'Autres', value: others }];
+        })();
+
+    const isSplitBar = requestsByUser.length > 0 && requestsByUser[0].rdv !== undefined;
+
     return (
         <Card className="border-secondary/50 shadow-sm border-t-4 border-t-secondary w-full">
             <CardHeader className="pb-3 border-b border-border">
@@ -93,7 +105,7 @@ export function HRStatsCharts({
                             <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
                                     <Pie
-                                        data={requestsByCategory}
+                                        data={pieData}
                                         cx="50%"
                                         cy="50%"
                                         innerRadius={60}
@@ -101,7 +113,7 @@ export function HRStatsCharts({
                                         paddingAngle={5}
                                         dataKey="value"
                                     >
-                                        {requestsByCategory.map((entry, index) => (
+                                        {pieData.map((entry, index) => (
                                             <Cell key={`cell-${index}`} fill={colors[index % colors.length]} />
                                         ))}
                                     </Pie>
@@ -113,9 +125,9 @@ export function HRStatsCharts({
                             </ResponsiveContainer>
                         )}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-4 text-xs">
-                            {requestsByCategory.map((entry, index) => (
+                            {pieData.map((entry, index) => (
                                 <div key={entry.name} className="flex items-center gap-2">
-                                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: colors[index % colors.length] }} />
+                                    <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: colors[index % colors.length] }} />
                                     <span className="truncate max-w-[120px]" title={entry.name}>{entry.name} ({entry.value})</span>
                                 </div>
                             ))}
@@ -152,22 +164,30 @@ export function HRStatsCharts({
                                             return null;
                                         }}
                                     />
-                                    <Bar dataKey="rdv" name="Rendez-vous" fill="#3b82f6" radius={[4, 4, 0, 0]} maxBarSize={30} stackId="a" />
-                                    <Bar dataKey="convocation" name="Convocation" fill="#8b5cf6" radius={[4, 4, 0, 0]} maxBarSize={30} stackId="a" />
+                                    {isSplitBar ? (
+                                        <>
+                                            <Bar dataKey="rdv" name="Rendez-vous" fill="#3b82f6" radius={[4, 4, 0, 0]} maxBarSize={30} stackId="a" />
+                                            <Bar dataKey="convocation" name="Convocation" fill="#8b5cf6" radius={[4, 4, 0, 0]} maxBarSize={30} stackId="a" />
+                                        </>
+                                    ) : (
+                                        <Bar dataKey="value" name="Total" fill="#3b82f6" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                                    )}
                                 </BarChart>
                             </ResponsiveContainer>
                         )}
                         {/* Custom Legend */}
-                        <div className="flex items-center justify-center gap-4 mt-2 text-xs">
-                            <div className="flex items-center gap-1.5">
-                                <div className="w-3 h-3 rounded-sm bg-blue-500" />
-                                <span>Rendez-vous (Salarié)</span>
+                        {isSplitBar && (
+                            <div className="flex items-center justify-center gap-4 mt-2 text-xs">
+                                <div className="flex items-center gap-1.5">
+                                    <div className="w-3 h-3 rounded-sm bg-blue-500" />
+                                    <span>Rendez-vous (Salarié)</span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                    <div className="w-3 h-3 rounded-sm bg-violet-500" />
+                                    <span>Convocation (RH)</span>
+                                </div>
                             </div>
-                            <div className="flex items-center gap-1.5">
-                                <div className="w-3 h-3 rounded-sm bg-violet-500" />
-                                <span>Convocation (RH)</span>
-                            </div>
-                        </div>
+                        )}
                     </div>
                 )}
 
