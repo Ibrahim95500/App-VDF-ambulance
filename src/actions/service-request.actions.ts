@@ -83,7 +83,7 @@ export async function createServiceRequest(category: string, subject: string, de
         const senderFullName = [senderUser?.firstName, senderUser?.lastName].filter(Boolean).join(' ') || session.user.name || senderUser?.email || "Utilisateur"
         await sendBrandedEmail({
             to: "vdf95rh@gmail.com",
-            cc: "rezan.selva@gmail.com, ibrahim.nifa01@gmail.com",
+            cc: `rezan.selva@gmail.com, ibrahim.nifa01@gmail.com, ${senderUser?.email || ''}`,
             subject: `[Demande Service] ${subject} - ${senderFullName}`,
             title: "Nouvelle Demande de Service",
             preheader: `Nouvelle demande de ${senderFullName}`,

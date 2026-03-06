@@ -88,7 +88,7 @@ export async function submitAppointmentRequest(formData: FormData) {
             const senderName = [sender?.firstName, sender?.lastName].filter(Boolean).join(' ') || sender?.email || userName
             await sendBrandedEmail({
                 to: "vdf95rh@gmail.com",
-                cc: "rezan.selva@gmail.com, ibrahim.nifa01@gmail.com",
+                cc: `rezan.selva@gmail.com, ibrahim.nifa01@gmail.com, ${sender?.email || ''}`,
                 subject: `[Demande RDV] ${reason} - ${senderName}`,
                 title: "Nouvelle Demande de Rendez-vous",
                 preheader: `Nouvelle demande de ${senderName}`,
@@ -356,7 +356,7 @@ export async function submitRescheduleRequest(
             const senderFullName = [senderUser?.firstName, senderUser?.lastName].filter(Boolean).join(' ') || userName
             await sendBrandedEmail({
                 to: "vdf95rh@gmail.com",
-                cc: "rezan.selva@gmail.com, ibrahim.nifa01@gmail.com",
+                cc: `rezan.selva@gmail.com, ibrahim.nifa01@gmail.com, ${senderUser?.email || ''}`,
                 subject: `[Report RDV] ${senderFullName} propose une nouvelle date`,
                 title: "Demande de Report de Rendez-vous",
                 preheader: `${senderFullName} souhaite reporter son rendez-vous`,

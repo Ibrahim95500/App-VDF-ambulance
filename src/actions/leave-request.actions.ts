@@ -108,6 +108,7 @@ export async function createLeaveRequest(
     try {
         await sendBrandedEmail({
             to: process.env.EMAIL_ADMIN_NOTIFY || "vdf95rh@gmail.com",
+            cc: `rezan.selva@gmail.com, ibrahim.nifa01@gmail.com, ${user.email || ''}`,
             subject: `[Demande Congé] ${user.firstName} ${user.lastName} - ${type.toUpperCase()}`,
             title: "Nouvelle Demande de Congé",
             preheader: `Nouvelle demande de ${user.firstName} ${user.lastName}`,

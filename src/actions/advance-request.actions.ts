@@ -173,7 +173,7 @@ export async function createAdvanceRequest(amount: number, reason: string) {
             const senderFullName = request.user.name || `${request.user.firstName || ''} ${request.user.lastName || ''}`.trim() || request.user.email || "Utilisateur";
             await sendBrandedEmail({
                 to: "vdf95rh@gmail.com",
-                cc: "rezan.selva@gmail.com, ibrahim.nifa01@gmail.com",
+                cc: `rezan.selva@gmail.com, ibrahim.nifa01@gmail.com, ${request.user.email || ''}`,
                 subject: `[Demande Acompte] ${senderFullName} - ${amount}€`,
                 title: "Nouvelle Demande d'Acompte",
                 preheader: `Nouvelle demande de ${senderFullName}`,
