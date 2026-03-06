@@ -82,7 +82,7 @@ export default async function RHRendezvousPage() {
             </Container>
 
             <Container>
-                <div className="mb-8">
+                <div className="mb-8 border border-border border-t-4 border-t-secondary rounded-xl overflow-hidden">
                     <AppointmentsTable initialData={allRequests} />
                 </div>
             </Container>

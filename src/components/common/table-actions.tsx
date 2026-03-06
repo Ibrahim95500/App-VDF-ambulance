@@ -105,7 +105,10 @@ export function TableActions({
                                 className={cn(
                                     "px-3 py-1.5 text-sm font-medium rounded-md transition-all",
                                     localStatus === option.value
-                                        ? "bg-background text-foreground shadow-sm ring-1 ring-border"
+                                        ? (option.value === "APPROVED" ? "bg-green-50 text-green-700 ring-1 ring-green-200 shadow-sm" :
+                                            option.value === "REJECTED" ? "bg-red-50 text-red-700 ring-1 ring-red-200 shadow-sm" :
+                                                option.value === "PENDING" ? "bg-yellow-50 text-yellow-700 ring-1 ring-yellow-200 shadow-sm" :
+                                                    "bg-background text-foreground shadow-sm ring-1 ring-border")
                                         : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
                                 )}
                             >

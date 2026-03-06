@@ -25,12 +25,12 @@ export default async function SalarieServicesPage() {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Submit Form */}
-                <div className="lg:col-span-1">
+                <div className="lg:col-span-1 border border-border border-t-4 border-t-secondary rounded-xl overflow-hidden h-fit bg-card p-2">
                     <RequestServiceForm />
                 </div>
 
                 {/* History Table */}
-                <div className="lg:col-span-2">
+                <div className="lg:col-span-2 border border-border border-t-4 border-t-secondary rounded-xl overflow-hidden h-fit bg-card">
                     <ServiceHistoryTable initialData={initialData} />
                 </div>
             </div>
