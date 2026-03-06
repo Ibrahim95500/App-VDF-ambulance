@@ -30,6 +30,11 @@ export const metadata: Metadata = {
     icon: '/media/app/logo.png',
     apple: '/media/app/logo.png',
   },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'VDF Ambulance',
+  },
 };
 
 export const viewport = {

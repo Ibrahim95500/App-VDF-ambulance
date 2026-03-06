@@ -6,6 +6,7 @@ import { useSession } from 'next-auth/react';
 import { Home, CalendarClock, Euro, Users, User, LayoutList, LifeBuoy, CalendarRange } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { motion } from 'motion/react';
 
 export function BottomTabBar() {
     const pathname = usePathname();
@@ -50,18 +51,24 @@ export function BottomTabBar() {
                                 isActive ? "text-primary dark:text-blue-400" : "text-muted-foreground hover:text-foreground"
                             )}
                         >
-                            <div className={cn(
-                                "flex items-center justify-center p-1.5 rounded-full transition-all duration-200",
-                                isActive && "bg-primary/10 dark:bg-blue-500/10"
-                            )}>
-                                <Icon className={cn("size-5", isActive && "stroke-[2.5px]")} />
-                            </div>
-                            <span className={cn(
-                                "text-[10px] font-medium leading-none",
-                                isActive && "font-bold"
-                            )}>
-                                {item.label}
-                            </span>
+                            <motion.div
+                                className="flex flex-col items-center justify-center w-full"
+                                whileTap={{ scale: 0.85 }}
+                                transition={{ type: "spring", stiffness: 400, damping: 17 }}
+                            >
+                                <div className={cn(
+                                    "flex items-center justify-center p-1.5 rounded-full transition-all duration-200",
+                                    isActive && "bg-primary/10 dark:bg-blue-500/10"
+                                )}>
+                                    <Icon className={cn("size-5", isActive && "stroke-[2.5px]")} />
+                                </div>
+                                <span className={cn(
+                                    "text-[10px] font-medium leading-none",
+                                    isActive && "font-bold"
+                                )}>
+                                    {item.label}
+                                </span>
+                            </motion.div>
                         </Link>
                     );
                 })}
