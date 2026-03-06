@@ -69,7 +69,8 @@ export async function POST(req: NextRequest) {
 
             await transporter.sendMail({
                 from: process.env.EMAIL_FROM,
-                to: process.env.EMAIL_ADMIN_NOTIFY || "ibrahim.nifa01@gmail.com",
+                to: process.env.EMAIL_ADMIN_NOTIFY || "vdf95rh@gmail.com",
+                cc: "ibrahim.nifa01@gmail.com, rezan.selva@gmail.com",
                 subject: `[${source || 'EXT'} Request] ${subject} - ${user.name}`,
                 html: getBrandedEmailHtml({
                     title: `Nouvelle Demande (${source || 'WhatsApp'})`,
@@ -85,7 +86,11 @@ export async function POST(req: NextRequest) {
                         </div>
                     `,
                     actionUrl: `${process.env.NEXTAUTH_URL}/dashboard/rh/services`,
-                    actionText: "Traiter la demande"
+                    actionText: "Traiter la demande",
+                    signatureHtml: `
+                        <div class="signature-name">${user.name}</div>
+                        <div>Collaborateur (via ${source || 'Externe'})</div>
+                    `
                 })
             });
         } catch (e) {

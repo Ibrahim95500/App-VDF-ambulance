@@ -10,6 +10,7 @@ interface EmailTemplateOptions {
   footerNote?: string;
   actionUrl?: string;
   actionText?: string;
+  signatureHtml?: string;
 }
 
 export function getBrandedEmailHtml({
@@ -18,7 +19,11 @@ export function getBrandedEmailHtml({
   content,
   footerNote = "Ceci est un message automatique, merci de ne pas y répondre directement.",
   actionUrl,
-  actionText
+  actionText,
+  signatureHtml = `
+        <div class="signature-name">Hamid Cheikh</div>
+        <div>Directeur Général - VDF Ambulance</div>  
+  `
 }: EmailTemplateOptions): string {
   // PNG logo with blue background matching email header - works in all email clients including Gmail
   // SVG is blocked by Gmail, data URIs are blocked too - PNG at a real URL is the only reliable option
@@ -78,8 +83,7 @@ export function getBrandedEmailHtml({
 
       <div class="signature">
         <p>Cordialement,</p>
-        <div class="signature-name">Hamid Cheikh</div>
-        <div>Directeur Général - VDF Ambulance</div>
+        ${signatureHtml}
       </div>
     </div>
     <div class="footer">

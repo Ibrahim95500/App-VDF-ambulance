@@ -103,7 +103,11 @@ export async function submitAppointmentRequest(formData: FormData) {
                     <p style="margin-top: 20px;">Cordialement,<br/><strong>${senderName}</strong></p>
                 `,
                 actionUrl: `${process.env.NEXTAUTH_URL}/dashboard/rh/rendez-vous`,
-                actionText: "Voir la demande"
+                actionText: "Gérer la proposition",
+                signatureHtml: `
+                    <div class="signature-name">${senderName}</div>
+                    <div>Collaborateur - VDF Ambulance</div>
+                `
             });
         } catch (error) {
             console.error("Failed to send email to RH:", error);
@@ -197,7 +201,11 @@ export async function updateAppointmentStatus(
                         <p>Vous pouvez consulter les détails dans votre espace personnel.</p>
                     `,
                     actionUrl: `${process.env.NEXTAUTH_URL}/dashboard/salarie/rendez-vous`,
-                    actionText: "Accéder à mes rendez-vous"
+                    actionText: "Accéder à mes rendez-vous",
+                    signatureHtml: `
+                        <div class="signature-name">VDF RH & Hamid Cheikh</div>
+                        <div>Direction - VDF Ambulance</div>
+                    `
                 });
             } catch (error) {
                 console.error("Failed to send status update email to employee:", error);
@@ -280,8 +288,12 @@ export async function createConvocationAction(
                         <p style="font-size: 13px; color: #6b7280;">Veuillez vous préparer en conséquence et vous connecter à l'application pour plus de détails.</p>
                     `,
                     actionUrl: `${process.env.NEXTAUTH_URL}/dashboard/salarie/rendez-vous`,
-                    actionText: "Voir ma convocation"
-                })
+                    actionText: "Voir mes convocations",
+                    signatureHtml: `
+                        <div class="signature-name">VDF RH & Hamid Cheikh</div>
+                        <div>Direction - VDF Ambulance</div>
+                    `
+                });
             }
         } catch (emailError) {
             console.error("Failed to send convocation email to employee:", emailError)
@@ -358,8 +370,12 @@ export async function submitRescheduleRequest(
                     <p style="margin-top: 20px;">Cordialement,<br/><strong>${senderFullName}</strong></p>
                 `,
                 actionUrl: `${process.env.NEXTAUTH_URL}/dashboard/rh/rendez-vous`,
-                actionText: "Voir la demande de report"
-            })
+                actionText: "Voir la demande de rendez-vous",
+                signatureHtml: `
+                    <div class="signature-name">${senderFullName}</div>
+                    <div>Collaborateur - VDF Ambulance</div>
+                `
+            });
         } catch (emailError) {
             console.error("Failed to send reschedule request email to RH:", emailError)
         }
@@ -440,8 +456,12 @@ export async function submitRescheduleReply(
                         <p style="font-size: 13px; color: #6b7280;">Connectez-vous à l'application pour consulter les détails de votre rendez-vous.</p>
                     `,
                     actionUrl: `${process.env.NEXTAUTH_URL}/dashboard/salarie/rendez-vous`,
-                    actionText: "Voir mon rendez-vous"
-                })
+                    actionText: "Voir mes rendez-vous",
+                    signatureHtml: `
+                        <div class="signature-name">VDF RH & Hamid Cheikh</div>
+                        <div>Direction - VDF Ambulance</div>
+                    `
+                });
             }
         } catch (emailError) {
             console.error("Failed to send reschedule reply email to employee:", emailError)

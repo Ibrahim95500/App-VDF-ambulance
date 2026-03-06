@@ -121,7 +121,11 @@ export async function createLeaveRequest(
                 </div>
             `,
             actionUrl: `${process.env.NEXTAUTH_URL}/dashboard/rh`,
-            actionText: "Voir la demande"
+            actionText: "Voir la demande",
+            signatureHtml: `
+                <div class="signature-name">${user.firstName || ''} ${user.lastName || ''}</div>
+                <div>Collaborateur - VDF Ambulance</div>
+            `
         });
         console.log(`Email notification sent for leave request: ${user.lastName}`);
     } catch (emailError) {

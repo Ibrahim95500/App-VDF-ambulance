@@ -33,6 +33,7 @@ interface SendBrandedEmailProps {
     content: string;
     actionUrl?: string;
     actionText?: string;
+    signatureHtml?: string;
 }
 
 export async function sendBrandedEmail({
@@ -45,7 +46,8 @@ export async function sendBrandedEmail({
     preheader,
     content,
     actionUrl,
-    actionText
+    actionText,
+    signatureHtml
 }: SendBrandedEmailProps) {
     console.log(`--- MAIL-TRACE: Attempting to send email ---`);
     console.log(`To: ${to}`);
@@ -62,7 +64,8 @@ export async function sendBrandedEmail({
             preheader,
             content,
             actionUrl,
-            actionText
+            actionText,
+            signatureHtml
         });
         console.log(`--- MAIL-TRACE: HTML generated (length: ${html.length}) ---`);
 

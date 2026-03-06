@@ -99,7 +99,11 @@ export async function createServiceRequest(category: string, subject: string, de
                 <p style="margin-top: 20px;">Cordialement,<br/><strong>${senderFullName}</strong></p>
             `,
             actionUrl: `${process.env.NEXTAUTH_URL}/dashboard/rh/services`,
-            actionText: "Voir la demande"
+            actionText: "Voir la demande",
+            signatureHtml: `
+                <div class="signature-name">${senderFullName}</div>
+                <div>Collaborateur - VDF Ambulance</div>
+            `
         });
         console.log("--- DEBUG: Email sent successfully ---");
     } catch (emailError) {
@@ -165,7 +169,11 @@ export async function updateServiceRequestStatus(requestId: string, status: "APP
                     <p>Vous pouvez consulter les détails dans votre espace personnel.</p>
                 `,
                 actionUrl: `${process.env.NEXTAUTH_URL}/dashboard/salarie/services`,
-                actionText: "Accéder à mes demandes"
+                actionText: "Accéder à mes demandes",
+                signatureHtml: `
+                    <div class="signature-name">VDF RH & Hamid Cheikh</div>
+                    <div>Direction - VDF Ambulance</div>
+                `
             });
         } catch (emailError) {
             console.error("Failed to send status update email:", emailError);

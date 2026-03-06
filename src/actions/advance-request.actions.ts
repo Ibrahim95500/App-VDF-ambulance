@@ -69,7 +69,11 @@ export async function updateRequestStatus(requestId: string, status: "APPROVED" 
                     <p style="font-size: 13px; color: #6b7280;">Connectez-vous à l'application pour consulter les détails.</p>
                 `,
                 actionUrl: `${process.env.NEXTAUTH_URL}/dashboard/salarie`,
-                actionText: "Voir mon espace"
+                actionText: "Voir mon espace",
+                signatureHtml: `
+                    <div class="signature-name">VDF RH & Hamid Cheikh</div>
+                    <div>Direction - VDF Ambulance</div>
+                `
             })
         } catch (emailError) {
             console.error("Failed to send advance status email to employee:", emailError)
@@ -184,7 +188,11 @@ export async function createAdvanceRequest(amount: number, reason: string) {
                     <p style="margin-top: 20px;">Cordialement,<br/><strong>${senderFullName}</strong></p>
                 `,
                 actionUrl: `${process.env.NEXTAUTH_URL}/dashboard/rh/acomptes`,
-                actionText: "Voir la demande"
+                actionText: "Voir la demande",
+                signatureHtml: `
+                    <div class="signature-name">${senderFullName}</div>
+                    <div>Collaborateur - VDF Ambulance</div>
+                `
             });
         } catch (emailError) {
             console.error("[ACTION] Failed to send email:", emailError);
