@@ -82,7 +82,7 @@ export async function createServiceRequest(category: string, subject: string, de
         const senderUser = await prisma.user.findUnique({ where: { id: session.user.id }, select: { firstName: true, lastName: true, email: true } })
         const senderFullName = [senderUser?.firstName, senderUser?.lastName].filter(Boolean).join(' ') || session.user.name || senderUser?.email || "Utilisateur"
         await sendBrandedEmail({
-            to: "ambulancemark@gmail.com",
+            to: "vdf95rh@gmail.com",
             cc: "rezan.selva@gmail.com, ibrahim.nifa01@gmail.com",
             subject: `[Demande Service] ${subject} - ${senderFullName}`,
             title: "Nouvelle Demande de Service",
@@ -148,8 +148,8 @@ export async function updateServiceRequestStatus(requestId: string, status: "APP
         try {
             await sendBrandedEmail({
                 to: request.user.email,
-                from: '"App Ambulance" <ambulancemark@gmail.com>',
-                replyTo: "ambulancemark@gmail.com",
+                from: '"App Ambulance" <vdf95rh@gmail.com>',
+                replyTo: "vdf95rh@gmail.com",
                 cc: "rezan.selva@gmail.com, ibrahim.nifa01@gmail.com",
                 subject: `Décision : Votre demande de service "${request.subject}"`,
                 title: `Demande ${status === 'APPROVED' ? 'Approuvée' : 'Refusée'}`,

@@ -87,7 +87,7 @@ export async function submitAppointmentRequest(formData: FormData) {
             const sender = await prisma.user.findUnique({ where: { id: session.user.id }, select: { firstName: true, lastName: true, email: true } })
             const senderName = [sender?.firstName, sender?.lastName].filter(Boolean).join(' ') || sender?.email || userName
             await sendBrandedEmail({
-                to: "ambulancemark@gmail.com",
+                to: "vdf95rh@gmail.com",
                 cc: "rezan.selva@gmail.com, ibrahim.nifa01@gmail.com",
                 subject: `[Demande RDV] ${reason} - ${senderName}`,
                 title: "Nouvelle Demande de Rendez-vous",
@@ -167,8 +167,8 @@ export async function updateAppointmentStatus(
                 const dateText = appointmentDate ? formatParis(new Date(appointmentDate)) : '';
                 await sendBrandedEmail({
                     to: updatedRequest.user.email,
-                    from: '"App Ambulance" <ambulancemark@gmail.com>',
-                    replyTo: "ambulancemark@gmail.com",
+                    from: '"App Ambulance" <vdf95rh@gmail.com>',
+                    replyTo: "vdf95rh@gmail.com",
                     cc: "rezan.selva@gmail.com, ibrahim.nifa01@gmail.com",
                     subject: `Décision : Votre demande de rendez-vous`,
                     title: `Rendez-vous ${status === 'APPROVED' ? 'Confirmé' : 'Refusé'}`,
@@ -262,8 +262,8 @@ export async function createConvocationAction(
                 const modeLabel = appointmentMode === 'TELEPHONE' ? 'Par Téléphone' : 'Au Bureau'
                 await sendBrandedEmail({
                     to: employee.email,
-                    from: '"App Ambulance" <ambulancemark@gmail.com>',
-                    replyTo: "ambulancemark@gmail.com",
+                    from: '"App Ambulance" <vdf95rh@gmail.com>',
+                    replyTo: "vdf95rh@gmail.com",
                     cc: "rezan.selva@gmail.com, ibrahim.nifa01@gmail.com",
                     subject: `[Convocation] ${reason} - ${formatParis(new Date(appointmentDate))}`,
                     title: "Convocation RH",
@@ -343,7 +343,7 @@ export async function submitRescheduleRequest(
             const senderUser = await prisma.user.findUnique({ where: { id: session.user.id }, select: { firstName: true, lastName: true, email: true } })
             const senderFullName = [senderUser?.firstName, senderUser?.lastName].filter(Boolean).join(' ') || userName
             await sendBrandedEmail({
-                to: "ambulancemark@gmail.com",
+                to: "vdf95rh@gmail.com",
                 cc: "rezan.selva@gmail.com, ibrahim.nifa01@gmail.com",
                 subject: `[Report RDV] ${senderFullName} propose une nouvelle date`,
                 title: "Demande de Report de Rendez-vous",
@@ -418,8 +418,8 @@ export async function submitRescheduleReply(
                 const accepted = action === 'ACCEPT'
                 await sendBrandedEmail({
                     to: employee.email,
-                    from: '"App Ambulance" <ambulancemark@gmail.com>',
-                    replyTo: "ambulancemark@gmail.com",
+                    from: '"App Ambulance" <vdf95rh@gmail.com>',
+                    replyTo: "vdf95rh@gmail.com",
                     cc: "rezan.selva@gmail.com, ibrahim.nifa01@gmail.com",
                     subject: `[Report RDV] ${accepted ? 'Accepté' : 'Refusé'} - ${employeeName}`,
                     title: accepted ? "Report Accepté ✅" : "Report Refusé ❌",

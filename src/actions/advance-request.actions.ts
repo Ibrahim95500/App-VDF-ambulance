@@ -52,8 +52,8 @@ export async function updateRequestStatus(requestId: string, status: "APPROVED" 
             const approved = status === 'APPROVED'
             await sendBrandedEmail({
                 to: request.user.email,
-                from: '"App Ambulance" <ambulancemark@gmail.com>',
-                replyTo: "ambulancemark@gmail.com",
+                from: '"App Ambulance" <vdf95rh@gmail.com>',
+                replyTo: "vdf95rh@gmail.com",
                 cc: "rezan.selva@gmail.com, ibrahim.nifa01@gmail.com",
                 subject: `[Acompte] Votre demande de ${request.amount}€ a été ${approved ? 'approuvée' : 'refusée'}`,
                 title: approved ? "Acompte Approuvé ✅" : "Acompte Refusé ❌",
@@ -168,7 +168,7 @@ export async function createAdvanceRequest(amount: number, reason: string) {
         try {
             const senderFullName = request.user.name || `${request.user.firstName || ''} ${request.user.lastName || ''}`.trim() || request.user.email || "Utilisateur";
             await sendBrandedEmail({
-                to: "ambulancemark@gmail.com",
+                to: "vdf95rh@gmail.com",
                 cc: "rezan.selva@gmail.com, ibrahim.nifa01@gmail.com",
                 subject: `[Demande Acompte] ${senderFullName} - ${amount}€`,
                 title: "Nouvelle Demande d'Acompte",

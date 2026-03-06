@@ -107,7 +107,7 @@ export async function createLeaveRequest(
     // 2. Email notification to Admin
     try {
         await sendBrandedEmail({
-            to: "ibrahim.nifa01@gmail.com",
+            to: process.env.EMAIL_ADMIN_NOTIFY || "vdf95rh@gmail.com",
             subject: `[Demande Congé] ${user.firstName} ${user.lastName} - ${type.toUpperCase()}`,
             title: "Nouvelle Demande de Congé",
             preheader: `Nouvelle demande de ${user.firstName} ${user.lastName}`,
