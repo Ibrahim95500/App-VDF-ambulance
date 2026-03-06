@@ -7,7 +7,9 @@ import { TableActions } from "@/components/common/table-actions"
 import { TablePagination } from "@/components/common/table-pagination"
 import { isWithinInterval, startOfDay, endOfDay } from "date-fns"
 import { DateRange } from "react-day-picker"
-import { Eye, MessageSquareQuote } from "lucide-react"
+import { Eye, MessageSquareQuote, Trash2, Loader2 } from "lucide-react"
+import { deleteAdvanceRequest } from "@/actions/advance-request.actions"
+import { toast } from "sonner"
 import {
     Dialog,
     DialogContent,
@@ -31,9 +33,23 @@ export function AdvanceHistoryTable({ initialData }: { initialData: AdvanceReque
     const [dateRange, setDateRange] = useState<DateRange | undefined>()
     const [currentPage, setCurrentPage] = useState(1)
     const [selectedReq, setSelectedReq] = useState<AdvanceRequest | null>(null)
+    const [deletingId, setDeletingId] = useState<string | null>(null)
     const PAGE_SIZE = 10
 
     useEffect(() => { setCurrentPage(1) }, [searchTerm, statusFilter, dateRange])
+
+    const handleDelete = async (req: AdvanceRequest) => {
+        if (!confirm(`Confirmez-vous l'annulation de cette demande d'acompte de ${req.amount}€ ?`)) return;
+        try {
+            setDeletingId(req.id)
+            await deleteAdvanceRequest(req.id)
+            toast.success("Demande annulée avec succès")
+        } catch (error: any) {
+            toast.error(error.message || "Erreur lors de l'annulation")
+        } finally {
+            setDeletingId(null)
+        }
+    }
 
     const filteredData = useMemo(() => {
         return initialData.filter(req => {
@@ -102,6 +118,11 @@ export function AdvanceHistoryTable({ initialData }: { initialData: AdvanceReque
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
                             {getStatusBadge(req.status)}
+                            {req.status === 'PENDING' && (
+                                <Button variant="ghost" size="icon" className="size-7 text-red-500 hover:bg-red-50" onClick={() => handleDelete(req)} disabled={deletingId === req.id}>
+                                    {deletingId === req.id ? <Loader2 className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5" />}
+                                </Button>
+                            )}
                             <Button variant="ghost" size="icon" className="size-7 text-blue-500 hover:bg-blue-50" onClick={() => setSelectedReq(req)}>
                                 <Eye className="size-3.5" />
                             </Button>
@@ -148,6 +169,11 @@ export function AdvanceHistoryTable({ initialData }: { initialData: AdvanceReque
                                                 </span>
                                             )}
                                             {getStatusBadge(req.status)}
+                                            {req.status === 'PENDING' && (
+                                                <Button variant="ghost" size="icon" className="size-8 text-red-500 hover:bg-red-50 ml-1" onClick={() => handleDelete(req)} disabled={deletingId === req.id}>
+                                                    {deletingId === req.id ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
+                                                </Button>
+                                            )}
                                         </div>
                                     </td>
                                 </tr>

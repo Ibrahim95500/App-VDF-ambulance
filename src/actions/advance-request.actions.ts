@@ -221,3 +221,36 @@ export async function createAdvanceRequest(amount: number, reason: string) {
         return { success: false, error: "Une erreur serveur est survenue. Veuillez réessayer plus tard." }
     }
 }
+
+export async function deleteAdvanceRequest(requestId: string) {
+    const session = await auth()
+
+    if (!session?.user?.id) {
+        throw new Error("Unauthorized")
+    }
+
+    // Verify ownership and status
+    const request = await prisma.advanceRequest.findUnique({
+        where: { id: requestId }
+    })
+
+    if (!request) {
+        throw new Error("Demande introuvable")
+    }
+
+    if (request.userId !== session.user.id) {
+        throw new Error("Vous n'êtes pas autorisé à supprimer cette demande")
+    }
+
+    if (request.status !== "PENDING") {
+        throw new Error("Seules les demandes en attente peuvent être supprimées")
+    }
+
+    // Delete the request
+    await prisma.advanceRequest.delete({
+        where: { id: requestId }
+    })
+
+    revalidatePath('/dashboard/salarie')
+    revalidatePath('/dashboard/rh/acomptes')
+}
