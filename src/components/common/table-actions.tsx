@@ -57,10 +57,16 @@ export function TableActions({
     pdfTitle = "Export Data"
 }: TableActionsProps) {
     const [date, setDate] = useState<DateRange | undefined>()
+    const [localStatus, setLocalStatus] = useState("ALL")
 
     const handleDateChange = (range: DateRange | undefined) => {
         setDate(range)
         if (onDateRangeChange) onDateRangeChange(range)
+    }
+
+    const handleStatusClick = (statusValue: string) => {
+        setLocalStatus(statusValue)
+        if (onStatusChange) onStatusChange(statusValue)
     }
 
     return (
@@ -78,21 +84,35 @@ export function TableActions({
                     </div>
                 )}
 
-                {/* Status Filter */}
+                {/* Status Filter (Pills) */}
                 {onStatusChange && statusOptions && (
-                    <Select onValueChange={onStatusChange}>
-                        <SelectTrigger className="w-full md:w-[180px] h-10">
-                            <SelectValue placeholder="Statut" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="ALL">Tous les statuts</SelectItem>
-                            {statusOptions.map(option => (
-                                <SelectItem key={option.value} value={option.value}>
-                                    {option.label}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+                    <div className="flex flex-wrap items-center gap-2 bg-muted/40 p-1.5 rounded-lg border border-border w-full md:w-auto">
+                        <button
+                            onClick={() => handleStatusClick("ALL")}
+                            className={cn(
+                                "px-3 py-1.5 text-sm font-medium rounded-md transition-all",
+                                localStatus === "ALL"
+                                    ? "bg-background text-foreground shadow-sm ring-1 ring-border"
+                                    : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                            )}
+                        >
+                            Tous
+                        </button>
+                        {statusOptions.map(option => (
+                            <button
+                                key={option.value}
+                                onClick={() => handleStatusClick(option.value)}
+                                className={cn(
+                                    "px-3 py-1.5 text-sm font-medium rounded-md transition-all",
+                                    localStatus === option.value
+                                        ? "bg-background text-foreground shadow-sm ring-1 ring-border"
+                                        : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                                )}
+                            >
+                                {option.label}
+                            </button>
+                        ))}
+                    </div>
                 )}
 
                 {/* Date Filter */}

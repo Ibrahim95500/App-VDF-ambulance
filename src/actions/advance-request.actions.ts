@@ -9,7 +9,7 @@ import { sendBrandedEmail } from "@/lib/mail"
 import { z } from "zod"
 
 const AdvanceRequestSchema = z.object({
-    amount: z.number().positive("Le montant doit être positif").max(5000, "Le montant est trop élevé"),
+    amount: z.number().positive("Le montant doit être positif").max(800, "Le montant maximum par acompte est de 800€"),
     reason: z.string().max(500, "Le motif ne doit pas dépasser 500 caractères").optional(),
 });
 
@@ -82,19 +82,15 @@ export async function updateRequestStatus(requestId: string, status: "APPROVED" 
 
 export async function createAdvanceRequest(amount: number, reason: string) {
     try {
-        console.log(`[ACTION] createAdvanceRequest started - Amount: ${amount}, Reason: ${reason}`);
         const session = await auth()
 
         if (!session?.user?.id) {
-            console.error("[ACTION] Unauthorized access attempt");
             return { success: false, error: "Non autorisé" }
         }
 
         // 15th of the month rule check
         const today = new Date()
-        console.log(`[ACTION] Today's date: ${today.getDate()}`);
         if (today.getDate() > 15) {
-            console.warn("[ACTION] Request attempted after the 15th");
             return { success: false, error: "Les demandes d'acompte ne sont possibles que du 1er au 15 du mois." }
         }
 
@@ -102,7 +98,6 @@ export async function createAdvanceRequest(amount: number, reason: string) {
         const targetDate = new Date(today.getFullYear(), today.getMonth() + 1, 1) // First day of next month
         const targetMonthName = targetDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
         const targetMonthString = `${targetDate.getFullYear()}-${String(targetDate.getMonth() + 1).padStart(2, '0')}`
-        console.log(`[ACTION] Target Month: ${targetMonthString}`);
 
         // Frequency Rule: Only 1 request per target month
         const existingRequest = await prisma.advanceRequest.findFirst({
@@ -113,7 +108,6 @@ export async function createAdvanceRequest(amount: number, reason: string) {
         })
 
         if (existingRequest) {
-            console.warn(`[ACTION] Duplicate request found for ${targetMonthString}`);
             return {
                 success: false,
                 error: `Vous avez déjà effectué une demande d'acompte qui sera déduite sur le salaire de ${targetMonthName}. Une seule demande par mois est autorisée.`
@@ -122,11 +116,9 @@ export async function createAdvanceRequest(amount: number, reason: string) {
 
         const validatedFields = AdvanceRequestSchema.safeParse({ amount, reason })
         if (!validatedFields.success) {
-            console.warn("[ACTION] Schema validation failed:", validatedFields.error.issues[0].message);
             return { success: false, error: validatedFields.error.issues[0].message }
         }
 
-        console.log("[ACTION] Creating request in DB...");
         const request = await prisma.advanceRequest.create({
             data: {
                 amount,
@@ -136,10 +128,8 @@ export async function createAdvanceRequest(amount: number, reason: string) {
             },
             include: { user: true }
         })
-        console.log("[ACTION] DB Request created successfully:", request.id);
 
         // 1. In-app notifications for RH & Employee
-        console.log("[ACTION] Preparing notifications...");
         const rhUsers = await prisma.user.findMany({ where: { role: 'RH' } })
         const userName = request.user.name || `${request.user.firstName || ''} ${request.user.lastName || ''}`.trim() || request.user.email || "Utilisateur";
 
@@ -162,9 +152,7 @@ export async function createAdvanceRequest(amount: number, reason: string) {
             link: "/dashboard/salarie"
         });
 
-        console.log(`[ACTION] Batch creating ${notifications.length} notifications...`);
         await createManyNotifications(notifications)
-        console.log("[ACTION] Notifications created successfully.");
 
         // Send Push Notifications to RH
         for (const rh of rhUsers) {
@@ -178,7 +166,6 @@ export async function createAdvanceRequest(amount: number, reason: string) {
 
         // 2. Email notification to Admin
         try {
-            console.log("[ACTION] Sending email notification...");
             const senderFullName = request.user.name || `${request.user.firstName || ''} ${request.user.lastName || ''}`.trim() || request.user.email || "Utilisateur";
             await sendBrandedEmail({
                 to: "ambulancemark@gmail.com",
@@ -199,25 +186,20 @@ export async function createAdvanceRequest(amount: number, reason: string) {
                 actionUrl: `${process.env.NEXTAUTH_URL}/dashboard/rh/acomptes`,
                 actionText: "Voir la demande"
             });
-            console.log(`Email notification sent for advance request: ${senderFullName}`);
         } catch (emailError) {
             console.error("[ACTION] Failed to send email:", emailError);
         }
 
-        console.log("[ACTION] Revalidating paths...");
         try {
             revalidatePath('/dashboard/rh/acomptes')
             revalidatePath('/dashboard/salarie')
             revalidatePath('/', 'layout')
-            console.log("[ACTION] Path revalidation complete.");
         } catch (revError) {
-            console.error("[ACTION] Revalidation error:", revError);
+            console.error(revError);
         }
 
-        console.log("[ACTION] createAdvanceRequest finished successfully.");
         return { success: true }
     } catch (err: any) {
-        console.error("[ACTION] Unexpected failure in createAdvanceRequest:", err);
         return { success: false, error: "Une erreur serveur est survenue. Veuillez réessayer plus tard." }
     }
 }

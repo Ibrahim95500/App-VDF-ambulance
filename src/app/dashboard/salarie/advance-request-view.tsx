@@ -41,7 +41,7 @@ export function AdvanceRequestView({ myRequests }: AdvanceRequestViewProps) {
             {/* Error & Info Alerts at the TOP */}
             <div className="flex flex-col gap-3">
                 {submissionError && (
-                    <div className="bg-red-50 text-red-700 p-4 rounded-lg border border-red-200 text-sm font-semibold flex items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2">
+                    <div className="bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400 p-4 rounded-lg border border-red-200 dark:border-red-500/20 text-sm font-semibold flex items-center justify-between gap-3 animate-in fade-in slide-in-from-top-2">
                         <div className="flex items-start gap-3">
                             <ShieldAlert className="size-5 shrink-0 mt-0.5" />
                             <p>{submissionError}</p>
@@ -56,18 +56,18 @@ export function AdvanceRequestView({ myRequests }: AdvanceRequestViewProps) {
                 )}
 
                 {isLocked && (
-                    <div className="bg-red-50 text-red-600 p-4 rounded-lg border border-red-200 text-sm font-medium flex items-start gap-3">
+                    <div className="bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-400 p-4 rounded-lg border border-red-200 dark:border-red-500/20 text-sm font-medium flex items-start gap-3">
                         <ShieldAlert className="size-5 shrink-0 mt-0.5" />
                         <p>⚠️ Les demandes d'acompte sont fermées pour ce mois-ci. (Uniquement du 1er au 15)</p>
                     </div>
                 )}
 
-                <div className="bg-orange-50 text-orange-700 p-4 rounded-lg border border-orange-200 text-sm flex items-start gap-3">
+                <div className="bg-orange-50 dark:bg-orange-500/10 text-orange-700 dark:text-orange-400 p-4 rounded-lg border border-orange-200 dark:border-orange-500/20 text-sm flex items-start gap-3">
                     <Info className="size-5 shrink-0 mt-0.5" />
                     <p>La demande d'acompte que vous formulez aujourd'hui sera déduite de votre prochain salaire : <strong>{targetMonthName}</strong>.</p>
                 </div>
 
-                <div className="bg-blue-50 text-blue-700 p-4 rounded-lg border border-blue-100 text-sm flex items-start gap-3">
+                <div className="bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 p-4 rounded-lg border border-blue-100 dark:border-blue-500/20 text-sm flex items-start gap-3">
                     <Info className="size-5 shrink-0 mt-0.5 text-blue-400" />
                     <p>Vous avez droit à <strong>une seule demande</strong> par mois cible. Si vous avez déjà soumis une demande pour {targetMonthName}, elle ne pourra pas être modifiée ici.</p>
                 </div>

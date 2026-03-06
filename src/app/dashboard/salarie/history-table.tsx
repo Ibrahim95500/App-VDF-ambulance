@@ -7,7 +7,7 @@ import { TableActions } from "@/components/common/table-actions"
 import { TablePagination } from "@/components/common/table-pagination"
 import { isWithinInterval, startOfDay, endOfDay } from "date-fns"
 import { DateRange } from "react-day-picker"
-import { Eye, MessageSquareQuote, Trash2, Loader2 } from "lucide-react"
+import { Eye, MessageSquareQuote, Trash2, Loader2, PiggyBank, SearchX } from "lucide-react"
 import { deleteAdvanceRequest } from "@/actions/advance-request.actions"
 import { toast } from "sonner"
 import {
@@ -107,8 +107,24 @@ export function AdvanceHistoryTable({ initialData }: { initialData: AdvanceReque
             {/* Mobile card view */}
             <div className="md:hidden divide-y divide-border">
                 {filteredData.length === 0 ? (
-                    <div className="py-8 text-center text-muted-foreground italic">
-                        {initialData.length === 0 ? "Aucune demande d'acompte." : "Aucun résultat pour ces filtres."}
+                    <div className="py-12 flex flex-col items-center justify-center text-center px-4">
+                        {initialData.length === 0 ? (
+                            <>
+                                <div className="size-16 rounded-full bg-secondary/10 flex items-center justify-center mb-4">
+                                    <PiggyBank className="size-8 text-secondary" />
+                                </div>
+                                <h3 className="text-lg font-semibold text-foreground mb-1">Aucun acompte demandé</h3>
+                                <p className="text-sm text-muted-foreground">Vous n'avez pas encore fait de demande d'acompte.</p>
+                            </>
+                        ) : (
+                            <>
+                                <div className="size-16 rounded-full bg-muted flex items-center justify-center mb-4">
+                                    <SearchX className="size-8 text-muted-foreground" />
+                                </div>
+                                <h3 className="text-lg font-semibold text-foreground mb-1">Aucun résultat</h3>
+                                <p className="text-sm text-muted-foreground">Modifiez vos filtres pour voir plus de résultats.</p>
+                            </>
+                        )}
                     </div>
                 ) : paginatedData.map((req) => (
                     <div key={req.id} className="py-3 flex items-center justify-between gap-3">
@@ -145,8 +161,26 @@ export function AdvanceHistoryTable({ initialData }: { initialData: AdvanceReque
                     <tbody className="divide-y divide-border">
                         {filteredData.length === 0 ? (
                             <tr>
-                                <td colSpan={4} className="px-5 py-8 text-center text-muted-foreground italic">
-                                    {initialData.length === 0 ? "Aucune demande d'acompte." : "Aucun résultat pour ces filtres."}
+                                <td colSpan={4} className="px-5 py-16">
+                                    <div className="flex flex-col items-center justify-center text-center">
+                                        {initialData.length === 0 ? (
+                                            <>
+                                                <div className="size-16 rounded-full bg-secondary/10 flex items-center justify-center mb-4">
+                                                    <PiggyBank className="size-8 text-secondary" />
+                                                </div>
+                                                <h3 className="text-lg font-semibold text-foreground mb-1">Aucun acompte demandé</h3>
+                                                <p className="text-sm text-muted-foreground">Vous n'avez pas encore fait de demande d'acompte.</p>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <div className="size-16 rounded-full bg-muted flex items-center justify-center mb-4">
+                                                    <SearchX className="size-8 text-muted-foreground" />
+                                                </div>
+                                                <h3 className="text-lg font-semibold text-foreground mb-1">Aucun résultat</h3>
+                                                <p className="text-sm text-muted-foreground">Modifiez vos filtres pour voir plus de résultats.</p>
+                                            </>
+                                        )}
+                                    </div>
                                 </td>
                             </tr>
                         ) : (
