@@ -139,7 +139,7 @@ export default async function RHDashboard() {
             </Container>
 
             <Container>
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8 mt-8">
                     {/* Colonne de gauche: Acomptes */}
                     <div className="flex flex-col gap-8">
                         {/* Advance Requests Card */}
@@ -258,20 +258,13 @@ export default async function RHDashboard() {
                     </div>
 
                     {/* Leave Requests Card (Hidden for now as requested by client) */}
-                </div>
 
-                {/* Statistiques Rendez-vous */}
-                {allAppointments.length > 0 && (
-                    <div className="mt-12">
-                        <h2 className="text-xl font-bold mb-4 text-foreground flex items-center gap-2">
-                            Demandes de Rendez-vous et convocation
-                        </h2>
-
-                        {/* Appointment Requests Card */}
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                    {/* Troisième colonne: Rendez-vous */}
+                    {allAppointments.length > 0 && (
+                        <div className="flex flex-col gap-8">
                             <Card className="border-secondary/50 shadow-sm border-t-4 border-t-secondary">
                                 <CardHeader className="pb-3 border-b border-border">
-                                    <CardTitle className="text-base font-semibold">Rendez-vous en Attente</CardTitle>
+                                    <CardTitle className="text-base font-semibold">Demande de Rendez-vous en Attente</CardTitle>
                                     <CardDescription>
                                         {pendingAppointments.length} demande(s) nécessite(nt) votre attention.
                                     </CardDescription>
@@ -316,19 +309,19 @@ export default async function RHDashboard() {
                                     </div>
                                 </CardContent>
                             </Card>
-                        </div>
 
-                        <HRStatsCharts
-                            requestsByCategory={rdvByStatus}
-                            requestsByUser={rdvByUser}
-                            requestsByMonth={rdvByMonth}
-                            hideUserTab={false}
-                            categoryLabel="Par Statut"
-                            title="Indicateurs de Rendez-vous"
-                            description="RDV salariés et convocations RH — statuts, par salarié et évolution mensuelle."
-                        />
-                    </div>
-                )}
+                            <HRStatsCharts
+                                requestsByCategory={rdvByStatus}
+                                requestsByUser={rdvByUser}
+                                requestsByMonth={rdvByMonth}
+                                hideUserTab={false}
+                                categoryLabel="Par Statut"
+                                title="Indicateurs de Rendez-vous"
+                                description="RDV salariés et convocations RH — statuts, par salarié et évolution/statut."
+                            />
+                        </div>
+                    )}
+                </div>
             </Container>
         </Fragment>
     )
