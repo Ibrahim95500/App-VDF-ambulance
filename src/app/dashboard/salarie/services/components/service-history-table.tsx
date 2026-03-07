@@ -6,6 +6,9 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Calendar, MessageSquare, Eye, MessageSquareQuote } from "lucide-react"
 import { TablePagination } from "@/components/common/table-pagination"
+import { TableActions } from "@/components/common/table-actions"
+import { isWithinInterval, startOfDay, endOfDay } from "date-fns"
+import { DateRange } from "react-day-picker"
 import {
     Dialog,
     DialogContent,
@@ -17,12 +20,56 @@ import {
 export function ServiceHistoryTable({ initialData }: { initialData: MyServiceRequest[] }) {
     const [currentPage, setCurrentPage] = useState(1)
     const [selectedReq, setSelectedReq] = useState<MyServiceRequest | null>(null)
+    const [searchTerm, setSearchTerm] = useState("")
+    const [statusFilter, setStatusFilter] = useState("ALL")
+    const [dateRange, setDateRange] = useState<DateRange | undefined>()
     const PAGE_SIZE = 10
+
+    const filteredData = useMemo(() => {
+        return initialData.filter(req => {
+            const searchStr = `${req.subject} ${req.category} ${req.description}`.toLowerCase()
+            if (searchTerm && !searchStr.includes(searchTerm.toLowerCase())) return false
+            if (statusFilter !== "ALL" && req.status !== statusFilter) return false
+            if (dateRange?.from) {
+                const reqDate = new Date(req.createdAt)
+                const start = startOfDay(dateRange.from)
+                const end = dateRange.to ? endOfDay(dateRange.to) : endOfDay(dateRange.from)
+                if (!isWithinInterval(reqDate, { start, end })) return false
+            }
+            return true
+        })
+    }, [initialData, searchTerm, statusFilter, dateRange])
 
     const paginatedData = useMemo(() => {
         const start = (currentPage - 1) * PAGE_SIZE
-        return initialData.slice(start, start + PAGE_SIZE)
-    }, [initialData, currentPage])
+        return filteredData.slice(start, start + PAGE_SIZE)
+    }, [filteredData, currentPage])
+
+    const exportData = useMemo(() => {
+        return filteredData.map(req => ({
+            "Catégorie": req.category,
+            "Sujet": req.subject,
+            "Description": req.description || "-",
+            "Date": new Date(req.createdAt).toLocaleDateString('fr-FR'),
+            "Statut": req.status === 'PENDING' ? 'En Attente' : req.status === 'APPROVED' ? 'Approuvée' : 'Refusée'
+        }))
+    }, [filteredData])
+
+    const statusOptions = [
+        { label: "En Attente", value: "PENDING" },
+        { label: "Approuvée", value: "APPROVED" },
+        { label: "Refusée", value: "REJECTED" }
+    ]
+
+    const filterCounts = useMemo(() => {
+        const counts: Record<string, number> = { ALL: initialData.length, PENDING: 0, APPROVED: 0, REJECTED: 0 }
+        initialData.forEach(req => {
+            if (req.status === 'PENDING') counts.PENDING++
+            else if (req.status === 'APPROVED') counts.APPROVED++
+            else if (req.status === 'REJECTED') counts.REJECTED++
+        })
+        return counts
+    }, [initialData])
 
     const getStatusBadge = (status: string) => {
         if (status === 'APPROVED') return <Badge variant="outline" className="text-green-600 bg-green-50 border-green-200">Approuvée</Badge>
@@ -40,9 +87,22 @@ export function ServiceHistoryTable({ initialData }: { initialData: MyServiceReq
     }
 
     return (
-        <div className="flex flex-col rounded-xl border border-secondary/50 border-t-4 border-t-secondary overflow-hidden">
-            <div className="px-5 py-4 border-b border-border bg-muted/5">
-                <h2 className="text-base font-semibold text-secondary tracking-wide">HISTORIQUE DE MES DEMANDES</h2>
+        <div className="flex flex-col rounded-xl border border-secondary/50 border-t-4 border-t-secondary overflow-hidden bg-background">
+            <div className="px-5 py-4 border-b border-border bg-muted/5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <h2 className="text-base font-semibold text-secondary tracking-wide shrink-0">HISTORIQUE DE MES DEMANDES</h2>
+            </div>
+
+            <div className="border-b border-border">
+                <TableActions
+                    data={exportData}
+                    onSearch={setSearchTerm}
+                    onStatusChange={setStatusFilter}
+                    onDateRangeChange={setDateRange}
+                    statusOptions={statusOptions}
+                    counts={filterCounts}
+                    filename="mes_services"
+                    pdfTitle="Historique de mes Demandes de Service"
+                />
             </div>
 
             {/* Mobile card view */}
@@ -144,8 +204,8 @@ export function ServiceHistoryTable({ initialData }: { initialData: MyServiceReq
                             <div className="space-y-1">
                                 <span className="text-xs uppercase text-muted-foreground font-bold tracking-wider">Commentaire de la Direction</span>
                                 <p className={`text-sm p-3 rounded-lg border italic ${selectedReq.status === 'APPROVED' ? 'bg-green-50 text-green-900 border-green-200' :
-                                        selectedReq.status === 'REJECTED' ? 'bg-red-50 text-red-900 border-red-200' :
-                                            'bg-muted text-foreground border-border'
+                                    selectedReq.status === 'REJECTED' ? 'bg-red-50 text-red-900 border-red-200' :
+                                        'bg-muted text-foreground border-border'
                                     }`}>
                                     "{selectedReq.adminComment}"
                                 </p>

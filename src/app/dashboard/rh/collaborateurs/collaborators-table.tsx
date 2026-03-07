@@ -171,6 +171,15 @@ export function CollaboratorsTable({ initialData, services = [] }: { initialData
         { label: "RH / Admin", value: "RH" }
     ]
 
+    const filterCounts = useMemo(() => {
+        const counts = { ALL: initialData.length, SALARIE: 0, RH: 0 }
+        initialData.forEach(user => {
+            if (user.role === 'SALARIE') counts.SALARIE++
+            if (user.role === 'RH') counts.RH++
+        })
+        return counts
+    }, [initialData])
+
     const handleDeactivate = async () => {
         if (!userToDeactivate || !reason.trim()) {
             toast.error("Veuillez saisir un motif de désactivation.")
@@ -234,6 +243,7 @@ export function CollaboratorsTable({ initialData, services = [] }: { initialData
                             onStatusChange={setRoleFilter}
                             onDateRangeChange={setDateRange}
                             statusOptions={roleOptions}
+                            counts={filterCounts}
                             filename="collaborateurs_vdf"
                             pdfTitle="Liste des Collaborateurs - VDF Ambulance"
                         />

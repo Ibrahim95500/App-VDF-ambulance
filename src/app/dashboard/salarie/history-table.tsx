@@ -86,6 +86,16 @@ export function AdvanceHistoryTable({ initialData }: { initialData: AdvanceReque
         { label: "Refusé", value: "REJECTED" }
     ]
 
+    const filterCounts = useMemo(() => {
+        const counts: Record<string, number> = { ALL: initialData.length, PENDING: 0, APPROVED: 0, REJECTED: 0 }
+        initialData.forEach(req => {
+            if (req.status === 'PENDING') counts.PENDING++
+            else if (req.status === 'APPROVED') counts.APPROVED++
+            else if (req.status === 'REJECTED') counts.REJECTED++
+        })
+        return counts
+    }, [initialData])
+
     const getStatusBadge = (status: string) => {
         if (status === 'APPROVED') return <Badge variant="outline" className="text-green-600 bg-green-50 border-green-200">Approuvé</Badge>
         if (status === 'REJECTED') return <Badge variant="outline" className="text-red-600 bg-red-50 border-red-200">Refusé</Badge>
@@ -100,6 +110,7 @@ export function AdvanceHistoryTable({ initialData }: { initialData: AdvanceReque
                 onStatusChange={setStatusFilter}
                 onDateRangeChange={setDateRange}
                 statusOptions={statusOptions}
+                counts={filterCounts}
                 filename="mes_acomptes"
                 pdfTitle="Historique de mes Demandes d'Acompte"
             />

@@ -43,6 +43,7 @@ interface TableActionsProps {
     onDateRangeChange?: (range: DateRange | undefined) => void
     onStatusChange?: (status: string) => void
     statusOptions?: { label: string, value: string }[]
+    counts?: Record<string, number>
     filename?: string
     pdfTitle?: string
 }
@@ -53,6 +54,7 @@ export function TableActions({
     onDateRangeChange,
     onStatusChange,
     statusOptions,
+    counts,
     filename = "export",
     pdfTitle = "Export Data"
 }: TableActionsProps) {
@@ -90,29 +92,48 @@ export function TableActions({
                         <button
                             onClick={() => handleStatusClick("ALL")}
                             className={cn(
-                                "px-3 py-1.5 text-sm font-medium rounded-md transition-all",
+                                "px-3 py-1.5 text-sm font-medium rounded-md transition-all flex items-center gap-1.5",
                                 localStatus === "ALL"
                                     ? "bg-background text-foreground shadow-sm ring-1 ring-border"
                                     : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
                             )}
                         >
-                            Tous
+                            <span>Tous</span>
+                            {counts && counts["ALL"] !== undefined && (
+                                <span className={cn(
+                                    "px-1.5 py-0.5 rounded-full text-[10px] font-bold leading-none min-w-[20px] text-center",
+                                    localStatus === "ALL" ? "bg-muted text-foreground" : "bg-foreground/10 text-muted-foreground"
+                                )}>
+                                    {counts["ALL"]}
+                                </span>
+                            )}
                         </button>
                         {statusOptions.map(option => (
                             <button
                                 key={option.value}
                                 onClick={() => handleStatusClick(option.value)}
                                 className={cn(
-                                    "px-3 py-1.5 text-sm font-medium rounded-md transition-all",
+                                    "px-3 py-1.5 text-sm font-medium rounded-md transition-all flex items-center gap-1.5",
                                     localStatus === option.value
                                         ? (option.value === "APPROVED" ? "bg-green-50 text-green-700 ring-1 ring-green-200 shadow-sm" :
                                             option.value === "REJECTED" ? "bg-red-50 text-red-700 ring-1 ring-red-200 shadow-sm" :
                                                 option.value === "PENDING" ? "bg-yellow-50 text-yellow-700 ring-1 ring-yellow-200 shadow-sm" :
-                                                    "bg-background text-foreground shadow-sm ring-1 ring-border")
+                                                    option.value === "SALARIE" ? "bg-blue-50 text-blue-700 ring-1 ring-blue-200 shadow-sm" :
+                                                        option.value === "RH" ? "bg-purple-50 text-purple-700 ring-1 ring-purple-200 shadow-sm" :
+                                                            option.value === "RESCHEDULE_PENDING" ? "bg-cyan-50 text-cyan-700 ring-1 ring-cyan-200 shadow-sm" :
+                                                                "bg-background text-foreground shadow-sm ring-1 ring-border")
                                         : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
                                 )}
                             >
-                                {option.label}
+                                <span>{option.label}</span>
+                                {counts && counts[option.value] !== undefined && (
+                                    <span className={cn(
+                                        "px-1.5 py-0.5 rounded-full text-[10px] font-bold leading-none min-w-[20px] text-center",
+                                        localStatus === option.value ? "bg-background/60" : "bg-foreground/10 text-muted-foreground"
+                                    )}>
+                                        {counts[option.value]}
+                                    </span>
+                                )}
                             </button>
                         ))}
                     </div>

@@ -115,6 +115,16 @@ export function AppointmentHistoryTable({ initialData }: { initialData: Appointm
         { label: "Refusé", value: "REJECTED" }
     ]
 
+    const filterCounts = useMemo(() => {
+        const counts: Record<string, number> = { ALL: initialData.length, PENDING: 0, APPROVED: 0, REJECTED: 0 }
+        initialData.forEach(req => {
+            if (req.status === 'PENDING') counts.PENDING++
+            else if (req.status === 'APPROVED') counts.APPROVED++
+            else if (req.status === 'REJECTED') counts.REJECTED++
+        })
+        return counts
+    }, [initialData])
+
     return (
         <div className="flex flex-col">
             <TableActions
@@ -123,6 +133,7 @@ export function AppointmentHistoryTable({ initialData }: { initialData: Appointm
                 onStatusChange={setStatusFilter}
                 onDateRangeChange={setDateRange}
                 statusOptions={statusOptions}
+                counts={filterCounts}
                 filename="mes_rendez_vous"
                 pdfTitle="Historique de mes Demandes de Rendez-vous"
             />

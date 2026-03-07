@@ -70,7 +70,9 @@ export function AppointmentsTable({ initialData }: { initialData: RequestWithUse
                 (req.user.email?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
                 (req.reason?.toLowerCase() || '').includes(searchTerm.toLowerCase())
 
-            const matchesStatus = statusFilter === "ALL" || req.status === statusFilter
+            const matchesStatus = statusFilter === "ALL" ||
+                (statusFilter === "RESCHEDULE_PENDING" ? req.rescheduleStatus === 'PENDING' :
+                    (req.status === statusFilter && req.rescheduleStatus !== 'PENDING'))
 
             // Date filter
             let matchesDate = true
@@ -184,8 +186,20 @@ export function AppointmentsTable({ initialData }: { initialData: RequestWithUse
     const statusOptions = [
         { label: "En Attente", value: "PENDING" },
         { label: "Approuvé", value: "APPROVED" },
-        { label: "Refusé", value: "REJECTED" }
+        { label: "Refusé", value: "REJECTED" },
+        { label: "Nouveau Report", value: "RESCHEDULE_PENDING" }
     ]
+
+    const filterCounts = useMemo(() => {
+        const counts: Record<string, number> = { ALL: initialData.filter(r => r.type === activeTab).length, PENDING: 0, APPROVED: 0, REJECTED: 0, RESCHEDULE_PENDING: 0 }
+        initialData.filter(r => r.type === activeTab).forEach(req => {
+            if (req.rescheduleStatus === 'PENDING') counts.RESCHEDULE_PENDING++
+            else if (req.status === 'PENDING') counts.PENDING++
+            else if (req.status === 'APPROVED') counts.APPROVED++
+            else if (req.status === 'REJECTED') counts.REJECTED++
+        })
+        return counts
+    }, [initialData, activeTab])
 
     return (
         <div className="flex flex-col gap-4">
@@ -221,6 +235,7 @@ export function AppointmentsTable({ initialData }: { initialData: RequestWithUse
                         onStatusChange={setStatusFilter}
                         onDateRangeChange={setDateRange}
                         statusOptions={statusOptions}
+                        counts={filterCounts}
                         filename="rendezvous_global"
                         pdfTitle="Liste des Demandes de Rendez-vous"
                     />
