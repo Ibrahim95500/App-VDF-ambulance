@@ -10,9 +10,11 @@ export function InstallPWAPrompt() {
     const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
 
     useEffect(() => {
-        // Check if app is already installed
+        // Check if app is already installed or running natively via Capacitor
         const isStandalone = window.matchMedia('(display-mode: standalone)').matches
-        if (isStandalone) return
+        const isNativeCapacitor = typeof window !== 'undefined' && (window as any).Capacitor?.isNative
+
+        if (isStandalone || isNativeCapacitor) return
 
         const handleBeforeInstallPrompt = (e: any) => {
             // Prevent the mini-infobar from appearing on mobile
