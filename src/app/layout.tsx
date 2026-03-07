@@ -9,7 +9,7 @@ import { I18nProvider } from '@/providers/i18n-provider';
 import { ModulesProvider } from '@/providers/modules-provider';
 import { ThemeProvider } from '@/providers/theme-provider';
 import { AuthProvider } from '@/providers/auth-provider';
-import { ClientHydration } from '@/components/client-hydration';
+
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -64,22 +64,20 @@ export default function RootLayout({
         )}
       >
         <AuthProvider>
-          <ClientHydration>
-            <PWARegistration />
-            <InstallPWAPrompt />
-            <SettingsProvider>
-              <ThemeProvider>
-                <I18nProvider>
-                  <TooltipsProvider>
-                    <ModulesProvider>
-                      <Suspense>{children}</Suspense>
-                      <Toaster />
-                    </ModulesProvider>
-                  </TooltipsProvider>
-                </I18nProvider>
-              </ThemeProvider>
-            </SettingsProvider>
-          </ClientHydration>
+          <PWARegistration />
+          <InstallPWAPrompt />
+          <SettingsProvider>
+            <ThemeProvider>
+              <I18nProvider>
+                <TooltipsProvider>
+                  <ModulesProvider>
+                    <Suspense>{children}</Suspense>
+                    <Toaster />
+                  </ModulesProvider>
+                </TooltipsProvider>
+              </I18nProvider>
+            </ThemeProvider>
+          </SettingsProvider>
         </AuthProvider>
       </body>
     </html>
