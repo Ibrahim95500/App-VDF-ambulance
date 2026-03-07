@@ -102,7 +102,7 @@ export function HRStatsCharts({
                         {requestsByCategory.length === 0 ? (
                             <div className="flex h-full items-center justify-center text-muted-foreground italic text-sm">Aucune donnée disponible.</div>
                         ) : (
-                            <ResponsiveContainer width="100%" height="100%">
+                            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                                 <PieChart>
                                     <Pie
                                         data={pieData}
@@ -141,7 +141,7 @@ export function HRStatsCharts({
                         {requestsByUser.length === 0 ? (
                             <div className="flex h-full items-center justify-center text-muted-foreground italic text-sm">Aucune donnée disponible.</div>
                         ) : (
-                            <ResponsiveContainer width="100%" height="100%">
+                            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                                 <BarChart data={requestsByUser.slice(0, 10)} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                     <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
                                     <XAxis dataKey="name" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
@@ -197,7 +197,7 @@ export function HRStatsCharts({
                         {requestsByMonth.length === 0 ? (
                             <div className="flex h-full items-center justify-center text-muted-foreground italic text-sm">Aucune donnée disponible.</div>
                         ) : (
-                            <ResponsiveContainer width="100%" height="100%">
+                            <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                                 <LineChart data={requestsByMonth} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                     <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
                                     <XAxis dataKey="name" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
