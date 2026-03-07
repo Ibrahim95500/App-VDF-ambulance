@@ -13,15 +13,19 @@ export function AdvanceRequestView({ myRequests }: AdvanceRequestViewProps) {
     const [submissionError, setSubmissionError] = useState<string | null>(null)
     const [mounted, setMounted] = useState(false)
 
-    useEffect(() => {
-        setMounted(true)
-    }, [])
-
     // Target Month logic
     const today = new Date()
     const targetDate = new Date(today.getFullYear(), today.getMonth() + 1, 1)
-    const targetMonthName = targetDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
-    const isLocked = today.getDate() > 15
+
+    // Safety for hydration mismatch on dates and times between Server and Safari iOS
+    const [targetMonthName, setTargetMonthName] = useState<string>("")
+    const [isLocked, setIsLocked] = useState<boolean>(false)
+
+    useEffect(() => {
+        setTargetMonthName(targetDate.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }))
+        setIsLocked(today.getDate() > 15)
+        setMounted(true)
+    }, [])
 
     if (!mounted) {
         return <div className="min-h-[400px] flex items-center justify-center">
