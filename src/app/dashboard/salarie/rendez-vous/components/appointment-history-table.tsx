@@ -155,7 +155,14 @@ export function AppointmentHistoryTable({ initialData }: { initialData: Appointm
                                         <Calendar className="size-3" /> Demandé le {format(new Date(req.createdAt), 'dd/MM/yyyy')}
                                     </div>
                                 </div>
-                                {getStatusBadge(req.status)}
+                                <div className="flex flex-col items-end gap-2 shrink-0">
+                                    {getStatusBadge(req.status)}
+                                    {req.adminComment && (
+                                        <span title="Un commentaire a été laissé">
+                                            <MessageSquareQuote className="size-4 text-muted-foreground opacity-70" />
+                                        </span>
+                                    )}
+                                </div>
                             </div>
 
                             {req.status === 'APPROVED' && req.appointmentDate && (
@@ -247,18 +254,18 @@ export function AppointmentHistoryTable({ initialData }: { initialData: Appointm
                         </tbody>
                     </table>
                 </div>
-
-                {filteredData.length > 0 && (
-                    <div className="border-t border-border bg-muted/20">
-                        <TablePagination
-                            currentPage={currentPage}
-                            totalItems={filteredData.length}
-                            pageSize={PAGE_SIZE}
-                            onPageChange={setCurrentPage}
-                        />
-                    </div>
-                )}
             </div>
+
+            {filteredData.length > 0 && (
+                <div className="mt-4 border border-border rounded-xl bg-muted/20 overflow-hidden">
+                    <TablePagination
+                        currentPage={currentPage}
+                        totalItems={filteredData.length}
+                        pageSize={PAGE_SIZE}
+                        onPageChange={setCurrentPage}
+                    />
+                </div>
+            )}
 
             {/* Detail dialog */}
             <Dialog open={!!selectedReq} onOpenChange={(open) => !open && setSelectedReq(null)}>

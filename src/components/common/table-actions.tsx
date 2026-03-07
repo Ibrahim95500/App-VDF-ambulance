@@ -129,7 +129,15 @@ export function TableActions({
                                 {counts && counts[option.value] !== undefined && (
                                     <span className={cn(
                                         "px-1.5 py-0.5 rounded-full text-[10px] font-bold leading-none min-w-[20px] text-center",
-                                        localStatus === option.value ? "bg-background/60" : "bg-foreground/10 text-muted-foreground"
+                                        localStatus === option.value
+                                            ? (option.value === "APPROVED" ? "bg-green-200 text-green-900" :
+                                                option.value === "REJECTED" ? "bg-red-200 text-red-900" :
+                                                    option.value === "PENDING" ? "bg-yellow-200 text-yellow-900" :
+                                                        option.value === "SALARIE" ? "bg-blue-200 text-blue-900" :
+                                                            option.value === "RH" ? "bg-purple-200 text-purple-900" :
+                                                                option.value === "RESCHEDULE_PENDING" ? "bg-cyan-200 text-cyan-900" :
+                                                                    "bg-muted-foreground/20 text-foreground")
+                                            : "bg-foreground/10 text-muted-foreground"
                                     )}>
                                         {counts[option.value]}
                                     </span>

@@ -113,6 +113,16 @@ export function RHServiceRequestsTable({ initialData }: { initialData: GlobalSer
         { label: "Refusé", value: "REJECTED" }
     ]
 
+    const filterCounts = useMemo(() => {
+        const counts: Record<string, number> = { ALL: initialData.length, PENDING: 0, APPROVED: 0, REJECTED: 0 }
+        initialData.forEach(req => {
+            if (req.status === 'PENDING') counts.PENDING++
+            else if (req.status === 'APPROVED') counts.APPROVED++
+            else if (req.status === 'REJECTED') counts.REJECTED++
+        })
+        return counts
+    }, [initialData])
+
     const getSourceIcon = (source: string) => {
         switch (source) {
             case 'WHATSAPP': return <Smartphone className="size-3.5 text-green-600" />
@@ -129,6 +139,7 @@ export function RHServiceRequestsTable({ initialData }: { initialData: GlobalSer
                 onStatusChange={setStatusFilter}
                 onDateRangeChange={setDateRange}
                 statusOptions={statusOptions}
+                counts={filterCounts}
                 filename="services_global"
                 pdfTitle="Liste des Demandes de Service"
             />
