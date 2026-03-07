@@ -15,6 +15,7 @@ const inter = Inter({ subsets: ['latin'] });
 
 import { PWARegistration } from '@/components/pwa-registration';
 import { InstallPWAPrompt } from '@/components/install-pwa-prompt';
+import { PushNotificationsManager } from '@/components/push-notifications-manager';
 
 import '@/css/styles.css';
 import '@/components/keenicons/assets/styles.css';
@@ -66,18 +67,21 @@ export default function RootLayout({
         <AuthProvider>
           <PWARegistration />
           <InstallPWAPrompt />
-          <SettingsProvider>
-            <ThemeProvider>
-              <I18nProvider>
-                <TooltipsProvider>
-                  <ModulesProvider>
-                    <Suspense>{children}</Suspense>
+          <ModulesProvider>
+            <SettingsProvider>
+              <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+                <I18nProvider>
+                  <PushNotificationsManager />
+                  <TooltipsProvider>
+                    <Suspense>
+                      {children}
+                    </Suspense>
                     <Toaster />
-                  </ModulesProvider>
-                </TooltipsProvider>
-              </I18nProvider>
-            </ThemeProvider>
-          </SettingsProvider>
+                  </TooltipsProvider>
+                </I18nProvider>
+              </ThemeProvider>
+            </SettingsProvider>
+          </ModulesProvider>
         </AuthProvider>
       </body>
     </html>
