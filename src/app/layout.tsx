@@ -57,6 +57,7 @@ export default function RootLayout({
   return (
     <html className="h-full" suppressHydrationWarning>
       <body
+        suppressHydrationWarning
         className={cn(
           'antialiased flex h-full text-base text-foreground bg-background',
           inter.className,
