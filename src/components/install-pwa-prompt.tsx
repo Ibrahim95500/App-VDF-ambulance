@@ -29,7 +29,7 @@ export function InstallPWAPrompt() {
 
         // Specific check for iOS as it doesn't support beforeinstallprompt
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream
-        if (isIOS && !isStandalone) {
+        if (isIOS && !isStandalone && !isNativeCapacitor) {
             // Show prompt for iOS after a short delay
             const timer = setTimeout(() => setShowPrompt(true), 3000)
             return () => clearTimeout(timer)
