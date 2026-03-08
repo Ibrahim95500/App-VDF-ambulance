@@ -3,7 +3,7 @@
 import { prisma as db } from "@/lib/prisma"
 import { auth } from "@/auth"
 import * as webpush from 'web-push';
-import { fcm } from "@/lib/firebase-admin";
+import { getFcm } from "@/lib/firebase-admin";
 
 const vapidPublic = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY || "BAI_PkE59fsaJPoOTDp1ueGcfAJ2LM_11e9R6egnWeCfXlgy187bohGv2yRK96LPyTSAOWfsJfRSCYcWCUsJVgc"
 const vapidPrivate = process.env.VAPID_PRIVATE_KEY || "f236x3mFmH2u0sC59U-yIfdEaYfO2zHq8S7Z_K8gP-c"
@@ -120,7 +120,8 @@ export async function sendPushNotification(userId: string, title: string, messag
 
         // Send FCM (Native)
         let fcmNotification = Promise.resolve();
-        if (fcmTokens.length > 0) {
+        const fcm = getFcm();
+        if (fcm && fcmTokens.length > 0) {
             const tokens = fcmTokens.map((t: any) => t.token);
             fcmNotification = fcm.sendEachForMulticast({
                 tokens,
