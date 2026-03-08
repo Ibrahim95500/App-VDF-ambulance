@@ -4,7 +4,7 @@ android {
     namespace = "com.vdf.ambulance"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.vdf.ambulance"
+        applicationId "fr.vdf-ambulance.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
