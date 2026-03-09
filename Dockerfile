@@ -10,7 +10,7 @@ WORKDIR /app
 # Configuration npm pour la résilience sur VPS
 RUN npm config set fetch-retry-maxtimeout 600000 && \
     npm config set fetch-retries 5 && \
-    npm config set timeout 600000
+    npm config set fetch-timeout 600000
 
 # Installer les dépendances
 COPY package.json package-lock.json ./
