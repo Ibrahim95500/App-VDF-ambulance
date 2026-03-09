@@ -12,6 +12,7 @@ services:
       POSTGRES_DB: ambulance_db_dev
     volumes:
       - postgres_data_dev:/var/lib/postgresql/data
+      - ./docker/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
     networks:
       - vdf-network-dev
 
@@ -25,7 +26,7 @@ services:
     ports:
       - "8080:3000"
     environment:
-      DATABASE_URL: postgresql://${DB_USER_DEV}:${DB_PASSWORD_DEV}@db-dev:5432/ambulance_db_dev
+      DATABASE_URL: postgresql://${DB_USER_DEV}:${DB_PASSWORD_DEV}@db-dev:5432/ambulance_app_db
       AUTH_SECRET: ${AUTH_SECRET_DEV}
       NEXTAUTH_URL: https://dev.vdf-ambulance.fr
       AUTH_TRUST_HOST: ${AUTH_TRUST_HOST}
