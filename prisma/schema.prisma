@@ -208,6 +208,15 @@ enum AssignmentStatus {
 enum AppointmentType {
   RENDEZ_VOUS
   CONVOCATION
+  AUGMENTATION_SALAIRE @map("Augmentation / Salaire")
+  CONFLIT_MEDIATION     @map("Conflit / Médiation")
+  AVERTISSEMENT_SANCTION @map("Avertissement ou Sanction")
+  INCIDENT_TRANSPORT    @map("Incident de transport")
+  POINT_CARRIERE        @map("Point carrière")
+  SOLDE_DE_TOUT_COMPTE @map("Solde de tout compte")
+  EVALUATION_ANNUELLE   @map("Évaluation annuelle")
+  AUTRE_METIER          @map("Autre métier")
+  MODIFICATION_CONTRAT  @map("Modification du contrat")
 }
 
 enum RescheduleStatus {
