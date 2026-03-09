@@ -9,7 +9,7 @@ services:
     environment:
       POSTGRES_USER: ${DB_USER_DEV}
       POSTGRES_PASSWORD: ${DB_PASSWORD_DEV}
-      POSTGRES_DB: ambulance_db_dev
+      POSTGRES_DB: ambulance_app_db
     volumes:
       - postgres_data_dev:/var/lib/postgresql/data
       - ./docker/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
@@ -56,7 +56,7 @@ services:
       - WEBHOOK_URL=https://n8n.vdf-ambulance.fr/
       # DB connexion (utilise la même BDD que l'app !)
       - DB_TYPE=postgresdb
-      - DB_POSTGRESDB_DATABASE=ambulance_db_dev
+      - DB_POSTGRESDB_DATABASE=ambulance_app_db
       - DB_POSTGRESDB_HOST=db-dev
       - DB_POSTGRESDB_PORT=5432
       - DB_POSTGRESDB_USER=${DB_USER_DEV}

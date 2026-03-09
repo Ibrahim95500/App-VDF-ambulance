@@ -1,9 +1,22 @@
 import { PrismaClient, Role } from '@prisma/client'
+import { Pool } from 'pg'
+import { PrismaPg } from '@prisma/adapter-pg'
 import bcrypt from 'bcryptjs'
 
-const prisma = new PrismaClient()
-
 async function main() {
+    console.log("--- DIAGNOSTIC AGENT BD ---");
+    console.log("DATABASE_URL present:", !!process.env.DATABASE_URL);
+
+    const connectionString = process.env.DATABASE_URL
+    if (!connectionString) {
+        throw new Error("DATABASE_URL is missing from environment variables!");
+    }
+
+    const pool = new Pool({ connectionString })
+    const adapter = new PrismaPg(pool)
+    const prisma = new PrismaClient({ adapter })
+
+    console.log("Démarrage du script de seed...");
     const rhEmail = process.env.RH_ADMIN_EMAIL || 'admin@ambulance.com'
     const rhPassword = process.env.RH_ADMIN_PASSWORD || 'VDF_Ambu_2026_Secure_Db'
     const hashedPassword = await bcrypt.hash(rhPassword, 10)
@@ -68,13 +81,11 @@ async function main() {
     }
 
     console.log('Seed de régulation terminé avec succès.');
+    await prisma.$disconnect()
 }
 
 main()
     .catch((e) => {
         console.error(e)
         process.exit(1)
-    })
-    .finally(async () => {
-        await prisma.$disconnect()
     })
