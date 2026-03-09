@@ -10,6 +10,6 @@ module.exports = {
         url: process.env.DATABASE_URL,
     },
     migrations: {
-        seed: 'npx tsx prisma/seed.ts',
+        seed: './node_modules/.bin/tsx prisma/seed.ts',
     },
 };
