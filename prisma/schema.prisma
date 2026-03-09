@@ -58,6 +58,18 @@ model User {
   deletionReason String?   @db.Text
   pushSubscriptions PushSubscription[]
   fcmTokens      FcmToken[]
+
+  // Champs Régulation
+  structure      Structure?
+  diploma        Diploma?
+  shift          Shift?
+  preference     Preference?
+  isTeamLeader   Boolean   @default(false)
+  oubliCount     Int       @default(0)
+
+  // Relations Régulation
+  leaderAssignments   PlanningAssignment[] @relation("Leader")
+  teammateAssignments PlanningAssignment[] @relation("Teammate")
 }
 
 model PushSubscription {
@@ -141,6 +153,7 @@ model ServiceRequest {
 enum Role {
   SALARIE
   RH
+  REGULATEUR
 }
 
 enum RequestStatus {
@@ -159,6 +172,37 @@ enum LeaveType {
   CP
   MA
   CSS
+}
+
+enum Structure {
+  MARK
+  VDF
+  LES_2
+}
+
+enum Diploma {
+  AUXILIAIRE
+  DEA
+}
+
+enum Shift {
+  JOUR
+  NUIT
+  VACATAIRE
+  JOUR_NUIT
+}
+
+enum Preference {
+  NORMAL
+  SAMEDI
+  NUIT
+  MATIN
+}
+
+enum AssignmentStatus {
+  PENDING
+  VALIDATED
+  REJECTED
 }
 
 enum AppointmentType {
@@ -196,4 +240,30 @@ model FcmToken {
   token     String   @unique
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Vehicle {
+  id                 String               @id @default(cuid())
+  plateNumber        String               @unique
+  category           Structure
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  assignments        PlanningAssignment[]
+}
+
+model PlanningAssignment {
+  id          String           @id @default(cuid())
+  date        DateTime
+  vehicleId   String
+  leaderId    String
+  teammateId  String
+  status      AssignmentStatus @default(PENDING)
+  startTime   String?
+  endTime     String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  vehicle     Vehicle          @relation(fields: [vehicleId], references: [id])
+  leader      User             @relation("Leader", fields: [leaderId], references: [id])
+  teammate    User             @relation("Teammate", fields: [teammateId], references: [id])
 }
