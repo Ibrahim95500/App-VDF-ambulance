@@ -84,12 +84,12 @@ export function LeaveHistory({ requests }: { requests: LeaveRequest[] }) {
         const start = new Date(req.startDate).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
         const end = new Date(req.endDate).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
         if (start === end) {
-            return <span className="text-white"><span className="font-semibold">{start}</span> <span className="text-[10px] text-white/70 uppercase font-medium">{req.startAmPm}</span></span>
+            return <span className="text-foreground"><span className="font-semibold">{start}</span> <span className="text-[10px] text-muted-foreground uppercase font-medium">{req.startAmPm}</span></span>
         }
         return (
-            <div className="flex flex-col text-xs gap-0.5 text-white">
-                <span><span className="text-white/70">Du</span> <span className="font-semibold">{start}</span> <span className="text-[10px] text-white/70 uppercase font-medium">{req.startAmPm}</span></span>
-                <span><span className="text-white/70">Au</span> <span className="font-semibold">{end}</span> <span className="text-[10px] text-white/70 uppercase font-medium">{req.endAmPm}</span></span>
+            <div className="flex flex-col text-xs gap-0.5 text-foreground">
+                <span><span className="text-muted-foreground">Du</span> <span className="font-semibold">{start}</span> <span className="text-[10px] text-muted-foreground uppercase font-medium">{req.startAmPm}</span></span>
+                <span><span className="text-muted-foreground">Au</span> <span className="font-semibold">{end}</span> <span className="text-[10px] text-muted-foreground uppercase font-medium">{req.endAmPm}</span></span>
             </div>
         )
     }

@@ -34,7 +34,7 @@ export function AdvanceRequestView({ myRequests }: AdvanceRequestViewProps) {
     }
 
     return (
-        <div className="flex flex-col gap-5 lg:gap-7.5 max-w-5xl mx-auto w-full px-4 sm:px-0">
+        <div className="flex flex-col gap-5 lg:gap-7.5 max-w-5xl mx-auto w-full px-2 sm:px-4">
             <div className="flex items-center gap-3 mb-2">
                 <EuroIcon className="size-8 text-secondary" />
                 <h1 className="text-3xl font-bold tracking-tight text-secondary">

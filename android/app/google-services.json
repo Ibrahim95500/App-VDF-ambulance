@@ -1,0 +1,29 @@
+{
+    "project_info": {
+        "project_number": "435161422033",
+        "project_id": "vdf-ambulance",
+        "storage_bucket": "vdf-ambulance.firebasestorage.app"
+    },
+    "client": [
+        {
+            "client_info": {
+                "mobilesdk_app_id": "1:435161422033:android:7a79649967e3e913850df0",
+                "android_client_info": {
+                    "package_name": "fr.vdf_ambulance.app"
+                }
+            },
+            "oauth_client": [],
+            "api_key": [
+                {
+                    "current_key": "AIzaSyC7ZjdYVqu2l_CPuKKINthSFKbJHNn5wUg"
+                }
+            ],
+            "services": {
+                "appinvite_service": {
+                    "other_platform_oauth_client": []
+                }
+            }
+        }
+    ],
+    "configuration_version": "1"
+}
