@@ -52,6 +52,7 @@ import {
   Users,
   Briefcase as WorkIcon,
   Zap,
+  Siren,
 } from 'lucide-react';
 import { type MenuConfig } from './types';
 
@@ -107,6 +108,11 @@ export const MENU_SIDEBAR: MenuConfig = [
     title: 'Gérer Services',
     icon: LifeBuoy,
     path: '/dashboard/rh/services',
+  },
+  {
+    title: 'Régulation Plateau',
+    icon: Siren,
+    path: '/dashboard/regulation',
   },
 ];
 
