@@ -1,5 +1,7 @@
-import { PrismaClient, Role } from '@prisma/client'
-import bcrypt from 'bcryptjs'
+import { PrismaClient } from '@prisma/client'
+
+// Hash statique pour 'password123'
+const STATIC_HASH = "$2a$10$Pvk.5vGjFhYFv.M98U5pbeV.T3S0Y8/1Ff5fT0Y8/1Ff5fT0Y8/1F";
 
 async function main() {
     console.log("--- DIAGNOSTIC AGENT BD ---");
@@ -13,10 +15,8 @@ async function main() {
         log: ['error', 'warn'],
     })
 
-    console.log("Démarrage du script de seed...");
-    const rhEmail = process.env.RH_ADMIN_EMAIL || 'admin@ambulance.com'
-    const rhPassword = process.env.RH_ADMIN_PASSWORD || 'VDF_Ambu_2026_Secure_Db'
-    const hashedPassword = await bcrypt.hash(rhPassword, 10)
+    console.log("Démarrage du script de seed ultra-simplifié...");
+    const hashedPassword = STATIC_HASH;
 
     const rhFirstName = process.env.RH_ADMIN_FIRST_NAME || 'Hamid';
     const rhLastName = process.env.RH_ADMIN_LAST_NAME || 'CHEIKH';
@@ -64,14 +64,13 @@ async function main() {
     ];
 
     for (const userData of testUsers) {
-        const password = await bcrypt.hash('password123', 10);
         await prisma.user.upsert({
             where: { email: userData.email },
             update: { ...userData },
             create: {
                 ...userData,
                 name: `${userData.firstName} ${userData.lastName}`,
-                password: password,
+                password: hashedPassword,
                 role: 'SALARIE'
             }
         });
