@@ -1,20 +1,17 @@
 import { PrismaClient, Role } from '@prisma/client'
-import { Pool } from 'pg'
-import { PrismaPg } from '@prisma/adapter-pg'
 import bcrypt from 'bcryptjs'
 
 async function main() {
     console.log("--- DIAGNOSTIC AGENT BD ---");
     console.log("DATABASE_URL present:", !!process.env.DATABASE_URL);
 
-    const connectionString = process.env.DATABASE_URL
-    if (!connectionString) {
+    if (!process.env.DATABASE_URL) {
         throw new Error("DATABASE_URL is missing from environment variables!");
     }
 
-    const pool = new Pool({ connectionString })
-    const adapter = new PrismaPg(pool)
-    const prisma = new PrismaClient({ adapter })
+    const prisma = new PrismaClient({
+        log: ['error', 'warn'],
+    })
 
     console.log("Démarrage du script de seed...");
     const rhEmail = process.env.RH_ADMIN_EMAIL || 'admin@ambulance.com'
