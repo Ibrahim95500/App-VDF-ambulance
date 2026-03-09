@@ -3,8 +3,14 @@ FROM node:20-alpine AS base
 
 # 1. Installer les dépendances seulement si nécessaire
 FROM base AS deps
-RUN apk add --no-cache libc6-compat
+# Ajouter les outils nécessaires pour les dépendances binaires (comme sharp)
+RUN apk add --no-cache libc6-compat build-base vips-dev
 WORKDIR /app
+
+# Configuration npm pour la résilience sur VPS
+RUN npm config set fetch-retry-maxtimeout 600000 && \
+    npm config set fetch-retries 5 && \
+    npm config set timeout 600000
 
 # Installer les dépendances
 COPY package.json package-lock.json ./
