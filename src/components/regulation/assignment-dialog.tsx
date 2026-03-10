@@ -29,6 +29,7 @@ interface Personnel {
     lastName: string | null
     diploma: string | null
     isTeamLeader: boolean
+    structure: 'MARK' | 'VDF' | 'LES_2' | null
 }
 
 interface AssignmentDialogProps {
@@ -36,6 +37,7 @@ interface AssignmentDialogProps {
     onOpenChange: (open: boolean) => void
     vehicleId: string
     plateNumber: string
+    category: 'MARK' | 'VDF'
     date: Date
     personnel: Personnel[]
     initialData?: {
@@ -51,6 +53,7 @@ export function AssignmentDialog({
     onOpenChange,
     vehicleId,
     plateNumber,
+    category,
     date,
     personnel,
     initialData
@@ -110,11 +113,14 @@ export function AssignmentDialog({
             <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
                     <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2bg-orange-500 rounded-lg text-white">
+                        <div className={`p-2 rounded-lg text-white ${category === 'MARK' ? 'bg-blue-600' : 'bg-orange-500'}`}>
                             <Clock size={20} />
                         </div>
                         <div>
-                            <DialogTitle className="text-xl font-bold">Planification {plateNumber}</DialogTitle>
+                            <DialogTitle className="text-xl font-bold flex items-center gap-2">
+                                Planification {plateNumber}
+                                <span className={`text-[10px] px-2 py-0.5 rounded-full text-white ${category === 'MARK' ? 'bg-blue-600' : 'bg-orange-500'}`}>{category}</span>
+                            </DialogTitle>
                             <DialogDescription>
                                 Affectation pour le {date.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
                             </DialogDescription>
@@ -155,14 +161,17 @@ export function AssignmentDialog({
                                 <SelectValue placeholder="Choisir un responsable" />
                             </SelectTrigger>
                             <SelectContent>
-                                {personnel.map(p => (
-                                    <SelectItem key={p.id} value={p.id} className="py-3">
-                                        <div className="flex flex-col">
-                                            <span className="font-bold">{p.lastName} {p.firstName}</span>
-                                            <span className="text-[10px] opacity-60 uppercase">{p.diploma || "DEA"} {p.isTeamLeader && "⭐ Chef"}</span>
-                                        </div>
-                                    </SelectItem>
-                                ))}
+                                {personnel
+                                    .filter(p => p.isTeamLeader === true)
+                                    .filter(p => category === 'MARK' ? (p.structure === 'MARK' || p.structure === 'LES_2') : (p.structure === 'VDF' || p.structure === 'LES_2'))
+                                    .map(p => (
+                                        <SelectItem key={p.id} value={p.id} className="py-3">
+                                            <div className="flex flex-col">
+                                                <span className="font-bold">{p.lastName} {p.firstName}</span>
+                                                <span className="text-[10px] opacity-60 uppercase">{p.diploma || "DEA"} {p.isTeamLeader && "⭐ Chef"}</span>
+                                            </div>
+                                        </SelectItem>
+                                    ))}
                             </SelectContent>
                         </Select>
                     </div>
@@ -177,14 +186,16 @@ export function AssignmentDialog({
                                 <SelectValue placeholder="Choisir un co-équipier" />
                             </SelectTrigger>
                             <SelectContent>
-                                {personnel.map(p => (
-                                    <SelectItem key={p.id} value={p.id} className="py-3">
-                                        <div className="flex flex-col">
-                                            <span className="font-bold">{p.lastName} {p.firstName}</span>
-                                            <span className="text-[10px] opacity-60 uppercase">{p.diploma || "Auxiliaire"}</span>
-                                        </div>
-                                    </SelectItem>
-                                ))}
+                                {personnel
+                                    .filter(p => category === 'MARK' ? (p.structure === 'MARK' || p.structure === 'LES_2') : (p.structure === 'VDF' || p.structure === 'LES_2'))
+                                    .map(p => (
+                                        <SelectItem key={p.id} value={p.id} className="py-3">
+                                            <div className="flex flex-col">
+                                                <span className="font-bold">{p.lastName} {p.firstName}</span>
+                                                <span className="text-[10px] opacity-60 uppercase">{p.diploma || "Auxiliaire"}</span>
+                                            </div>
+                                        </SelectItem>
+                                    ))}
                             </SelectContent>
                         </Select>
                     </div>

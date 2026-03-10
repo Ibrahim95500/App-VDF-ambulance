@@ -1,16 +1,19 @@
 'use client';
 
 import { ReactNode, useEffect } from 'react';
+import { useSession } from "next-auth/react";
 import { useSettings } from '@/providers/settings-provider';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Footer } from './components/footer';
 import { Header } from './components/header';
 import { Sidebar } from './components/sidebar';
 import { BottomTabBar } from './components/bottom-tab-bar';
+import { SessionSync } from '@/components/auth/session-sync';
 
 export function Demo1Layout({ children, notificationsCount = 0 }: { children: ReactNode, notificationsCount?: number }) {
   const isMobile = useIsMobile();
   const { settings, setOption } = useSettings();
+  const { data: session } = useSession();
 
   useEffect(() => {
     const bodyClass = document.body.classList;
@@ -26,6 +29,23 @@ export function Demo1Layout({ children, notificationsCount = 0 }: { children: Re
     // Set current layout
     setOption('layout', 'demo1');
   }, [setOption]);
+
+  useEffect(() => {
+    // Astuce de pirate (FIABLE): F5 automatique garanti au tout premier atterrissage sur le Dashboard après login.
+    // On ne dépend même plus de 'session', on regarde juste si on est côté client et sur le dashboard.
+    if (typeof window !== "undefined") {
+      const cacheKey = "vdf_pirate_f5_done";
+      if (!sessionStorage.getItem(cacheKey)) {
+        sessionStorage.setItem(cacheKey, "true");
+        console.log("Astuce F5 : Hard Reload à l'atterrissage du Dashboard !");
+
+        // Timeout minimal 100ms
+        setTimeout(() => {
+          window.location.reload();
+        }, 100);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     const bodyClass = document.body.classList;
@@ -52,6 +72,7 @@ export function Demo1Layout({ children, notificationsCount = 0 }: { children: Re
 
   return (
     <>
+      <SessionSync />
       {!isMobile && <Sidebar />}
 
       <div className="wrapper flex grow flex-col lg:pb-0">

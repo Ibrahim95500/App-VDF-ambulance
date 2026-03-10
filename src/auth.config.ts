@@ -24,15 +24,22 @@ export const authConfig = {
         },
         async jwt({ token, user, trigger, session }) {
             if (user) {
-                token.role = (user as any).role
+                token.roles = (user as any).roles
                 token.isRegulateur = (user as any).isRegulateur
             }
+
+            // Handle update signal from SessionSync
+            if (trigger === "update" && session?.user) {
+                if (session.user.roles) token.roles = session.user.roles
+                if (session.user.isRegulateur !== undefined) token.isRegulateur = session.user.isRegulateur
+            }
+
             // We don't store the image in the JWT to avoid HTTP 431 (Cookie too large)
             return token
         },
         async session({ session, token }: { session: any, token: any }) {
             if (session.user) {
-                session.user.role = token.role
+                session.user.roles = token.roles
                 session.user.isRegulateur = token.isRegulateur
                 if (token.sub) {
                     session.user.id = token.sub

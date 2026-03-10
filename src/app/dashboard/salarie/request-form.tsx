@@ -32,8 +32,8 @@ export function RequestAdvanceForm({ isLocked, targetMonthName, onSubmissionErro
             return
         }
 
-        if (Number(amount) > 800) {
-            toast.error("Le plafond maximum autorisé par acompte est de 800€.")
+        if (Number(amount) > 4000) {
+            toast.error("Le plafond maximum autorisé par acompte est de 4000€.")
             return
         }
 
@@ -63,10 +63,6 @@ export function RequestAdvanceForm({ isLocked, targetMonthName, onSubmissionErro
 
     return (
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-            <div className="bg-purple-50 dark:bg-purple-500/10 text-purple-700 dark:text-purple-300 p-4 rounded-lg border border-purple-200 dark:border-purple-500/20 text-sm flex items-start gap-3">
-                <Info className="size-5 shrink-0 mt-0.5" />
-                <p><strong>Plafond Mensuel :</strong> Le montant maximum autorisé pour une demande d'acompte est fixé à <strong>800 €</strong>.</p>
-            </div>
 
             <div className="flex flex-col gap-1">
                 <label className="text-sm font-medium text-foreground">Montant de l'acompte (€)</label>
@@ -78,7 +74,7 @@ export function RequestAdvanceForm({ isLocked, targetMonthName, onSubmissionErro
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
                     disabled={isLocked || loading}
-                    max="800"
+                    max="4000"
                     className="h-10 px-3 py-2 rounded-md border border-input bg-transparent text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-secondary disabled:cursor-not-allowed disabled:opacity-50"
                 />
             </div>

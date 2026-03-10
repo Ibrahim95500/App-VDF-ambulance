@@ -72,7 +72,25 @@ export function Header({ notificationsCount = 0 }: { notificationsCount?: number
             </span>
           </Link>
           <div className="flex items-center">
-            {/* Hamburger menu removed in v2 for Bottom Tab Bar */}
+            {/* Hamburger menu restored to give full menu access alongside BottomTabBar */}
+            <Sheet open={isSidebarSheetOpen} onOpenChange={setIsSidebarSheetOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="lg:hidden text-foreground">
+                  <Menu className="h-6 w-6" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-[300px] p-0 border-r-0 bg-background flex flex-col">
+                <SheetHeader className="p-4 border-b border-border bg-muted/20">
+                  <SheetTitle className="flex items-center gap-2 text-left">
+                    <VdfLogo className="w-8 h-8" />
+                    <span className="text-base font-bold" style={{ color: '#2c3e8a' }}>VDF Menu</span>
+                  </SheetTitle>
+                </SheetHeader>
+                <div className="flex-1 overflow-y-auto pb-[calc(1rem+env(safe-area-inset-bottom))]">
+                  <SidebarMenu />
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
 

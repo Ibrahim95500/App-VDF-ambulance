@@ -62,32 +62,6 @@ export const MENU_SIDEBAR: MenuConfig = [
     icon: LayoutGrid,
     path: '/dashboard',
   },
-  { heading: 'Mes Démarches' },
-  {
-    title: 'Acomptes',
-    icon: Euro,
-    path: '/dashboard/salarie',
-  },
-  {
-    title: 'Rendez-vous',
-    icon: CalendarRange,
-    path: '/dashboard/salarie/rendez-vous',
-  },
-  // {
-  //   title: 'Congés & Absences',
-  //   icon: CalendarCheck,
-  //   path: '/dashboard/salarie/conges',
-  // },
-  {
-    title: 'Demandes de Service',
-    icon: LifeBuoy,
-    path: '/dashboard/salarie/services',
-  },
-  {
-    title: 'Régulation Plateau',
-    icon: Siren,
-    path: '/dashboard/salarie/regulation',
-  },
   { heading: 'Espace RH' },
   {
     title: 'Collaborateurs',
@@ -104,20 +78,36 @@ export const MENU_SIDEBAR: MenuConfig = [
     icon: CalendarRange,
     path: '/dashboard/rh/rendez-vous',
   },
-  // {
-  //   title: 'Gérer Congés',
-  //   icon: CalendarCheck,
-  //   path: '/dashboard/rh/conges',
-  // },
   {
     title: 'Gérer Services',
     icon: LifeBuoy,
     path: '/dashboard/rh/services',
   },
   {
-    title: 'Régulation Plateau',
+    title: 'Régule RH',
     icon: Siren,
     path: '/dashboard/rh/regulation',
+  },
+  { heading: 'Mes Démarches' },
+  {
+    title: 'Acomptes',
+    icon: Euro,
+    path: '/dashboard/salarie',
+  },
+  {
+    title: 'Rendez-vous',
+    icon: CalendarRange,
+    path: '/dashboard/salarie/rendez-vous',
+  },
+  {
+    title: 'Demandes de Service',
+    icon: LifeBuoy,
+    path: '/dashboard/salarie/services',
+  },
+  {
+    title: 'Régule Salarié',
+    icon: Siren,
+    path: '/dashboard/salarie/regulation',
   },
 ];
 

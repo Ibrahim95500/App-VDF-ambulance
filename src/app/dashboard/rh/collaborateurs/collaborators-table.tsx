@@ -19,18 +19,19 @@ import {
 import { Textarea } from "@/components/ui/textarea"
 import { deactivateUser, reactivateUser } from "@/actions/users"
 import { toast } from "sonner"
-import { Trash2Icon, InfoIcon, ShieldCheckIcon, ShieldAlertIcon, UserCheckIcon, UserXIcon, MessageSquareIcon, Eye, RotateCcw, Calendar, Loader2 } from "lucide-react"
+import { Trash2Icon, InfoIcon, ShieldCheckIcon, ShieldAlertIcon, UserCheckIcon, UserXIcon, MessageSquareIcon, Eye, RotateCcw, Calendar, Loader2, Pen } from "lucide-react"
 import { HRStatsCharts } from "../components/hr-stats-charts"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { createConvocationAction } from "@/actions/appointment-request.actions"
+import { EditCollaboratorForm } from "../components/edit-collaborator-form"
 
 interface User {
     id: string
     name: string | null
     email: string | null
     image: string | null
-    role: string
+    roles: string[]
     createdAt?: Date | string | null
     firstName: string | null
     lastName: string | null
@@ -55,6 +56,7 @@ export function CollaboratorsTable({ initialData, services = [] }: { initialData
     const [reason, setReason] = useState("")
     const [isDeactivating, setIsDeactivating] = useState(false)
     const [selectedUser, setSelectedUser] = useState<User | null>(null)
+    const [isEditingProfile, setIsEditingProfile] = useState(false)
     const [isReactivating, setIsReactivating] = useState<string | null>(null)
 
     // Convocation state
@@ -127,7 +129,7 @@ export function CollaboratorsTable({ initialData, services = [] }: { initialData
             if (searchTerm && !searchStr.includes(searchTerm.toLowerCase())) return false
 
             // Role filter
-            if (roleFilter !== "ALL" && user.role !== roleFilter) return false
+            if (roleFilter !== "ALL" && !user.roles?.includes(roleFilter)) return false
 
             // Active/Inactive filter
             if (statusFilter !== "ALL") {
@@ -159,7 +161,7 @@ export function CollaboratorsTable({ initialData, services = [] }: { initialData
             "Prénom": user.firstName || "-",
             "Email": user.email,
             "Téléphone": user.phone || "-",
-            "Rôle": user.role === 'RH' ? 'RH / Admin' : 'Salarié',
+            "Rôle": user.roles?.includes('RH') ? 'RH / Admin' : 'Salarié',
             "Statut": (user as any).isActive !== false ? 'Actif' : 'Inactif',
             "Motif Désactivation": (user as any).deletionReason || "-",
             "Date d'inscription": user.createdAt ? new Date(user.createdAt).toLocaleDateString('fr-FR') : '-'
@@ -174,8 +176,8 @@ export function CollaboratorsTable({ initialData, services = [] }: { initialData
     const filterCounts = useMemo(() => {
         const counts = { ALL: initialData.length, SALARIE: 0, RH: 0 }
         initialData.forEach(user => {
-            if (user.role === 'SALARIE') counts.SALARIE++
-            if (user.role === 'RH') counts.RH++
+            if (user.roles?.includes('SALARIE')) counts.SALARIE++
+            if (user.roles?.includes('RH')) counts.RH++
         })
         return counts
     }, [initialData])
@@ -300,11 +302,13 @@ export function CollaboratorsTable({ initialData, services = [] }: { initialData
                                     </p>
                                     <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                                 </div>
-                                {user.role === 'RH' ? (
-                                    <Badge variant="outline" className="text-purple-600 bg-purple-50 border-purple-200 text-[10px] font-bold shrink-0">RH</Badge>
-                                ) : (
-                                    <Badge variant="outline" className="text-secondary bg-secondary/10 border-secondary/20 text-[10px] font-bold shrink-0">Salarié</Badge>
-                                )}
+                                <div className="flex items-center gap-1 flex-wrap justify-end">
+                                    {(user.roles || []).map((role: string) => (
+                                        <Badge key={role} variant="outline" className={`text-[10px] font-bold shrink-0 ${role === 'RH' ? 'text-purple-600 bg-purple-50 border-purple-200' : 'text-secondary bg-secondary/10 border-secondary/20'}`}>
+                                            {role === 'RH' ? 'RH' : role}
+                                        </Badge>
+                                    ))}
+                                </div>
                             </div>
                             <div className="flex items-center justify-between gap-2">
                                 {(user as any).isActive !== false ? (
@@ -382,11 +386,13 @@ export function CollaboratorsTable({ initialData, services = [] }: { initialData
                                         </div>
                                     </td>
                                     <td className="px-5 py-4 text-center">
-                                        {user.role === 'RH' ? (
-                                            <Badge variant="outline" className="text-purple-600 bg-purple-50 border-purple-200 px-3 py-1 text-[10px] font-bold uppercase tracking-wider">RH / Admin</Badge>
-                                        ) : (
-                                            <Badge variant="outline" className="text-secondary bg-secondary/10 border-secondary/20 px-3 py-1 text-[10px] font-bold uppercase tracking-wider">Salarié</Badge>
-                                        )}
+                                        <div className="flex items-center justify-center gap-1.5 flex-wrap">
+                                            {(user.roles || []).map((role: string) => (
+                                                <Badge key={role} variant="outline" className={`px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${role === 'RH' ? 'text-purple-600 bg-purple-50 border-purple-200' : 'text-secondary bg-secondary/10 border-secondary/20'}`}>
+                                                    {role === 'RH' ? 'RH / Admin' : role}
+                                                </Badge>
+                                            ))}
+                                        </div>
                                     </td>
                                     <td className="px-5 py-4 text-center">
                                         {(user as any).isActive !== false ? (
@@ -500,7 +506,13 @@ export function CollaboratorsTable({ initialData, services = [] }: { initialData
             </Dialog>
 
             {/* Detail Dialog */}
-            <Dialog open={!!selectedUser} onOpenChange={(open) => !open && setSelectedUser(null)}>
+            <Dialog open={!!selectedUser} onOpenChange={(open) => {
+                if (!open) {
+                    setSelectedUser(null);
+                    setIsEditingProfile(false);
+                    setIsConvoking(false);
+                }
+            }}>
                 <DialogContent className="max-w-[90vw] sm:max-w-xl border-border bg-background p-0 gap-0 overflow-y-auto max-h-[90vh] pb-8">
                     <DialogHeader className="p-0 m-0">
                         <DialogTitle className="sr-only">Détails de {selectedUser?.firstName} {selectedUser?.lastName}</DialogTitle>
@@ -520,106 +532,122 @@ export function CollaboratorsTable({ initialData, services = [] }: { initialData
                             </div>
                         </div>
                     </div>
-                    <div className="p-5 space-y-3">
-                        <div className="flex items-center justify-between">
-                            <span className="text-sm text-muted-foreground">Rôle</span>
-                            {selectedUser?.role === 'RH' ? (
-                                <Badge variant="outline" className="text-purple-600 bg-purple-50 border-purple-200">RH / Admin</Badge>
-                            ) : (
-                                <Badge variant="outline" className="text-secondary bg-secondary/10 border-secondary/20">Salarié</Badge>
+                    {isEditingProfile && selectedUser ? (
+                        <div className="p-5">
+                            <h3 className="font-bold text-lg text-secondary border-b border-border pb-2 mb-4">Modifier le profil et accès</h3>
+                            <EditCollaboratorForm
+                                user={selectedUser}
+                                onCancel={() => setIsEditingProfile(false)}
+                                onSuccess={() => { setIsEditingProfile(false); setSelectedUser(null); }}
+                            />
+                        </div>
+                    ) : (
+                        <div className="p-5 space-y-3">
+                            <div className="flex justify-end mb-2">
+                                <Button onClick={() => setIsEditingProfile(true)} size="sm" variant="outline" className="bg-primary/5 text-primary hover:bg-primary/10 border-transparent shadow-none"><Pen className="w-4 h-4 mr-1.5" /> Modifier les accès</Button>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm text-muted-foreground">Rôles</span>
+                                <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                                    {(selectedUser?.roles || []).map((role: string) => (
+                                        <Badge key={role} variant="outline" className={role === 'RH' ? "text-purple-600 bg-purple-50 border-purple-200" : "text-secondary bg-secondary/10 border-secondary/20"}>
+                                            {role === 'RH' ? 'RH / Admin' : role}
+                                        </Badge>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm text-muted-foreground">Statut</span>
+                                {(selectedUser as any)?.isActive !== false ? (
+                                    <div className="flex items-center gap-1.5 text-green-600 text-[10px] font-bold bg-green-50 border border-green-200 rounded-full px-2 py-0.5">
+                                        <ShieldCheckIcon className="w-3 h-3" /> ACTIF
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center gap-1.5 text-red-600 text-[10px] font-bold bg-red-50 border border-red-200 rounded-full px-2 py-0.5">
+                                        <ShieldAlertIcon className="w-3 h-3" /> INACTIF
+                                    </div>
+                                )}
+                            </div>
+                            {selectedUser?.phone && (
+                                <div className="flex items-center justify-between">
+                                    <span className="text-sm text-muted-foreground">Téléphone</span>
+                                    <span className="text-sm font-medium">{selectedUser.phone}</span>
+                                </div>
+                            )}
+                            {selectedUser?.birthDate && (
+                                <div className="flex items-center justify-between">
+                                    <span className="text-sm text-muted-foreground">Date de naissance</span>
+                                    <span className="text-sm font-medium">{new Date(selectedUser.birthDate).toLocaleDateString('fr-FR')}</span>
+                                </div>
+                            )}
+                            {(selectedUser as any)?.deletionReason && (
+                                <div className="space-y-1">
+                                    <span className="text-xs uppercase text-muted-foreground font-bold tracking-wider">Motif de suspension</span>
+                                    <p className="text-sm text-red-700 p-3 bg-red-50 rounded-lg border border-red-200 italic">
+                                        {(selectedUser as any).deletionReason}
+                                    </p>
+                                </div>
+                            )}
+
+                            {!isConvoking && selectedUser?.roles?.includes('SALARIE') && (selectedUser as any)?.isActive !== false && (
+                                <div className="pt-4 border-t border-border">
+                                    <button
+                                        onClick={() => setIsConvoking(true)}
+                                        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 text-sm font-bold transition-colors"
+                                    >
+                                        <Calendar className="w-4 h-4" /> Convoquer ce salarié
+                                    </button>
+                                </div>
+                            )}
+
+                            {isConvoking && (
+                                <div className="pt-4 border-t border-border space-y-3 animate-in fade-in duration-200">
+                                    <p className="text-xs font-bold uppercase text-blue-700 tracking-wider">Nouvelle Convocation</p>
+                                    <Select value={convocReason} onValueChange={setConvocReason} disabled={convocSubmitting}>
+                                        <SelectTrigger className="text-sm"><SelectValue placeholder="Motif *" /></SelectTrigger>
+                                        <SelectContent>
+                                            {reasonOptions.map((r, i) => <SelectItem key={i} value={r}>{r}</SelectItem>)}
+                                        </SelectContent>
+                                    </Select>
+                                    <Input
+                                        type="datetime-local"
+                                        value={convocDate}
+                                        onChange={(e) => setConvocDate(e.target.value)}
+                                        className="text-sm [&::-webkit-calendar-picker-indicator]:dark:invert-0"
+                                        style={{ colorScheme: 'light' }}
+                                        disabled={convocSubmitting}
+                                    />
+                                    <Select value={convocMode} onValueChange={setConvocMode} disabled={convocSubmitting}>
+                                        <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="BUREAU">Au Bureau</SelectItem>
+                                            <SelectItem value="TELEPHONE">Par Téléphone</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <Textarea placeholder="Message pour le salarié (Optionnel)" value={convocDesc} onChange={(e) => setConvocDesc(e.target.value)} className="min-h-[80px] resize-none text-sm" disabled={convocSubmitting} />
+                                    <div className="flex gap-2 justify-end">
+                                        <Button variant="outline" size="sm" onClick={() => setIsConvoking(false)} disabled={convocSubmitting} className="border-slate-300 text-slate-700 font-medium">Annuler</Button>
+                                        <Button size="sm" onClick={handleConvocation} disabled={convocSubmitting} className="bg-blue-600 hover:bg-blue-700 text-white">
+                                            {convocSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Calendar className="w-4 h-4 mr-1" />}
+                                            Envoyer
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {userStats && (userStats.requestsByCategory.length > 0 || userStats.requestsByMonth.length > 0) && (
+                                <div className="pt-4 mt-4 border-t border-border">
+                                    <span className="text-xs uppercase text-muted-foreground font-bold tracking-wider mb-2 block">Statistiques Personnelles</span>
+                                    <HRStatsCharts
+                                        requestsByCategory={userStats.requestsByCategory}
+                                        requestsByUser={[]}
+                                        requestsByMonth={userStats.requestsByMonth}
+                                        hideUserTab
+                                    />
+                                </div>
                             )}
                         </div>
-                        <div className="flex items-center justify-between">
-                            <span className="text-sm text-muted-foreground">Statut</span>
-                            {(selectedUser as any)?.isActive !== false ? (
-                                <div className="flex items-center gap-1.5 text-green-600 text-[10px] font-bold bg-green-50 border border-green-200 rounded-full px-2 py-0.5">
-                                    <ShieldCheckIcon className="w-3 h-3" /> ACTIF
-                                </div>
-                            ) : (
-                                <div className="flex items-center gap-1.5 text-red-600 text-[10px] font-bold bg-red-50 border border-red-200 rounded-full px-2 py-0.5">
-                                    <ShieldAlertIcon className="w-3 h-3" /> INACTIF
-                                </div>
-                            )}
-                        </div>
-                        {selectedUser?.phone && (
-                            <div className="flex items-center justify-between">
-                                <span className="text-sm text-muted-foreground">Téléphone</span>
-                                <span className="text-sm font-medium">{selectedUser.phone}</span>
-                            </div>
-                        )}
-                        {selectedUser?.birthDate && (
-                            <div className="flex items-center justify-between">
-                                <span className="text-sm text-muted-foreground">Date de naissance</span>
-                                <span className="text-sm font-medium">{new Date(selectedUser.birthDate).toLocaleDateString('fr-FR')}</span>
-                            </div>
-                        )}
-                        {(selectedUser as any)?.deletionReason && (
-                            <div className="space-y-1">
-                                <span className="text-xs uppercase text-muted-foreground font-bold tracking-wider">Motif de suspension</span>
-                                <p className="text-sm text-red-700 p-3 bg-red-50 rounded-lg border border-red-200 italic">
-                                    {(selectedUser as any).deletionReason}
-                                </p>
-                            </div>
-                        )}
-
-                        {!isConvoking && selectedUser?.role === 'SALARIE' && (selectedUser as any)?.isActive !== false && (
-                            <div className="pt-4 border-t border-border">
-                                <button
-                                    onClick={() => setIsConvoking(true)}
-                                    className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 text-sm font-bold transition-colors"
-                                >
-                                    <Calendar className="w-4 h-4" /> Convoquer ce salarié
-                                </button>
-                            </div>
-                        )}
-
-                        {isConvoking && (
-                            <div className="pt-4 border-t border-border space-y-3 animate-in fade-in duration-200">
-                                <p className="text-xs font-bold uppercase text-blue-700 tracking-wider">Nouvelle Convocation</p>
-                                <Select value={convocReason} onValueChange={setConvocReason} disabled={convocSubmitting}>
-                                    <SelectTrigger className="text-sm"><SelectValue placeholder="Motif *" /></SelectTrigger>
-                                    <SelectContent>
-                                        {reasonOptions.map((r, i) => <SelectItem key={i} value={r}>{r}</SelectItem>)}
-                                    </SelectContent>
-                                </Select>
-                                <Input
-                                    type="datetime-local"
-                                    value={convocDate}
-                                    onChange={(e) => setConvocDate(e.target.value)}
-                                    className="text-sm [&::-webkit-calendar-picker-indicator]:dark:invert-0"
-                                    style={{ colorScheme: 'light' }}
-                                    disabled={convocSubmitting}
-                                />
-                                <Select value={convocMode} onValueChange={setConvocMode} disabled={convocSubmitting}>
-                                    <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="BUREAU">Au Bureau</SelectItem>
-                                        <SelectItem value="TELEPHONE">Par Téléphone</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                <Textarea placeholder="Message pour le salarié (Optionnel)" value={convocDesc} onChange={(e) => setConvocDesc(e.target.value)} className="min-h-[80px] resize-none text-sm" disabled={convocSubmitting} />
-                                <div className="flex gap-2 justify-end">
-                                    <Button variant="outline" size="sm" onClick={() => setIsConvoking(false)} disabled={convocSubmitting} className="border-slate-300 text-slate-700 font-medium">Annuler</Button>
-                                    <Button size="sm" onClick={handleConvocation} disabled={convocSubmitting} className="bg-blue-600 hover:bg-blue-700 text-white">
-                                        {convocSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Calendar className="w-4 h-4 mr-1" />}
-                                        Envoyer
-                                    </Button>
-                                </div>
-                            </div>
-                        )}
-
-                        {userStats && (userStats.requestsByCategory.length > 0 || userStats.requestsByMonth.length > 0) && (
-                            <div className="pt-4 mt-4 border-t border-border">
-                                <span className="text-xs uppercase text-muted-foreground font-bold tracking-wider mb-2 block">Statistiques Personnelles</span>
-                                <HRStatsCharts
-                                    requestsByCategory={userStats.requestsByCategory}
-                                    requestsByUser={[]}
-                                    requestsByMonth={userStats.requestsByMonth}
-                                    hideUserTab
-                                />
-                            </div>
-                        )}
-                    </div>
+                    )}
                 </DialogContent>
             </Dialog>
         </div>

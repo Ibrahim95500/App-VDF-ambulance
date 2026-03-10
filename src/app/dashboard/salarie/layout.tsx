@@ -8,8 +8,9 @@ export default async function SalarieLayout({
 }) {
     const session = await auth()
 
-    // Redirect HR users out of the salaried dashboard area to their designated dashboard
-    if (session?.user && (session.user as any).role === "RH") {
+    const roles = (session?.user as any).roles || []
+    // Redirect strict HR users (who are NOT admins) out of the salaried dashboard area
+    if (session?.user && roles.includes("RH") && !roles.includes("ADMIN")) {
         redirect("/dashboard/rh")
     }
 

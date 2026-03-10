@@ -9,7 +9,7 @@ import { sendBrandedEmail } from "@/lib/mail"
 import { z } from "zod"
 
 const AdvanceRequestSchema = z.object({
-    amount: z.number().positive("Le montant doit être positif").max(800, "Le montant maximum par acompte est de 800€"),
+    amount: z.number().positive("Le montant doit être positif").max(4000, "Le montant maximum par acompte est de 4000€"),
     reason: z.string().max(500, "Le motif ne doit pas dépasser 500 caractères").optional(),
 });
 
@@ -17,7 +17,7 @@ export async function updateRequestStatus(requestId: string, status: "APPROVED" 
     const session = await auth()
 
     // Security check: Only RH can approve/reject
-    if ((session?.user as any)?.role !== "RH") {
+    if (!(session?.user as any)?.roles?.includes("RH")) {
         throw new Error("Unauthorized: Only RH can update request status")
     }
 
@@ -134,7 +134,7 @@ export async function createAdvanceRequest(amount: number, reason: string) {
         })
 
         // 1. In-app notifications for RH & Employee
-        const rhUsers = await prisma.user.findMany({ where: { role: 'RH' } })
+        const rhUsers = await prisma.user.findMany({ where: { roles: { has: 'RH' } } })
         const userName = request.user.name || `${request.user.firstName || ''} ${request.user.lastName || ''}`.trim() || request.user.email || "Utilisateur";
 
         const notifications: any[] = rhUsers.map(rh => ({

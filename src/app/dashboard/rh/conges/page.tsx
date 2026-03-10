@@ -9,7 +9,8 @@ import { CalendarClock } from 'lucide-react';
 
 export default async function ManageLeavesPage() {
     const session = await auth()
-    if (!session?.user || (session.user as any).role !== "RH") {
+    const roles = (session?.user as any)?.roles || [];
+    if (!session?.user || (!roles.includes("RH") && !roles.includes("ADMIN"))) {
         redirect("/dashboard/salarie")
     }
 

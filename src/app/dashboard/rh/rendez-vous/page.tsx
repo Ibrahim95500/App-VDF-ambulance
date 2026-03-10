@@ -15,13 +15,14 @@ import { prisma } from '@/lib/prisma';
 
 export default async function RHRendezvousPage() {
     const session = await auth()
-    if (!session?.user || (session.user as any).role !== "RH") {
+    const roles = (session?.user as any)?.roles || [];
+    if (!session?.user || (!roles.includes("RH") && !roles.includes("ADMIN"))) {
         redirect("/dashboard/salarie")
     }
 
     const allRequests = await getAppointmentRequests()
     const employees = await prisma.user.findMany({
-        where: { role: 'SALARIE' },
+        where: { roles: { has: 'SALARIE' } },
         select: { id: true, firstName: true, lastName: true, email: true },
         orderBy: { firstName: 'asc' }
     });

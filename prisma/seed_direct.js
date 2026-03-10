@@ -1,3 +1,4 @@
+require('dotenv').config();
 const { Client } = require('pg');
 
 const connectionString = process.env.DATABASE_URL;
@@ -22,26 +23,44 @@ async function seed() {
         const REZAN_HASH = "$2b$10$n7zLMFwxji2QFAWkaYmB9OE5cKcVooN1gUuvjcJ8txxloK85iGaXa"; // password123 (Garanti)
         const TEST_HASH = "$2b$10$n7zLMFwxji2QFAWkaYmB9OE5cKcVooN1gUuvjcJ8txxloK85iGaXa"; // password123
 
-        // 1. Mise à jour des Utilisateurs Principaux (Rezan devient REGULATEUR)
-        console.log('Peuplement des accès prioritaires...');
+        // 1. Mise à jour des Utilisateurs Principaux et Employés Réels
+        console.log('Peuplement des accès prioritaires et employés réels...');
+
+        // Structure: id, email, name, fName, lName, roles (Array of Enum), isReg, password, structure, diploma, shift, preference, isTeamLeader
         const mainUsers = [
-            ['ibrahim-id', 'ibrahim.nifa01@gmail.com', 'Ibrahim NIFA', 'Ibrahim', 'NIFA', 'SALARIE', false, IBRAHIM_HASH],
-            ['hamid-id', 'ambulancemark@gmail.com', 'Hamid CHEIKH', 'Hamid', 'CHEIKH', 'RH', false, HAMID_HASH],
-            ['rezan-id', 'rezan.selva@gmail.com', 'Rezan SELVA', 'Rezan', 'SELVA', 'SALARIE', true, REZAN_HASH], // REZAN = REGULATEUR
+            // Comptes Administratifs
+            ['ibrahim-id', 'ibrahim.nifa01@gmail.com', 'Ibrahim NIFA', 'Ibrahim', 'NIFA', '{"SALARIE"}', false, IBRAHIM_HASH, 'LES_2', 'DEA', 'JOUR', 'NORMAL', false],
+            ['hamid-id', 'ambulancemark@gmail.com', 'Hamid CHEIKH', 'Hamid', 'CHEIKH', '{"SALARIE", "RH"}', false, HAMID_HASH, null, null, null, null, false],
+            ['rezan-id', 'rezan.selva@gmail.com', 'Rezan SELVA', 'Rezan', 'SELVA', '{"SALARIE", "REGULATEUR", "ADMIN"}', true, REZAN_HASH, 'MARK', 'DEA', 'JOUR', 'NORMAL', false],
+
+            // Employés Réels (MARK)
+            ['dahm-id', 'dahm@vdf.fr', 'Dahm', 'Dahm', '', '{"SALARIE"}', false, TEST_HASH, 'MARK', 'AUXILIAIRE', 'JOUR', 'MATIN', true],
+            ['ben-id', 'ben@vdf.fr', 'Ben', 'Ben', '', '{"SALARIE"}', false, TEST_HASH, 'MARK', 'AUXILIAIRE', 'NUIT', 'NUIT', false],
+            ['abdel-id', 'abdel@vdf.fr', 'Abdel', 'Abdel', '', '{"SALARIE"}', false, TEST_HASH, 'MARK', 'DEA', 'JOUR', 'NORMAL', true],
+
+            // Employés Réels (VDF)
+            ['farhan-id', 'farhan@vdf.fr', 'Farhan', 'Farhan', '', '{"SALARIE"}', false, TEST_HASH, 'VDF', 'AUXILIAIRE', 'JOUR', 'NORMAL', true],
+            ['yannick-id', 'yannick@vdf.fr', 'Yannick', 'Yannick', '', '{"SALARIE"}', false, TEST_HASH, 'VDF', 'AUXILIAIRE', 'JOUR', 'NORMAL', true],
+            ['chrisod-id', 'chrisod@vdf.fr', 'Chris OD', 'Chris', 'OD', '{"SALARIE"}', false, TEST_HASH, 'VDF', 'DEA', 'JOUR', 'NORMAL', true],
         ];
 
-        for (const [id, email, name, fName, lName, role, isReg, password] of mainUsers) {
+        for (const [id, email, name, fName, lName, roles, isReg, password, struc, dipl, shif, pref, isTL] of mainUsers) {
             await client.query(`
-        INSERT INTO "User" (id, email, name, password, role, "firstName", "lastName", "isRegulateur", "isActive", "createdAt", "updatedAt")
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, true, NOW(), NOW())
+        INSERT INTO "User" (id, email, name, password, roles, "firstName", "lastName", "isRegulateur", "isActive", structure, diploma, shift, preference, "isTeamLeader", "createdAt", "updatedAt")
+        VALUES ($1, $2, $3, $4, $5::"Role"[], $6, $7, $8, true, $9::"Structure", $10::"Diploma", $11::"Shift", $12::"Preference", $13, NOW(), NOW())
         ON CONFLICT (email) DO UPDATE SET 
-            role = EXCLUDED.role, 
+            roles = EXCLUDED.roles, 
             password = EXCLUDED.password,
             name = EXCLUDED.name,
             "isRegulateur" = EXCLUDED."isRegulateur",
             "firstName" = EXCLUDED."firstName",
-            "lastName" = EXCLUDED."lastName";
-      `, [id, email, name, password, role, fName, lName, isReg]);
+            "lastName" = EXCLUDED."lastName",
+            structure = EXCLUDED.structure,
+            diploma = EXCLUDED.diploma,
+            shift = EXCLUDED.shift,
+            preference = EXCLUDED.preference,
+            "isTeamLeader" = EXCLUDED."isTeamLeader";
+      `, [id, email, name, password, roles, fName, lName, isReg, struc, dipl, shif, pref, isTL]);
         }
 
         // 2. Véhicules (Mise à jour selon la nouvelle liste PJ)

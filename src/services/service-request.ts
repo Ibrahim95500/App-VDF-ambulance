@@ -3,7 +3,7 @@ import { auth } from "@/auth"
 
 export async function getAllServiceRequests() {
     const session = await auth()
-    if ((session?.user as any)?.role !== "RH") return []
+    if (!(session?.user as any)?.roles?.includes("RH")) return []
 
     return await prisma.serviceRequest.findMany({
         include: {

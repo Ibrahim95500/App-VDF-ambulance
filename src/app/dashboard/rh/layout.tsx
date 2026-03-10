@@ -8,8 +8,11 @@ export default async function RHLayout({
 }) {
     const session = await auth()
 
-    // Redirect non-HR users out of the HR dashboard area
-    if (!session?.user || (session.user as any).role !== "RH") {
+    const roles = session?.user ? (session.user as any).roles || [] : []
+    const isAuthorized = roles.includes("RH") || roles.includes("REGULATEUR") || roles.includes("ADMIN")
+
+    // Redirect unauthorized users out of the HR dashboard area
+    if (!session?.user || !isAuthorized) {
         redirect("/dashboard/salarie")
     }
 

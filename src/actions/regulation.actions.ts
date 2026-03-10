@@ -37,9 +37,11 @@ export async function getAvailablePersonnel(date: Date) {
     // ou ceux qui sont en repos (LeaveRequest)
     return prisma.user.findMany({
         where: {
-            role: 'SALARIE',
+            roles: {
+                has: 'SALARIE'
+            },
             isActive: true
-        },
+        } as any,
         orderBy: {
             lastName: 'asc'
         }

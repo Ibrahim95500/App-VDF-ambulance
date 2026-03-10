@@ -140,7 +140,7 @@ export async function createLeaveRequest(
 export async function updateLeaveRequestStatus(requestId: string, status: 'APPROVED' | 'REJECTED', comment?: string) {
     const session = await auth()
 
-    if (!session?.user || (session.user as any).role !== "RH") {
+    if (!session?.user || !(session.user as any).roles?.includes("RH")) {
         throw new Error("Action non autorisée. Réservé aux RH.")
     }
 

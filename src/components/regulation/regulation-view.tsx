@@ -186,6 +186,7 @@ export function RegulationView() {
                     onOpenChange={setIsDialogOpen}
                     vehicleId={selectedVehicle.id}
                     plateNumber={selectedVehicle.plateNumber}
+                    category={selectedVehicle.category}
                     date={date}
                     personnel={personnel}
                     initialData={selectedVehicle.assignments?.[0] ? {

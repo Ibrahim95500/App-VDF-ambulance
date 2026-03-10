@@ -4,6 +4,7 @@ import { useState } from "react"
 import { updateUserPassword, updateUserProfile, updateUserImage } from "@/actions/users"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { PasswordInput } from "@/components/ui/password-input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { LoaderCircleIcon, CheckCircle2Icon, AlertCircleIcon, CameraIcon } from "lucide-react"
@@ -250,10 +251,9 @@ export function ProfileForm({ user }: { user: any }) {
 
                         <div className="space-y-2">
                             <Label htmlFor="currentPassword">Mot de passe actuel</Label>
-                            <Input
+                            <PasswordInput
                                 id="currentPassword"
                                 name="currentPassword"
-                                type="password"
                                 required
                                 placeholder="••••••••"
                             />
@@ -262,20 +262,18 @@ export function ProfileForm({ user }: { user: any }) {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="space-y-2">
                                 <Label htmlFor="newPassword">Nouveau mot de passe</Label>
-                                <Input
+                                <PasswordInput
                                     id="newPassword"
                                     name="newPassword"
-                                    type="password"
                                     required
                                     placeholder="••••••••"
                                 />
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="confirmPassword">Confirmer le mot de passe</Label>
-                                <Input
+                                <PasswordInput
                                     id="confirmPassword"
                                     name="confirmPassword"
-                                    type="password"
                                     required
                                     placeholder="••••••••"
                                 />

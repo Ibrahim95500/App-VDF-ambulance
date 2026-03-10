@@ -15,7 +15,13 @@ const CreateCollaboratorSchema = z.object({
     lastName: z.string().min(2, "Le nom doit faire au moins 2 caractères").max(50, "Le nom ne doit pas dépasser 50 caractères"),
     phone: z.string().max(12, "Le numéro de téléphone ne doit pas dépasser 12 caractères").optional(),
     birthDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Format de date invalide (AAAA-MM-JJ)").optional().nullable(),
-    role: z.enum(["SALARIE", "RH"]).default("SALARIE"),
+    role: z.any().optional(), // On garde ça pour rétrocompatibilité
+    roles: z.array(z.enum(["SALARIE", "RH", "REGULATEUR", "ADMIN"])).default(["SALARIE"]),
+    structure: z.enum(["MARK", "VDF", "LES_2"]).optional().nullable(),
+    diploma: z.enum(["AUXILIAIRE", "DEA"]).optional().nullable(),
+    shift: z.enum(["JOUR", "NUIT", "VACATAIRE", "JOUR_NUIT"]).optional().nullable(),
+    preference: z.enum(["NORMAL", "SAMEDI", "NUIT", "MATIN"]).optional().nullable(),
+    isTeamLeader: z.boolean().default(false),
 });
 
 const UpdateProfileSchema = z.object({
@@ -45,20 +51,28 @@ function generateRandomPassword(length = 10) {
 }
 
 export async function createCollaborator(formData: FormData) {
+    const rawRoles = formData.getAll("roles") as string[];
+    const isTeamLeaderRaw = formData.get("isTeamLeader");
+
     const validatedFields = CreateCollaboratorSchema.safeParse({
         email: formData.get("email"),
         firstName: formData.get("firstName"),
         lastName: formData.get("lastName"),
         phone: formData.get("phone"),
         birthDate: formData.get("birthDate"),
-        role: formData.get("role") || "SALARIE",
+        roles: rawRoles.length > 0 ? rawRoles : ["SALARIE"],
+        structure: formData.get("structure") || null,
+        diploma: formData.get("diploma") || null,
+        shift: formData.get("shift") || null,
+        preference: formData.get("preference") || null,
+        isTeamLeader: isTeamLeaderRaw === "on" || isTeamLeaderRaw === "true",
     });
 
     if (!validatedFields.success) {
         return { error: validatedFields.error.issues[0].message };
     }
 
-    const { email, firstName, lastName, phone, birthDate: birthDateStr, role } = validatedFields.data;
+    const { email, firstName, lastName, phone, birthDate: birthDateStr, roles, structure, diploma, shift, preference, isTeamLeader } = validatedFields.data;
 
     try {
         const existingUser = await prisma.user.findUnique({ where: { email } });
@@ -84,8 +98,14 @@ export async function createCollaborator(formData: FormData) {
                 phone,
                 birthDate,
                 password: hashedPassword,
-                role: role as "SALARIE" | "RH"
-            }
+                roles: roles as any[],
+                isRegulateur: roles.includes("REGULATEUR"), // Auto setup if REGULATEUR is checked
+                structure,
+                diploma,
+                shift,
+                preference,
+                isTeamLeader
+            } as any
         });
 
         try {
@@ -369,12 +389,12 @@ export async function resetPassword(formData: FormData) {
 export async function deactivateUser(userId: string, reason: string) {
     try {
         const session = await auth();
-        const role = (session?.user as any)?.role;
+        const roles = (session?.user as any)?.roles || [];
 
-        console.log(`[DEACTIVATE] User: ${session?.user?.email}, Role: ${role}, Target ID: ${userId}`);
+        console.log(`[DEACTIVATE] User: ${session?.user?.email}, Roles: ${roles.join(',')}, Target ID: ${userId}`);
 
-        if (!session?.user || (role !== "ADMIN" && role !== "RH")) {
-            return { error: `Non autorisé. Votre rôle est : ${role || 'Inconnu'}. Seul un RH peut suspendre un compte.` };
+        if (!session?.user || (!roles.includes("ADMIN") && !roles.includes("RH"))) {
+            return { error: `Non autorisé. Vos rôles sont : ${roles.join(',')}. Seul un RH peut suspendre un compte.` };
         }
 
         if (!reason || reason.trim().length < 5) {
@@ -405,9 +425,9 @@ export async function deactivateUser(userId: string, reason: string) {
 export async function reactivateUser(userId: string) {
     try {
         const session = await auth();
-        const role = (session?.user as any)?.role;
+        const roles = (session?.user as any)?.roles || [];
 
-        if (!session?.user || (role !== "ADMIN" && role !== "RH")) {
+        if (!session?.user || (!roles.includes("ADMIN") && !roles.includes("RH"))) {
             return { error: "Non autorisé. Seul un RH peut réactiver un compte." };
         }
 
@@ -428,3 +448,38 @@ export async function reactivateUser(userId: string) {
         return { error: `Erreur technique: ${error.message || 'Erreur inconnue'}` };
     }
 }
+
+export async function updateCollaboratorAdmin(userId: string, formData: FormData) {
+    const session = await auth();
+    const rolesAuth = (session?.user as any)?.roles || [];
+
+    if (!session?.user || (!rolesAuth.includes("ADMIN") && !rolesAuth.includes("RH"))) {
+        return { error: "Non autorisé. Seul un RH peut modifier un compte." };
+    }
+
+    const rawRoles = formData.getAll("roles") as string[];
+    const isTeamLeaderRaw = formData.get("isTeamLeader");
+    const isTeamLeader = isTeamLeaderRaw === "on" || isTeamLeaderRaw === "true";
+
+    try {
+        await prisma.user.update({
+            where: { id: userId },
+            data: {
+                roles: rawRoles.length > 0 ? rawRoles : ["SALARIE"],
+                isRegulateur: rawRoles.includes("REGULATEUR"),
+                structure: formData.get("structure") as any || null,
+                diploma: formData.get("diploma") as any || null,
+                shift: formData.get("shift") as any || null,
+                preference: formData.get("preference") as any || null,
+                isTeamLeader,
+            }
+        });
+
+        revalidatePath("/dashboard/rh/collaborateurs");
+        return { success: "Profil technique mis à jour avec succès !" };
+    } catch (error: any) {
+        console.error("Update collaborator error details:", error);
+        return { error: "Une erreur s'est produite lors de la modification." };
+    }
+}
+

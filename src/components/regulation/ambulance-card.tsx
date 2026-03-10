@@ -40,8 +40,8 @@ export function AmbulanceCard({
     }
 
     const categoryStyles = {
-        MARK: "border-orange-500/40 bg-orange-50/50 dark:bg-orange-950/20",
-        VDF: "border-blue-500/40 bg-blue-50/50 dark:bg-blue-950/20"
+        MARK: "border-blue-500/40 bg-blue-50/50 dark:bg-blue-950/20",
+        VDF: "border-orange-500/40 bg-orange-50/50 dark:bg-orange-950/20"
     }
 
     return (
@@ -57,7 +57,7 @@ export function AmbulanceCard({
             {/* Background Icon Decoration */}
             <Ambulance className={cn(
                 "absolute -right-4 -bottom-4 w-32 h-32 opacity-5 transition-transform duration-500 group-hover:scale-110",
-                category === 'MARK' ? "text-orange-600" : "text-blue-600"
+                category === 'MARK' ? "text-blue-600" : "text-orange-600"
             )} />
 
             <CardContent className={cn("p-4", isCompact ? "p-3" : "p-4")}>
@@ -66,7 +66,7 @@ export function AmbulanceCard({
                         <div className="flex items-center gap-2 mb-1">
                             <div className={cn(
                                 "p-2 rounded-lg shadow-inner",
-                                category === 'MARK' ? "bg-orange-500 text-white" : "bg-blue-600 text-white"
+                                category === 'MARK' ? "bg-blue-600 text-white" : "bg-orange-500 text-white"
                             )}>
                                 <Ambulance size={isCompact ? 16 : 20} />
                             </div>

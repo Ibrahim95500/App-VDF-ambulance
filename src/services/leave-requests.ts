@@ -27,7 +27,7 @@ export async function getMyLeaveRequests() {
 export async function getAllLeaveRequests() {
     const session = await auth()
 
-    if (!session?.user || (session.user as any).role !== "RH") {
+    if (!session?.user || !(session.user as any).roles?.includes("RH")) {
         return []
     }
 

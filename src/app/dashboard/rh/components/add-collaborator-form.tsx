@@ -67,35 +67,89 @@ export function AddCollaboratorForm() {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="phone">Téléphone (Français)</Label>
-                            <Input id="phone" name="phone" placeholder="06 12 34 56 78" maxLength={12} pattern="^[0-9\s]+$" />
+                        <div className="space-y-3">
+                            <Label>Rôles <span className="text-red-500">*</span></Label>
+                            <div className="flex flex-col gap-2 p-3 border border-border rounded-md bg-muted/20">
+                                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                                    <input type="checkbox" name="roles" value="SALARIE" defaultChecked className="rounded border-gray-300 text-secondary focus:ring-secondary size-4" />
+                                    <span>Salarié</span>
+                                </label>
+                                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                                    <input type="checkbox" name="roles" value="REGULATEUR" className="rounded border-gray-300 text-secondary focus:ring-secondary size-4" />
+                                    <span>Régulateur</span>
+                                </label>
+                                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                                    <input type="checkbox" name="roles" value="RH" className="rounded border-gray-300 text-secondary focus:ring-secondary size-4" />
+                                    <span>RH</span>
+                                </label>
+                                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                                    <input type="checkbox" name="roles" value="ADMIN" className="rounded border-gray-300 text-secondary focus:ring-secondary size-4" />
+                                    <span>Admin</span>
+                                </label>
+                            </div>
                         </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="role">Rôle <span className="text-red-500">*</span></Label>
-                            <select
-                                id="role"
-                                name="role"
-                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                required
-                                defaultValue="SALARIE"
-                            >
-                                <option value="SALARIE">Salarié</option>
-                                <option value="RH">RH / Administrateur</option>
-                            </select>
+
+                        <div className="space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="birthDate">Date de naissance</Label>
+                                <Input id="birthDate" name="birthDate" type="date" max={new Date().toISOString().split('T')[0]} min="1900-01-01" />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="phone">Téléphone</Label>
+                                <Input id="phone" name="phone" placeholder="06 12 34 56 78" maxLength={12} pattern="^[0-9\\s]+$" />
+                            </div>
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 gap-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="birthDate">Date de naissance</Label>
-                            <Input
-                                id="birthDate"
-                                name="birthDate"
-                                type="date"
-                                max={new Date().toISOString().split('T')[0]}
-                                min="1900-01-01"
-                            />
+                    <div className="pt-2 border-t border-border mt-4 mb-2">
+                        <h4 className="text-sm font-bold text-secondary mb-3">Informations de Régulation métier</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="structure">Structure</Label>
+                                <select id="structure" name="structure" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                                    <option value="">Non défini</option>
+                                    <option value="MARK">MARK</option>
+                                    <option value="VDF">VDF</option>
+                                    <option value="LES_2">MARK & VDF</option>
+                                </select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="diploma">Diplôme</Label>
+                                <select id="diploma" name="diploma" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                                    <option value="">Non défini</option>
+                                    <option value="AUXILIAIRE">Auxiliaire</option>
+                                    <option value="DEA">DEA</option>
+                                </select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="shift">Roulement</Label>
+                                <select id="shift" name="shift" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                                    <option value="">Non défini</option>
+                                    <option value="JOUR">Jour</option>
+                                    <option value="NUIT">Nuit</option>
+                                    <option value="VACATAIRE">Vacataire</option>
+                                    <option value="JOUR_NUIT">Jour & Nuit</option>
+                                </select>
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="preference">Préférence</Label>
+                                <select id="preference" name="preference" className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                                    <option value="">Non défini</option>
+                                    <option value="NORMAL">Normale</option>
+                                    <option value="SAMEDI">Samedi</option>
+                                    <option value="NUIT">Nuit exclusif</option>
+                                    <option value="MATIN">Matin</option>
+                                </select>
+                            </div>
+                            <div className="col-span-1 md:col-span-2 space-y-2 mt-1 p-3 bg-orange-50/70 rounded-lg border-2 border-orange-400">
+                                <label className="flex items-center gap-3 cursor-pointer">
+                                    <input type="checkbox" name="isTeamLeader" className="size-5 rounded border-orange-400 text-orange-600 focus:ring-orange-600" />
+                                    <div>
+                                        <p className="font-bold text-sm text-orange-950">Responsable de Bord <span className="text-orange-600 text-xs uppercase tracking-wide ml-1">(Responsable Véhicule)</span></p>
+                                        <p className="text-xs text-orange-800/80">Pré-sélectionne ou autorise ce collaborateur à piloter ce véhicule (MARK ou VDF) lors de la régulation.</p>
+                                    </div>
+                                </label>
+                            </div>
                         </div>
                     </div>
 

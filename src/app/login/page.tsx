@@ -3,6 +3,7 @@ import { AuthError } from "next-auth"
 import { redirect } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { PasswordInput } from "@/components/ui/password-input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent } from "@/components/ui/card"
 import Link from 'next/link';
@@ -142,10 +143,9 @@ export default async function LoginPage({
                                         Mot de passe oublié ?
                                     </Link>
                                 </div>
-                                <Input
+                                <PasswordInput
                                     id="password"
                                     name="password"
-                                    type="password"
                                     placeholder="••••••••"
                                     required
                                     className="h-11 border-gray-300 focus:border-blue-500 focus:ring-blue-500"

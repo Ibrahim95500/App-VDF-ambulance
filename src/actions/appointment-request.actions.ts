@@ -131,7 +131,7 @@ export async function updateAppointmentStatus(
 ) {
     try {
         const session = await auth()
-        if (!session?.user || (session.user as any).role !== "RH") {
+        if (!session?.user || !(session.user as any).roles?.includes("RH")) {
             throw new Error("Non autorisé")
         }
 
@@ -230,7 +230,7 @@ export async function createConvocationAction(
 ) {
     try {
         const session = await auth()
-        if (!session?.user || (session.user as any).role !== "RH") {
+        if (!session?.user || !(session.user as any).roles?.includes("RH")) {
             throw new Error("Non autorisé")
         }
 
@@ -397,7 +397,7 @@ export async function submitRescheduleReply(
 ) {
     try {
         const session = await auth()
-        if (!session?.user || (session.user as any).role !== "RH") {
+        if (!session?.user || !(session.user as any).roles?.includes("RH")) {
             throw new Error("Non autorisé")
         }
 

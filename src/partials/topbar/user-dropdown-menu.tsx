@@ -41,8 +41,11 @@ export function UserDropdownMenu({ trigger }: { trigger: ReactNode }) {
   const { changeLanguage, language } = useLanguage();
   const { theme, setTheme } = useTheme();
 
-  // Infer role from path if session role is missing or to stay in sync with current view
-  const currentRole = (session?.user as any)?.role || (pathname.startsWith('/dashboard/rh') ? 'RH' : 'SALARIE');
+  const roles = (session?.user as any)?.roles || [];
+  let currentRole = 'SALARIE';
+  if (roles.includes('ADMIN')) currentRole = 'ADMIN';
+  else if (roles.includes('RH')) currentRole = 'RH';
+  else if (roles.includes('REGULATEUR')) currentRole = 'REGULATEUR';
 
   const handleLanguage = (lang: Language) => {
     changeLanguage(lang.code);
@@ -76,7 +79,10 @@ export function UserDropdownMenu({ trigger }: { trigger: ReactNode }) {
             </div>
           </div>
           <Badge variant="outline" className="text-xs bg-muted/20">
-            {currentRole === 'RH' ? 'Administrateur RH' : 'Salarié'}
+            {currentRole === 'ADMIN' ? 'Administrateur' :
+              currentRole === 'RH' ? 'RH' :
+                currentRole === 'REGULATEUR' ? 'Régulateur' :
+                  'Salarié'}
           </Badge>
         </div>
 
@@ -117,7 +123,12 @@ export function UserDropdownMenu({ trigger }: { trigger: ReactNode }) {
             variant="destructive"
             size="sm"
             className="w-full"
-            onClick={() => signOut()}
+            onClick={() => {
+              if (typeof window !== 'undefined') {
+                sessionStorage.removeItem("vdf_pirate_f5_done");
+              }
+              signOut();
+            }}
           >
             Déconnexion
           </Button>

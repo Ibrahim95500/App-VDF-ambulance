@@ -53,9 +53,13 @@ export default async function ProfilePage() {
                                 <h2 className="text-lg font-bold text-foreground text-center">
                                     {user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : (user?.name || 'Utilisateur')}
                                 </h2>
-                                <span className="text-xs font-semibold px-2 py-1 bg-secondary text-secondary-foreground rounded-full mt-1 uppercase tracking-wider">
-                                    {user?.role === 'RH' ? 'Administrateur RH' : 'Salarié'}
-                                </span>
+                                <div className="flex flex-wrap items-center justify-center gap-2 mt-2">
+                                    {((user as any)?.roles || []).map((role: string) => (
+                                        <div key={role} className="text-[11px] font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-100 uppercase tracking-wider shadow-sm">
+                                            {role === 'RH' ? 'ADMIN / RH' : role}
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                             <CardContent className="p-0">
                                 <div className="divide-y divide-border text-sm">

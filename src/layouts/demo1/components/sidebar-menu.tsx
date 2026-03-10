@@ -23,8 +23,8 @@ export function SidebarMenu() {
   const pathname = usePathname();
   const { data: session, status } = useSession();
 
-  // Use session role, fallback to inferring from path, finally fallback to SALARIE
-  let userRole = (session?.user as any)?.role;
+  const roles = (session?.user as any)?.roles || [];
+  let userRole = roles.includes('RH') || roles.includes('ADMIN') ? 'RH' : '';
 
   if (!userRole && status !== 'loading') {
     // If not loading and no role in session, check pathname as fallback
@@ -36,43 +36,42 @@ export function SidebarMenu() {
   }
 
   // Filter menu based on role
-  const filteredSidebarMenu = MENU_SIDEBAR.filter(item => {
-    // During loading, we can show a minimal menu or wait
-    if (status === 'loading' && !userRole) {
-      // Fallback inference during loading too
-      if (pathname.startsWith('/dashboard/rh')) userRole = 'RH';
-      else if (pathname.startsWith('/dashboard/salarie')) userRole = 'SALARIE';
-      else return item.path === '/dashboard'; // Only show main dashboard link while loading
+  const filteredSidebarMenu = MENU_SIDEBAR.filter((item) => {
+    // 0bis. Si c'est l'accueil général, tout le monde le voit
+    if (item.path === '/dashboard') return true;
+
+    // 1. ADMIN voit TOUT sans exception
+    if (roles.includes('ADMIN')) return true;
+
+    const isRH = roles.includes('RH');
+    const isSalarie = roles.includes('SALARIE');
+    const isRegulateur = roles.includes('REGULATEUR') || (session?.user as any)?.isRegulateur;
+
+    // 2. Section "Mes Démarches" (SALARIE)
+    if (item.heading === 'Mes Démarches' || item.path?.startsWith('/dashboard/salarie')) {
+      return isSalarie || isRegulateur;
     }
 
-    const currentRole = userRole || 'SALARIE';
-    const isRegulateur = (session?.user as any)?.isRegulateur;
-
-    // Hide sections based on role
-    if (currentRole === 'RH') {
-      // RH strictly sees Espace RH only
-      if (item.heading === 'Mes Démarches') return false;
-      if (item.path?.startsWith('/dashboard/salarie')) return false;
-    } else {
-      // SALARIE logic
-      if (item.heading === 'Espace RH') {
-        // Show Espace RH heading for isRegulateur to display the regulation tab
-        return !!isRegulateur;
-      }
-
-      if (item.path?.startsWith('/dashboard/rh')) {
-        // Exception: allow isRegulateur to see the global regulation page
-        if (item.path === '/dashboard/rh/regulation' && isRegulateur) return true;
-        return false;
-      }
+    // 3. Section "Espace RH" (RH)
+    if (item.heading === 'Espace RH' || (item.path?.startsWith('/dashboard/rh') && item.path !== '/dashboard/rh/regulation')) {
+      return isRH;
     }
-    return true;
+
+    // 4. Module Régulation spécifique (Régule RH)
+    if (item.path === '/dashboard/rh/regulation') {
+      return isRegulateur;
+    }
+
+    return false;
   });
 
   // Memoize matchPath to prevent unnecessary re-renders
   const matchPath = useCallback(
     (path: string): boolean => {
-      if (path === '/dashboard') {
+      if (path === '/dashboard/rh' && pathname === '/dashboard/rh') {
+        return true;
+      }
+      if (path === '/dashboard' || path === '/dashboard/rh') {
         return pathname === '/dashboard' || pathname === '/dashboard/rh' || pathname === '/dashboard/salarie';
       }
       return path === pathname || (path.length > 1 && pathname.startsWith(path));
@@ -261,6 +260,40 @@ export function SidebarMenu() {
   const buildMenuHeading = (item: MenuItem, index: number): JSX.Element => {
     return <AccordionMenuLabel key={index}>{item.heading}</AccordionMenuLabel>;
   };
+
+  if (status === 'loading' || (status === 'authenticated' && roles.length === 0)) {
+    return (
+      <div className="kt-scrollable-y-hover flex grow shrink-0 py-5 px-5 lg:max-h-[calc(100vh-5.5rem)] opacity-50">
+        {/* Fake Dashboard */}
+        <div className="flex items-center gap-3 py-1">
+          <div className="w-5 h-5 rounded-md bg-muted-foreground/20 animate-pulse" />
+          <div className="h-4 w-32 bg-muted-foreground/20 rounded-md animate-pulse" />
+        </div>
+
+        {/* Fake Heading */}
+        <div className="h-3 w-20 bg-muted-foreground/10 rounded-md animate-pulse mt-4 mb-2" />
+        <div className="flex items-center gap-3 py-1">
+          <div className="w-5 h-5 rounded-md bg-muted-foreground/20 animate-pulse" />
+          <div className="h-4 w-28 bg-muted-foreground/20 rounded-md animate-pulse" />
+        </div>
+        <div className="flex items-center gap-3 py-1">
+          <div className="w-5 h-5 rounded-md bg-muted-foreground/20 animate-pulse" />
+          <div className="h-4 w-24 bg-muted-foreground/20 rounded-md animate-pulse" />
+        </div>
+        <div className="flex items-center gap-3 py-1">
+          <div className="w-5 h-5 rounded-md bg-muted-foreground/20 animate-pulse" />
+          <div className="h-4 w-32 bg-muted-foreground/20 rounded-md animate-pulse" />
+        </div>
+
+        {/* Fake Heading 2 */}
+        <div className="h-3 w-20 bg-muted-foreground/10 rounded-md animate-pulse mt-4 mb-2" />
+        <div className="flex items-center gap-3 py-1">
+          <div className="w-5 h-5 rounded-md bg-muted-foreground/20 animate-pulse" />
+          <div className="h-4 w-24 bg-muted-foreground/20 rounded-md animate-pulse" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="kt-scrollable-y-hover flex grow shrink-0 py-5 px-5 lg:max-h-[calc(100vh-5.5rem)]">

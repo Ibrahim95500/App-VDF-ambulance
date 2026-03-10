@@ -17,7 +17,10 @@ import { fr } from 'date-fns/locale';
 
 export default async function RHDashboard() {
     const session = await auth()
-    if (!session?.user || (session.user as any).role !== "RH") {
+    const roles = session?.user ? (session.user as any).roles || [] : []
+    const isAuthorized = roles.includes("RH") || roles.includes("ADMIN") || roles.includes("REGULATEUR")
+
+    if (!session?.user || !isAuthorized) {
         redirect("/dashboard/salarie")
     }
 

@@ -9,9 +9,9 @@ export default async function DashboardPage() {
         redirect("/login")
     }
 
-    const role = (session.user as any).role
+    const roles = (session.user as any).roles || [];
 
-    if (role === "RH") {
+    if (roles.includes("ADMIN") || roles.includes("RH")) {
         redirect("/dashboard/rh")
     } else {
         redirect("/dashboard/salarie")

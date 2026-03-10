@@ -11,7 +11,7 @@ export async function getAllUsers() {
                 name: true,
                 email: true,
                 image: true,
-                role: true,
+                roles: true,
                 createdAt: true,
                 firstName: true,
                 lastName: true,

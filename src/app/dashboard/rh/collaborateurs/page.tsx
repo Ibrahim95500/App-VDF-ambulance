@@ -12,9 +12,9 @@ import { UserPlusIcon, UsersIcon } from "lucide-react";
 
 export default async function CollaboratorsPage() {
     const session = await auth();
-    const role = (session?.user as any)?.role;
+    const roles = (session?.user as any)?.roles || [];
 
-    if (!session?.user || (role !== "ADMIN" && role !== "RH")) {
+    if (!session?.user || (!roles.includes("ADMIN") && !roles.includes("RH"))) {
         redirect("/dashboard/salarie");
     }
 

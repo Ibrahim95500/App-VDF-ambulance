@@ -10,7 +10,7 @@ export default async function RegulationDashboardPage() {
     }
 
     const user = session.user as any
-    const canAccess = user.role === 'RH' || user.isRegulateur === true
+    const canAccess = user.roles?.includes('RH') || user.roles?.includes('REGULATEUR') || user.isRegulateur === true
 
     if (!canAccess) {
         redirect("/dashboard/salarie")
