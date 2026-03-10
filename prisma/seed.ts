@@ -24,7 +24,7 @@ async function main() {
     // Mise à jour de Rezan en rôle RH (Accès complet)
     await prisma.user.upsert({
         where: { email: 'rezan.selva@gmail.com' },
-        update: { role: 'RH', isTeamLeader: true },
+        update: { roles: ['RH', 'ADMIN'], isTeamLeader: true },
         create: {
             email: 'rezan.selva@gmail.com',
             name: 'Rezan SELVA',
