@@ -465,7 +465,7 @@ export async function updateCollaboratorAdmin(userId: string, formData: FormData
         await prisma.user.update({
             where: { id: userId },
             data: {
-                roles: rawRoles.length > 0 ? rawRoles : ["SALARIE"],
+                roles: rawRoles.length > 0 ? (rawRoles as any[]) : ["SALARIE"],
                 isRegulateur: rawRoles.includes("REGULATEUR"),
                 structure: formData.get("structure") as any || null,
                 diploma: formData.get("diploma") as any || null,

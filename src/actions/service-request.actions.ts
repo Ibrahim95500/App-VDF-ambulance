@@ -43,7 +43,7 @@ export async function createServiceRequest(category: string, subject: string, de
     console.log("Request created in DB:", request.id);
 
     // 1. In-app notifications for RH & Employee
-    const rhUsers = await prisma.user.findMany({ where: { role: 'RH' } })
+    const rhUsers = await prisma.user.findMany({ where: { roles: { has: 'RH' } } })
     const userName = session.user.name || "Utilisateur";
 
     const notifications: any[] = rhUsers.map(rh => ({

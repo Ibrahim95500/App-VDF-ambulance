@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
         })
 
         // Notify RH
-        const rhUsers = await prisma.user.findMany({ where: { role: 'RH' } })
+        const rhUsers = await prisma.user.findMany({ where: { roles: { has: 'RH' } } })
         for (const rh of rhUsers) {
             await createNotification({
                 userId: rh.id,

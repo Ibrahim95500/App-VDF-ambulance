@@ -50,7 +50,7 @@ export async function submitAppointmentRequest(formData: FormData) {
         })
 
         // Notifications to RH
-        const rhUsers = await prisma.user.findMany({ where: { role: 'RH' } })
+        const rhUsers = await prisma.user.findMany({ where: { roles: { has: 'RH' } } })
         const userName = session.user.name || session.user.email || "Utilisateur"
 
         const notifications: any[] = rhUsers.map(rh => ({
@@ -327,7 +327,7 @@ export async function submitRescheduleRequest(
 
         await requestReschedule(id, proposedDate, message, event)
 
-        const rhUsers = await prisma.user.findMany({ where: { role: 'RH' } })
+        const rhUsers = await prisma.user.findMany({ where: { roles: { has: 'RH' } } })
         const userName = session.user.name || session.user.email || "Utilisateur"
 
         const notifications: any[] = rhUsers.map(rh => ({

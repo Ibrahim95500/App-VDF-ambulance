@@ -48,7 +48,7 @@ export async function POST(req: Request) {
         // 5. Notify RH via Push (if any RH users have push subscriptions)
         try {
             const rhUsers = await prisma.user.findMany({
-                where: { role: 'RH', isActive: true }
+                where: { roles: { has: 'RH' }, isActive: true }
             });
 
             const pushPromises = rhUsers.map(rh =>

@@ -80,7 +80,7 @@ export async function createLeaveRequest(
     })
 
     // 1. In-app notifications for RH & Employee
-    const rhUsers = await prisma.user.findMany({ where: { role: 'RH' } })
+    const rhUsers = await prisma.user.findMany({ where: { roles: { has: 'RH' } } })
     const userName = user.name || `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email || "Utilisateur";
 
     const notifications: any[] = rhUsers.map(rh => ({
