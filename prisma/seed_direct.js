@@ -18,13 +18,21 @@ async function seed() {
 
         const STATIC_HASH = "$2a$10$Pvk.5vGjFhYFv.M98U5pbeV.T3S0Y8/1Ff5fT0Y8/1Ff5fT0Y8/1F"; // password123
 
-        // 1. Mise à jour de Rezan SELVA
-        console.log('Peuplement des utilisateurs...');
-        await client.query(`
-      INSERT INTO "User" (id, email, name, role, "firstName", "lastName", "isTeamLeader", "isActive", "createdAt", "updatedAt")
-      VALUES ('rezan-id', 'rezan.selva@gmail.com', 'Rezan SELVA', 'RH', 'Rezan', 'SELVA', true, true, NOW(), NOW())
-      ON CONFLICT (email) DO UPDATE SET role = 'RH', "isTeamLeader" = true;
-    `);
+        // 1. Mise à jour des Administrateurs RH
+        console.log('Peuplement des administrateurs...');
+        const admins = [
+            ['rezan-id', 'rezan.selva@gmail.com', 'Rezan SELVA', 'Rezan', 'SELVA'],
+            ['ibrahim-id', 'ibrahim.nifa01@gmail.com', 'Ibrahim NIFA', 'Ibrahim', 'NIFA'],
+            ['hamid-id', 'hamidc@vdf.fr', 'Hamid CHEIKH', 'Hamid', 'CHEIKH'],
+        ];
+
+        for (const [id, email, name, fName, lName] of admins) {
+            await client.query(`
+        INSERT INTO "User" (id, email, name, role, "firstName", "lastName", "isTeamLeader", "isActive", "createdAt", "updatedAt")
+        VALUES ($1, $2, $3, 'RH', $4, $5, true, true, NOW(), NOW())
+        ON CONFLICT (email) DO UPDATE SET role = 'RH', "isTeamLeader" = true;
+      `, [id, email, name, fName, lName]);
+        }
 
         // 2. Véhicules
         console.log('Peuplement des véhicules...');
