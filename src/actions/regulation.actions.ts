@@ -97,7 +97,7 @@ export async function saveAssignment(data: {
             })
         }
 
-        revalidatePath('/dashboard/regulation')
+        revalidatePath('/dashboard/rh/regulation')
         return { success: true }
     } catch (error: any) {
         console.error("Erreur saveAssignment:", error)
@@ -112,7 +112,7 @@ export async function updateAssignmentStatus(assignmentId: string, status: Assig
             data: { status }
         })
 
-        revalidatePath('/dashboard/regulation')
+        revalidatePath('/dashboard/rh/regulation')
         revalidatePath('/dashboard/salarie')
         return { success: true }
     } catch (error: any) {

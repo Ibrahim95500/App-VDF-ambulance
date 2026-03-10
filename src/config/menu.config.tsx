@@ -117,7 +117,7 @@ export const MENU_SIDEBAR: MenuConfig = [
   {
     title: 'Régulation Plateau',
     icon: Siren,
-    path: '/dashboard/regulation',
+    path: '/dashboard/rh/regulation',
   },
 ];
 

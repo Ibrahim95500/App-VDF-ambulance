@@ -46,6 +46,7 @@ export function SidebarMenu() {
     }
 
     const currentRole = userRole || 'SALARIE';
+    const isRegulateur = (session?.user as any)?.isRegulateur;
 
     // Hide sections based on role
     if (currentRole === 'RH') {
@@ -53,9 +54,17 @@ export function SidebarMenu() {
       if (item.heading === 'Mes Démarches') return false;
       if (item.path?.startsWith('/dashboard/salarie')) return false;
     } else {
-      // SALARIE sees Mes Démarches only
-      if (item.heading === 'Espace RH') return false;
-      if (item.path?.startsWith('/dashboard/rh')) return false;
+      // SALARIE logic
+      if (item.heading === 'Espace RH') {
+        // Show Espace RH heading for isRegulateur to display the regulation tab
+        return !!isRegulateur;
+      }
+
+      if (item.path?.startsWith('/dashboard/rh')) {
+        // Exception: allow isRegulateur to see the global regulation page
+        if (item.path === '/dashboard/rh/regulation' && isRegulateur) return true;
+        return false;
+      }
     }
     return true;
   });
