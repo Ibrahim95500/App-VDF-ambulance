@@ -16,22 +16,31 @@ async function seed() {
         await client.connect();
         console.log('Connecté à PostgreSQL pour le seed direct...');
 
-        const STATIC_HASH = "$2a$10$Pvk.5vGjFhYFv.M98U5pbeV.T3S0Y8/1Ff5fT0Y8/1Ff5fT0Y8/1F"; // password123
+        // Hashes générés pour les accès réels
+        const IBRAHIM_HASH = "$2b$10$7DCyWepFWX03josowcWrluAgDNPxFnsNFCyfUc5v4m6WpX0N1UtEG"; // Nanou2020@
+        const HAMID_HASH = "$2b$10$vXHbmkg1KpmjjTefEvak..tUAVwBLKoBFms37fey8M7FvqZb7q4Y2"; // Hamidou95140@
+        const REZAN_HASH = "$2a$10$Pvk.5vGjFhYFv.M98U5pbeV.T3S0Y8/1Ff5fT0Y8/1Ff5fT0Y8/1F"; // password123
+        const TEST_HASH = "$2a$10$Pvk.5vGjFhYFv.M98U5pbeV.T3S0Y8/1Ff5fT0Y8/1Ff5fT0Y8/1F"; // password123
 
-        // 1. Mise à jour des Administrateurs RH
-        console.log('Peuplement des administrateurs...');
-        const admins = [
-            ['rezan-id', 'rezan.selva@gmail.com', 'Rezan SELVA', 'Rezan', 'SELVA'],
-            ['ibrahim-id', 'ibrahim.nifa01@gmail.com', 'Ibrahim NIFA', 'Ibrahim', 'NIFA'],
-            ['hamid-id', 'hamidc@vdf.fr', 'Hamid CHEIKH', 'Hamid', 'CHEIKH'],
+        // 1. Mise à jour des Utilisateurs Principaux
+        console.log('Peuplement des accès prioritaires...');
+        const mainUsers = [
+            ['ibrahim-id', 'ibrahim.nifa01@gmail.com', 'Ibrahim NIFA', 'Ibrahim', 'NIFA', 'SALARIE', IBRAHIM_HASH],
+            ['hamid-id', 'ambulancemark@gmail.com', 'Hamid CHEIKH', 'Hamid', 'CHEIKH', 'RH', HAMID_HASH],
+            ['rezan-id', 'rezan.selva@gmail.com', 'Rezan SELVA', 'Rezan', 'SELVA', 'SALARIE', REZAN_HASH],
         ];
 
-        for (const [id, email, name, fName, lName] of admins) {
+        for (const [id, email, name, fName, lName, role, password] of mainUsers) {
             await client.query(`
-        INSERT INTO "User" (id, email, name, role, "firstName", "lastName", "isTeamLeader", "isActive", "createdAt", "updatedAt")
-        VALUES ($1, $2, $3, 'RH', $4, $5, true, true, NOW(), NOW())
-        ON CONFLICT (email) DO UPDATE SET role = 'RH', "isTeamLeader" = true;
-      `, [id, email, name, fName, lName]);
+        INSERT INTO "User" (id, email, name, password, role, "firstName", "lastName", "isActive", "createdAt", "updatedAt")
+        VALUES ($1, $2, $3, $4, $5, $6, $7, true, NOW(), NOW())
+        ON CONFLICT (email) DO UPDATE SET 
+            role = EXCLUDED.role, 
+            password = EXCLUDED.password,
+            name = EXCLUDED.name,
+            "firstName" = EXCLUDED."firstName",
+            "lastName" = EXCLUDED."lastName";
+      `, [id, email, name, password, role, fName, lName]);
         }
 
         // 2. Véhicules
@@ -53,7 +62,7 @@ async function seed() {
       `, [plate, cat]);
         }
 
-        // 3. Salariés de test
+        // 3. Salariés de test additionnels
         const testUsers = [
             ['resp.mark@vdf.fr', 'Responsable', 'MARK', 'MARK', 'DEA', 'JOUR', true],
             ['coeq.mark@vdf.fr', 'Coéquipier', 'MARK', 'MARK', 'AUXILIAIRE', 'JOUR', false],
@@ -68,7 +77,7 @@ async function seed() {
         INSERT INTO "User" (id, email, name, password, role, "firstName", "lastName", structure, diploma, shift, "isTeamLeader", "isActive", "createdAt", "updatedAt")
         VALUES (gen_random_uuid()::text, $1, $2, $3, 'SALARIE', $4, $5, $6, $7, $8, $9, true, NOW(), NOW())
         ON CONFLICT (email) DO NOTHING;
-      `, [email, `${fName} ${lName}`, STATIC_HASH, fName, lName, struct, diplo, shift, leader]);
+      `, [email, `${fName} ${lName}`, TEST_HASH, fName, lName, struct, diplo, shift, leader]);
         }
 
         console.log('--- SEED DIRECT TERMINÉ AVEC SUCCÈS ---');
