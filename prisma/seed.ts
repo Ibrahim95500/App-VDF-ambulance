@@ -28,7 +28,7 @@ async function main() {
         create: {
             email: 'rezan.selva@gmail.com',
             name: 'Rezan SELVA',
-            role: 'RH',
+            roles: ['RH', 'ADMIN'],
             firstName: 'Rezan',
             lastName: 'SELVA',
             isTeamLeader: true
@@ -71,7 +71,7 @@ async function main() {
                 ...userData,
                 name: `${userData.firstName} ${userData.lastName}`,
                 password: hashedPassword,
-                role: 'SALARIE'
+                roles: ['SALARIE']
             }
         });
     }
