@@ -83,6 +83,11 @@ export const MENU_SIDEBAR: MenuConfig = [
     icon: LifeBuoy,
     path: '/dashboard/salarie/services',
   },
+  {
+    title: 'Régulation Plateau',
+    icon: Siren,
+    path: '/dashboard/salarie/regulation',
+  },
   { heading: 'Espace RH' },
   {
     title: 'Collaborateurs',
