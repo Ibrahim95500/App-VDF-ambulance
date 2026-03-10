@@ -18,7 +18,16 @@ export function MyAssignment({ assignment }: MyAssignmentProps) {
 
     if (!assignment) return null
 
+    // Fenêtre de validation : 19h - 21h
+    const now = new Date()
+    const currentHour = now.getHours()
+    const isWindowOpen = currentHour >= 19 && currentHour < 21
+
     const handleAction = async (newStatus: 'VALIDATED' | 'REJECTED') => {
+        if (!isWindowOpen) {
+            toast.error("La validation n'est possible qu'entre 19h00 et 21h00.")
+            return
+        }
         try {
             setLoading(true)
             const result = await updateAssignmentStatus(assignment.id, newStatus)
@@ -52,7 +61,7 @@ export function MyAssignment({ assignment }: MyAssignmentProps) {
                 endTime={assignment.endTime}
             />
 
-            {status === 'PENDING' && (
+            {status === 'PENDING' && isWindowOpen && (
                 <div className="flex gap-3 animate-in fade-in slide-in-from-bottom-2">
                     <Button
                         onClick={() => handleAction('VALIDATED')}
@@ -71,6 +80,18 @@ export function MyAssignment({ assignment }: MyAssignmentProps) {
                         {loading ? <Loader2 className="animate-spin mr-2" /> : <XCircle size={18} className="mr-2" />}
                         Signaler un souci
                     </Button>
+                </div>
+            )}
+
+            {status === 'PENDING' && !isWindowOpen && (
+                <div className="p-4 bg-amber-50 dark:bg-amber-950/20 border-2 border-dashed border-amber-200 dark:border-amber-800 rounded-2xl flex flex-col items-center text-center gap-2">
+                    <div className="p-2 bg-amber-100 dark:bg-amber-900 rounded-full text-amber-600">
+                        <Info size={24} />
+                    </div>
+                    <p className="text-amber-800 dark:text-amber-400 font-bold">Fenêtre de validation fermée</p>
+                    <p className="text-amber-600 dark:text-amber-500 text-xs">
+                        Vous pourrez valider votre mission ce soir entre <span className="underline">19h00 et 21h00</span>.
+                    </p>
                 </div>
             )}
 

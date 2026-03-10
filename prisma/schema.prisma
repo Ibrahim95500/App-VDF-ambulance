@@ -65,6 +65,7 @@ model User {
   shift          Shift?
   preference     Preference?
   isTeamLeader   Boolean   @default(false)
+  isRegulateur   Boolean   @default(false)
   oubliCount     Int       @default(0)
 
   // Relations Régulation

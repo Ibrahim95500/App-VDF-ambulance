@@ -25,6 +25,7 @@ export const authConfig = {
         async jwt({ token, user, trigger, session }) {
             if (user) {
                 token.role = (user as any).role
+                token.isRegulateur = (user as any).isRegulateur
             }
             // We don't store the image in the JWT to avoid HTTP 431 (Cookie too large)
             return token
@@ -32,6 +33,7 @@ export const authConfig = {
         async session({ session, token }) {
             if (session.user) {
                 (session.user as any).role = token.role
+                    (session.user as any).isRegulateur = token.isRegulateur
                 if (token.sub) {
                     session.user.id = token.sub
                     // Dynamic image path to avoid cookie bloat

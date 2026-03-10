@@ -27,7 +27,23 @@ import { cn } from "@/lib/utils"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
-export default function RegulationDashboard() {
+import { auth } from "@/auth"
+import { redirect } from "next/navigation"
+
+export default async function RegulationDashboard() {
+    const session = await auth()
+
+    if (!session?.user) {
+        redirect("/login")
+    }
+
+    const user = session.user as any
+    const canAccess = user.role === 'RH' || user.isRegulateur === true
+
+    if (!canAccess) {
+        redirect("/dashboard/salarie")
+    }
+
     const [date, setDate] = useState<Date>(() => {
         const d = new Date()
         d.setDate(d.getDate() + 1) // Demain par défaut

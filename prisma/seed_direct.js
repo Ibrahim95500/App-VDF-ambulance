@@ -22,65 +22,57 @@ async function seed() {
         const REZAN_HASH = "$2a$10$Pvk.5vGjFhYFv.M98U5pbeV.T3S0Y8/1Ff5fT0Y8/1Ff5fT0Y8/1F"; // password123
         const TEST_HASH = "$2a$10$Pvk.5vGjFhYFv.M98U5pbeV.T3S0Y8/1Ff5fT0Y8/1Ff5fT0Y8/1F"; // password123
 
-        // 1. Mise à jour des Utilisateurs Principaux
+        // 1. Mise à jour des Utilisateurs Principaux (Rezan devient REGULATEUR)
         console.log('Peuplement des accès prioritaires...');
         const mainUsers = [
-            ['ibrahim-id', 'ibrahim.nifa01@gmail.com', 'Ibrahim NIFA', 'Ibrahim', 'NIFA', 'SALARIE', IBRAHIM_HASH],
-            ['hamid-id', 'ambulancemark@gmail.com', 'Hamid CHEIKH', 'Hamid', 'CHEIKH', 'RH', HAMID_HASH],
-            ['rezan-id', 'rezan.selva@gmail.com', 'Rezan SELVA', 'Rezan', 'SELVA', 'SALARIE', REZAN_HASH],
+            ['ibrahim-id', 'ibrahim.nifa01@gmail.com', 'Ibrahim NIFA', 'Ibrahim', 'NIFA', 'SALARIE', false, IBRAHIM_HASH],
+            ['hamid-id', 'ambulancemark@gmail.com', 'Hamid CHEIKH', 'Hamid', 'CHEIKH', 'RH', false, HAMID_HASH],
+            ['rezan-id', 'rezan.selva@gmail.com', 'Rezan SELVA', 'Rezan', 'SELVA', 'SALARIE', true, REZAN_HASH], // REZAN = REGULATEUR
         ];
 
-        for (const [id, email, name, fName, lName, role, password] of mainUsers) {
+        for (const [id, email, name, fName, lName, role, isReg, password] of mainUsers) {
             await client.query(`
-        INSERT INTO "User" (id, email, name, password, role, "firstName", "lastName", "isActive", "createdAt", "updatedAt")
-        VALUES ($1, $2, $3, $4, $5, $6, $7, true, NOW(), NOW())
+        INSERT INTO "User" (id, email, name, password, role, "firstName", "lastName", "isRegulateur", "isActive", "createdAt", "updatedAt")
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, true, NOW(), NOW())
         ON CONFLICT (email) DO UPDATE SET 
             role = EXCLUDED.role, 
             password = EXCLUDED.password,
             name = EXCLUDED.name,
+            "isRegulateur" = EXCLUDED."isRegulateur",
             "firstName" = EXCLUDED."firstName",
             "lastName" = EXCLUDED."lastName";
-      `, [id, email, name, password, role, fName, lName]);
+      `, [id, email, name, password, role, fName, lName, isReg]);
         }
 
-        // 2. Véhicules
-        console.log('Peuplement des véhicules...');
+        // 2. Véhicules (Mise à jour selon la nouvelle liste PJ)
+        console.log('Peuplement des véhicules (Nouvelle liste)...');
         const vehicles = [
+            // Anciens
             ['EP-268-EJ', 'MARK'],
             ['FB-913-YS', 'MARK'],
             ['FH-181-FX', 'MARK'],
             ['FK-433-KS', 'VDF'],
             ['FK-477-KR', 'VDF'],
             ['FK-840-CN', 'VDF'],
+            // Nouveaux PJ
+            ['HE-042-WP', 'MARK'],
+            ['FX-542-YZ', 'MARK'],
+            ['GM-657-RB', 'MARK'],
+            ['GR-638-TJ', 'MARK'],
+            ['HC-130-TB', 'MARK'],
+            ['FC-223-MS', 'MARK'],
+            ['VSL-GENERIC', 'VDF'], // Pour le VSL
         ];
 
         for (const [plate, cat] of vehicles) {
             await client.query(`
         INSERT INTO "Vehicle" (id, "plateNumber", category, "createdAt", "updatedAt")
         VALUES (gen_random_uuid()::text, $1, $2, NOW(), NOW())
-        ON CONFLICT ("plateNumber") DO NOTHING;
+        ON CONFLICT ("plateNumber") DO UPDATE SET category = EXCLUDED.category;
       `, [plate, cat]);
         }
 
-        // 3. Salariés de test additionnels
-        const testUsers = [
-            ['resp.mark@vdf.fr', 'Responsable', 'MARK', 'MARK', 'DEA', 'JOUR', true],
-            ['coeq.mark@vdf.fr', 'Coéquipier', 'MARK', 'MARK', 'AUXILIAIRE', 'JOUR', false],
-            ['resp.vdf@vdf.fr', 'Responsable', 'VDF', 'VDF', 'DEA', 'NUIT', true],
-            ['coeq.vdf@vdf.fr', 'Coéquipier', 'VDF', 'VDF', 'AUXILIAIRE', 'NUIT', false],
-            ['resp.les2@vdf.fr', 'Responsable', 'LES2', 'LES_2', 'DEA', 'JOUR_NUIT', true],
-            ['coeq.les2@vdf.fr', 'Coéquipier', 'LES2', 'LES_2', 'AUXILIAIRE', 'JOUR_NUIT', false],
-        ];
-
-        for (const [email, fName, lName, struct, diplo, shift, leader] of testUsers) {
-            await client.query(`
-        INSERT INTO "User" (id, email, name, password, role, "firstName", "lastName", structure, diploma, shift, "isTeamLeader", "isActive", "createdAt", "updatedAt")
-        VALUES (gen_random_uuid()::text, $1, $2, $3, 'SALARIE', $4, $5, $6, $7, $8, $9, true, NOW(), NOW())
-        ON CONFLICT (email) DO NOTHING;
-      `, [email, `${fName} ${lName}`, TEST_HASH, fName, lName, struct, diplo, shift, leader]);
-        }
-
-        console.log('--- SEED DIRECT TERMINÉ AVEC SUCCÈS ---');
+        console.log('--- SEED DIRECT V2 TERMINÉ AVEC SUCCÈS ---');
     } catch (err) {
         console.error('Erreur lors du seed direct:', err);
     } finally {
