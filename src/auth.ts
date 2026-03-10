@@ -53,7 +53,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                     email: user.email,
                     name: user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.name,
                     role: user.role,
-                    isRegulateur: user.isRegulateur,
+                    isRegulateur: (user as any).isRegulateur,
                 } as any;
             }
         })

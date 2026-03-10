@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
-import { AssignmentStatus } from "@prisma/client"
+import type { AssignmentStatus } from "@prisma/client"
 
 export async function getVehiclesWithAssignments(date: Date) {
     const startOfTargetDate = new Date(date)
