@@ -122,11 +122,11 @@ export function RegulationView() {
                         <TabsTrigger value="ALL" className="rounded-lg px-6 font-bold">
                             Tous <Badge variant="secondary" className="ml-2 bg-slate-200 dark:bg-slate-700">{counts.ALL}</Badge>
                         </TabsTrigger>
-                        <TabsTrigger value="MARK" className="rounded-lg px-6 font-bold data-[state=active]:bg-orange-500 data-[state=active]:text-white">
-                            MARK <Badge variant="secondary" className="ml-2 bg-orange-100 text-orange-600">{counts.MARK}</Badge>
+                        <TabsTrigger value="MARK" className="rounded-lg px-6 font-bold data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+                            MARK <Badge variant="secondary" className="ml-2 bg-blue-100 text-blue-600">{counts.MARK}</Badge>
                         </TabsTrigger>
-                        <TabsTrigger value="VDF" className="rounded-lg px-6 font-bold data-[state=active]:bg-blue-600 data-[state=active]:text-white">
-                            VDF <Badge variant="secondary" className="ml-2 bg-blue-100 text-blue-600">{counts.VDF}</Badge>
+                        <TabsTrigger value="VDF" className="rounded-lg px-6 font-bold data-[state=active]:bg-orange-500 data-[state=active]:text-white">
+                            VDF <Badge variant="secondary" className="ml-2 bg-orange-100 text-orange-600">{counts.VDF}</Badge>
                         </TabsTrigger>
                     </TabsList>
                 </Tabs>
