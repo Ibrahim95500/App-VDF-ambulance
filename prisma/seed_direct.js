@@ -19,8 +19,8 @@ async function seed() {
         // Hashes générés pour les accès réels
         const IBRAHIM_HASH = "$2b$10$7DCyWepFWX03josowcWrluAgDNPxFnsNFCyfUc5v4m6WpX0N1UtEG"; // Nanou2020@
         const HAMID_HASH = "$2b$10$vXHbmkg1KpmjjTefEvak..tUAVwBLKoBFms37fey8M7FvqZb7q4Y2"; // Hamidou95140@
-        const REZAN_HASH = "$2b$10$N9qo8uLOickgx2ZMRZoMyeIjZAgNoTfQ0C.it98A9.xWb.7T0Y8S2"; // password123 (Hash $2b valide)
-        const TEST_HASH = "$2b$10$N9qo8uLOickgx2ZMRZoMyeIjZAgNoTfQ0C.it98A9.xWb.7T0Y8S2"; // password123
+        const REZAN_HASH = "$2b$10$n7zLMFwxji2QFAWkaYmB9OE5cKcVooN1gUuvjcJ8txxloK85iGaXa"; // password123 (Garanti)
+        const TEST_HASH = "$2b$10$n7zLMFwxji2QFAWkaYmB9OE5cKcVooN1gUuvjcJ8txxloK85iGaXa"; // password123
 
         // 1. Mise à jour des Utilisateurs Principaux (Rezan devient REGULATEUR)
         console.log('Peuplement des accès prioritaires...');

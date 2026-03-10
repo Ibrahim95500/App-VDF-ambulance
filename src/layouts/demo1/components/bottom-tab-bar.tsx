@@ -23,7 +23,7 @@ export function BottomTabBar() {
             { label: 'Régulation', href: '/dashboard/rh/regulation', icon: Siren },
             { label: 'Acomptes', href: '/dashboard/rh/acomptes', icon: Euro },
             { label: 'Rendez-vous', href: '/dashboard/rh/rendez-vous', icon: CalendarRange },
-            // { label: 'Services', href: '/dashboard/rh/services', icon: LifeBuoy },
+            { label: 'Services', href: '/dashboard/rh/services', icon: LifeBuoy },
             { label: 'Équipe', href: '/dashboard/rh/collaborateurs', icon: Users },
             { label: 'Profil', href: '/dashboard/profil', icon: User },
         ]
@@ -31,7 +31,7 @@ export function BottomTabBar() {
             { label: 'Acomptes', href: '/dashboard/salarie', icon: Euro },
             { label: 'Régulation', href: '/dashboard/salarie/regulation', icon: Siren },
             { label: 'Rendez-vous', href: '/dashboard/salarie/rendez-vous', icon: CalendarRange },
-            // { label: 'Services', href: '/dashboard/salarie/services', icon: LifeBuoy },
+            { label: 'Services', href: '/dashboard/salarie/services', icon: LifeBuoy },
             { label: 'Profil', href: '/dashboard/profil', icon: User },
         ];
 
