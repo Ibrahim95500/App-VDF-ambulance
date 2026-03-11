@@ -18,15 +18,27 @@ import { Loader2 } from "lucide-react"
 
 export function RequestAppointmentForm() {
     const [isSubmitting, setIsSubmitting] = useState(false)
+    const [selectedReason, setSelectedReason] = useState<string>("")
     const formRef = useRef<HTMLFormElement>(null)
 
     async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault()
         const formData = new FormData(event.currentTarget)
         const reason = formData.get("reason") as string
+        const description = formData.get("description") as string
 
         if (!reason) {
             toast.error("Veuillez choisir un motif.")
+            return
+        }
+
+        if (reason === "Autre" && (!description || description.trim().length < 30)) {
+            toast.error("Veuillez détailler le motif de votre demande (minimum 30 caractères).")
+            return
+        }
+
+        if (description && description.trim().length > 0 && description.trim().length < 30) {
+            toast.error("Le motif de la demande doit contenir au moins 30 caractères.")
             return
         }
 
@@ -61,24 +73,22 @@ export function RequestAppointmentForm() {
                         <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                             Motif du rendez-vous
                         </label>
-                        <Select name="reason" required disabled={isSubmitting}>
+                        <Select name="reason" value={selectedReason} onValueChange={setSelectedReason} required disabled={isSubmitting}>
                             <SelectTrigger className="h-10 border-gray-200">
                                 <SelectValue placeholder="Choisir un motif" />
                             </SelectTrigger>
                             <SelectContent>
                                 <SelectItem value="Point carrière">Point carrière</SelectItem>
-                                <SelectItem value="Solde de tout compte">Solde de tout compte</SelectItem>
                                 <SelectItem value="Question administrative">Question administrative / RH</SelectItem>
                                 <SelectItem value="Conflit / Médiation">Conflit / Médiation</SelectItem>
-                                <SelectItem value="Augmentation / Salaire">Augmentation / Salaire</SelectItem>
-                                <SelectItem value="Autre demande">Autre demande</SelectItem>
+                                <SelectItem value="Autre">Autre</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
 
                     <div className="space-y-2">
                         <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                            Description détaillée (Optionnel)
+                            Motif de la demande de RDV {selectedReason === "Autre" && <span className="text-red-500">* (Obligatoire, min. 30 caractères)</span>}
                         </label>
                         <Textarea
                             name="description"

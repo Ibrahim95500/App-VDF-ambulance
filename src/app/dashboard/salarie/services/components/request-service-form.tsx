@@ -30,7 +30,7 @@ import { Loader2, Send } from "lucide-react"
 const formSchema = z.object({
     category: z.string().min(1, "Veuillez choisir une catégorie"),
     subject: z.string().min(3, "Le sujet est trop court"),
-    description: z.string().min(10, "Veuillez détailler votre demande"),
+    description: z.string().min(30, "Veuillez détailler votre demande (minimum 30 caractères)"),
 })
 
 export function RequestServiceForm() {
@@ -97,7 +97,7 @@ export function RequestServiceForm() {
                                             <SelectItem value="Formation">Demande de formation</SelectItem>
                                             <SelectItem value="Équipement">Demande d'équipement / tenue</SelectItem>
                                             <SelectItem value="Véhicule / Logistique">Demande liée au véhicule / Logistique</SelectItem>
-                                            <SelectItem value="Autre demande RH">Autre demande RH</SelectItem>
+                                            <SelectItem value="Autre">Autre</SelectItem>
                                         </SelectContent>
                                     </Select>
                                     <FormMessage />
