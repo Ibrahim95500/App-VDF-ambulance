@@ -2,6 +2,7 @@ import { auth } from "@/auth"
 import { getMyAssignment } from "@/actions/regulation.actions"
 import { MyAssignment } from "@/components/regulation/my-assignment"
 import { redirect } from "next/navigation"
+import { format } from "date-fns"
 
 export default async function SalarieRegulationPage() {
     const session = await auth()
@@ -13,8 +14,9 @@ export default async function SalarieRegulationPage() {
     // On cherche l'assignation pour demain (par défaut)
     const tomorrow = new Date()
     tomorrow.setDate(tomorrow.getDate() + 1)
+    const dateStr = format(tomorrow, 'yyyy-MM-dd')
 
-    const myAssignment = await getMyAssignment(session.user.id, tomorrow)
+    const myAssignment = await getMyAssignment(session.user.id, dateStr)
 
     return (
         <div className="flex flex-col gap-8">

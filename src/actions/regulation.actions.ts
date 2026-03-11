@@ -4,12 +4,9 @@ import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 import type { AssignmentStatus } from "@prisma/client"
 
-export async function getVehiclesWithAssignments(date: Date) {
-    const startOfTargetDate = new Date(date)
-    startOfTargetDate.setHours(0, 0, 0, 0)
-
-    const endOfTargetDate = new Date(date)
-    endOfTargetDate.setHours(23, 59, 59, 999)
+export async function getVehiclesWithAssignments(dateStr: string) {
+    const startOfTargetDate = new Date(`${dateStr}T00:00:00.000Z`)
+    const endOfTargetDate = new Date(`${dateStr}T23:59:59.999Z`)
 
     return prisma.vehicle.findMany({
         include: {
@@ -32,7 +29,7 @@ export async function getVehiclesWithAssignments(date: Date) {
     })
 }
 
-export async function getAvailablePersonnel(date: Date) {
+export async function getAvailablePersonnel(dateStr: string) {
     // Dans une version plus complexe, on filtrerait ceux qui ne sont pas déjà assignés
     // ou ceux qui sont en repos (LeaveRequest)
     return prisma.user.findMany({
@@ -52,16 +49,13 @@ export async function saveAssignment(data: {
     vehicleId: string
     leaderId: string
     teammateId: string
-    date: Date
+    dateStr: string
     startTime?: string
     endTime?: string
 }) {
     try {
-        const startOfDay = new Date(data.date)
-        startOfDay.setHours(0, 0, 0, 0)
-
-        const endOfDay = new Date(data.date)
-        endOfDay.setHours(23, 59, 59, 999)
+        const startOfDay = new Date(`${data.dateStr}T00:00:00.000Z`)
+        const endOfDay = new Date(`${data.dateStr}T23:59:59.999Z`)
 
         // On cherche s'il existe déjà une assignation pour ce véhicule à cette date
         const existing = await prisma.planningAssignment.findFirst({
@@ -91,7 +85,7 @@ export async function saveAssignment(data: {
                     vehicleId: data.vehicleId,
                     leaderId: data.leaderId,
                     teammateId: data.teammateId,
-                    date: data.date,
+                    date: startOfDay,
                     startTime: data.startTime,
                     endTime: data.endTime,
                     status: 'PENDING'
@@ -122,12 +116,9 @@ export async function updateAssignmentStatus(assignmentId: string, status: Assig
     }
 }
 
-export async function getMyAssignment(userId: string, date: Date) {
-    const startOfDay = new Date(date)
-    startOfDay.setHours(0, 0, 0, 0)
-
-    const endOfDay = new Date(date)
-    endOfDay.setHours(23, 59, 59, 999)
+export async function getMyAssignment(userId: string, dateStr: string) {
+    const startOfDay = new Date(`${dateStr}T00:00:00.000Z`)
+    const endOfDay = new Date(`${dateStr}T23:59:59.999Z`)
 
     return prisma.planningAssignment.findFirst({
         where: {
@@ -146,4 +137,23 @@ export async function getMyAssignment(userId: string, date: Date) {
             teammate: true
         }
     })
+}
+
+export async function getRegulationHistory() {
+    try {
+        const history = await prisma.planningAssignment.findMany({
+            orderBy: {
+                date: 'desc'
+            },
+            include: {
+                vehicle: true,
+                leader: true,
+                teammate: true
+            }
+        })
+        return history;
+    } catch (error: any) {
+        console.error("Error getRegulationHistory:", error);
+        return [];
+    }
 }
