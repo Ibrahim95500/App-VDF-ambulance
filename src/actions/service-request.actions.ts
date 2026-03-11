@@ -42,8 +42,8 @@ export async function createServiceRequest(category: string, subject: string, de
     })
     console.log("Request created in DB:", request.id);
 
-    // 1. In-app notifications for RH & Employee
-    const rhUsers = await prisma.user.findMany({ where: { roles: { has: 'RH' } } })
+    // 1. In-app notifications for RH & Admin & Employee
+    const rhUsers = await prisma.user.findMany({ where: { OR: [{ roles: { has: 'RH' } }, { roles: { has: 'ADMIN' } }] } })
     const userName = session.user.name || "Utilisateur";
 
     const notifications: any[] = rhUsers.map(rh => ({
@@ -122,7 +122,7 @@ export async function createServiceRequest(category: string, subject: string, de
  */
 export async function updateServiceRequestStatus(requestId: string, status: "APPROVED" | "REJECTED", comment?: string) {
     const session = await auth()
-    if (!(session?.user as any)?.roles?.includes("RH")) throw new Error("Unauthorized")
+    if (!(session?.user as any)?.roles?.includes("RH") && !(session?.user as any)?.roles?.includes("ADMIN")) throw new Error("Unauthorized")
 
     const request = await prisma.serviceRequest.update({
         where: { id: requestId },

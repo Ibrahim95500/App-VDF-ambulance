@@ -49,8 +49,8 @@ export async function submitAppointmentRequest(formData: FormData) {
             description: description || undefined,
         })
 
-        // Notifications to RH
-        const rhUsers = await prisma.user.findMany({ where: { roles: { has: 'RH' } } })
+        // Notifications to RH & ADMIN
+        const rhUsers = await prisma.user.findMany({ where: { OR: [{ roles: { has: 'RH' } }, { roles: { has: 'ADMIN' } }] } })
         const userName = session.user.name || session.user.email || "Utilisateur"
 
         const notifications: any[] = rhUsers.map(rh => ({
@@ -131,7 +131,7 @@ export async function updateAppointmentStatus(
 ) {
     try {
         const session = await auth()
-        if (!session?.user || !(session.user as any).roles?.includes("RH")) {
+        if (!session?.user || (!(session.user as any).roles?.includes("RH") && !(session.user as any).roles?.includes("ADMIN"))) {
             throw new Error("Non autorisé")
         }
 
@@ -230,7 +230,7 @@ export async function createConvocationAction(
 ) {
     try {
         const session = await auth()
-        if (!session?.user || !(session.user as any).roles?.includes("RH")) {
+        if (!session?.user || (!(session.user as any).roles?.includes("RH") && !(session.user as any).roles?.includes("ADMIN"))) {
             throw new Error("Non autorisé")
         }
 
@@ -327,7 +327,7 @@ export async function submitRescheduleRequest(
 
         await requestReschedule(id, proposedDate, message, event)
 
-        const rhUsers = await prisma.user.findMany({ where: { roles: { has: 'RH' } } })
+        const rhUsers = await prisma.user.findMany({ where: { OR: [{ roles: { has: 'RH' } }, { roles: { has: 'ADMIN' } }] } })
         const userName = session.user.name || session.user.email || "Utilisateur"
 
         const notifications: any[] = rhUsers.map(rh => ({
@@ -397,7 +397,7 @@ export async function submitRescheduleReply(
 ) {
     try {
         const session = await auth()
-        if (!session?.user || !(session.user as any).roles?.includes("RH")) {
+        if (!session?.user || (!(session.user as any).roles?.includes("RH") && !(session.user as any).roles?.includes("ADMIN"))) {
             throw new Error("Non autorisé")
         }
 

@@ -79,8 +79,8 @@ export async function createLeaveRequest(
         }
     })
 
-    // 1. In-app notifications for RH & Employee
-    const rhUsers = await prisma.user.findMany({ where: { roles: { has: 'RH' } } })
+    // 1. In-app notifications for RH & Admin & Employee
+    const rhUsers = await prisma.user.findMany({ where: { OR: [{ roles: { has: 'RH' } }, { roles: { has: 'ADMIN' } }] } })
     const userName = user.name || `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.email || "Utilisateur";
 
     const notifications: any[] = rhUsers.map(rh => ({
@@ -140,8 +140,8 @@ export async function createLeaveRequest(
 export async function updateLeaveRequestStatus(requestId: string, status: 'APPROVED' | 'REJECTED', comment?: string) {
     const session = await auth()
 
-    if (!session?.user || !(session.user as any).roles?.includes("RH")) {
-        throw new Error("Action non autorisée. Réservé aux RH.")
+    if (!session?.user || (!(session.user as any).roles?.includes("RH") && !(session.user as any).roles?.includes("ADMIN"))) {
+        throw new Error("Action non autorisée. Réservé aux RH et Admins.")
     }
 
     const updatedRequest = await prisma.leaveRequest.update({

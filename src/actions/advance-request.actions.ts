@@ -16,9 +16,9 @@ const AdvanceRequestSchema = z.object({
 export async function updateRequestStatus(requestId: string, status: "APPROVED" | "REJECTED", comment?: string) {
     const session = await auth()
 
-    // Security check: Only RH can approve/reject
-    if (!(session?.user as any)?.roles?.includes("RH")) {
-        throw new Error("Unauthorized: Only RH can update request status")
+    // Security check: Only RH or ADMIN can approve/reject
+    if (!(session?.user as any)?.roles?.includes("RH") && !(session?.user as any)?.roles?.includes("ADMIN")) {
+        throw new Error("Unauthorized: Only RH or ADMIN can update request status")
     }
 
     const request = await prisma.advanceRequest.update({
@@ -133,8 +133,8 @@ export async function createAdvanceRequest(amount: number, reason: string) {
             include: { user: true }
         })
 
-        // 1. In-app notifications for RH & Employee
-        const rhUsers = await prisma.user.findMany({ where: { roles: { has: 'RH' } } })
+        // 1. In-app notifications for RH & Admin & Employee
+        const rhUsers = await prisma.user.findMany({ where: { OR: [{ roles: { has: 'RH' } }, { roles: { has: 'ADMIN' } }] } })
         const userName = request.user.name || `${request.user.firstName || ''} ${request.user.lastName || ''}`.trim() || request.user.email || "Utilisateur";
 
         const notifications: any[] = rhUsers.map(rh => ({
