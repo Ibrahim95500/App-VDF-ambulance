@@ -181,6 +181,9 @@ export function RegulationView() {
                                 onSelect={(d) => d && setDate(d)}
                                 initialFocus
                                 locale={fr}
+                                modifiersClassNames={{
+                                    today: "text-purple-600 dark:text-purple-400 font-black [&>*]:after:!bg-purple-500 dark:[&>*]:after:!bg-purple-400"
+                                }}
                             />
                         </PopoverContent>
                     </Popover>
