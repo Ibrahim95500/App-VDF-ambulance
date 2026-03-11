@@ -79,7 +79,8 @@ export function AssignmentDialog({
         }
     }, [isOpen, initialData])
 
-    // On récupère tous les IDs des personnes déjà assignées sur d'AUTRES véhicules à cette date
+    // On récupère tous les IDs des personnes déjà assignées sur d'AUTRES véhicules À CETTE DATE uniquement.
+    // Chaque date est indépendante : être assigné le 11/03 ne bloque pas le 12/03.
     const assignedIds = new Set<string>();
     vehicles.forEach(v => {
         if (v.id !== vehicleId && v.assignments && v.assignments.length > 0) {
@@ -89,12 +90,29 @@ export function AssignmentDialog({
         }
     });
 
-    // Tous les salariés actifs non déjà assignés ailleurs ce jour-là
-    const availablePersonnel = personnel.filter(p => !assignedIds.has(p.id));
-    // Leaders : uniquement ceux avec isTeamLeader = true
-    const availableLeaders = availablePersonnel.filter(p => p.isTeamLeader === true);
-    // Co-équipiers : tous les salariés disponibles (pas de restriction de structure)
-    const availableTeammates = availablePersonnel;
+    /**
+     * Compatibilité structure ↔ type de véhicule :
+     *   MARK unit → MARK, LES_2, ou null (polyvalent)
+     *   VDF unit  → VDF,  LES_2, ou null (polyvalent)
+     * Ainsi un profil LES_2 ou sans structure définie peut aller partout.
+     */
+    const isCompatible = (pStructure: string | null | undefined, vehicleCategory: 'MARK' | 'VDF'): boolean => {
+        if (!pStructure || pStructure === 'LES_2') return true;  // polyvalent
+        return pStructure === vehicleCategory;
+    };
+
+    // Personnel libre ce jour-là (pas déjà affecté sur un autre véhicule aujourd'hui)
+    const freePersonnel = personnel.filter(p => !assignedIds.has(p.id));
+
+    // Responsables : isTeamLeader = true ET structure compatible avec le véhicule
+    const availableLeaders = freePersonnel.filter(p =>
+        p.isTeamLeader === true && isCompatible(p.structure, category)
+    );
+
+    // Co-équipiers : structure compatible (aucune contrainte sur isTeamLeader)
+    const availableTeammates = freePersonnel.filter(p =>
+        isCompatible(p.structure, category)
+    );
 
     const isSamePerson = leaderId !== "" && teammateId !== "" && leaderId === teammateId;
 
