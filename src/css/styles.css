@@ -29,3 +29,18 @@
 /** Dark/Light Theme Variant **/
 @custom-variant dark (&:is(.dark *));
 @custom-variant light (&:not(.dark *));
+
+/** Calendrier Régulation - Pastille Lendemain (Bleu) **/
+.rdp-tomorrow > button::after {
+  content: '';
+  pointer-events: none;
+  position: absolute;
+  bottom: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 5px;
+  height: 5px;
+  border-radius: 9999px;
+  background-color: #3b82f6; /* blue-500 */
+  transition: background-color 0.2s;
+}
