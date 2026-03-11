@@ -19,7 +19,7 @@ import {
     SelectTrigger,
     SelectValue
 } from "@/components/ui/select"
-import { User, ShieldCheck, Clock, CheckCircle2, Loader2 } from "lucide-react"
+import { User, ShieldCheck, Clock, CheckCircle2, Loader2, AlertCircle } from "lucide-react"
 import { saveAssignment } from "@/actions/regulation.actions"
 import { toast } from "sonner"
 
@@ -39,7 +39,10 @@ interface AssignmentDialogProps {
     plateNumber: string
     category: 'MARK' | 'VDF'
     date: Date
+    dateStr: string
     personnel: Personnel[]
+    vehicles?: any[]
+    onSuccess: () => void
     initialData?: {
         leaderId?: string
         teammateId?: string
@@ -55,7 +58,10 @@ export function AssignmentDialog({
     plateNumber,
     category,
     date,
+    dateStr,
     personnel,
+    vehicles = [],
+    onSuccess,
     initialData
 }: AssignmentDialogProps) {
     const [loading, setLoading] = useState(false)
@@ -73,13 +79,28 @@ export function AssignmentDialog({
         }
     }, [isOpen, initialData])
 
+    // On récupère tous les IDs des personnes déjà assignées sur d'AUTRES véhicules à cette date
+    const assignedIds = new Set<string>();
+    vehicles.forEach(v => {
+        if (v.id !== vehicleId && v.assignments && v.assignments.length > 0) {
+            const assignment = v.assignments[0];
+            if (assignment.leaderId) assignedIds.add(assignment.leaderId);
+            if (assignment.teammateId) assignedIds.add(assignment.teammateId);
+        }
+    });
+
+    // On filtre le personnel pour ne garder que ceux non assignés ailleurs
+    const availablePersonnel = personnel.filter(p => !assignedIds.has(p.id));
+
+    const isSamePerson = leaderId !== "" && teammateId !== "" && leaderId === teammateId;
+
     const handleSave = async () => {
         if (!leaderId || !teammateId) {
             toast.error("Veuillez sélectionner un équipage complet.")
             return
         }
 
-        if (leaderId === teammateId) {
+        if (isSamePerson) {
             toast.error("Le responsable et le co-équipier doivent être différents.")
             return
         }
@@ -90,7 +111,7 @@ export function AssignmentDialog({
                 vehicleId,
                 leaderId,
                 teammateId,
-                date,
+                dateStr,
                 startTime,
                 endTime
             })
@@ -99,6 +120,7 @@ export function AssignmentDialog({
                 toast.error(result.error)
             } else {
                 toast.success("Assignation enregistrée !")
+                onSuccess()
                 onOpenChange(false)
             }
         } catch (error: any) {
@@ -161,7 +183,7 @@ export function AssignmentDialog({
                                 <SelectValue placeholder="Choisir un responsable" />
                             </SelectTrigger>
                             <SelectContent>
-                                {personnel
+                                {availablePersonnel
                                     .filter(p => p.isTeamLeader === true)
                                     .filter(p => category === 'MARK' ? (p.structure === 'MARK' || p.structure === 'LES_2') : (p.structure === 'VDF' || p.structure === 'LES_2'))
                                     .map(p => (
@@ -186,7 +208,7 @@ export function AssignmentDialog({
                                 <SelectValue placeholder="Choisir un co-équipier" />
                             </SelectTrigger>
                             <SelectContent>
-                                {personnel
+                                {availablePersonnel
                                     .filter(p => category === 'MARK' ? (p.structure === 'MARK' || p.structure === 'LES_2') : (p.structure === 'VDF' || p.structure === 'LES_2'))
                                     .map(p => (
                                         <SelectItem key={p.id} value={p.id} className="py-3">
@@ -201,14 +223,21 @@ export function AssignmentDialog({
                     </div>
                 </div>
 
+                {isSamePerson && (
+                    <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm font-bold flex items-center gap-2 border border-red-200 animate-in fade-in slide-in-from-top-2">
+                        <AlertCircle size={18} />
+                        Action impossible : Responsable et Co-équipier identiques.
+                    </div>
+                )}
+
                 <DialogFooter className="flex gap-2 sm:gap-0">
                     <Button variant="outline" onClick={() => onOpenChange(false)} className="flex-1">
                         Annuler
                     </Button>
                     <Button
                         onClick={handleSave}
-                        disabled={loading}
-                        className="flex-1 bg-orange-600 hover:bg-orange-700 text-white font-bold"
+                        disabled={loading || isSamePerson}
+                        className="flex-1 bg-[#FF4500] hover:bg-[#CC3700] text-white font-bold"
                     >
                         {loading ? <Loader2 className="animate-spin mr-2" /> : <CheckCircle2 size={18} className="mr-2" />}
                         Enregistrer

@@ -1,9 +1,11 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { getVehiclesWithAssignments, getAvailablePersonnel } from "@/actions/regulation.actions"
+import { getVehiclesWithAssignments, getAvailablePersonnel, getRegulationHistory } from "@/actions/regulation.actions"
+import { sendPlanningsToEmployees } from "@/actions/regulation-process.actions"
 import { AmbulanceCard } from "@/components/regulation/ambulance-card"
 import { AssignmentDialog } from "@/components/regulation/assignment-dialog"
+import { HistoryTable } from "@/components/regulation/history-table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Calendar } from "@/components/ui/calendar"
@@ -16,12 +18,14 @@ import {
     Calendar as CalendarIcon,
     Ambulance,
     ChevronRight,
-    Search
+    Search,
+    Loader2
 } from "lucide-react"
 import { format } from "date-fns"
 import { fr } from "date-fns/locale"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { toast } from "sonner"
 
 export function RegulationView() {
     const [date, setDate] = useState<Date>(() => {
@@ -33,8 +37,14 @@ export function RegulationView() {
     const [vehicles, setVehicles] = useState<any[]>([])
     const [personnel, setPersonnel] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
+    const [isSending, setIsSending] = useState(false)
     const [searchTerm, setSearchTerm] = useState("")
     const [activeTab, setActiveTab] = useState<string>("ALL")
+
+    // History State
+    const [viewMode, setViewMode] = useState<'PLANNING' | 'HISTORY'>('PLANNING')
+    const [historyData, setHistoryData] = useState<any[]>([])
+    const [loadingHistory, setLoadingHistory] = useState(false)
 
     // Dialog State
     const [selectedVehicle, setSelectedVehicle] = useState<any>(null)
@@ -44,12 +54,31 @@ export function RegulationView() {
         loadData()
     }, [date])
 
+    useEffect(() => {
+        if (viewMode === 'HISTORY' && historyData.length === 0) {
+            loadHistory()
+        }
+    }, [viewMode])
+
+    const loadHistory = async () => {
+        try {
+            setLoadingHistory(true)
+            const data = await getRegulationHistory()
+            setHistoryData(data)
+        } catch (error) {
+            toast.error("Impossible de charger l'historique complet")
+        } finally {
+            setLoadingHistory(false)
+        }
+    }
+
     const loadData = async () => {
         try {
             setLoading(true)
+            const dateStr = format(date, 'yyyy-MM-dd')
             const [vData, pData] = await Promise.all([
-                getVehiclesWithAssignments(date),
-                getAvailablePersonnel(date)
+                getVehiclesWithAssignments(dateStr),
+                getAvailablePersonnel(dateStr)
             ])
             setVehicles(vData)
             setPersonnel(pData)
@@ -57,6 +86,24 @@ export function RegulationView() {
             console.error("Erreur chargement regulation:", error)
         } finally {
             setLoading(false)
+        }
+    }
+
+    const handleSendPlannings = async () => {
+        try {
+            setIsSending(true)
+            const dateStr = format(date, 'yyyy-MM-dd')
+            const result = await sendPlanningsToEmployees(dateStr)
+            
+            if (result.success) {
+                toast.success(result.message || "Plannings envoyés avec succès !")
+            } else {
+                toast.error(result.error || "Une erreur est survenue")
+            }
+        } catch (error) {
+            toast.error("Erreur serveur lors de l'envoi des plannings.")
+        } finally {
+            setIsSending(false)
         }
     }
 
@@ -108,14 +155,54 @@ export function RegulationView() {
                         </PopoverContent>
                     </Popover>
 
-                    <Button className="h-12 bg-slate-900 dark:bg-white dark:text-slate-900 font-bold px-6 rounded-xl hover:scale-105 transition-transform">
+                    <Button 
+                        onClick={handleSendPlannings}
+                        disabled={isSending}
+                        className="h-12 bg-slate-900 dark:bg-white dark:text-slate-900 font-bold px-6 rounded-xl hover:scale-105 transition-transform"
+                    >
+                        {isSending ? <Loader2 size={18} className="mr-2 animate-spin" /> : null}
                         Figer et Envoyer à 19h
-                        <ChevronRight size={18} className="ml-2" />
+                        {!isSending && <ChevronRight size={18} className="ml-2" />}
                     </Button>
                 </div>
             </div>
 
-            {/* Filters Row */}
+            {/* Main Navigation Tabs */}
+            <div className="flex w-full md:w-auto bg-slate-100 dark:bg-slate-800 p-1.5 rounded-xl border-2 border-slate-200 dark:border-slate-800">
+                <button
+                    onClick={() => setViewMode('PLANNING')}
+                    className={`flex-1 md:flex-none px-6 py-3 rounded-lg font-bold text-sm transition-all ${
+                        viewMode === 'PLANNING' 
+                            ? 'bg-white dark:bg-slate-900 shadow-sm text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700' 
+                            : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                    }`}
+                >
+                    Planification du Jour
+                </button>
+                <button
+                    onClick={() => setViewMode('HISTORY')}
+                    className={`flex-1 md:flex-none px-6 py-3 rounded-lg font-bold text-sm transition-all ${
+                        viewMode === 'HISTORY' 
+                            ? 'bg-white dark:bg-slate-900 shadow-sm text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700' 
+                            : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                    }`}
+                >
+                    Historique Passé
+                </button>
+            </div>
+
+            {viewMode === 'HISTORY' ? (
+                loadingHistory ? (
+                    <div className="py-24 flex flex-col items-center justify-center text-slate-400">
+                        <Loader2 className="animate-spin mb-4" size={32} />
+                        <p className="font-bold">Chargement de l'historique...</p>
+                    </div>
+                ) : (
+                    <HistoryTable data={historyData} />
+                )
+            ) : (
+                <>
+                    {/* Filters Row (Planning Mode ONLY) */}
             <div className="flex flex-col md:flex-row gap-4 items-center">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full md:w-auto">
                     <TabsList className="bg-slate-100 dark:bg-slate-800 p-1 rounded-xl h-12 border">
@@ -178,6 +265,8 @@ export function RegulationView() {
                     })}
                 </div>
             )}
+            </>
+            )}
 
             {/* Assignment Dialog */}
             {selectedVehicle && (
@@ -188,7 +277,10 @@ export function RegulationView() {
                     plateNumber={selectedVehicle.plateNumber}
                     category={selectedVehicle.category}
                     date={date}
+                    dateStr={format(date, 'yyyy-MM-dd')}
                     personnel={personnel}
+                    vehicles={vehicles}
+                    onSuccess={loadData}
                     initialData={selectedVehicle.assignments?.[0] ? {
                         leaderId: selectedVehicle.assignments[0].leaderId,
                         teammateId: selectedVehicle.assignments[0].teammateId,
