@@ -252,7 +252,6 @@ export async function checkConfirmationsAndPenalize(dateStr: string) {
                 await sendBrandedEmail({
                     to: admin.email,
                     from: '"VDF Robot" <vdf95rh@gmail.com>',
-                    bcc: 'rezan.selva@gmail.com',
                     subject: `[Rapport Régulation] Bilan de 21h00 - ${dateDisplay}`,
                     title: `Rapport Régulation 21h00`,
                     preheader: `Bilan de validation des équipages pour le ${dateDisplay}`,

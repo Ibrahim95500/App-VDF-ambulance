@@ -13,19 +13,15 @@ export function EditCollaboratorForm({ user, onCancel, onSuccess }: { user: any,
     const [submitting, setSubmitting] = useState(false)
 
     // Form state
-    const [roles, setRoles] = useState<string[]>(user.roles || ["SALARIE"])
+    const [role, setRole] = useState<string>((user.roles && user.roles.length > 0) ? user.roles[0] : "SALARIE")
     const [structure, setStructure] = useState<string>(user.structure || "VDF")
     const [diploma, setDiploma] = useState<string>(user.diploma || "AUXILIAIRE")
     const [shift, setShift] = useState<string>(user.shift || "JOUR")
     const [preference, setPreference] = useState<string>(user.preference || "NORMAL")
     const [isTeamLeader, setIsTeamLeader] = useState<boolean>(user.isTeamLeader || false)
 
-    const handleRoleChange = (role: string, checked: boolean) => {
-        if (checked) {
-            setRoles([...roles, role])
-        } else {
-            setRoles(roles.filter(r => r !== role))
-        }
+    const handleRoleChange = (newRole: string) => {
+        setRole(newRole)
     }
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -34,7 +30,7 @@ export function EditCollaboratorForm({ user, onCancel, onSuccess }: { user: any,
 
         try {
             const formData = new FormData()
-            roles.forEach(role => formData.append("roles", role))
+            formData.append("roles", role)
             formData.append("structure", structure)
             formData.append("diploma", diploma)
             formData.append("shift", shift)
@@ -59,26 +55,15 @@ export function EditCollaboratorForm({ user, onCancel, onSuccess }: { user: any,
         <form onSubmit={handleSubmit} className="space-y-5 py-4 animate-in fade-in duration-200 max-h-[60vh] overflow-y-auto px-1">
             <div className="space-y-3">
                 <Label className="font-bold text-muted-foreground uppercase text-xs tracking-wider">Rôles et Accès</Label>
-                <div className="grid grid-cols-2 gap-3 bg-muted/50 p-4 rounded-xl border border-border">
-                    <div className="flex items-center space-x-2">
-                        <Checkbox id="role-salarie" checked={roles.includes("SALARIE")} onCheckedChange={(c) => handleRoleChange("SALARIE", !!c)} />
-                        <label htmlFor="role-salarie" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer">
-                            Salarié
-                        </label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                        <Checkbox id="role-rh" checked={roles.includes("RH")} onCheckedChange={(c) => handleRoleChange("RH", !!c)} />
-                        <label htmlFor="role-rh" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer">
-                            Administration RH
-                        </label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                        <Checkbox id="role-regulateur" checked={roles.includes("REGULATEUR")} onCheckedChange={(c) => handleRoleChange("REGULATEUR", !!c)} />
-                        <label htmlFor="role-regulateur" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer">
-                            Régulateur
-                        </label>
-                    </div>
-                </div>
+                <Select value={role} onValueChange={handleRoleChange}>
+                    <SelectTrigger className="h-10 text-sm"><SelectValue placeholder="Sélectionnez un rôle" /></SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="SALARIE">Salarié</SelectItem>
+                        <SelectItem value="REGULATEUR">Régulateur</SelectItem>
+                        <SelectItem value="RH">Administration RH</SelectItem>
+                        <SelectItem value="ADMIN">Admin</SelectItem>
+                    </SelectContent>
+                </Select>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

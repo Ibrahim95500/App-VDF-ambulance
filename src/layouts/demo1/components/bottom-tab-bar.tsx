@@ -15,6 +15,8 @@ export function BottomTabBar() {
     const hasPrivilege = (session?.user as any)?.roles?.some((r: string) => ['RH', 'ADMIN', 'REGULATEUR'].includes(r));
     const isRegulateur = (session?.user as any)?.roles?.includes('REGULATEUR') || (session?.user as any)?.isRegulateur;
 
+    const isRealRH = (session?.user as any)?.roles?.includes('RH') || (session?.user as any)?.roles?.includes('ADMIN');
+
     // Desktop: hidden.
     if (!isMobile) return null;
 
@@ -23,23 +25,24 @@ export function BottomTabBar() {
     const safeHasPrivilege = isLoadingOrEmpty ? true : hasPrivilege;
     const safeIsRegulateur = isLoadingOrEmpty ? true : isRegulateur;
     const safeIsAdmin = isLoadingOrEmpty ? true : (session?.user as any)?.roles?.includes('ADMIN');
+    const safeIsRealRH = isLoadingOrEmpty ? true : isRealRH;
 
     const isRHSection = pathname.startsWith('/dashboard/rh');
 
     // Determine tabs based on current view
     const navItems = isRHSection
         ? [
-            { label: 'Accueil', href: '/dashboard/rh', icon: Home },
+            safeIsRealRH ? { label: 'Accueil', href: '/dashboard/rh', icon: Home } : null,
             { label: 'Régule RH', href: '/dashboard/rh/regulation', icon: Siren },
-            { label: 'Équipe', href: '/dashboard/rh/collaborateurs', icon: Users },
+            safeIsRealRH ? { label: 'Équipe', href: '/dashboard/rh/collaborateurs', icon: Users } : null,
             { label: 'Côté Salarié', href: '/dashboard/salarie', icon: ArrowLeftRight, isSwitch: true }
-        ]
+        ].filter(Boolean) as any[]
         : [
             { label: 'Acomptes', href: '/dashboard/salarie', icon: Banknote },
             { label: 'RDV', href: '/dashboard/salarie/rendez-vous', icon: CalendarDays },
             { label: 'Services', href: '/dashboard/salarie/services', icon: LifeBuoy },
             { label: safeIsRegulateur ? 'Régulation' : 'Régule Salarié', href: '/dashboard/salarie/regulation', icon: Siren },
-            safeHasPrivilege ? { label: 'Côté' + (safeIsAdmin ? ' RH' : ' RH'), href: '/dashboard/rh', icon: ArrowLeftRight, isSwitch: true } : null
+            safeHasPrivilege ? { label: 'Côté RH', href: safeIsRealRH ? '/dashboard/rh' : '/dashboard/rh/regulation', icon: ArrowLeftRight, isSwitch: true } : null
         ].filter(Boolean) as any[];
 
     return (

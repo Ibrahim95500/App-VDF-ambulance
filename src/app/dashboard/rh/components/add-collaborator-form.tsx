@@ -68,25 +68,13 @@ export function AddCollaboratorForm() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-3">
-                            <Label>Rôles <span className="text-red-500">*</span></Label>
-                            <div className="flex flex-col gap-2 p-3 border border-border rounded-md bg-muted/20">
-                                <label className="flex items-center gap-2 text-sm cursor-pointer">
-                                    <input type="checkbox" name="roles" value="SALARIE" defaultChecked className="rounded border-gray-300 text-secondary focus:ring-secondary size-4" />
-                                    <span>Salarié</span>
-                                </label>
-                                <label className="flex items-center gap-2 text-sm cursor-pointer">
-                                    <input type="checkbox" name="roles" value="REGULATEUR" className="rounded border-gray-300 text-secondary focus:ring-secondary size-4" />
-                                    <span>Régulateur</span>
-                                </label>
-                                <label className="flex items-center gap-2 text-sm cursor-pointer">
-                                    <input type="checkbox" name="roles" value="RH" className="rounded border-gray-300 text-secondary focus:ring-secondary size-4" />
-                                    <span>RH</span>
-                                </label>
-                                <label className="flex items-center gap-2 text-sm cursor-pointer">
-                                    <input type="checkbox" name="roles" value="ADMIN" className="rounded border-gray-300 text-secondary focus:ring-secondary size-4" />
-                                    <span>Admin</span>
-                                </label>
-                            </div>
+                            <Label htmlFor="roles">Rôle <span className="text-red-500">*</span></Label>
+                            <select id="roles" name="roles" required className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
+                                <option value="SALARIE">Salarié</option>
+                                <option value="REGULATEUR">Régulateur</option>
+                                <option value="RH">RH</option>
+                                <option value="ADMIN">Admin</option>
+                            </select>
                         </div>
 
                         <div className="space-y-4">
