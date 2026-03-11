@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { getVehiclesWithAssignments, getAvailablePersonnel, getRegulationHistory } from "@/actions/regulation.actions"
-import { sendPlanningsToEmployees } from "@/actions/regulation-process.actions"
+
 import { AmbulanceCard } from "@/components/regulation/ambulance-card"
 import { AssignmentDialog } from "@/components/regulation/assignment-dialog"
 import { HistoryTable } from "@/components/regulation/history-table"
@@ -37,7 +37,7 @@ export function RegulationView() {
     const [vehicles, setVehicles] = useState<any[]>([])
     const [personnel, setPersonnel] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
-    const [isSending, setIsSending] = useState(false)
+
     const [searchTerm, setSearchTerm] = useState("")
     const [activeTab, setActiveTab] = useState<string>("ALL")
 
@@ -89,23 +89,7 @@ export function RegulationView() {
         }
     }
 
-    const handleSendPlannings = async () => {
-        try {
-            setIsSending(true)
-            const dateStr = format(date, 'yyyy-MM-dd')
-            const result = await sendPlanningsToEmployees(dateStr)
-            
-            if (result.success) {
-                toast.success(result.message || "Plannings envoyés avec succès !")
-            } else {
-                toast.error(result.error || "Une erreur est survenue")
-            }
-        } catch (error) {
-            toast.error("Erreur serveur lors de l'envoi des plannings.")
-        } finally {
-            setIsSending(false)
-        }
-    }
+
 
     const filteredVehicles = vehicles.filter(v => {
         const matchesSearch = v.plateNumber.toLowerCase().includes(searchTerm.toLowerCase())
@@ -118,6 +102,39 @@ export function RegulationView() {
         MARK: vehicles.filter(v => v.category === 'MARK').length,
         VDF: vehicles.filter(v => v.category === 'VDF').length,
     }
+
+    const currentHour = new Date().getHours();
+    const isTomorrow = new Date(date).setHours(0,0,0,0) === new Date(new Date().setDate(new Date().getDate() + 1)).setHours(0,0,0,0);
+    const isToday = new Date(date).setHours(0,0,0,0) === new Date().setHours(0,0,0,0);
+    const isPast = new Date(date).setHours(0,0,0,0) < new Date().setHours(0,0,0,0);
+
+    let totalEquipages = 0;
+    let validated = 0;
+    vehicles.forEach(v => {
+        if (v.assignments && v.assignments.length > 0) {
+            totalEquipages++;
+            if (v.assignments[0].status === 'CONFIRMED') validated++;
+        }
+    });
+
+    const getStatusDisplay = () => {
+        if (isPast) return { label: "Terminé (Historique)", className: "bg-slate-200 text-slate-800 border-slate-300" };
+        if (isToday) return { label: "En service (Jour J)", className: "bg-purple-100 text-purple-800 border-purple-300" };
+        
+        if (isTomorrow) {
+            if (currentHour < 19) {
+                return { label: "Heure de Planification", className: "bg-blue-100 text-blue-800 border-blue-300 animate-pulse" };
+            } else if (currentHour >= 19 && currentHour < 21) {
+                return { label: `En cours de validation (${validated}/${totalEquipages} validés)`, className: "bg-orange-100 text-orange-800 border-orange-300 font-bold shadow-sm" };
+            } else {
+                return { label: "Terminé : Préparez le planning du jour suivant", className: "bg-green-100 text-green-800 border-green-300 font-bold" };
+            }
+        }
+
+        return { label: "Planification en avance", className: "bg-blue-50 text-blue-600 border-blue-200" };
+    };
+
+    const statusObj = getStatusDisplay();
 
     return (
         <div className="flex flex-col gap-6 p-6 pb-24">
@@ -155,15 +172,10 @@ export function RegulationView() {
                         </PopoverContent>
                     </Popover>
 
-                    <Button 
-                        onClick={handleSendPlannings}
-                        disabled={isSending}
-                        className="h-12 bg-slate-900 dark:bg-white dark:text-slate-900 font-bold px-6 rounded-xl hover:scale-105 transition-transform"
-                    >
-                        {isSending ? <Loader2 size={18} className="mr-2 animate-spin" /> : null}
-                        Figer et Envoyer à 19h
-                        {!isSending && <ChevronRight size={18} className="ml-2" />}
-                    </Button>
+                    <div className={`px-4 py-2 rounded-xl border-2 ${statusObj.className} flex items-center gap-2 h-12`}>
+                        <div className={`w-2 h-2 rounded-full ${statusObj.className.includes('blue') ? 'bg-blue-500' : statusObj.className.includes('orange') ? 'bg-orange-500' : statusObj.className.includes('green') ? 'bg-green-500' : statusObj.className.includes('purple') ? 'bg-purple-500' : 'bg-slate-500'}`}></div>
+                        <span className="text-sm">{statusObj.label}</span>
+                    </div>
                 </div>
             </div>
 
