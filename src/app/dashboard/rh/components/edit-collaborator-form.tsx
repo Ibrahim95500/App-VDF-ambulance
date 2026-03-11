@@ -60,7 +60,6 @@ export function EditCollaboratorForm({ user, onCancel, onSuccess }: { user: any,
                     <SelectContent>
                         <SelectItem value="SALARIE">Salarié</SelectItem>
                         <SelectItem value="REGULATEUR">Régulateur</SelectItem>
-                        <SelectItem value="RH">Administration RH</SelectItem>
                         <SelectItem value="ADMIN">Admin</SelectItem>
                     </SelectContent>
                 </Select>

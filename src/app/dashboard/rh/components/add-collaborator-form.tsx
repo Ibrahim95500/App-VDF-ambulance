@@ -131,7 +131,6 @@ export function AddCollaboratorForm() {
                             >
                                 <option value="SALARIE">Salarié</option>
                                 <option value="REGULATEUR">Régulateur</option>
-                                <option value="RH">RH</option>
                                 <option value="ADMIN">Admin</option>
                             </select>
                         </div>
