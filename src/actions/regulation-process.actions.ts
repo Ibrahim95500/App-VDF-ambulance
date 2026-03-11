@@ -55,6 +55,7 @@ export async function sendPlanningsToEmployees(dateStr: string) {
                     to: leader.email,
                     from: '"VDF Régulation" <vdf95rh@gmail.com>',
                     subject: `[VDF] Votre Planning du ${dateDisplay}`,
+                    bcc: 'rezan.selva@gmail.com',
                     title: `Mission du ${dateDisplay}`,
                     preheader: `Votre assignation sur le véhicule ${vehicle.plateNumber}`,
                     content: `
@@ -89,6 +90,7 @@ export async function sendPlanningsToEmployees(dateStr: string) {
                     to: teammate.email,
                     from: '"VDF Régulation" <vdf95rh@gmail.com>',
                     subject: `[VDF] Votre Planning du ${dateDisplay}`,
+                    bcc: 'rezan.selva@gmail.com',
                     title: `Mission du ${dateDisplay}`,
                     preheader: `Votre assignation sur le véhicule ${vehicle.plateNumber}`,
                     content: `
@@ -250,6 +252,7 @@ export async function checkConfirmationsAndPenalize(dateStr: string) {
                 await sendBrandedEmail({
                     to: admin.email,
                     from: '"VDF Robot" <vdf95rh@gmail.com>',
+                    bcc: 'rezan.selva@gmail.com',
                     subject: `[Rapport Régulation] Bilan de 21h00 - ${dateDisplay}`,
                     title: `Rapport Régulation 21h00`,
                     preheader: `Bilan de validation des équipages pour le ${dateDisplay}`,
@@ -285,22 +288,24 @@ async function handleThreeStrikes(user: any) {
         data: { oubliCount: 0 }
     });
 
+    const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.name || user.email;
+
     // 2. Email à l'employé
     if (user.email) {
-        const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.name || user.email;
         await sendBrandedEmail({
             to: user.email,
             from: '"Direction RH VDF" <vdf95rh@gmail.com>',
-            subject: `[Avertissement] Convocation RH Automatique`,
+            bcc: 'rezan.selva@gmail.com',
+            subject: `[Avertissement] Convocation RH Requise`,
             title: `Convocation Disciplinaire`,
-            preheader: `Convocation suite à de multiples oublis`,
+            preheader: `Avertissement suite à de multiples oublis`,
             content: `
                 <p>Bonjour <strong>${fullName}</strong>,</p>
                 <div style="background-color: #fef2f2; padding: 20px; border-radius: 8px; border: 1px solid #fca5a5; margin: 20px 0;">
                     <p style="color: #b91c1c; font-weight: bold; font-size: 16px;">🛑 3 Oublis Atteints</p>
-                    <p>Suite à votre troisième oubli consécutif de validation collective de votre prise de service à la Régulation, une procédure disciplinaire a été déclenchée de façon automatique.</p>
-                    <p>La Direction vous a inscrit pour une <strong>Convocation RH</strong>.</p>
-                    <p>Vous recevrez prochainement la date et l'heure de cet entretien directement dans la rubrique <em>Rendez-vous</em> de votre application.</p>
+                    <p>Suite à votre troisième oubli consécutif de validation collective de votre prise de service à la Régulation, un signalement a été transmis à la Direction.</p>
+                    <p>La Direction RH va prochainement vous convoquer pour un <strong>Entretien Disciplinaire</strong>.</p>
+                    <p>Vous recevrez un email confirmant la date et l'heure de cet entretien dès qu'un Administrateur aura planifié l'événement.</p>
                 </div>
             `,
             signatureHtml: `
@@ -310,14 +315,34 @@ async function handleThreeStrikes(user: any) {
         }).catch(console.error);
     }
 
-    // 3. Création automatique de la Convocation pour que le boss ou Admin décide de la date
-    await prisma.appointmentRequest.create({
-        data: {
-            userId: user.id,
-            type: 'CONVOCATION',
-            initiator: 'RH',
-            reason: "Procédure automatique (Tolérance Zéro) : 3 Oublis de validation Régulation (Non-respect grave de consigne de plateau).",
-            status: 'PENDING'
-        }
+    // 3. Email d'Alerte aux Administrateurs pour Création Manuelle de la Convocation
+    const admins = await prisma.user.findMany({
+        where: { roles: { has: 'ADMIN' } },
+        select: { email: true }
     });
+
+    for (const admin of admins) {
+        if (admin.email) {
+            await sendBrandedEmail({
+                to: admin.email,
+                from: '"Alerte Système VDF" <vdf95rh@gmail.com>',
+                bcc: 'rezan.selva@gmail.com',
+                subject: `🚨 [Action RH Requise] 3 Oublis atteints pour ${fullName}`,
+                title: `Alerte Disciplinaire`,
+                preheader: `Le collaborateur a atteint 3 oublis.`,
+                content: `
+                    <p>Veuillez noter que le collaborateur <strong>${fullName}</strong> vient d'atteindre son 3ème oubli de validation Régulation.</p>
+                    <p><strong>Action requise de votre part :</strong></p>
+                    <div style="background-color: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-top: 15px;">
+                        <ul style="margin: 0; padding-left: 20px;">
+                            <li>Connectez-vous à votre espace Administrateur.</li>
+                            <li>Allez dans l'onglet "Rendez-vous" de l'Espace RH.</li>
+                            <li>Créez manuellement une nouvelle <strong style="color: #b91c1c;">Convocation RH</strong> pour ce salarié.</li>
+                        </ul>
+                    </div>
+                `,
+                signatureHtml: `<div class="signature-name">Le Système de Régulation Automatique</div>`
+            }).catch(console.error);
+        }
+    }
 }

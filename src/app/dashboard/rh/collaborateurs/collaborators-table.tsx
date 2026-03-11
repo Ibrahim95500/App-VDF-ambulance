@@ -39,6 +39,7 @@ interface User {
     birthDate: Date | null
     isActive?: boolean
     deletionReason?: string | null
+    oubliCount?: number
 }
 
 export function CollaboratorsTable({ initialData, services = [] }: { initialData: User[], services?: any[] }) {
@@ -297,8 +298,11 @@ export function CollaboratorsTable({ initialData, services = [] }: { initialData
                         <div className="flex flex-col grow gap-1.5 min-w-0">
                             <div className="flex items-start justify-between gap-2">
                                 <div className="min-w-0">
-                                    <p className={`font-bold text-sm truncate ${(user as any).isActive === false ? 'text-red-700' : 'text-foreground'}`}>
+                                    <p className={`font-bold text-sm truncate flex items-center ${(user as any).isActive === false ? 'text-red-700' : 'text-foreground'}`}>
                                         {(user.firstName || user.lastName) ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : (user.name || "-")}
+                                        {user.oubliCount && user.oubliCount >= 3 && (
+                                            <span className="ml-2 inline-flex items-center text-[9px] font-black text-white bg-red-600 px-1.5 py-0.5 rounded shadow-sm shadow-red-200 tracking-wider">🚨 3 OUBLIS</span>
+                                        )}
                                     </p>
                                     <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                                 </div>
@@ -373,6 +377,11 @@ export function CollaboratorsTable({ initialData, services = [] }: { initialData
                                                 <span className={`font-bold text-base leading-tight ${(user as any).isActive === false ? 'text-red-700' : 'text-foreground'}`}>
                                                     {(user.firstName || user.lastName) ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : (user.name || "-")}
                                                 </span>
+                                                {user.oubliCount && user.oubliCount >= 3 && (
+                                                    <span className="inline-flex items-center gap-1 mt-1 text-[10px] font-bold text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded w-fit shadow-sm shadow-red-100">
+                                                        <ShieldAlertIcon className="w-3 h-3" /> ALERTE : 3 OUBLIS ATTEINTS
+                                                    </span>
+                                                )}
                                                 <span className="text-[11px] text-muted-foreground mt-1 underline decoration-primary/30">{user.email}</span>
                                             </div>
                                         </div>
@@ -527,7 +536,14 @@ export function CollaboratorsTable({ initialData, services = [] }: { initialData
                                 </div>
                             )}
                             <div>
-                                <p className="font-black text-base">{selectedUser?.firstName} {selectedUser?.lastName}</p>
+                                <p className="font-black text-base flex items-center">
+                                    {selectedUser?.firstName} {selectedUser?.lastName}
+                                    {selectedUser?.oubliCount && selectedUser.oubliCount >= 3 && (
+                                        <span className="ml-3 inline-flex items-center text-[10px] font-black bg-red-500 text-white px-2 py-0.5 rounded shadow-sm tracking-wide">
+                                            🚨 3 OUBLIS
+                                        </span>
+                                    )}
+                                </p>
                                 <p className="text-xs text-slate-400">{selectedUser?.email}</p>
                             </div>
                         </div>
@@ -591,9 +607,15 @@ export function CollaboratorsTable({ initialData, services = [] }: { initialData
 
                             {!isConvoking && selectedUser?.roles?.includes('SALARIE') && (selectedUser as any)?.isActive !== false && (
                                 <div className="pt-4 border-t border-border">
+                                    {selectedUser.oubliCount && selectedUser.oubliCount >= 3 && (
+                                        <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                                            <p className="text-xs font-bold text-red-800 flex items-center gap-1.5 mb-1"><ShieldAlertIcon className="w-4 h-4"/> Action Requise Absolue</p>
+                                            <p className="text-[11px] text-red-600 leading-tight">Ce collaborateur a atteint 3 oublis de validation de planification à la régulation. Vous devez procéder à l'envoi d'une convocation RH ci-dessous.</p>
+                                        </div>
+                                    )}
                                     <button
                                         onClick={() => setIsConvoking(true)}
-                                        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 text-sm font-bold transition-colors"
+                                        className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-lg border text-sm font-bold transition-all shadow-sm ${selectedUser.oubliCount && selectedUser.oubliCount >= 3 ? 'bg-red-600 text-white border-red-700 hover:bg-red-700 hover:shadow-red-200 shadow-md' : 'border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100'}`}
                                     >
                                         <Calendar className="w-4 h-4" /> Convoquer ce salarié
                                     </button>

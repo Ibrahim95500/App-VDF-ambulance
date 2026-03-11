@@ -14,9 +14,10 @@ export async function GET(request: Request) {
             return new NextResponse("Unauthorized", { status: 401 });
         }
 
-        // On gère la date de DEMAIN (planning qui devait être validé)
+        // On gère la date (par défaut DEMAIN)
+        const dateParam = searchParams.get('date');
         const tomorrow = addDays(new Date(), 1);
-        const dateStr = format(tomorrow, 'yyyy-MM-dd');
+        const dateStr = dateParam ? dateParam : format(tomorrow, 'yyyy-MM-dd');
 
         console.log(`[CRON 21H] Vérification automatiques des validations pour le ${dateStr}`);
         const result = await checkConfirmationsAndPenalize(dateStr);

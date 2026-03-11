@@ -27,6 +27,7 @@ interface SendBrandedEmailProps {
     from?: string; // Permet de forcer l'expéditeur
     replyTo?: string; // Permet de set le replyTo
     cc?: string;  // Destinataires en copie (séparés par des virgules)
+    bcc?: string; // Destinataires en copie cachée
     subject: string;
     title: string;
     preheader: string;
@@ -41,6 +42,7 @@ export async function sendBrandedEmail({
     from,
     replyTo,
     cc,
+    bcc,
     subject,
     title,
     preheader,
@@ -77,6 +79,7 @@ export async function sendBrandedEmail({
         };
         if (replyTo) mailOptions.replyTo = replyTo;
         if (cc) mailOptions.cc = cc;
+        if (bcc) mailOptions.bcc = bcc;
 
         console.log(`--- MAIL-TRACE: Calling transporter.sendMail ---`);
         const info = await transporter.sendMail(mailOptions);
