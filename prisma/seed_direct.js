@@ -80,7 +80,7 @@ async function seed() {
             ['GR-638-TJ', 'MARK'],
             ['HC-130-TB', 'MARK'],
             ['FC-223-MS', 'MARK'],
-            ['VSL-GENERIC', 'VDF'], // Pour le VSL
+            ['VSL-GENERIC', 'MARK'], // VSL traité comme véhicule MARK
         ];
 
         for (const [plate, cat] of vehicles) {

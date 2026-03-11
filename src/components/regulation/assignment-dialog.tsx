@@ -89,8 +89,12 @@ export function AssignmentDialog({
         }
     });
 
-    // On filtre le personnel pour ne garder que ceux non assignés ailleurs
+    // Tous les salariés actifs non déjà assignés ailleurs ce jour-là
     const availablePersonnel = personnel.filter(p => !assignedIds.has(p.id));
+    // Leaders : uniquement ceux avec isTeamLeader = true
+    const availableLeaders = availablePersonnel.filter(p => p.isTeamLeader === true);
+    // Co-équipiers : tous les salariés disponibles (pas de restriction de structure)
+    const availableTeammates = availablePersonnel;
 
     const isSamePerson = leaderId !== "" && teammateId !== "" && leaderId === teammateId;
 
@@ -172,9 +176,7 @@ export function AssignmentDialog({
                                 <SelectValue placeholder="Choisir un responsable" />
                             </SelectTrigger>
                             <SelectContent>
-                                {availablePersonnel
-                                    .filter(p => p.isTeamLeader === true)
-                                    .filter(p => category === 'MARK' ? (p.structure === 'MARK' || p.structure === 'LES_2') : (p.structure === 'VDF' || p.structure === 'LES_2'))
+                                {availableLeaders
                                     .map(p => (
                                         <SelectItem key={p.id} value={p.id} className="py-3">
                                             <div className="flex flex-col">
@@ -197,8 +199,7 @@ export function AssignmentDialog({
                                 <SelectValue placeholder="Choisir un co-équipier" />
                             </SelectTrigger>
                             <SelectContent>
-                                {availablePersonnel
-                                    .filter(p => category === 'MARK' ? (p.structure === 'MARK' || p.structure === 'LES_2') : (p.structure === 'VDF' || p.structure === 'LES_2'))
+                                {availableTeammates
                                     .map(p => (
                                         <SelectItem key={p.id} value={p.id} className="py-3">
                                             <div className="flex flex-col">
