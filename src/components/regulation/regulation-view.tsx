@@ -40,6 +40,12 @@ export function RegulationView() {
 
     const [searchTerm, setSearchTerm] = useState("")
     const [activeTab, setActiveTab] = useState<string>("ALL")
+    const [currentTime, setCurrentTime] = useState(new Date())
+
+    useEffect(() => {
+        const timer = setInterval(() => setCurrentTime(new Date()), 60000); // Met à jour chaque minute
+        return () => clearInterval(timer);
+    }, []);
 
     // History State
     const [viewMode, setViewMode] = useState<'PLANNING' | 'HISTORY'>('PLANNING')
@@ -103,7 +109,7 @@ export function RegulationView() {
         VDF: vehicles.filter(v => v.category === 'VDF').length,
     }
 
-    const currentHour = new Date().getHours();
+    const currentHour = currentTime.getHours();
     const isTomorrow = new Date(date).setHours(0,0,0,0) === new Date(new Date().setDate(new Date().getDate() + 1)).setHours(0,0,0,0);
     const isToday = new Date(date).setHours(0,0,0,0) === new Date().setHours(0,0,0,0);
     const isPast = new Date(date).setHours(0,0,0,0) < new Date().setHours(0,0,0,0);
@@ -123,7 +129,14 @@ export function RegulationView() {
         
         if (isTomorrow) {
             if (currentHour < 19) {
-                return { label: "Heure de Planification", className: "bg-blue-100 text-blue-800 border-blue-300 animate-pulse" };
+                const targetTime = new Date(currentTime);
+                targetTime.setHours(19, 0, 0, 0);
+                const diffMs = targetTime.getTime() - currentTime.getTime();
+                const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
+                const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+                const timeStr = `${diffHrs}h ${diffMins}m`;
+
+                return { label: `Planification en cours (${timeStr} restants)`, className: "bg-blue-100 text-blue-800 border-blue-300 animate-pulse" };
             } else if (currentHour >= 19 && currentHour < 21) {
                 return { label: `En cours de validation (${validated}/${totalEquipages} validés)`, className: "bg-orange-100 text-orange-800 border-orange-300 font-bold shadow-sm" };
             } else {
