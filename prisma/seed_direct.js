@@ -1,4 +1,4 @@
-require('dotenv').config();
+try { require('dotenv').config(); } catch(e) { /* En production/VPS, DATABASE_URL est injectée par Docker */ }
 const { Client } = require('pg');
 
 const connectionString = process.env.DATABASE_URL;
