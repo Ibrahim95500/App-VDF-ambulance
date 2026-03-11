@@ -30,8 +30,8 @@ async function seed() {
         const mainUsers = [
             // Comptes Administratifs
             ['ibrahim-id', 'ibrahim.nifa01@gmail.com', 'Ibrahim NIFA', 'Ibrahim', 'NIFA', '{"SALARIE"}', false, IBRAHIM_HASH, 'LES_2', 'DEA', 'JOUR', 'NORMAL', false],
-            ['hamid-id', 'ambulancemark@gmail.com', 'Hamid CHEIKH', 'Hamid', 'CHEIKH', '{"SALARIE", "RH"}', false, HAMID_HASH, null, null, null, null, false],
-            ['rezan-id', 'rezan.selva@gmail.com', 'Rezan SELVA', 'Rezan', 'SELVA', '{"SALARIE", "REGULATEUR", "ADMIN"}', true, REZAN_HASH, 'MARK', 'DEA', 'JOUR', 'NORMAL', false],
+            ['hamid-id', 'ambulancemark@gmail.com', 'Hamid CHEIKH', 'Hamid', 'CHEIKH', '{"ADMIN", "RH"}', false, HAMID_HASH, null, null, null, null, false],
+            ['rezan-id', 'rezan.selva@gmail.com', 'Rezan SELVA', 'Rezan', 'SELVA', '{"ADMIN", "REGULATEUR"}', true, REZAN_HASH, 'MARK', 'DEA', 'JOUR', 'NORMAL', false],
 
             // Employés Réels (MARK)
             ['dahm-id', 'dahm@vdf.fr', 'Dahm', 'Dahm', '', '{"SALARIE"}', false, TEST_HASH, 'MARK', 'AUXILIAIRE', 'JOUR', 'MATIN', true],
