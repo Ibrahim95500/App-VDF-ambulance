@@ -58,7 +58,6 @@ export function MyAssignment({ assignment }: MyAssignmentProps) {
                 teammateName={`${assignment.teammate.lastName} ${assignment.teammate.firstName}`}
                 status={status}
                 startTime={assignment.startTime}
-                endTime={assignment.endTime}
             />
 
             {status === 'PENDING' && isWindowOpen && (

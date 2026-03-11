@@ -82,8 +82,8 @@ export function HistoryDetailsDialog({ isOpen, onOpenChange, assignment }: Histo
                             <Clock size={18} className="text-slate-500" />
                         </div>
                         <div>
-                            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Horaires de service</div>
-                            <div className="font-bold text-base">{assignment.startTime} <span className="text-slate-400 font-normal mx-1">à</span> {assignment.endTime}</div>
+                            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Heure de prise de service</div>
+                            <div className="font-bold text-base">{assignment.startTime}</div>
                         </div>
                     </div>
 

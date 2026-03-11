@@ -152,25 +152,14 @@ export function AssignmentDialog({
 
                 <div className="grid gap-6 py-4">
                     {/* Horaires */}
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label className="text-xs font-bold uppercase opacity-60">Prise de service</Label>
-                            <Input
-                                type="time"
-                                value={startTime}
-                                onChange={(e) => setStartTime(e.target.value)}
-                                className="font-bold"
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label className="text-xs font-bold uppercase opacity-60">Fin de service</Label>
-                            <Input
-                                type="time"
-                                value={endTime}
-                                onChange={(e) => setEndTime(e.target.value)}
-                                className="font-bold"
-                            />
-                        </div>
+                    <div className="space-y-2">
+                        <Label className="text-xs font-bold uppercase opacity-60">Prise de service</Label>
+                        <Input
+                            type="time"
+                            value={startTime}
+                            onChange={(e) => setStartTime(e.target.value)}
+                            className="font-bold"
+                        />
                     </div>
 
                     {/* Responsable */}

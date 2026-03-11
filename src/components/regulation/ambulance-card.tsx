@@ -82,7 +82,7 @@ export function AmbulanceCard({
                     {startTime && (
                         <Badge variant="outline" className="flex items-center gap-1.5 font-bold bg-white/50 backdrop-blur-sm border-slate-200">
                             <Clock size={12} className="text-primary" />
-                            {startTime} - {endTime || '??'}
+                            {startTime}
                         </Badge>
                     )}
                 </div>

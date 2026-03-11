@@ -177,7 +177,7 @@ export function HistoryTable({ data }: HistoryTableProps) {
                                     </TableCell>
                                     <TableCell>
                                         <span className="bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-md text-xs font-bold whitespace-nowrap">
-                                            {item.startTime} - {item.endTime}
+                                            {item.startTime}
                                         </span>
                                     </TableCell>
                                     <TableCell>
