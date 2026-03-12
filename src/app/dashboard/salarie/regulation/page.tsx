@@ -62,10 +62,12 @@ export default async function SalarieRegulationPage() {
                                 </div>
                                 <MyAssignment assignment={myAssignment} />
                             </div>
+                        ) : (
                              <div className="flex flex-col items-center justify-center py-16 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-200 text-center px-6">
                                 <h3 className="text-lg font-bold text-slate-700 dark:text-slate-200">Aucune mission prévue</h3>
                                 <p className="text-slate-500 text-sm mt-1">Vous n'avez pas encore de mission assignée pour aujourd'hui ou demain.</p>
                             </div>
+                        )}
                     </TabsContent>
 
                     <TabsContent value="history" className="animate-in fade-in slide-in-from-bottom-4 duration-500">
