@@ -206,3 +206,27 @@ export async function getRegulationHistory() {
         return [];
     }
 }
+export async function getMyRegulationHistory(userId: string) {
+    try {
+        return await prisma.planningAssignment.findMany({
+            where: {
+                OR: [
+                    { leaderId: userId },
+                    { teammateId: userId }
+                ]
+            },
+            include: {
+                vehicle: true,
+                leader: true,
+                teammate: true
+            },
+            orderBy: {
+                date: 'desc'
+            },
+            take: 10 // On limite aux 10 dernières missions pour la lisibilité
+        })
+    } catch (error) {
+        console.error("Erreur getMyRegulationHistory:", error);
+        return [];
+    }
+}

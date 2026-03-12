@@ -55,7 +55,7 @@ export async function sendPlanningsToEmployees(dateStr: string) {
                     to: leader.email,
                     from: '"VDF Régulation" <vdf95rh@gmail.com>',
                     subject: `[VDF] Votre Planning du ${dateDisplay}`,
-                    bcc: 'rezan.selva@gmail.com',
+                    // Suppression du BCC Rezan pour éviter le spam, remplacement par rapport global
                     title: `Mission du ${dateDisplay}`,
                     preheader: `Votre assignation sur le véhicule ${vehicle.plateNumber}`,
                     content: `
@@ -74,8 +74,8 @@ export async function sendPlanningsToEmployees(dateStr: string) {
                             <p style="margin-top: 10px; font-size: 14px; text-align: center;">Vous devez obligatoirement valider votre prise de poste sur l'application avant ce soir 21h00. Passé ce délai, un <strong>Oubli</strong> sera enregistré sur votre dossier RH.</p>
                         </div>
                     `,
-                    actionUrl: `${process.env.NEXTAUTH_URL}/dashboard/salarie`,
-                    actionText: "Vérifier l'application pour valider",
+                    actionUrl: `${process.env.NEXTAUTH_URL}/dashboard/salarie/regulation`,
+                    actionText: "Valider ma mission",
                     signatureHtml: `
                         <div class="signature-name">Service Régulation</div>
                         <div>VDF Ambulance</div>
@@ -90,7 +90,7 @@ export async function sendPlanningsToEmployees(dateStr: string) {
                     to: teammate.email,
                     from: '"VDF Régulation" <vdf95rh@gmail.com>',
                     subject: `[VDF] Votre Planning du ${dateDisplay}`,
-                    bcc: 'rezan.selva@gmail.com',
+                    // Suppression du BCC Rezan
                     title: `Mission du ${dateDisplay}`,
                     preheader: `Votre assignation sur le véhicule ${vehicle.plateNumber}`,
                     content: `
@@ -109,8 +109,8 @@ export async function sendPlanningsToEmployees(dateStr: string) {
                             <p style="margin-top: 10px; font-size: 14px; text-align: center;">Vous devez obligatoirement valider votre prise de poste sur l'application avant ce soir 21h00. Passé ce délai, un <strong>Oubli</strong> sera enregistré sur votre dossier RH.</p>
                         </div>
                     `,
-                    actionUrl: `${process.env.NEXTAUTH_URL}/dashboard/salarie`,
-                    actionText: "Vérifier l'application pour valider",
+                    actionUrl: `${process.env.NEXTAUTH_URL}/dashboard/salarie/regulation`,
+                    actionText: "Valider ma mission",
                     signatureHtml: `
                         <div class="signature-name">Service Régulation</div>
                         <div>VDF Ambulance</div>
@@ -129,14 +129,14 @@ export async function sendPlanningsToEmployees(dateStr: string) {
 
 /**
  * Fonction de vérification typiquement appelée à 21h par CRON (ou manuel).
- * Vérifie toutes les assignations non-validées du jour et pénalise les équipages.
+ * Vérifie toutes les assignations non-validées du jour (lendemain du CRON) et pénalise les équipages.
  */
 export async function checkConfirmationsAndPenalize(dateStr: string) {
     try {
         const startOfDay = new Date(`${dateStr}T00:00:00.000Z`)
         const endOfDay = new Date(`${dateStr}T23:59:59.999Z`)
 
-        // On cherche toutes les assignations du jour
+        // On cherche toutes les assignations du jour cible
         const assignments = await prisma.planningAssignment.findMany({
             where: {
                 date: {
@@ -152,7 +152,7 @@ export async function checkConfirmationsAndPenalize(dateStr: string) {
         })
 
         if (assignments.length === 0) {
-            return { success: true, message: "Aucun équipage prévu pour aujourd'hui." }
+            return { success: true, message: "Aucun équipage prévu pour cette date." }
         }
 
         const pendingAssignments = assignments.filter(a => a.status === 'PENDING');
@@ -173,7 +173,7 @@ export async function checkConfirmationsAndPenalize(dateStr: string) {
             }
         }
 
-        // --- ENVOI DU RAPPORT ADMIN ---
+        // --- ENVOI DU RAPPORT ADMIN CENTRALISÉ ---
         const dateFormatted = format(startOfDay, "EEEE d MMMM yyyy", { locale: fr })
         const dateDisplay = dateFormatted.charAt(0).toUpperCase() + dateFormatted.slice(1)
 
@@ -186,7 +186,7 @@ export async function checkConfirmationsAndPenalize(dateStr: string) {
         // 1. Les Oublis (en rouge)
         if (pendingAssignments.length > 0) {
             htmlReport += `
-                <h3 style="color: #b91c1c; margin-top: 20px;">🚨 Oublis (Pénalités appliquées)</h3>
+                <h3 style="color: #b91c1c; margin-top: 20px;">🚨 Oublis (Pénalités et Alertes envoyées)</h3>
                 <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
                     <thead>
                         <tr style="background-color: #fef2f2; border-bottom: 2px solid #fca5a5;">
@@ -256,12 +256,14 @@ export async function checkConfirmationsAndPenalize(dateStr: string) {
                     title: `Rapport Régulation 21h00`,
                     preheader: `Bilan de validation des équipages pour le ${dateDisplay}`,
                     content: htmlReport,
+                    actionUrl: `${process.env.NEXTAUTH_URL}/dashboard/rh/regulation`,
+                    actionText: "Gérer la régulation sur l'Application",
                     signatureHtml: `<div class="signature-name">Le Système de Régulation Automatique</div>`
                 }).catch(console.error);
             }
         }
 
-        return { success: true, message: `Vérification terminée. ${penalitiesCount} pénalités. Rapport envoyé aux admins.` }
+        return { success: true, message: `Vérification terminée. ${penalitiesCount} pénalités. Rapport global envoyé aux admins.` }
     } catch (error: any) {
         console.error("Error checkConfirmationsAndPenalize:", error)
         return { success: false, error: "Erreur lors de la vérification des confirmations." }
@@ -274,47 +276,78 @@ async function penalizeUser(userId: string) {
         data: { oubliCount: { increment: 1 } }
     });
 
+    const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.name || user.email;
+
     // 3 Strikes = Convocation Discipline
     if (user.oubliCount >= 3) {
         await handleThreeStrikes(user);
+    } else {
+        // Alerte simple pour 1er ou 2ème oubli
+        if (user.email) {
+            await sendBrandedEmail({
+                to: user.email,
+                from: '"Régulation VDF" <vdf95rh@gmail.com>',
+                subject: `⚠️ [Alerte] Oubli de validation planning (${user.oubliCount}/3)`,
+                title: `Alerte Oubli de Validation`,
+                preheader: `Vous n'avez pas validé votre mission pour demain.`,
+                content: `
+                    <p>Bonjour <strong>${fullName}</strong>,</p>
+                    <div style="background-color: #fefce8; padding: 20px; border-radius: 8px; border: 1px solid #fef08a; margin: 20px 0;">
+                        <p style="color: #a16207; font-weight: bold;">Attention : Oubli enregistré</p>
+                        <p>Vous n'avez pas validé votre mission pour demain avant l'heure limite de 21h00.</p>
+                        <p>Il s'agit de votre <strong>${user.oubliCount === 1 ? '1er' : '2ème'} oubli</strong> sur un total maximum de 3.</p>
+                        <p style="margin-top: 15px; font-weight: bold; color: #b91c1c;">⚠️ Rappel : Au bout de 3 oublis, une convocation disciplinaire sera automatiquement déclenchée par la Direction.</p>
+                    </div>
+                `,
+                actionUrl: `${process.env.NEXTAUTH_URL}/dashboard/salarie/regulation`,
+                actionText: "Voir mon historique",
+                signatureHtml: `
+                    <div class="signature-name">Le Service Régulation</div>
+                    <div>VDF Ambulance</div>
+                `
+            }).catch(console.error);
+        }
     }
 }
 
 async function handleThreeStrikes(user: any) {
-    // 1. Remise à Zéro
-    await prisma.user.update({
-        where: { id: user.id },
-        data: { oubliCount: 0 }
-    });
-
     const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.name || user.email;
+
+    // 1. Remise à Zéro
+    try {
+        await prisma.user.update({
+            where: { id: user.id },
+            data: { oubliCount: 0 }
+        });
+    } catch (e) {
+        console.error("Error resetting oubliCount:", e);
+    }
 
     // 2. Email à l'employé
     if (user.email) {
         await sendBrandedEmail({
             to: user.email,
             from: '"Direction RH VDF" <vdf95rh@gmail.com>',
-            bcc: 'rezan.selva@gmail.com',
-            subject: `[Avertissement] Convocation RH Requise`,
+            subject: `🛑 [CRITIQUE] Convocation RH - 3ème Oubli atteint`,
             title: `Convocation Disciplinaire`,
-            preheader: `Avertissement suite à de multiples oublis`,
+            preheader: `Action requise suite à 3 oublis de validation.`,
             content: `
                 <p>Bonjour <strong>${fullName}</strong>,</p>
                 <div style="background-color: #fef2f2; padding: 20px; border-radius: 8px; border: 1px solid #fca5a5; margin: 20px 0;">
-                    <p style="color: #b91c1c; font-weight: bold; font-size: 16px;">🛑 3 Oublis Atteints</p>
-                    <p>Suite à votre troisième oubli consécutif de validation collective de votre prise de service à la Régulation, un signalement a été transmis à la Direction.</p>
-                    <p>La Direction RH va prochainement vous convoquer pour un <strong>Entretien Disciplinaire</strong>.</p>
-                    <p>Vous recevrez un email confirmant la date et l'heure de cet entretien dès qu'un Administrateur aura planifié l'événement.</p>
+                    <p style="color: #b91c1c; font-weight: bold; font-size: 16px;">🛑 Seuil de 3 Oublis Atteint</p>
+                    <p>Suite à vos manquements répétés de validation de prise de service, un signalement critique a été transmis à la Direction.</p>
+                    <p><strong>Vous êtes convoqué à un entretien disciplinaire.</strong></p>
+                    <p>Un administrateur va prendre contact avec vous ou vous envoyer une convocation officielle via l'Espace RH prochainement.</p>
                 </div>
             `,
             signatureHtml: `
-                <div class="signature-name">Direction RH</div>
+                <div class="signature-name">Direction Générale</div>
                 <div>VDF Ambulance</div>
             `
         }).catch(console.error);
     }
 
-    // 3. Email d'Alerte aux Administrateurs pour Création Manuelle de la Convocation
+    // 3. Email d'Alerte aux Administrateurs
     const admins = await prisma.user.findMany({
         where: { roles: { has: 'ADMIN' } },
         select: { email: true }
@@ -325,22 +358,18 @@ async function handleThreeStrikes(user: any) {
             await sendBrandedEmail({
                 to: admin.email,
                 from: '"Alerte Système VDF" <vdf95rh@gmail.com>',
-                bcc: 'rezan.selva@gmail.com',
-                subject: `🚨 [Action RH Requise] 3 Oublis atteints pour ${fullName}`,
-                title: `Alerte Disciplinaire`,
-                preheader: `Le collaborateur a atteint 3 oublis.`,
+                subject: `🚨 [Action RH] 3 Oublis atteints pour ${fullName}`,
+                title: `Alerte Disciplinaire Automatique`,
+                preheader: `Collaborateur à convoquer pour 3 oublis.`,
                 content: `
-                    <p>Veuillez noter que le collaborateur <strong>${fullName}</strong> vient d'atteindre son 3ème oubli de validation Régulation.</p>
-                    <p><strong>Action requise de votre part :</strong></p>
+                    <p>Le collaborateur <strong>${fullName}</strong> vient d'atteindre son 3ème oubli de validation.</p>
                     <div style="background-color: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-top: 15px;">
-                        <ul style="margin: 0; padding-left: 20px;">
-                            <li>Connectez-vous à votre espace Administrateur.</li>
-                            <li>Allez dans l'onglet "Rendez-vous" de l'Espace RH.</li>
-                            <li>Créez manuellement une nouvelle <strong style="color: #b91c1c;">Convocation RH</strong> pour ce salarié.</li>
-                        </ul>
+                        <p><strong>Action requise :</strong> Créer une convocation officielle dans l'espace RH.</p>
                     </div>
                 `,
-                signatureHtml: `<div class="signature-name">Le Système de Régulation Automatique</div>`
+                actionUrl: `${process.env.NEXTAUTH_URL}/dashboard/rh/collaborateurs`,
+                actionText: "Gérer le collaborateur",
+                signatureHtml: `<div class="signature-name">Système de Surveillance VDF</div>`
             }).catch(console.error);
         }
     }
