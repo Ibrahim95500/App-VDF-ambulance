@@ -33,16 +33,18 @@ export function SidebarHeader() {
       <Button
         onClick={handleToggleClick}
         size="sm"
-        mode="icon"
         variant="outline"
         className={cn(
-          'size-7 absolute start-full top-2/4 rtl:translate-x-2/4 -translate-x-2/4 -translate-y-2/4 z-[100] cursor-pointer',
-          settings.layouts.demo1.sidebarCollapse
-            ? 'ltr:rotate-180'
-            : 'rtl:rotate-180',
+          'size-8 absolute -end-4 top-1/2 -translate-y-1/2 z-[100] rounded-full bg-background border-border shadow-md hover:text-primary hover:bg-slate-50 transition-all duration-300',
+          settings.layouts.demo1.sidebarCollapse && 'translate-x-0'
         )}
       >
-        <ChevronFirst className="size-4!" />
+        <div className={cn(
+          "transition-transform duration-500",
+          settings.layouts.demo1.sidebarCollapse ? "rotate-180" : "rotate-0"
+        )}>
+          <ChevronFirst className="size-4" />
+        </div>
       </Button>
     </div>
   );
