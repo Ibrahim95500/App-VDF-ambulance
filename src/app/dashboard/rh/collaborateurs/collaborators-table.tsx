@@ -293,6 +293,27 @@ export function CollaboratorsTable({ initialData, services = [] }: { initialData
 
             if (statusFilter === "ACTIVE" && (user as any).isActive === false) return false
             if (statusFilter === "INACTIVE" && (user as any).isActive !== false) return false
+            return true
+        })
+    }, [initialData, searchTerm, roleFilter, statusFilter, dateRange])
+
+    const paginatedData = useMemo(() => {
+        const start = (currentPage - 1) * PAGE_SIZE
+        return filteredData.slice(start, start + PAGE_SIZE)
+    }, [filteredData, currentPage])
+
+    const exportData = useMemo(() => {
+        return filteredData.map(user => ({
+            "Nom": user.lastName || "-",
+            "Prénom": user.firstName || "-",
+            "Email": user.email,
+            "Téléphone": user.phone || "-",
+            "Rôle": user.roles?.includes('RH') ? 'RH / Admin' : 'Salarié',
+            "Statut": user.isDeleted ? 'Supprimé' : (user as any).isActive !== false ? 'Actif' : 'Inactif',
+            "Motif Désactivation": (user as any).deletionReason || "-",
+            "Date d'inscription": user.createdAt ? new Date(user.createdAt).toLocaleDateString('fr-FR') : '-'
+        }))
+    }, [filteredData])
 
     return (
         <div className="flex flex-col gap-6">
@@ -408,15 +429,28 @@ export function CollaboratorsTable({ initialData, services = [] }: { initialData
                                     <Button variant="ghost" size="icon" className="size-7 text-blue-500 hover:bg-blue-50" onClick={() => setSelectedUser(user)}>
                                         <Eye className="size-3.5" />
                                     </Button>
-                                    {(user as any).isActive !== false ? (
-                                        <Button size="sm" variant="ghost" className="h-7 text-[11px] text-red-500 hover:text-red-600 hover:bg-red-50" onClick={() => setUserToDeactivate(user as any)}>
-                                            Suspendre
+                                    {user.isDeleted ? (
+                                        <Button size="sm" variant="ghost" className="h-7 text-[11px] text-blue-600 hover:text-blue-700 hover:bg-blue-50" disabled={isRestoring === user.id} onClick={() => handleRestore(user.id)}>
+                                            {isRestoring === user.id ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <RefreshCw className="w-3 h-3 mr-1" />} Restaurer
                                         </Button>
+                                    ) : (user as any).isActive !== false ? (
+                                        <>
+                                            <Button size="sm" variant="ghost" className="h-7 text-[11px] text-red-500 hover:text-red-600 hover:bg-red-50 px-2" onClick={() => setUserToDeactivate(user)}>
+                                                Suspendre
+                                            </Button>
+                                            <Button size="sm" variant="ghost" className="h-7 text-slate-400 hover:text-red-700 px-1" onClick={() => setUserToDelete(user)}>
+                                                <TrashIcon className="w-3 h-3" />
+                                            </Button>
+                                        </>
                                     ) : (
-                                        <Button size="sm" variant="ghost" className="h-7 text-[11px] text-green-600 hover:text-green-700 hover:bg-green-50" disabled={isReactivating === user.id} onClick={() => handleReactivate(user.id)}>
-                                            <RotateCcw className="size-3 mr-1" />
-                                            Réactiver
-                                        </Button>
+                                        <div className="flex items-center gap-1">
+                                            <Button size="sm" variant="ghost" className="h-7 text-[11px] text-green-600 hover:text-green-700 hover:bg-green-50" disabled={isReactivating === user.id} onClick={() => handleReactivate(user.id)}>
+                                                <RotateCcw className="size-3 mr-1" /> Réactiver
+                                            </Button>
+                                            <Button size="sm" variant="ghost" className="h-7 text-slate-400 hover:text-red-700 px-1" onClick={() => setUserToDelete(user)}>
+                                                <TrashIcon className="w-3 h-3" />
+                                            </Button>
+                                        </div>
                                     )}
                                 </div>
                             </div>
