@@ -85,13 +85,37 @@ export async function POST(req: NextRequest) {
                             <p style="white-space: pre-wrap;">${description}</p>
                         </div>
                     `,
-                    actionUrl: `${process.env.NEXTAUTH_URL}/dashboard/rh/services`,
+                    actionUrl: `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/dashboard/rh/services`,
                     actionText: "Traiter la demande",
                     signatureHtml: `
-                        <div class="signature-name">${user.name}</div>
-                        <div>Collaborateur (via ${source || 'Externe'})</div>
+                        <table border="0" cellspacing="0" cellpadding="0" style="margin-top: 15px;">
+                            <tr>
+                                <td style="padding-right: 15px; border-right: 2px solid #2c3e8a;">
+                                    <img src="cid:logo_vdf_footer" alt="VDF" width="60" height="40" style="display: block; width: 60px; height: auto;">
+                                </td>
+                                <td style="padding-left: 15px;">
+                                    <div style="font-weight: bold; color: #2c3e8a; font-size: 16px; margin-bottom: 2px;">${user.name}</div>
+                                    <div style="font-size: 13px; color: #718096; font-weight: 500;">Collaborateur (via ${source || 'Externe'})</div>
+                                    <div style="font-size: 12px; color: #94a3b8;">VDF Ambulance</div>
+                                </td>
+                            </tr>
+                        </table>
                     `
-                })
+                }),
+                attachments: [
+                    {
+                        filename: 'logo-header.png',
+                        path: require('path').join(process.cwd(), 'public/brand/logo-email.png'),
+                        cid: 'logo_vdf_header',
+                        contentDisposition: 'inline'
+                    },
+                    {
+                        filename: 'logo-signature.png',
+                        path: require('path').join(process.cwd(), 'public/brand/logo-vdf-star.png'),
+                        cid: 'logo_vdf_footer',
+                        contentDisposition: 'inline'
+                    }
+                ]
             });
         } catch (e) {
             console.error("External request email failed:", e);

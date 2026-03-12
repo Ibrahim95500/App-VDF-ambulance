@@ -7,20 +7,21 @@ import nodemailer from "nodemailer"
 import { auth } from "@/auth"
 import { randomUUID } from "crypto"
 import { z } from "zod"
+import path from "path"
 
 // Validation Schemas
 const CreateCollaboratorSchema = z.object({
     email: z.string().email("Format d'email invalide").toLowerCase().max(100, "L'email ne doit pas dépasser 100 caractères"),
     firstName: z.string().min(2, "Le prénom doit faire au moins 2 caractères").max(50, "Le prénom ne doit pas dépasser 50 caractères"),
     lastName: z.string().min(2, "Le nom doit faire au moins 2 caractères").max(50, "Le nom ne doit pas dépasser 50 caractères"),
-    phone: z.string().max(12, "Le numéro de téléphone ne doit pas dépasser 12 caractères").optional(),
+    phone: z.string().max(12, "Le numéro de téléphone ne doit pas dépasser 12 caractères").optional().nullable(),
     birthDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Format de date invalide (AAAA-MM-JJ)").optional().nullable(),
     role: z.any().optional(), // On garde ça pour rétrocompatibilité
     roles: z.array(z.enum(["SALARIE", "RH", "REGULATEUR", "ADMIN"])).default(["SALARIE"]),
-    structure: z.enum(["MARK", "VDF", "LES_2"]).optional().nullable(),
-    diploma: z.enum(["AUXILIAIRE", "DEA"]).optional().nullable(),
-    shift: z.enum(["JOUR", "NUIT", "VACATAIRE", "JOUR_NUIT"]).optional().nullable(),
-    preference: z.enum(["NORMAL", "SAMEDI", "NUIT", "MATIN"]).optional().nullable(),
+    structure: z.preprocess((val) => val === "" ? null : val, z.enum(["MARK", "VDF", "LES_2"]).optional().nullable()),
+    diploma: z.preprocess((val) => val === "" ? null : val, z.enum(["AUXILIAIRE", "DEA"]).optional().nullable()),
+    shift: z.preprocess((val) => val === "" ? null : val, z.enum(["JOUR", "NUIT", "VACATAIRE", "JOUR_NUIT"]).optional().nullable()),
+    preference: z.preprocess((val) => val === "" ? null : val, z.enum(["NORMAL", "SAMEDI", "NUIT", "MATIN"]).optional().nullable()),
     isTeamLeader: z.boolean().default(false),
 });
 
@@ -58,13 +59,13 @@ export async function createCollaborator(formData: FormData) {
         email: formData.get("email"),
         firstName: formData.get("firstName"),
         lastName: formData.get("lastName"),
-        phone: formData.get("phone"),
-        birthDate: formData.get("birthDate"),
+        phone: formData.get("phone") || null,
+        birthDate: formData.get("birthDate") || null,
         roles: rawRoles.length > 0 ? rawRoles : ["SALARIE"],
-        structure: formData.get("structure") || null,
-        diploma: formData.get("diploma") || null,
-        shift: formData.get("shift") || null,
-        preference: formData.get("preference") || null,
+        structure: formData.get("structure"),
+        diploma: formData.get("diploma"),
+        shift: formData.get("shift"),
+        preference: formData.get("preference"),
         isTeamLeader: isTeamLeaderRaw === "on" || isTeamLeaderRaw === "true",
     });
 
@@ -109,6 +110,7 @@ export async function createCollaborator(formData: FormData) {
         });
 
         try {
+            console.log(`[EMAIL] Préparation de l'envoi pour ${email}...`);
             // Send email with credentials
             const smtpConfig = process.env.EMAIL_SERVER
                 ? process.env.EMAIL_SERVER
@@ -118,14 +120,15 @@ export async function createCollaborator(formData: FormData) {
                     auth: {
                         user: process.env.EMAIL_SERVER_USER,
                         pass: process.env.EMAIL_SERVER_PASSWORD,
-                    }
+                    },
+                    secure: process.env.EMAIL_SERVER_PORT === "465",
                 };
 
             const transporter = nodemailer.createTransport(smtpConfig);
 
             const { getBrandedEmailHtml } = await import("@/lib/email-templates");
 
-            await transporter.sendMail({
+            const info = await transporter.sendMail({
                 from: process.env.EMAIL_FROM,
                 to: email,
                 subject: "Vos accès App Ambulance",
@@ -145,13 +148,28 @@ export async function createCollaborator(formData: FormData) {
                     `,
                     actionUrl: process.env.NEXTAUTH_URL || 'https://vdf-ambulance.fr',
                     actionText: "Se connecter à l'espace"
-                })
+                }),
+                attachments: [
+                    {
+                        filename: 'logo-header.png',
+                        path: path.join(process.cwd(), 'public/brand/logo-email.png'),
+                        cid: 'logo_vdf_header',
+                        contentDisposition: 'inline'
+                    },
+                    {
+                        filename: 'logo-signature.png',
+                        path: path.join(process.cwd(), 'public/brand/logo-vdf-star.png'),
+                        cid: 'logo_vdf_footer',
+                        contentDisposition: 'inline'
+                    }
+                ]
             });
+            console.log(`[EMAIL] Envoyé avec succès à ${email}. MessageID: ${info.messageId}`);
         } catch (emailError) {
-            console.error("Failed to send email. SMTP is likely misconfigured. Raw Password is:", rawPassword);
-            console.error(emailError);
+            console.error("[EMAIL] Échec de l'envoi. Erreur détaillée :", emailError);
+            console.error("Mot de passe brut pour récupération manuelle :", rawPassword);
             revalidatePath("/dashboard/rh/collaborateurs");
-            return { success: `Compte créé avec succès. (Le mot de passe temporaire est ${rawPassword}). Note: L'envoi de l'email a échoué car le serveur SMTP n'est pas configuré.` };
+            return { success: `Compte créé avec succès. Note: L'envoi de l'email a échoué (SMTP). Mot de passe temporaire : ${rawPassword}` };
         }
 
         revalidatePath("/dashboard/rh/collaborateurs");
@@ -463,14 +481,25 @@ export async function updateCollaboratorAdmin(userId: string, formData: FormData
 
     const firstName = formData.get("firstName") as string;
     const lastName = formData.get("lastName") as string;
+    const email = formData.get("email") as string;
     const phone = formData.get("phone") as string;
 
     try {
+        if (email) {
+            const existingUser = await prisma.user.findUnique({
+                where: { email },
+            });
+            if (existingUser && existingUser.id !== userId) {
+                return { error: "Cet email est déjà utilisé par un autre collaborateur." };
+            }
+        }
+
         await prisma.user.update({
             where: { id: userId },
             data: {
                 firstName: firstName || undefined,
                 lastName: lastName || undefined,
+                email: email || undefined,
                 phone: phone || undefined,
                 name: (firstName && lastName) ? `${firstName} ${lastName}` : undefined,
                 roles: rawRoles.length > 0 ? (rawRoles as any[]) : ["SALARIE"],

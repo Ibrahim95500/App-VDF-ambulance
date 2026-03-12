@@ -1,5 +1,6 @@
 import nodemailer from "nodemailer";
 import { getBrandedEmailHtml } from "./email-templates";
+import path from "path";
 
 /**
  * Get SMTP Transporter
@@ -75,7 +76,21 @@ export async function sendBrandedEmail({
             from: from || process.env.EMAIL_FROM || "noreply@vdf-ambulance.fr",
             to,
             subject,
-            html
+            html,
+            attachments: [
+                {
+                    filename: 'logo-header.png',
+                    path: path.join(process.cwd(), 'public/brand/logo-email.png'),
+                    cid: 'logo_vdf_header',
+                    contentDisposition: 'inline'
+                },
+                {
+                    filename: 'logo-signature.png',
+                    path: path.join(process.cwd(), 'public/brand/logo-vdf-star.png'),
+                    cid: 'logo_vdf_footer',
+                    contentDisposition: 'inline'
+                }
+            ]
         };
         if (replyTo) mailOptions.replyTo = replyTo;
         if (cc) mailOptions.cc = cc;

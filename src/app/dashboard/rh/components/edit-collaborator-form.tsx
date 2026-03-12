@@ -16,6 +16,7 @@ export function EditCollaboratorForm({ user, onCancel, onSuccess }: { user: any,
     // Form state with absolute safety guards
     const [firstName, setFirstName] = useState(String(user?.firstName || ""))
     const [lastName, setLastName] = useState(String(user?.lastName || ""))
+    const [email, setEmail] = useState(String(user?.email || ""))
     const [phone, setPhone] = useState(String(user?.phone || ""))
     const [role, setRole] = useState<string>((user?.roles && user.roles.length > 0) ? String(user.roles[0]) : "SALARIE")
     
@@ -35,6 +36,7 @@ export function EditCollaboratorForm({ user, onCancel, onSuccess }: { user: any,
             const formData = new FormData()
             formData.append("firstName", firstName)
             formData.append("lastName", lastName)
+            formData.append("email", email)
             formData.append("phone", phone)
             formData.append("roles", role)
             formData.append("structure", structure === "NONE" ? "" : structure)
@@ -68,6 +70,10 @@ export function EditCollaboratorForm({ user, onCancel, onSuccess }: { user: any,
                 <div className="space-y-2">
                     <Label className="text-xs uppercase font-bold text-muted-foreground">Nom</Label>
                     <Input value={lastName} onChange={(e) => setLastName(e.target.value)} className="h-10 border-slate-300" placeholder="Nom" />
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                    <Label className="text-xs uppercase font-bold text-muted-foreground">Adresse Email</Label>
+                    <Input value={email} onChange={(e) => setEmail(e.target.value)} type="email" className="h-10 border-slate-300" placeholder="email@exemple.com" />
                 </div>
                 <div className="space-y-2 md:col-span-2">
                     <Label className="text-xs uppercase font-bold text-muted-foreground">Téléphone (Contact)</Label>

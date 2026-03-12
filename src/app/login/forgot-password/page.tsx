@@ -34,8 +34,8 @@ export default function ForgotPasswordPage() {
                     <div className="flex flex-col items-center text-center mb-8">
                         <Link href="/">
                             <img
-                                src={toAbsoluteUrl('/media/app/logo.png?v=2')}
-                                className="h-16 w-auto mb-6 object-contain drop-shadow-sm"
+                                src={toAbsoluteUrl('/media/app/logo.png?v=3')}
+                                className="h-20 w-auto mb-6 object-contain drop-shadow-sm"
                                 alt="App Ambulance"
                             />
                         </Link>

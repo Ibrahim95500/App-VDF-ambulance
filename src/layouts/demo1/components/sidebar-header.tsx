@@ -22,7 +22,7 @@ export function SidebarHeader() {
     <div className="sidebar-header hidden lg:flex items-center relative justify-between px-3 lg:px-6 shrink-0">
       <Link href="/">
         <div className="flex items-center gap-2">
-          <VdfLogo className="w-10 h-10" />
+          <VdfLogo className="h-10 w-auto" />
           {!settings.layouts.demo1.sidebarCollapse && (
             <span className="text-lg font-bold text-foreground truncate pl-2" style={{ color: '#2c3e8a' }}>
               App Ambulance

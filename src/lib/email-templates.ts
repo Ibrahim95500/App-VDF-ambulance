@@ -21,14 +21,24 @@ export function getBrandedEmailHtml({
   actionUrl,
   actionText,
   signatureHtml = `
-        <div class="signature-name">Hamid Cheikh</div>
-        <div>Directeur Général - VDF Ambulance</div>  
+        <table border="0" cellspacing="0" cellpadding="0" style="margin-top: 15px;">
+            <tr>
+                <td style="padding-right: 15px; border-right: 2px solid #2c3e8a;">
+                    <img src="cid:logo_vdf_footer" alt="VDF" width="60" height="40" style="display: block; width: 60px; height: auto;">
+                </td>
+                <td style="padding-left: 15px;">
+                    <div style="font-weight: bold; color: #2c3e8a; font-size: 16px; margin-bottom: 2px;">Hamid Cheikh</div>
+                    <div style="font-size: 13px; color: #718096; font-weight: 500;">Directeur Général</div>
+                    <div style="font-size: 12px; color: #94a3b8;">VDF Ambulance</div>
+                </td>
+            </tr>
+        </table>
   `
 }: EmailTemplateOptions): string {
-  // PNG logo for emails - using absolute URL from production domain for reliability
-  const logoUrl = 'https://dev.vdf-ambulance.fr/media/app/logo.png';
+  const logoHeaderUrl = 'cid:logo_vdf_header'; 
   const primaryColor = "#2c3e8a"; // VDF Blue
   const accentColor = "#f97316";  // VDF Orange
+  const backgroundColor = "#f4f7f9";
 
   return `
 <!DOCTYPE html>
@@ -37,59 +47,66 @@ export function getBrandedEmailHtml({
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${title}</title>
-  <style>
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f4f7f9; }
-    .container { max-width: 600px; margin: 20px auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #e1e8ed; }
-    .header { background-color: ${primaryColor}; padding: 40px 20px 30px; text-align: center; }
-    .content { padding: 40px 30px; }
-    .title { color: ${primaryColor}; font-size: 24px; font-weight: bold; margin-bottom: 20px; margin-top: 0; border-bottom: 2px solid ${accentColor}; display: inline-block; padding-bottom: 5px; }
-    .text { font-size: 16px; color: #4b5563; margin-bottom: 25px; }
-    .button-container { text-align: center; margin: 30px 0; }
-    .button { background-color: ${primaryColor}; color: #ffffff !important; padding: 12px 25px; border-radius: 6px; text-decoration: none; font-weight: bold; font-size: 16px; display: inline-block; }
-    .signature { margin-top: 40px; padding-top: 20px; border-top: 1px solid #edf2f7; color: #718096; font-size: 14px; }
-    .signature-name { font-weight: bold; color: ${primaryColor}; font-size: 16px; margin-bottom: 4px; }
-    .footer { background-color: #f8fafc; padding: 20px; text-align: center; color: #94a3b8; font-size: 12px; }
-  </style>
 </head>
-<body>
+<body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: ${backgroundColor};">
   <div style="display:none;font-size:1px;color:#fff;line-height:1px;max-height:0px;max-width:0px;opacity:0;overflow:hidden">${preheader}</div>
-  <div class="container">
-    <div class="header">
-        <table width="100%" border="0" cellspacing="0" cellpadding="0">
-            <tr>
-                <td align="center">
-                    <img src="${logoUrl}" alt="VDF Ambulance" width="110" height="110" style="display: block; width: 110px; height: 110px; margin: 0 auto;">
-                </td>
-            </tr>
-            <tr>
-                <td align="center" style="padding-top: 10px;">
-                    <div style="color: #ffffff; font-size: 13px; font-weight: bold; letter-spacing: 5px; text-transform: uppercase; font-family: Arial, sans-serif;">VDF AMBULANCE</div>
-                </td>
-            </tr>
-        </table>
-    </div>
-    <div class="content">
-      <h1 class="title">${title}</h1>
-      <div class="text">
-        ${content}
-      </div>
-      
-      ${actionUrl && actionText ? `
-      <div class="button-container">
-        <a href="${actionUrl}" class="button">${actionText}</a>
-      </div>
-      ` : ''}
+  
+  <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color: ${backgroundColor}; padding: 20px 0;">
+    <tr>
+      <td align="center">
+        <!--[if mso]>
+        <table align="center" border="0" cellspacing="0" cellpadding="0" width="600">
+        <tr>
+        <td align="center" valign="top" width="600">
+        <![endif]-->
+        <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width: 600px; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 1px solid #e1e8ed;">
+          <!-- HEADER -->
+          <tr>
+            <td align="center" style="background-color: ${primaryColor}; padding: 45px 20px 35px;">
+                <img src="${logoHeaderUrl}" alt="VDF Ambulance" width="120" height="auto" style="display: block; width: 120px; height: auto; margin: 0 auto; max-width: 120px;">
+                <div style="color: #ffffff; font-size: 11px; font-weight: bold; letter-spacing: 6px; text-transform: uppercase; font-family: Arial, sans-serif; margin-top: 20px;">VDF AMBULANCE</div>
+            </td>
+          </tr>
+          
+          <!-- CONTENT -->
+          <tr>
+            <td style="padding: 45px 35px;">
+              <h1 style="color: ${primaryColor}; font-size: 24px; font-weight: bold; margin-bottom: 25px; margin-top: 0; border-bottom: 3px solid ${accentColor}; display: inline-block; padding-bottom: 8px;">${title}</h1>
+              
+              <div style="font-size: 16px; color: #4b5563; margin-bottom: 25px;">
+                ${content}
+              </div>
+              
+              ${actionUrl && actionText ? `
+              <div style="text-align: center; margin: 40px 0;">
+                <a href="${actionUrl}" style="background-color: ${primaryColor}; color: #ffffff !important; padding: 15px 35px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 16px; display: inline-block; box-shadow: 0 4px 6px rgba(44, 62, 138, 0.2);">${actionText}</a>
+              </div>
+              ` : ''}
 
-      <div class="signature">
-        <p>Cordialement,</p>
-        ${signatureHtml}
-      </div>
-    </div>
-    <div class="footer">
-      <p>© ${new Date().getFullYear()} VDF Ambulance. Tous droits réservés.</p>
-      <p>${footerNote}</p>
-    </div>
-  </div>
+              <!-- SIGNATURE -->
+              <div style="margin-top: 45px; padding-top: 25px; border-top: 1px solid #edf2f7;">
+                <p style="margin-bottom: 10px; color: #718096; font-size: 14px;">Cordialement,</p>
+                ${signatureHtml}
+              </div>
+            </td>
+          </tr>
+          
+          <!-- FOOTER -->
+          <tr>
+            <td style="background-color: #f8fafc; padding: 25px; text-align: center; color: #94a3b8; font-size: 11px; border-top: 1px solid #edf2f7;">
+              <p style="margin: 0 0 8px 0;">© ${new Date().getFullYear()} VDF Ambulance. Tous droits réservés.</p>
+              <p style="margin: 0; font-style: italic;">${footerNote}</p>
+            </td>
+          </tr>
+        </table>
+        <!--[if mso]>
+        </td>
+        </tr>
+        </table>
+        <![endif]-->
+      </td>
+    </tr>
+  </table>
 </body>
 </html>
   `;
