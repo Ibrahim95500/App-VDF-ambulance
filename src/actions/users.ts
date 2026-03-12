@@ -151,15 +151,9 @@ export async function createCollaborator(formData: FormData) {
                 }),
                 attachments: [
                     {
-                        filename: 'logo-header.png',
+                        filename: 'logo-vdf.png',
                         path: path.join(process.cwd(), 'public/brand/logo-email.png'),
                         cid: 'logo_vdf_header',
-                        contentDisposition: 'inline'
-                    },
-                    {
-                        filename: 'logo-signature.png',
-                        path: path.join(process.cwd(), 'public/brand/logo-vdf-star.png'),
-                        cid: 'logo_vdf_footer',
                         contentDisposition: 'inline'
                     }
                 ]

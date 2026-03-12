@@ -91,7 +91,7 @@ export async function POST(req: NextRequest) {
                         <table border="0" cellspacing="0" cellpadding="0" style="margin-top: 15px;">
                             <tr>
                                 <td style="padding-right: 15px; border-right: 2px solid #2c3e8a;">
-                                    <img src="cid:logo_vdf_footer" alt="VDF" width="60" height="40" style="display: block; width: 60px; height: auto;">
+                                    <img src="cid:logo_vdf_header" alt="VDF" width="60" height="auto" style="display: block; width: 60px; height: auto;">
                                 </td>
                                 <td style="padding-left: 15px;">
                                     <div style="font-weight: bold; color: #2c3e8a; font-size: 16px; margin-bottom: 2px;">${user.name}</div>
@@ -104,15 +104,9 @@ export async function POST(req: NextRequest) {
                 }),
                 attachments: [
                     {
-                        filename: 'logo-header.png',
+                        filename: 'logo-vdf.png',
                         path: require('path').join(process.cwd(), 'public/brand/logo-email.png'),
                         cid: 'logo_vdf_header',
-                        contentDisposition: 'inline'
-                    },
-                    {
-                        filename: 'logo-signature.png',
-                        path: require('path').join(process.cwd(), 'public/brand/logo-vdf-star.png'),
-                        cid: 'logo_vdf_footer',
                         contentDisposition: 'inline'
                     }
                 ]
