@@ -2,10 +2,11 @@
 
 import { useState } from "react"
 import { AmbulanceCard } from "./ambulance-card"
-import { updateAssignmentStatus } from "@/actions/regulation.actions"
+import { validateMyPlanning } from "@/actions/regulation.actions"
 import { Button } from "@/components/ui/button"
 import { CheckCircle2, XCircle, Loader2, Info } from "lucide-react"
 import { toast } from "sonner"
+import { useSession } from "next-auth/react"
 import { cn } from "@/lib/utils"
 
 interface MyAssignmentProps {
@@ -13,8 +14,16 @@ interface MyAssignmentProps {
 }
 
 export function MyAssignment({ assignment }: MyAssignmentProps) {
+    const { data: session } = useSession()
+    const [leaderValidated, setLeaderValidated] = useState(assignment.leaderValidated)
+    const [teammateValidated, setTeammateValidated] = useState(assignment.teammateValidated)
     const [status, setStatus] = useState(assignment.status)
     const [loading, setLoading] = useState(false)
+
+    const userId = session?.user?.id
+    const isLeader = assignment.leaderId === userId
+    const isTeammate = assignment.teammateId === userId
+    const hasAlreadyValidated = isLeader ? leaderValidated : isTeammate ? teammateValidated : false
 
     if (!assignment) return null
 
@@ -23,22 +32,31 @@ export function MyAssignment({ assignment }: MyAssignmentProps) {
     const currentHour = now.getHours()
     const isWindowOpen = currentHour >= 19 && currentHour < 21
 
-    const handleAction = async (newStatus: 'VALIDATED' | 'REJECTED') => {
+    const handleAction = async () => {
         if (!isWindowOpen) {
             toast.error("La validation n'est possible qu'entre 19h00 et 21h00.")
             return
         }
+        if (!userId) return
+
         try {
             setLoading(true)
-            const result = await updateAssignmentStatus(assignment.id, newStatus)
+            const result = await validateMyPlanning(userId, assignment.id)
             if (result.error) {
                 toast.error(result.error)
             } else {
-                setStatus(newStatus)
-                toast.success(newStatus === 'VALIDATED' ? "Assignation validée !" : "Assignation refusée.")
+                if (isLeader) setLeaderValidated(true)
+                if (isTeammate) setTeammateValidated(true)
+                
+                // On rafraichit potentiellement le status global si c'était le dernier à valider
+                if ((isLeader && teammateValidated) || (isTeammate && leaderValidated)) {
+                    setStatus('VALIDATED')
+                }
+                
+                toast.success("Votre mission est validée !")
             }
         } catch (error) {
-            toast.error("Erreur lors de la mise à jour")
+            toast.error("Erreur lors de la validation")
         } finally {
             setLoading(false)
         }
@@ -56,28 +74,21 @@ export function MyAssignment({ assignment }: MyAssignmentProps) {
                 category={assignment.vehicle.category}
                 leaderName={`${assignment.leader.lastName} ${assignment.leader.firstName}`}
                 teammateName={`${assignment.teammate.lastName} ${assignment.teammate.firstName}`}
+                leaderValidated={leaderValidated}
+                teammateValidated={teammateValidated}
                 status={status}
                 startTime={assignment.startTime}
             />
 
-            {status === 'PENDING' && isWindowOpen && (
+            {!hasAlreadyValidated && isWindowOpen && (
                 <div className="flex gap-3 animate-in fade-in slide-in-from-bottom-2">
                     <Button
-                        onClick={() => handleAction('VALIDATED')}
+                        onClick={handleAction}
                         disabled={loading}
-                        className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold h-11"
+                        className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold h-11 shadow-lg shadow-green-100"
                     >
                         {loading ? <Loader2 className="animate-spin mr-2" /> : <CheckCircle2 size={18} className="mr-2" />}
-                        Valider l'équipage
-                    </Button>
-                    <Button
-                        onClick={() => handleAction('REJECTED')}
-                        disabled={loading}
-                        variant="destructive"
-                        className="flex-1 font-bold h-11"
-                    >
-                        {loading ? <Loader2 className="animate-spin mr-2" /> : <XCircle size={18} className="mr-2" />}
-                        Signaler un souci
+                        Valider ma mission
                     </Button>
                 </div>
             )}
@@ -94,10 +105,15 @@ export function MyAssignment({ assignment }: MyAssignmentProps) {
                 </div>
             )}
 
-            {status === 'VALIDATED' && (
-                <div className="p-3 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-xl text-green-700 dark:text-green-400 text-sm font-bold flex items-center gap-2">
-                    <CheckCircle2 size={16} />
-                    Vous avez validé cette mission. Bonne route !
+            {hasAlreadyValidated && (
+                <div className="p-4 bg-green-50 dark:bg-green-950/20 border-2 border-green-200 dark:border-green-800 rounded-2xl text-green-700 dark:text-green-400 text-sm font-bold flex flex-col items-center gap-2 text-center">
+                    <div className="p-2 bg-green-100 dark:bg-green-900 rounded-full">
+                        <CheckCircle2 size={24} />
+                    </div>
+                    <div>
+                        <p>Vous avez validé votre mission.</p>
+                        <p className="text-xs font-normal opacity-80 mt-1">Merci pour votre ponctualité. Bonne route !</p>
+                    </div>
                 </div>
             )}
         </div>

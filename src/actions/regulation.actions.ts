@@ -76,7 +76,9 @@ export async function saveAssignment(data: {
                     teammateId: data.teammateId,
                     startTime: data.startTime,
                     endTime: data.endTime,
-                    status: 'PENDING' // On repasse en pending si on modifie
+                    status: 'PENDING',
+                    leaderValidated: false,
+                    teammateValidated: false
                 }
             })
         } else {
@@ -97,6 +99,41 @@ export async function saveAssignment(data: {
         return { success: true }
     } catch (error: any) {
         console.error("Erreur saveAssignment:", error)
+        return { error: error.message }
+    }
+}
+
+export async function validateMyPlanning(userId: string, assignmentId: string) {
+    try {
+        const assignment = await prisma.planningAssignment.findUnique({
+            where: { id: assignmentId }
+        })
+        if (!assignment) return { error: 'Assignment introuvable' }
+
+        // Détermine si le user est leader ou teammate
+        const isLeader = assignment.leaderId === userId
+        const isTeammate = assignment.teammateId === userId
+        if (!isLeader && !isTeammate) return { error: 'Non autorisé' }
+
+        const updateField = isLeader ? { leaderValidated: true } : { teammateValidated: true }
+
+        const updated = await prisma.planningAssignment.update({
+            where: { id: assignmentId },
+            data: updateField
+        })
+
+        // Si les 2 ont validé → status VALIDATED
+        if (updated.leaderValidated && updated.teammateValidated) {
+            await prisma.planningAssignment.update({
+                where: { id: assignmentId },
+                data: { status: 'VALIDATED' }
+            })
+        }
+
+        revalidatePath('/dashboard/rh/regulation')
+        revalidatePath('/dashboard/salarie')
+        return { success: true }
+    } catch (error: any) {
         return { error: error.message }
     }
 }

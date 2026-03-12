@@ -263,16 +263,18 @@ model Vehicle {
 }
 
 model PlanningAssignment {
-  id          String           @id @default(cuid())
-  date        DateTime
-  vehicleId   String
-  leaderId    String
-  teammateId  String
-  status      AssignmentStatus @default(PENDING)
-  startTime   String?
-  endTime     String?
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
+  id                 String           @id @default(cuid())
+  date               DateTime
+  vehicleId          String
+  leaderId           String
+  teammateId         String
+  status             AssignmentStatus @default(PENDING)
+  leaderValidated    Boolean          @default(false)
+  teammateValidated  Boolean          @default(false)
+  startTime          String?
+  endTime            String?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
 
   vehicle     Vehicle          @relation(fields: [vehicleId], references: [id])
   leader      User             @relation("Leader", fields: [leaderId], references: [id])

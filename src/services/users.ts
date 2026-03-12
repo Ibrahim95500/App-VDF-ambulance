@@ -19,6 +19,13 @@ export async function getAllUsers() {
                 birthDate: true,
                 isActive: true,
                 deletionReason: true,
+                structure: true,
+                diploma: true,
+                shift: true,
+                preference: true,
+                isTeamLeader: true,
+                isRegulateur: true,
+                oubliCount: true,
             }
         })
         return users

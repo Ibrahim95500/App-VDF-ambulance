@@ -2,7 +2,7 @@
 
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { User, Ambulance, ShieldCheck, Siren, Clock, UserCheck } from "lucide-react"
+import { User, Ambulance, ShieldCheck, Clock, CheckCircle2, Clock3, XCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 export type AssignmentStatus = 'PENDING' | 'VALIDATED' | 'REJECTED'
@@ -12,6 +12,8 @@ interface AmbulanceCardProps {
     category: 'MARK' | 'VDF'
     leaderName?: string
     teammateName?: string
+    leaderValidated?: boolean
+    teammateValidated?: boolean
     status?: AssignmentStatus
     startTime?: string
     endTime?: string
@@ -24,25 +26,73 @@ export function AmbulanceCard({
     category,
     leaderName,
     teammateName,
+    leaderValidated = false,
+    teammateValidated = false,
     status = 'PENDING',
     startTime,
-    endTime,
     onClick,
     isCompact = false
 }: AmbulanceCardProps) {
     const isFull = !!(leaderName && teammateName)
     const isEmpty = !leaderName && !teammateName
 
-    const statusColors = {
-        PENDING: "bg-yellow-500/20 text-yellow-600 border-yellow-500/30",
-        VALIDATED: "bg-green-500/20 text-green-600 border-green-500/30",
-        REJECTED: "bg-red-500/20 text-red-600 border-red-500/30"
-    }
+    // Compteur de validation par véhicule
+    const validatedCount = (leaderValidated ? 1 : 0) + (teammateValidated ? 1 : 0)
+    const totalCount = isFull ? 2 : leaderName || teammateName ? 1 : 0
+
+    // Statut global du véhicule basé sur les validations individuelles
+    const vehicleStatus: 'none' | 'partial' | 'full' = isFull
+        ? validatedCount === 2 ? 'full' : validatedCount === 1 ? 'partial' : 'none'
+        : 'none'
 
     const categoryStyles = {
         MARK: "border-blue-500/40 bg-blue-50/50 dark:bg-blue-950/20",
         VDF: "border-orange-500/40 bg-orange-50/50 dark:bg-orange-950/20"
     }
+
+    const PersonRow = ({
+        name,
+        isLeader,
+        validated,
+    }: { name?: string; isLeader: boolean; validated: boolean }) => (
+        <div className={cn(
+            "flex items-center gap-3 p-2.5 rounded-xl border transition-all duration-200",
+            name
+                ? "bg-white/80 dark:bg-slate-900/80 border-slate-200 shadow-sm"
+                : "bg-slate-100/50 border-dashed border-slate-300 text-slate-400 italic"
+        )}>
+            <div className={cn(
+                "flex items-center justify-center w-8 h-8 rounded-full border-2",
+                name && isLeader ? "bg-orange-100 border-orange-200 text-orange-600" :
+                name && !isLeader ? "bg-blue-100 border-blue-200 text-blue-600" :
+                "bg-slate-200 border-slate-300"
+            )}>
+                {isLeader ? <ShieldCheck size={16} /> : <User size={16} />}
+            </div>
+            <div className="flex flex-col min-w-0 flex-1">
+                <span className="text-[9px] uppercase font-bold opacity-50 leading-none mb-1">
+                    {isLeader ? "Responsable" : "Co-équipier"}
+                </span>
+                <span className="text-sm font-bold truncate">
+                    {name || "En attente..."}
+                </span>
+            </div>
+            {/* Badge validation individuelle */}
+            {name && (
+                validated ? (
+                    <div className="flex items-center gap-1 text-[10px] font-bold text-green-600 bg-green-50 border border-green-200 rounded-full px-2 py-0.5 shrink-0">
+                        <CheckCircle2 size={11} />
+                        <span>Validé</span>
+                    </div>
+                ) : (
+                    <div className="flex items-center gap-1 text-[10px] font-bold text-amber-600 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5 shrink-0">
+                        <Clock3 size={11} />
+                        <span>En attente</span>
+                    </div>
+                )
+            )}
+        </div>
+    )
 
     return (
         <Card
@@ -60,7 +110,8 @@ export function AmbulanceCard({
                 category === 'MARK' ? "text-blue-600" : "text-orange-600"
             )} />
 
-            <CardContent className={cn("p-4", isCompact ? "p-3" : "p-4")}>
+            <CardContent className={cn("relative z-10", isCompact ? "p-3" : "p-4")}>
+                {/* Header : plaque + heure */}
                 <div className="flex justify-between items-start mb-4">
                     <div className="flex flex-col">
                         <div className="flex items-center gap-2 mb-1">
@@ -87,77 +138,56 @@ export function AmbulanceCard({
                     )}
                 </div>
 
-                <div className="space-y-3 relative z-10">
-                    {/* Responsable Row */}
-                    <div className={cn(
-                        "flex items-center gap-3 p-2.5 rounded-xl border transition-all duration-200",
-                        leaderName
-                            ? "bg-white/80 dark:bg-slate-900/80 border-slate-200 shadow-sm"
-                            : "bg-slate-100/50 border-dashed border-slate-300 text-slate-400 italic"
-                    )}>
-                        <div className={cn(
-                            "flex items-center justify-center w-8 h-8 rounded-full border-2",
-                            leaderName ? "bg-orange-100 border-orange-200 text-orange-600" : "bg-slate-200 border-slate-300"
-                        )}>
-                            <ShieldCheck size={16} />
-                        </div>
-                        <div className="flex flex-col min-w-0">
-                            <span className="text-[9px] uppercase font-bold opacity-50 leading-none mb-1">Responsable</span>
-                            <span className="text-sm font-bold truncate">
-                                {leaderName || "En attente..."}
-                            </span>
-                        </div>
-                    </div>
-
-                    {/* Co-équipier Row */}
-                    <div className={cn(
-                        "flex items-center gap-3 p-2.5 rounded-xl border transition-all duration-200",
-                        teammateName
-                            ? "bg-white/80 dark:bg-slate-900/80 border-slate-200 shadow-sm"
-                            : "bg-slate-100/50 border-dashed border-slate-300 text-slate-400 italic"
-                    )}>
-                        <div className={cn(
-                            "flex items-center justify-center w-8 h-8 rounded-full border-2",
-                            teammateName ? "bg-blue-100 border-blue-200 text-blue-600" : "bg-slate-200 border-slate-300"
-                        )}>
-                            <User size={16} />
-                        </div>
-                        <div className="flex flex-col min-w-0">
-                            <span className="text-[9px] uppercase font-bold opacity-50 leading-none mb-1">Co-équipier</span>
-                            <span className="text-sm font-bold truncate">
-                                {teammateName || "En attente..."}
-                            </span>
-                        </div>
-                    </div>
+                {/* Équipage */}
+                <div className="space-y-2 mb-3">
+                    <PersonRow name={leaderName} isLeader={true} validated={leaderValidated} />
+                    <PersonRow name={teammateName} isLeader={false} validated={teammateValidated} />
                 </div>
 
-                {/* Footer Status */}
-                {!isEmpty && (
-                    <div className="mt-4 pt-3 border-t border-slate-200/50 flex justify-between items-center">
-                        <Badge className={cn("px-2 py-0 text-[10px] font-black uppercase tracking-widest", statusColors[status])}>
-                            {status === 'PENDING' && "En attente"}
-                            {status === 'VALIDATED' && "Validé ✅"}
-                            {status === 'REJECTED' && "Refusé ❌"}
-                        </Badge>
-
-                        {status === 'VALIDATED' && (
-                            <div className="flex items-center gap-1 text-[10px] font-bold text-green-600">
-                                <UserCheck size={12} /> Prêt pour le service
+                {/* Footer : statut global du véhicule + compteur */}
+                {isFull && (
+                    <div className="mt-3 pt-3 border-t border-slate-200/50 flex justify-between items-center">
+                        {vehicleStatus === 'full' && (
+                            <div className="flex items-center gap-1.5 text-[11px] font-black text-green-700 bg-green-100 border border-green-300 rounded-full px-3 py-1">
+                                <CheckCircle2 size={13} />
+                                Validé ✅
                             </div>
                         )}
+                        {vehicleStatus === 'partial' && (
+                            <div className="flex items-center gap-1.5 text-[11px] font-black text-amber-700 bg-amber-100 border border-amber-300 rounded-full px-3 py-1">
+                                <Clock3 size={13} />
+                                Partiellement validé
+                            </div>
+                        )}
+                        {vehicleStatus === 'none' && (
+                            <div className="flex items-center gap-1.5 text-[11px] font-black text-slate-500 bg-slate-100 border border-slate-300 rounded-full px-3 py-1">
+                                <Clock3 size={13} />
+                                En attente
+                            </div>
+                        )}
+
+                        {/* Compteur par véhicule */}
+                        <div className={cn(
+                            "text-[11px] font-black rounded-full px-2.5 py-1 border",
+                            vehicleStatus === 'full' ? "bg-green-100 text-green-700 border-green-300" :
+                            vehicleStatus === 'partial' ? "bg-amber-100 text-amber-700 border-amber-300" :
+                            "bg-slate-100 text-slate-500 border-slate-300"
+                        )}>
+                            {validatedCount}/{totalCount} validé{validatedCount !== 1 ? "s" : ""}
+                        </div>
+                    </div>
+                )}
+
+                {/* Indicateur pulsant si en attente de validation */}
+                {isFull && vehicleStatus !== 'full' && (
+                    <div className="absolute top-3 right-3">
+                        <span className="relative flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-500"></span>
+                        </span>
                     </div>
                 )}
             </CardContent>
-
-            {/* Glowing Accent for Active Units */}
-            {isFull && status === 'PENDING' && (
-                <div className="absolute top-0 right-0 p-1">
-                    <span className="relative flex h-2 w-2">
-                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
-                        <span className="relative inline-flex rounded-full h-2 w-2 bg-orange-500"></span>
-                    </span>
-                </div>
-            )}
         </Card>
     )
 }

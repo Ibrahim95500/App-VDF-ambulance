@@ -14,10 +14,10 @@ export function EditCollaboratorForm({ user, onCancel, onSuccess }: { user: any,
 
     // Form state
     const [role, setRole] = useState<string>((user.roles && user.roles.length > 0) ? user.roles[0] : "SALARIE")
-    const [structure, setStructure] = useState<string>(user.structure || "VDF")
-    const [diploma, setDiploma] = useState<string>(user.diploma || "AUXILIAIRE")
-    const [shift, setShift] = useState<string>(user.shift || "JOUR")
-    const [preference, setPreference] = useState<string>(user.preference || "NORMAL")
+    const [structure, setStructure] = useState<string>(user.structure || "")
+    const [diploma, setDiploma] = useState<string>(user.diploma || "")
+    const [shift, setShift] = useState<string>(user.shift || "")
+    const [preference, setPreference] = useState<string>(user.preference || "")
     const [isTeamLeader, setIsTeamLeader] = useState<boolean>(user.isTeamLeader || false)
 
     const handleRoleChange = (newRole: string) => {
@@ -69,8 +69,9 @@ export function EditCollaboratorForm({ user, onCancel, onSuccess }: { user: any,
                 <div className="space-y-2">
                     <Label className="text-xs uppercase font-bold text-muted-foreground">Structure</Label>
                     <Select value={structure} onValueChange={setStructure}>
-                        <SelectTrigger className="h-10 text-sm"><SelectValue placeholder="Sélectionnez" /></SelectTrigger>
+                        <SelectTrigger className="h-10 text-sm"><SelectValue placeholder="Non défini" /></SelectTrigger>
                         <SelectContent>
+                            <SelectItem value="">Non défini</SelectItem>
                             <SelectItem value="MARK">MARK Ambulance</SelectItem>
                             <SelectItem value="VDF">VDF Ambulance</SelectItem>
                             <SelectItem value="LES_2">Les Deux</SelectItem>
@@ -80,8 +81,9 @@ export function EditCollaboratorForm({ user, onCancel, onSuccess }: { user: any,
                 <div className="space-y-2">
                     <Label className="text-xs uppercase font-bold text-muted-foreground">Diplôme</Label>
                     <Select value={diploma} onValueChange={setDiploma}>
-                        <SelectTrigger className="h-10 text-sm"><SelectValue placeholder="Sélectionnez" /></SelectTrigger>
+                        <SelectTrigger className="h-10 text-sm"><SelectValue placeholder="Non défini" /></SelectTrigger>
                         <SelectContent>
+                            <SelectItem value="">Non défini</SelectItem>
                             <SelectItem value="AUXILIAIRE">Auxiliaire Ambulancier</SelectItem>
                             <SelectItem value="DEA">DEA</SelectItem>
                         </SelectContent>
@@ -90,8 +92,9 @@ export function EditCollaboratorForm({ user, onCancel, onSuccess }: { user: any,
                 <div className="space-y-2">
                     <Label className="text-xs uppercase font-bold text-muted-foreground">Rythme</Label>
                     <Select value={shift} onValueChange={setShift}>
-                        <SelectTrigger className="h-10 text-sm"><SelectValue placeholder="Sélectionnez" /></SelectTrigger>
+                        <SelectTrigger className="h-10 text-sm"><SelectValue placeholder="Non défini" /></SelectTrigger>
                         <SelectContent>
+                            <SelectItem value="">Non défini</SelectItem>
                             <SelectItem value="JOUR">Jour</SelectItem>
                             <SelectItem value="NUIT">Nuit</SelectItem>
                             <SelectItem value="VACATAIRE">Vacataire</SelectItem>
@@ -102,8 +105,9 @@ export function EditCollaboratorForm({ user, onCancel, onSuccess }: { user: any,
                 <div className="space-y-2">
                     <Label className="text-xs uppercase font-bold text-muted-foreground">Préférence</Label>
                     <Select value={preference} onValueChange={setPreference}>
-                        <SelectTrigger className="h-10 text-sm"><SelectValue placeholder="Sélectionnez" /></SelectTrigger>
+                        <SelectTrigger className="h-10 text-sm"><SelectValue placeholder="Non défini" /></SelectTrigger>
                         <SelectContent>
+                            <SelectItem value="">Non défini</SelectItem>
                             <SelectItem value="NORMAL">Normale</SelectItem>
                             <SelectItem value="SAMEDI">Samedi Dispo.</SelectItem>
                             <SelectItem value="NUIT">Nuit Préférée</SelectItem>

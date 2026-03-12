@@ -114,12 +114,13 @@ export function RegulationView() {
     const isToday = new Date(date).setHours(0,0,0,0) === new Date().setHours(0,0,0,0);
     const isPast = new Date(date).setHours(0,0,0,0) < new Date().setHours(0,0,0,0);
 
-    let totalEquipages = 0;
+    let totalPersons = 0;
     let validated = 0;
     vehicles.forEach(v => {
         if (v.assignments && v.assignments.length > 0) {
-            totalEquipages++;
-            if (v.assignments[0].status === 'CONFIRMED') validated++;
+            const a = v.assignments[0];
+            if (a.leaderId) { totalPersons++; if (a.leaderValidated) validated++; }
+            if (a.teammateId) { totalPersons++; if (a.teammateValidated) validated++; }
         }
     });
 
@@ -138,7 +139,13 @@ export function RegulationView() {
 
                 return { label: `Planification en cours (${timeStr} restants)`, className: "bg-blue-100 text-blue-800 border-blue-300 animate-pulse" };
             } else if (currentHour >= 19 && currentHour < 21) {
-                return { label: `En cours de validation (${validated}/${totalEquipages} validés)`, className: "bg-orange-100 text-orange-800 border-orange-300 font-bold shadow-sm" };
+                const totalVehicles = vehicles.filter(v => v.assignments?.length > 0).length;
+                const validatedVehicles = vehicles.filter(v => v.assignments?.[0]?.status === 'VALIDATED').length;
+                
+                return { 
+                    label: `En cours : Véhicules (${validatedVehicles}/${totalVehicles}) • Personnes (${validated} / ${totalPersons})`, 
+                    className: "bg-orange-100 text-orange-800 border-orange-300 font-bold shadow-sm" 
+                };
             } else {
                 return { label: "Terminé : Préparez le planning du jour suivant", className: "bg-green-100 text-green-800 border-green-300 font-bold" };
             }
@@ -287,9 +294,10 @@ export function RegulationView() {
                                 category={vehicle.category}
                                 leaderName={assignment?.leader ? `${assignment.leader.lastName} ${assignment.leader.firstName}` : undefined}
                                 teammateName={assignment?.teammate ? `${assignment.teammate.lastName} ${assignment.teammate.firstName}` : undefined}
+                                leaderValidated={assignment?.leaderValidated || false}
+                                teammateValidated={assignment?.teammateValidated || false}
                                 status={assignment?.status}
                                 startTime={assignment?.startTime}
-                                endTime={assignment?.endTime}
                                 onClick={() => {
                                     setSelectedVehicle(vehicle)
                                     setIsDialogOpen(true)

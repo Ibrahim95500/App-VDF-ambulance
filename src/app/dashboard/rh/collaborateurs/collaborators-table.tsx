@@ -40,6 +40,12 @@ interface User {
     isActive?: boolean
     deletionReason?: string | null
     oubliCount?: number
+    structure?: string | null
+    diploma?: string | null
+    shift?: string | null
+    preference?: string | null
+    isTeamLeader?: boolean
+    isRegulateur?: boolean
 }
 
 export function CollaboratorsTable({ initialData, services = [] }: { initialData: User[], services?: any[] }) {
