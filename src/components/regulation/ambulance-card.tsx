@@ -12,6 +12,8 @@ interface AmbulanceCardProps {
     category: 'MARK' | 'VDF'
     leaderName?: string
     teammateName?: string
+    leaderDiploma?: string
+    teammateDiploma?: string
     leaderValidated?: boolean
     teammateValidated?: boolean
     status?: AssignmentStatus
@@ -26,6 +28,8 @@ export function AmbulanceCard({
     category,
     leaderName,
     teammateName,
+    leaderDiploma,
+    teammateDiploma,
     leaderValidated = false,
     teammateValidated = false,
     status = 'PENDING',
@@ -54,7 +58,8 @@ export function AmbulanceCard({
         name,
         isLeader,
         validated,
-    }: { name?: string; isLeader: boolean; validated: boolean }) => (
+        diploma
+    }: { name?: string; isLeader: boolean; validated: boolean; diploma?: string }) => (
         <div className={cn(
             "flex items-center gap-3 p-2.5 rounded-xl border transition-all duration-200",
             name
@@ -73,8 +78,11 @@ export function AmbulanceCard({
                 <span className="text-[9px] uppercase font-bold opacity-50 leading-none mb-1">
                     {isLeader ? "Responsable" : "Co-équipier"}
                 </span>
-                <span className="text-sm font-bold truncate">
+                <span className="text-sm font-bold truncate flex items-center gap-2">
                     {name || "En attente..."}
+                    {diploma === 'REGULATEUR' && (
+                        <Badge variant="outline" className="text-[9px] bg-purple-50 text-purple-600 border-purple-200 uppercase px-1 h-4 shrink-0">Regul</Badge>
+                    )}
                 </span>
             </div>
             {/* Badge validation individuelle */}
@@ -140,8 +148,8 @@ export function AmbulanceCard({
 
                 {/* Équipage */}
                 <div className="space-y-2 mb-3">
-                    <PersonRow name={leaderName} isLeader={true} validated={leaderValidated} />
-                    <PersonRow name={teammateName} isLeader={false} validated={teammateValidated} />
+                    <PersonRow name={leaderName} isLeader={true} validated={leaderValidated} diploma={leaderDiploma} />
+                    <PersonRow name={teammateName} isLeader={false} validated={teammateValidated} diploma={teammateDiploma} />
                 </div>
 
                 {/* Footer : statut global du véhicule + compteur */}

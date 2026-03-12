@@ -45,6 +45,15 @@ export async function getAvailablePersonnel(dateStr: string) {
             ],
             isActive: true
         } as any,
+        select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            diploma: true,
+            isTeamLeader: true,
+            structure: true,
+            oubliCount: true,
+        },
         orderBy: {
             lastName: 'asc'
         }

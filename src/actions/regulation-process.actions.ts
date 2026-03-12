@@ -162,12 +162,12 @@ export async function checkConfirmationsAndPenalize(dateStr: string) {
         let penalitiesCount = 0;
 
         for (const assignment of pendingAssignments) {
-            // On punit l'équipage entier car le statut est collectif
-            if (assignment.leader) {
+            // On ne punit que ceux qui n'ont pas validé individuellement
+            if (assignment.leader && !assignment.leaderValidated) {
                 await penalizeUser(assignment.leader.id);
                 penalitiesCount++;
             }
-            if (assignment.teammate) {
+            if (assignment.teammate && !assignment.teammateValidated) {
                 await penalizeUser(assignment.teammate.id);
                 penalitiesCount++;
             }

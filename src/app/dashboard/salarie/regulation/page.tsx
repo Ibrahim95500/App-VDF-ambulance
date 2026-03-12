@@ -6,6 +6,8 @@ import { redirect } from "next/navigation"
 import { format, addDays } from "date-fns"
 import { fr } from "date-fns/locale"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Badge } from "@/components/ui/badge"
+import { AlertCircle } from "lucide-react"
 
 export default async function SalarieRegulationPage() {
     const session = await auth()
@@ -31,7 +33,15 @@ export default async function SalarieRegulationPage() {
         <div className="flex flex-col gap-8">
             <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 shadow-sm">
                 <h1 className="text-2xl font-black tracking-tighter uppercase">Ma Régulation Plateau</h1>
-                <p className="text-muted-foreground text-sm mt-1">Consultez votre mission et votre historique de validation.</p>
+                <div className="flex items-center justify-between mt-1">
+                    <p className="text-muted-foreground text-sm font-medium">Consultez votre mission et votre historique de validation.</p>
+                    {session.user.oubliCount > 0 && (
+                        <Badge variant="destructive" className="animate-pulse h-7 px-3 font-black text-[11px] gap-2 border-2 border-red-500/20 shadow-lg shadow-red-500/10">
+                            <AlertCircle size={14} />
+                            {session.user.oubliCount} OUBLI{session.user.oubliCount > 1 ? 'S' : ''} SUR 3
+                        </Badge>
+                    )}
+                </div>
             </div>
 
             <div className="max-w-5xl mx-auto w-full px-2 sm:px-4">

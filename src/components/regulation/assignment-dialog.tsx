@@ -31,6 +31,7 @@ interface Personnel {
     diploma: string | null
     isTeamLeader: boolean
     structure: 'MARK' | 'VDF' | 'LES_2' | null
+    oubliCount: number
 }
 
 interface AssignmentDialogProps {
@@ -204,6 +205,11 @@ export function AssignmentDialog({
                                                     {p.diploma === 'REGULATEUR' && (
                                                         <Badge variant="outline" className="text-[9px] bg-purple-50 text-purple-600 border-purple-200 uppercase px-1 h-4">Regul</Badge>
                                                     )}
+                                                    {p.oubliCount > 0 && (
+                                                        <Badge variant="destructive" className="text-[8px] h-3.5 px-1 font-black leading-none flex items-center gap-0.5">
+                                                            <AlertCircle size={8} /> {p.oubliCount}/3
+                                                        </Badge>
+                                                    )}
                                                 </div>
                                                 <span className="text-[10px] opacity-60 uppercase">{p.diploma || "DEA"} {p.isTeamLeader && "⭐ Chef"}</span>
                                             </div>
@@ -228,7 +234,14 @@ export function AssignmentDialog({
                                     .map(p => (
                                         <SelectItem key={p.id} value={p.id} className="py-3">
                                             <div className="flex flex-col">
-                                                <span className="font-bold">{p.lastName} {p.firstName}</span>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="font-bold">{p.lastName} {p.firstName}</span>
+                                                    {p.oubliCount > 0 && (
+                                                        <Badge variant="destructive" className="text-[8px] h-3.5 px-1 font-black leading-none flex items-center gap-0.5">
+                                                            <AlertCircle size={8} /> {p.oubliCount}/3
+                                                        </Badge>
+                                                    )}
+                                                </div>
                                                 <span className="text-[10px] opacity-60 uppercase">{p.diploma || "Auxiliaire"}</span>
                                             </div>
                                         </SelectItem>

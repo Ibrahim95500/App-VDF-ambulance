@@ -309,6 +309,8 @@ export function RegulationView() {
                                 category={vehicle.category}
                                 leaderName={assignment?.leader ? `${assignment.leader.lastName} ${assignment.leader.firstName}` : undefined}
                                 teammateName={assignment?.teammate ? `${assignment.teammate.lastName} ${assignment.teammate.firstName}` : undefined}
+                                leaderDiploma={assignment?.leader?.diploma || undefined}
+                                teammateDiploma={assignment?.teammate?.diploma || undefined}
                                 leaderValidated={assignment?.leaderValidated || false}
                                 teammateValidated={assignment?.teammateValidated || false}
                                 status={assignment?.status}
