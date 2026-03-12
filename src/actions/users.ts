@@ -52,30 +52,30 @@ function generateRandomPassword(length = 10) {
 }
 
 export async function createCollaborator(formData: FormData) {
-    const rawRoles = formData.getAll("roles") as string[];
-    const isTeamLeaderRaw = formData.get("isTeamLeader");
-
-    const validatedFields = CreateCollaboratorSchema.safeParse({
-        email: formData.get("email"),
-        firstName: formData.get("firstName"),
-        lastName: formData.get("lastName"),
-        phone: formData.get("phone") || null,
-        birthDate: formData.get("birthDate") || null,
-        roles: rawRoles.length > 0 ? rawRoles : ["SALARIE"],
-        structure: formData.get("structure"),
-        diploma: formData.get("diploma"),
-        shift: formData.get("shift"),
-        preference: formData.get("preference"),
-        isTeamLeader: isTeamLeaderRaw === "on" || isTeamLeaderRaw === "true",
-    });
-
-    if (!validatedFields.success) {
-        return { error: validatedFields.error.issues[0].message };
-    }
-
-    const { email, firstName, lastName, phone, birthDate: birthDateStr, roles, structure, diploma, shift, preference, isTeamLeader } = validatedFields.data;
-
     try {
+        const rawRoles = formData.getAll("roles") as string[];
+        const isTeamLeaderRaw = formData.get("isTeamLeader");
+
+        const validatedFields = CreateCollaboratorSchema.safeParse({
+            email: formData.get("email"),
+            firstName: formData.get("firstName"),
+            lastName: formData.get("lastName"),
+            phone: formData.get("phone") || null,
+            birthDate: formData.get("birthDate") || null,
+            roles: rawRoles.length > 0 ? rawRoles : ["SALARIE"],
+            structure: formData.get("structure"),
+            diploma: formData.get("diploma"),
+            shift: formData.get("shift"),
+            preference: formData.get("preference"),
+            isTeamLeader: isTeamLeaderRaw === "on" || isTeamLeaderRaw === "true",
+        });
+
+        if (!validatedFields.success) {
+            return { error: validatedFields.error.issues[0].message };
+        }
+
+        const { email, firstName, lastName, phone, birthDate: birthDateStr, roles, structure, diploma, shift, preference, isTeamLeader } = validatedFields.data;
+
         const existingUser = await prisma.user.findUnique({ where: { email } });
         if (existingUser) {
             return { error: "Cet utilisateur (email) est déjà renseigné dans l'application." };
@@ -90,6 +90,7 @@ export async function createCollaborator(formData: FormData) {
         }
         const fullName = `${firstName} ${lastName}`;
 
+        console.log(`[CREATE] Tentative de création BDD pour ${email}...`);
         await prisma.user.create({
             data: {
                 email,
@@ -108,6 +109,7 @@ export async function createCollaborator(formData: FormData) {
                 isTeamLeader
             } as any
         });
+        console.log(`[CREATE] Succès BDD pour ${email}.`);
 
         try {
             console.log(`[EMAIL] Préparation de l'envoi pour ${email}...`);
@@ -116,7 +118,7 @@ export async function createCollaborator(formData: FormData) {
                 ? process.env.EMAIL_SERVER
                 : {
                     host: process.env.EMAIL_SERVER_HOST,
-                    port: Number(process.env.EMAIL_SERVER_PORT),
+                    port: process.env.EMAIL_SERVER_PORT ? Number(process.env.EMAIL_SERVER_PORT) : 587,
                     auth: {
                         user: process.env.EMAIL_SERVER_USER,
                         pass: process.env.EMAIL_SERVER_PASSWORD,
@@ -159,18 +161,18 @@ export async function createCollaborator(formData: FormData) {
                 ]
             });
             console.log(`[EMAIL] Envoyé avec succès à ${email}. MessageID: ${info.messageId}`);
-        } catch (emailError) {
+        } catch (emailError: any) {
             console.error("[EMAIL] Échec de l'envoi. Erreur détaillée :", emailError);
             console.error("Mot de passe brut pour récupération manuelle :", rawPassword);
             revalidatePath("/dashboard/rh/collaborateurs");
-            return { success: `Compte créé avec succès. Note: L'envoi de l'email a échoué (SMTP). Mot de passe temporaire : ${rawPassword}` };
+            return { success: `Compte créé avec succès. Note: L'envoi de l'email a échoué (${emailError.message || 'SMTP'}). Mot de passe temporaire : ${rawPassword}` };
         }
 
         revalidatePath("/dashboard/rh/collaborateurs");
         return { success: "Le collaborateur a été créé avec succès et un email a été envoyé." };
-    } catch (error) {
-        console.error("User creation error:", error);
-        return { error: "Une erreur s'est produite lors de la création." };
+    } catch (error: any) {
+        console.error("CRITICAL User creation error:", error);
+        return { error: `Une erreur s'est produite: ${error.message || 'Erreur technique'}` };
     }
 }
 
