@@ -46,6 +46,7 @@ interface User {
     preference?: string | null
     isTeamLeader?: boolean
     isRegulateur?: boolean
+    isDeleted?: boolean
 }
 
 export function CollaboratorsTable({ initialData, services = [] }: { initialData: User[], services?: any[] }) {
