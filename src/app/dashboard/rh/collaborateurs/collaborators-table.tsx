@@ -306,7 +306,7 @@ export function CollaboratorsTable({ initialData, services = [] }: { initialData
                                 <div className="min-w-0">
                                     <p className={`font-bold text-sm truncate flex items-center ${(user as any).isActive === false ? 'text-red-700' : 'text-foreground'}`}>
                                         {(user.firstName || user.lastName) ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : (user.name || "-")}
-                                        {user.oubliCount && user.oubliCount >= 3 && (
+                                        {(user.oubliCount ?? 0) >= 3 && (
                                             <span className="ml-2 inline-flex items-center text-[9px] font-black text-white bg-red-600 px-1.5 py-0.5 rounded shadow-sm shadow-red-200 tracking-wider">🚨 3 OUBLIS</span>
                                         )}
                                     </p>
@@ -383,7 +383,7 @@ export function CollaboratorsTable({ initialData, services = [] }: { initialData
                                                 <span className={`font-bold text-base leading-tight ${(user as any).isActive === false ? 'text-red-700' : 'text-foreground'}`}>
                                                     {(user.firstName || user.lastName) ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : (user.name || "-")}
                                                 </span>
-                                                {user.oubliCount && user.oubliCount >= 3 && (
+                                                {(user.oubliCount ?? 0) >= 3 && (
                                                     <span className="inline-flex items-center gap-1 mt-1 text-[10px] font-bold text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded w-fit shadow-sm shadow-red-100">
                                                         <ShieldAlertIcon className="w-3 h-3" /> ALERTE : 3 OUBLIS ATTEINTS
                                                     </span>
@@ -544,7 +544,7 @@ export function CollaboratorsTable({ initialData, services = [] }: { initialData
                             <div>
                                 <p className="font-black text-base flex items-center">
                                     {selectedUser?.firstName} {selectedUser?.lastName}
-                                    {selectedUser?.oubliCount && selectedUser.oubliCount >= 3 && (
+                                    {(selectedUser?.oubliCount ?? 0) >= 3 && (
                                         <span className="ml-3 inline-flex items-center text-[10px] font-black bg-red-500 text-white px-2 py-0.5 rounded shadow-sm tracking-wide">
                                             🚨 3 OUBLIS
                                         </span>

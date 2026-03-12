@@ -4,6 +4,7 @@ import { useState } from "react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
+import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Loader2 } from "lucide-react"
@@ -13,6 +14,9 @@ export function EditCollaboratorForm({ user, onCancel, onSuccess }: { user: any,
     const [submitting, setSubmitting] = useState(false)
 
     // Form state
+    const [firstName, setFirstName] = useState(user.firstName || "")
+    const [lastName, setLastName] = useState(user.lastName || "")
+    const [phone, setPhone] = useState(user.phone || "")
     const [role, setRole] = useState<string>((user.roles && user.roles.length > 0) ? user.roles[0] : "SALARIE")
     const [structure, setStructure] = useState<string>(user.structure || "")
     const [diploma, setDiploma] = useState<string>(user.diploma || "")
@@ -30,6 +34,9 @@ export function EditCollaboratorForm({ user, onCancel, onSuccess }: { user: any,
 
         try {
             const formData = new FormData()
+            formData.append("firstName", firstName)
+            formData.append("lastName", lastName)
+            formData.append("phone", phone)
             formData.append("roles", role)
             formData.append("structure", structure)
             formData.append("diploma", diploma)
@@ -53,12 +60,28 @@ export function EditCollaboratorForm({ user, onCancel, onSuccess }: { user: any,
 
     return (
         <form onSubmit={handleSubmit} className="space-y-5 py-4 animate-in fade-in duration-200 max-h-[60vh] overflow-y-auto px-1">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-muted/30 p-4 rounded-xl border border-border">
+                <div className="space-y-2">
+                    <Label className="text-xs uppercase font-bold text-muted-foreground">Prénom</Label>
+                    <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} className="h-10" placeholder="Prénom" />
+                </div>
+                <div className="space-y-2">
+                    <Label className="text-xs uppercase font-bold text-muted-foreground">Nom</Label>
+                    <Input value={lastName} onChange={(e) => setLastName(e.target.value)} className="h-10" placeholder="Nom" />
+                </div>
+                <div className="space-y-2 md:col-span-2">
+                    <Label className="text-xs uppercase font-bold text-muted-foreground">Téléphone (Contact)</Label>
+                    <Input value={phone} onChange={(e) => setPhone(e.target.value)} className="h-10" placeholder="Ex: 06..." />
+                </div>
+            </div>
+
             <div className="space-y-3">
                 <Label className="font-bold text-muted-foreground uppercase text-xs tracking-wider">Rôles et Accès</Label>
                 <Select value={role} onValueChange={handleRoleChange}>
                     <SelectTrigger className="h-10 text-sm"><SelectValue placeholder="Sélectionnez un rôle" /></SelectTrigger>
                     <SelectContent>
                         <SelectItem value="SALARIE">Salarié</SelectItem>
+                        <SelectItem value="RH">RH / Admin</SelectItem>
                         <SelectItem value="REGULATEUR">Régulateur</SelectItem>
                         <SelectItem value="ADMIN">Admin</SelectItem>
                     </SelectContent>

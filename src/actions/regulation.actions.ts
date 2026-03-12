@@ -5,28 +5,33 @@ import { revalidatePath } from "next/cache"
 import type { AssignmentStatus } from "@prisma/client"
 
 export async function getVehiclesWithAssignments(dateStr: string) {
-    const startOfTargetDate = new Date(`${dateStr}T00:00:00.000Z`)
-    const endOfTargetDate = new Date(`${dateStr}T23:59:59.999Z`)
+    try {
+        const startOfTargetDate = new Date(`${dateStr}T00:00:00.000Z`)
+        const endOfTargetDate = new Date(`${dateStr}T23:59:59.999Z`)
 
-    return prisma.vehicle.findMany({
-        include: {
-            assignments: {
-                where: {
-                    date: {
-                        gte: startOfTargetDate,
-                        lte: endOfTargetDate
+        return await prisma.vehicle.findMany({
+            include: {
+                assignments: {
+                    where: {
+                        date: {
+                            gte: startOfTargetDate,
+                            lte: endOfTargetDate
+                        }
+                    },
+                    include: {
+                        leader: true,
+                        teammate: true
                     }
-                },
-                include: {
-                    leader: true,
-                    teammate: true
                 }
+            },
+            orderBy: {
+                plateNumber: 'asc'
             }
-        },
-        orderBy: {
-            plateNumber: 'asc'
-        }
-    })
+        })
+    } catch (error) {
+        console.error("Erreur getVehiclesWithAssignments:", error)
+        return []
+    }
 }
 
 export async function getAvailablePersonnel(dateStr: string) {
@@ -90,7 +95,9 @@ export async function saveAssignment(data: {
                     date: startOfDay,
                     startTime: data.startTime,
                     endTime: data.endTime,
-                    status: 'PENDING'
+                    status: 'PENDING',
+                    leaderValidated: false,
+                    teammateValidated: false
                 }
             })
         }
@@ -154,26 +161,31 @@ export async function updateAssignmentStatus(assignmentId: string, status: Assig
 }
 
 export async function getMyAssignment(userId: string, dateStr: string) {
-    const startOfDay = new Date(`${dateStr}T00:00:00.000Z`)
-    const endOfDay = new Date(`${dateStr}T23:59:59.999Z`)
+    try {
+        const startOfDay = new Date(`${dateStr}T00:00:00.000Z`)
+        const endOfDay = new Date(`${dateStr}T23:59:59.999Z`)
 
-    return prisma.planningAssignment.findFirst({
-        where: {
-            OR: [
-                { leaderId: userId },
-                { teammateId: userId }
-            ],
-            date: {
-                gte: startOfDay,
-                lte: endOfDay
+        return await prisma.planningAssignment.findFirst({
+            where: {
+                OR: [
+                    { leaderId: userId },
+                    { teammateId: userId }
+                ],
+                date: {
+                    gte: startOfDay,
+                    lte: endOfDay
+                }
+            },
+            include: {
+                vehicle: true,
+                leader: true,
+                teammate: true
             }
-        },
-        include: {
-            vehicle: true,
-            leader: true,
-            teammate: true
-        }
-    })
+        })
+    } catch (error) {
+        console.error("Erreur getMyAssignment:", error)
+        return null
+    }
 }
 
 export async function getRegulationHistory() {

@@ -461,10 +461,18 @@ export async function updateCollaboratorAdmin(userId: string, formData: FormData
     const isTeamLeaderRaw = formData.get("isTeamLeader");
     const isTeamLeader = isTeamLeaderRaw === "on" || isTeamLeaderRaw === "true";
 
+    const firstName = formData.get("firstName") as string;
+    const lastName = formData.get("lastName") as string;
+    const phone = formData.get("phone") as string;
+
     try {
         await prisma.user.update({
             where: { id: userId },
             data: {
+                firstName: firstName || undefined,
+                lastName: lastName || undefined,
+                phone: phone || undefined,
+                name: (firstName && lastName) ? `${firstName} ${lastName}` : undefined,
                 roles: rawRoles.length > 0 ? (rawRoles as any[]) : ["SALARIE"],
                 isRegulateur: rawRoles.includes("REGULATEUR"),
                 structure: formData.get("structure") as any || null,
@@ -476,7 +484,7 @@ export async function updateCollaboratorAdmin(userId: string, formData: FormData
         });
 
         revalidatePath("/dashboard/rh/collaborateurs");
-        return { success: "Profil technique mis à jour avec succès !" };
+        return { success: "Profil mis à jour avec succès !" };
     } catch (error: any) {
         console.error("Update collaborator error details:", error);
         return { error: "Une erreur s'est produite lors de la modification." };
