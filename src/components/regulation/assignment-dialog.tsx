@@ -20,6 +20,7 @@ import {
     SelectValue
 } from "@/components/ui/select"
 import { User, ShieldCheck, Clock, CheckCircle2, Loader2, AlertCircle } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
 import { saveAssignment } from "@/actions/regulation.actions"
 import { toast } from "sonner"
 
