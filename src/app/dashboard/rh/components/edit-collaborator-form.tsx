@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
@@ -13,23 +13,22 @@ import { updateCollaboratorAdmin } from "@/actions/users"
 export function EditCollaboratorForm({ user, onCancel, onSuccess }: { user: any, onCancel: () => void, onSuccess: () => void }) {
     const [submitting, setSubmitting] = useState(false)
 
-    // Form state
-    const [firstName, setFirstName] = useState(user.firstName || "")
-    const [lastName, setLastName] = useState(user.lastName || "")
-    const [phone, setPhone] = useState(user.phone || "")
-    const [role, setRole] = useState<string>((user.roles && user.roles.length > 0) ? user.roles[0] : "SALARIE")
-    const [structure, setStructure] = useState<string>(user.structure || "")
-    const [diploma, setDiploma] = useState<string>(user.diploma || "")
-    const [shift, setShift] = useState<string>(user.shift || "")
-    const [preference, setPreference] = useState<string>(user.preference || "")
-    const [isTeamLeader, setIsTeamLeader] = useState<boolean>(user.isTeamLeader || false)
-
-    const handleRoleChange = (newRole: string) => {
-        setRole(newRole)
-    }
+    // Form state with absolute safety guards
+    const [firstName, setFirstName] = useState(String(user?.firstName || ""))
+    const [lastName, setLastName] = useState(String(user?.lastName || ""))
+    const [phone, setPhone] = useState(String(user?.phone || ""))
+    const [role, setRole] = useState<string>((user?.roles && user.roles.length > 0) ? String(user.roles[0]) : "SALARIE")
+    
+    // Normalize empty values to "NONE" for Radix Select stability
+    const [structure, setStructure] = useState<string>(user?.structure || "NONE")
+    const [diploma, setDiploma] = useState<string>(user?.diploma || "NONE")
+    const [shift, setShift] = useState<string>(user?.shift || "NONE")
+    const [preference, setPreference] = useState<string>(user?.preference || "NONE")
+    const [isTeamLeader, setIsTeamLeader] = useState<boolean>(!!user?.isTeamLeader)
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
+        if (submitting) return
         setSubmitting(true)
 
         try {
@@ -38,10 +37,10 @@ export function EditCollaboratorForm({ user, onCancel, onSuccess }: { user: any,
             formData.append("lastName", lastName)
             formData.append("phone", phone)
             formData.append("roles", role)
-            formData.append("structure", structure)
-            formData.append("diploma", diploma)
-            formData.append("shift", shift)
-            formData.append("preference", preference)
+            formData.append("structure", structure === "NONE" ? "" : structure)
+            formData.append("diploma", diploma === "NONE" ? "" : diploma)
+            formData.append("shift", shift === "NONE" ? "" : shift)
+            formData.append("preference", preference === "NONE" ? "" : preference)
             if (isTeamLeader) formData.append("isTeamLeader", "true")
 
             const result = await updateCollaboratorAdmin(user.id, formData)
@@ -52,6 +51,7 @@ export function EditCollaboratorForm({ user, onCancel, onSuccess }: { user: any,
                 onSuccess()
             }
         } catch (error) {
+            console.error("Form submission error:", error)
             toast.error("Erreur lors de la mise à jour.")
         } finally {
             setSubmitting(false)
@@ -63,22 +63,22 @@ export function EditCollaboratorForm({ user, onCancel, onSuccess }: { user: any,
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-muted/30 p-4 rounded-xl border border-border">
                 <div className="space-y-2">
                     <Label className="text-xs uppercase font-bold text-muted-foreground">Prénom</Label>
-                    <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} className="h-10" placeholder="Prénom" />
+                    <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} className="h-10 border-slate-300" placeholder="Prénom" />
                 </div>
                 <div className="space-y-2">
                     <Label className="text-xs uppercase font-bold text-muted-foreground">Nom</Label>
-                    <Input value={lastName} onChange={(e) => setLastName(e.target.value)} className="h-10" placeholder="Nom" />
+                    <Input value={lastName} onChange={(e) => setLastName(e.target.value)} className="h-10 border-slate-300" placeholder="Nom" />
                 </div>
                 <div className="space-y-2 md:col-span-2">
                     <Label className="text-xs uppercase font-bold text-muted-foreground">Téléphone (Contact)</Label>
-                    <Input value={phone} onChange={(e) => setPhone(e.target.value)} className="h-10" placeholder="Ex: 06..." />
+                    <Input value={phone} onChange={(e) => setPhone(e.target.value)} className="h-10 border-slate-300" placeholder="Ex: 06..." />
                 </div>
             </div>
 
             <div className="space-y-3">
-                <Label className="font-bold text-muted-foreground uppercase text-xs tracking-wider">Rôles et Accès</Label>
-                <Select value={role} onValueChange={handleRoleChange}>
-                    <SelectTrigger className="h-10 text-sm"><SelectValue placeholder="Sélectionnez un rôle" /></SelectTrigger>
+                <Label className="font-bold text-muted-foreground uppercase text-xs tracking-wider">Rôle et Accès principal</Label>
+                <Select value={role} onValueChange={setRole}>
+                    <SelectTrigger className="h-10 text-sm border-slate-300"><SelectValue placeholder="Sélectionnez un rôle" /></SelectTrigger>
                     <SelectContent>
                         <SelectItem value="SALARIE">Salarié</SelectItem>
                         <SelectItem value="RH">RH / Admin</SelectItem>
@@ -92,9 +92,9 @@ export function EditCollaboratorForm({ user, onCancel, onSuccess }: { user: any,
                 <div className="space-y-2">
                     <Label className="text-xs uppercase font-bold text-muted-foreground">Structure</Label>
                     <Select value={structure} onValueChange={setStructure}>
-                        <SelectTrigger className="h-10 text-sm"><SelectValue placeholder="Non défini" /></SelectTrigger>
+                        <SelectTrigger className="h-10 text-sm border-slate-300"><SelectValue /></SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="">Non défini</SelectItem>
+                            <SelectItem value="NONE">Non défini</SelectItem>
                             <SelectItem value="MARK">MARK Ambulance</SelectItem>
                             <SelectItem value="VDF">VDF Ambulance</SelectItem>
                             <SelectItem value="LES_2">Les Deux</SelectItem>
@@ -104,9 +104,9 @@ export function EditCollaboratorForm({ user, onCancel, onSuccess }: { user: any,
                 <div className="space-y-2">
                     <Label className="text-xs uppercase font-bold text-muted-foreground">Diplôme</Label>
                     <Select value={diploma} onValueChange={setDiploma}>
-                        <SelectTrigger className="h-10 text-sm"><SelectValue placeholder="Non défini" /></SelectTrigger>
+                        <SelectTrigger className="h-10 text-sm border-slate-300"><SelectValue /></SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="">Non défini</SelectItem>
+                            <SelectItem value="NONE">Non défini</SelectItem>
                             <SelectItem value="AUXILIAIRE">Auxiliaire Ambulancier</SelectItem>
                             <SelectItem value="DEA">DEA</SelectItem>
                         </SelectContent>
@@ -115,9 +115,9 @@ export function EditCollaboratorForm({ user, onCancel, onSuccess }: { user: any,
                 <div className="space-y-2">
                     <Label className="text-xs uppercase font-bold text-muted-foreground">Rythme</Label>
                     <Select value={shift} onValueChange={setShift}>
-                        <SelectTrigger className="h-10 text-sm"><SelectValue placeholder="Non défini" /></SelectTrigger>
+                        <SelectTrigger className="h-10 text-sm border-slate-300"><SelectValue /></SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="">Non défini</SelectItem>
+                            <SelectItem value="NONE">Non défini</SelectItem>
                             <SelectItem value="JOUR">Jour</SelectItem>
                             <SelectItem value="NUIT">Nuit</SelectItem>
                             <SelectItem value="VACATAIRE">Vacataire</SelectItem>
@@ -128,9 +128,9 @@ export function EditCollaboratorForm({ user, onCancel, onSuccess }: { user: any,
                 <div className="space-y-2">
                     <Label className="text-xs uppercase font-bold text-muted-foreground">Préférence</Label>
                     <Select value={preference} onValueChange={setPreference}>
-                        <SelectTrigger className="h-10 text-sm"><SelectValue placeholder="Non défini" /></SelectTrigger>
+                        <SelectTrigger className="h-10 text-sm border-slate-300"><SelectValue /></SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="">Non défini</SelectItem>
+                            <SelectItem value="NONE">Non défini</SelectItem>
                             <SelectItem value="NORMAL">Normale</SelectItem>
                             <SelectItem value="SAMEDI">Samedi Dispo.</SelectItem>
                             <SelectItem value="NUIT">Nuit Préférée</SelectItem>
@@ -148,7 +148,7 @@ export function EditCollaboratorForm({ user, onCancel, onSuccess }: { user: any,
                         <label htmlFor="isTeamLeaderEdit" className="text-sm font-semibold text-orange-950 cursor-pointer">
                             Responsable de Bord <span className="text-orange-600 text-xs uppercase tracking-wide ml-1">(Responsable Véhicule)</span>
                         </label>
-                        <p className="text-[11px] text-orange-800/80 mt-1">Pré-sélectionne ou autorise ce collaborateur à piloter ce véhicule (MARK ou VDF) lors de la régulation.</p>
+                        <p className="text-[11px] text-orange-800/80 mt-1">Autorise ce collaborateur à piloter un véhicule (MARK ou VDF) lors de la régulation.</p>
                     </div>
                 </div>
             </div>
