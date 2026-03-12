@@ -1,8 +1,9 @@
 import { prisma } from "@/lib/prisma"
 
-export async function getAllUsers() {
+export async function getAllUsers(includeDeleted = false) {
     try {
         const users = await prisma.user.findMany({
+            where: includeDeleted ? {} : { isDeleted: false },
             orderBy: {
                 name: 'asc'
             },
@@ -26,6 +27,8 @@ export async function getAllUsers() {
                 isTeamLeader: true,
                 isRegulateur: true,
                 oubliCount: true,
+                isDeleted: true,
+                deletedAt: true,
             }
         })
         return users

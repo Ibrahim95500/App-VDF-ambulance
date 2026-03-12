@@ -58,6 +58,8 @@ model User {
   deletionReason String?   @db.Text
   pushSubscriptions PushSubscription[]
   fcmTokens      FcmToken[]
+  isDeleted      Boolean   @default(false)
+  deletedAt      DateTime?
 
   // Champs Régulation
   structure      Structure?

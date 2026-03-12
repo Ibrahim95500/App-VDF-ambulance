@@ -547,4 +547,67 @@ export async function decrementOubliCount(userId: string) {
     }
 }
 
+export async function softDeleteUser(userId: string) {
+    try {
+        const session = await auth();
+        const roles = (session?.user as any)?.roles || [];
+
+        if (!session?.user || (!roles.includes("ADMIN") && !roles.includes("RH"))) {
+            return { error: "Non autorisé. Seul un RH peut supprimer un compte." };
+        }
+
+        const targetUser = await prisma.user.findUnique({ where: { id: userId } });
+        if (!targetUser) {
+            return { error: "L'utilisateur n'a pas été trouvé." };
+        }
+
+        await prisma.user.update({
+            where: { id: userId },
+            data: {
+                isDeleted: true,
+                deletedAt: new Date(),
+                isActive: false // On le désactive aussi par sécurité
+            }
+        });
+
+        revalidatePath("/dashboard/rh/collaborateurs");
+        return { success: `Le collaborateur ${targetUser.name || targetUser.email} a été supprimé (viré) avec succès.` };
+    } catch (error: any) {
+        console.error("Soft delete user error:", error);
+        return { error: `Erreur technique: ${error.message || 'Erreur inconnue'}` };
+    }
+}
+
+export async function restoreUser(userId: string) {
+    try {
+        const session = await auth();
+        const roles = (session?.user as any)?.roles || [];
+
+        if (!session?.user || (!roles.includes("ADMIN") && !roles.includes("RH"))) {
+            return { error: "Non autorisé. Seul un RH peut restaurer un compte." };
+        }
+
+        const targetUser = await prisma.user.findUnique({ where: { id: userId } });
+        if (!targetUser) {
+            return { error: "L'utilisateur n'a pas été trouvé." };
+        }
+
+        await prisma.user.update({
+            where: { id: userId },
+            data: {
+                isDeleted: false,
+                deletedAt: null,
+                isActive: true
+            }
+        });
+
+        revalidatePath("/dashboard/rh/collaborateurs");
+        return { success: `Le compte de ${targetUser.name || targetUser.email} a été restauré avec succès.` };
+    } catch (error: any) {
+        console.error("Restore user error:", error);
+        return { error: `Erreur technique: ${error.message || 'Erreur inconnue'}` };
+    }
+}
+
+
 

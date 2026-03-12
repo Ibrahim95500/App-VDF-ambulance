@@ -17,9 +17,9 @@ import {
     DialogFooter
 } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
-import { deactivateUser, reactivateUser, decrementOubliCount } from "@/actions/users"
+import { deactivateUser, reactivateUser, decrementOubliCount, softDeleteUser, restoreUser } from "@/actions/users"
 import { toast } from "sonner"
-import { Trash2Icon, InfoIcon, ShieldCheckIcon, ShieldAlertIcon, UserCheckIcon, UserXIcon, MessageSquareIcon, Eye, RotateCcw, Calendar, Loader2, Pen } from "lucide-react"
+import { Trash2Icon, InfoIcon, ShieldCheckIcon, ShieldAlertIcon, UserCheckIcon, UserXIcon, MessageSquareIcon, Eye, RotateCcw, Calendar, Loader2, Pen, TrashIcon, RefreshCw } from "lucide-react"
 import { HRStatsCharts } from "../components/hr-stats-charts"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -66,6 +66,9 @@ export function CollaboratorsTable({ initialData, services = [] }: { initialData
     const [isEditingProfile, setIsEditingProfile] = useState(false)
     const [isReactivating, setIsReactivating] = useState<string | null>(null)
     const [isReducingOubli, setIsReducingOubli] = useState(false)
+    const [userToDelete, setUserToDelete] = useState<User | null>(null)
+    const [isDeleting, setIsDeleting] = useState(false)
+    const [isRestoring, setIsRestoring] = useState<string | null>(null)
 
     // Convocation state
     const [isConvoking, setIsConvoking] = useState(false)
@@ -228,6 +231,37 @@ export function CollaboratorsTable({ initialData, services = [] }: { initialData
         }
     }
 
+    const handleDelete = async () => {
+        if (!userToDelete) return;
+        setIsDeleting(true);
+        try {
+            const result = await softDeleteUser(userToDelete.id);
+            if (result.success) {
+                toast.success(result.success);
+                setUserToDelete(null);
+            } else if (result.error) {
+                toast.error(result.error);
+            }
+        } catch {
+            toast.error("Erreur lors de la suppression.");
+        } finally {
+            setIsDeleting(false);
+        }
+    }
+
+    const handleRestore = async (userId: string) => {
+        setIsRestoring(userId);
+        try {
+            const result = await restoreUser(userId);
+            if (result.success) toast.success(result.success);
+            else if (result.error) toast.error(result.error);
+        } catch {
+            toast.error("Erreur lors de la restauration.");
+        } finally {
+            setIsRestoring(null);
+        }
+    }
+
     const handleReduceOubli = async () => {
         if (!selectedUser) return;
         setIsReducingOubli(true);
@@ -247,8 +281,18 @@ export function CollaboratorsTable({ initialData, services = [] }: { initialData
         }
     }
 
-    const activeCount = initialData.filter(u => (u as any).isActive !== false).length
-    const inactiveCount = initialData.length - activeCount
+    const activeCount = initialData.filter(u => !u.isDeleted && (u as any).isActive !== false).length
+    const inactiveCount = initialData.filter(u => !u.isDeleted && (u as any).isActive === false).length
+    const deletedCount = initialData.filter(u => u.isDeleted).length
+
+    const filteredData = useMemo(() => {
+        return initialData.filter(user => {
+            // Filtrage par statut de suppression
+            if (statusFilter === "DELETED" && !user.isDeleted) return false;
+            if (statusFilter !== "DELETED" && user.isDeleted) return false;
+
+            if (statusFilter === "ACTIVE" && (user as any).isActive === false) return false
+            if (statusFilter === "INACTIVE" && (user as any).isActive !== false) return false
 
     return (
         <div className="flex flex-col gap-6">
@@ -261,6 +305,12 @@ export function CollaboratorsTable({ initialData, services = [] }: { initialData
                     <UserXIcon className="w-4 h-4" />
                     <span className="font-bold">{inactiveCount}</span> Collaborateurs Inactifs
                 </Badge>
+                {deletedCount > 0 && (
+                    <Badge variant="outline" className="px-4 py-2 bg-slate-100 text-slate-600 border-slate-200 flex items-center gap-2">
+                        <TrashIcon className="w-4 h-4" />
+                        <span className="font-bold">{deletedCount}</span> Supprimés (Virés)
+                    </Badge>
+                )}
             </div>
 
             <div className="border border-border rounded-xl p-6">
@@ -301,6 +351,14 @@ export function CollaboratorsTable({ initialData, services = [] }: { initialData
                             >
                                 Inactifs
                             </button>
+                            {deletedCount > 0 && (
+                                <button
+                                    onClick={() => setStatusFilter("DELETED")}
+                                    className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${statusFilter === "DELETED" ? "bg-background shadow-sm text-slate-900 border" : "text-muted-foreground hover:text-foreground"}`}
+                                >
+                                    Fired / Supprimés
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -459,27 +517,59 @@ export function CollaboratorsTable({ initialData, services = [] }: { initialData
                                             <Button variant="ghost" size="icon" className="size-8 text-blue-500 hover:text-blue-600 hover:bg-blue-50" onClick={() => setSelectedUser(user)}>
                                                 <Eye className="w-4 h-4" />
                                             </Button>
-                                            {(user as any).isActive !== false ? (
+                                            {user.isDeleted ? (
                                                 <Button
                                                     variant="ghost"
                                                     size="sm"
-                                                    className="h-8 text-red-500 hover:text-red-600 hover:bg-red-50 transition-colors"
-                                                    onClick={() => setUserToDeactivate(user)}
+                                                    className="h-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50 transition-colors font-bold"
+                                                    disabled={isRestoring === user.id}
+                                                    onClick={() => handleRestore(user.id)}
                                                 >
-                                                    <Trash2Icon className="w-4 h-4 mr-1.5" />
-                                                    Suspendre
+                                                    {isRestoring === user.id ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-1.5" />}
+                                                    Restaurer
                                                 </Button>
+                                            ) : (user as any).isActive !== false ? (
+                                                <div className="flex items-center gap-1">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="h-8 text-red-500 hover:text-red-600 hover:bg-red-50 transition-colors"
+                                                        onClick={() => setUserToDeactivate(user)}
+                                                    >
+                                                        <Trash2Icon className="w-4 h-4 mr-1.5" />
+                                                        Suspendre
+                                                    </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="h-8 text-slate-400 hover:text-red-700 hover:bg-red-50 transition-colors px-2"
+                                                        onClick={() => setUserToDelete(user)}
+                                                        title="Virer définitvement"
+                                                    >
+                                                        <TrashIcon className="w-4 h-4" />
+                                                    </Button>
+                                                </div>
                                             ) : (
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    className="h-8 text-green-600 hover:text-green-700 hover:bg-green-50 transition-colors"
-                                                    disabled={isReactivating === user.id}
-                                                    onClick={() => handleReactivate(user.id)}
-                                                >
-                                                    <RotateCcw className="w-4 h-4 mr-1.5" />
-                                                    Réactiver
-                                                </Button>
+                                                <div className="flex items-center gap-1">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="h-8 text-green-600 hover:text-green-700 hover:bg-green-50 transition-colors font-bold"
+                                                        disabled={isReactivating === user.id}
+                                                        onClick={() => handleReactivate(user.id)}
+                                                    >
+                                                        <RotateCcw className="w-4 h-4 mr-1.5" />
+                                                        Réactiver
+                                                    </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="h-8 text-slate-400 hover:text-red-700 hover:bg-red-50 transition-colors px-2"
+                                                        onClick={() => setUserToDelete(user)}
+                                                    >
+                                                        <TrashIcon className="w-4 h-4" />
+                                                    </Button>
+                                                </div>
                                             )}
                                         </div>
                                     </td>
@@ -535,6 +625,41 @@ export function CollaboratorsTable({ initialData, services = [] }: { initialData
                             disabled={isDeactivating || !reason.trim() || reason.trim().length < 5}
                         >
                             {isDeactivating ? "Suspension en cours..." : "Confirmer la suspension"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Delete (Fired) Confirmation Dialog */}
+            <Dialog open={!!userToDelete} onOpenChange={(open) => !open && setUserToDelete(null)}>
+                <DialogContent className="sm:max-w-md border-red-200">
+                    <DialogHeader>
+                        <DialogTitle className="text-red-700 flex items-center gap-2 text-xl font-black">
+                            <TrashIcon className="w-6 h-6 text-red-600" />
+                            VIRER LE COLLABORATEUR
+                        </DialogTitle>
+                        <DialogDescription className="pt-2 text-foreground font-medium">
+                            Attention ! Cette action va masquer l'utilisateur de toutes les listes actives et de la régulation.<br />
+                            Il sera déplacé dans la liste des "Anciens collaborateurs".
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="py-6 flex flex-col items-center justify-center bg-red-50/50 rounded-lg border border-red-100 my-4">
+                        <p className="text-sm text-red-800 font-bold uppercase tracking-wider mb-1">Cible :</p>
+                        <p className="text-2xl font-black text-red-900">{userToDelete?.firstName} {userToDelete?.lastName}</p>
+                        <p className="text-xs text-red-600 mt-1 italic">{userToDelete?.email}</p>
+                    </div>
+
+                    <DialogFooter className="flex sm:justify-between items-center gap-3 border-t pt-5 mt-2">
+                        <Button variant="ghost" onClick={() => setUserToDelete(null)} className="font-semibold text-muted-foreground hover:text-foreground">
+                            Annuler
+                        </Button>
+                        <Button
+                            className="bg-red-700 hover:bg-red-800 text-white font-black h-12 px-8 shadow-xl shadow-red-200 uppercase tracking-widest"
+                            onClick={handleDelete}
+                            disabled={isDeleting}
+                        >
+                            {isDeleting ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : "OUI, VIRER CE COMPTE"}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
