@@ -77,12 +77,32 @@ export function SalarieHistoryTable({ data, userId }: SalarieHistoryTableProps) 
                                                     <CheckCircle2 size={14} />
                                                     <span>Validé</span>
                                                 </div>
-                                            ) : (
-                                                <div className="flex items-center gap-1 text-red-500 font-bold text-xs">
-                                                    <XCircle size={14} />
-                                                    <span>Oubli</span>
-                                                </div>
-                                            )}
+                                            ) : (() => {
+                                                // Logique d'Oubli : seulement après 21h la veille de la mission
+                                                const missionDate = new Date(item.date)
+                                                const deadline = new Date(missionDate)
+                                                deadline.setDate(deadline.getDate() - 1)
+                                                deadline.setHours(21, 0, 0, 0)
+
+                                                const now = new Date()
+                                                const isDeadlinePassed = now > deadline
+
+                                                if (isDeadlinePassed) {
+                                                    return (
+                                                        <div className="flex items-center gap-1 text-red-500 font-bold text-xs">
+                                                            <XCircle size={14} />
+                                                            <span>Oubli</span>
+                                                        </div>
+                                                    )
+                                                } else {
+                                                    return (
+                                                        <div className="flex items-center gap-1 text-slate-400 font-bold text-xs italic">
+                                                            <Clock size={14} />
+                                                            <span>En attente...</span>
+                                                        </div>
+                                                    )
+                                                }
+                                            })()}
                                         </div>
                                     </td>
                                 </tr>
