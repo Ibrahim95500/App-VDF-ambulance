@@ -14,19 +14,11 @@ export default async function SalarieRegulationPage() {
         redirect("/login")
     }
 
-    // 1. On cherche d'abord pour DEMAIN
+    // 1. On cherche pour DEMAIN (Règle de base)
     const tomorrowDate = addDays(new Date(), 1)
     const dateStrTomorrow = format(tomorrowDate, 'yyyy-MM-dd')
-    let myAssignment = await getMyAssignment(session.user.id, dateStrTomorrow)
-    let showingDate = tomorrowDate
-
-    // 2. Si rien pour demain, on regarde pour AUJOURD'HUI (cas Jordan)
-    if (!myAssignment) {
-        const todayDate = new Date()
-        const dateStrToday = format(todayDate, 'yyyy-MM-dd')
-        myAssignment = await getMyAssignment(session.user.id, dateStrToday)
-        showingDate = todayDate
-    }
+    const myAssignment = await getMyAssignment(session.user.id, dateStrTomorrow)
+    const showingDate = tomorrowDate
 
     // 3. Récupérer l'historique personnel
     const history = await getMyRegulationHistory(session.user.id)
