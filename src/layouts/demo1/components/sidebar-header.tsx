@@ -36,7 +36,7 @@ export function SidebarHeader() {
         mode="icon"
         variant="outline"
         className={cn(
-          'size-7 absolute start-full top-2/4 rtl:translate-x-2/4 -translate-x-2/4 -translate-y-2/4 z-60',
+          'size-7 absolute start-full top-2/4 rtl:translate-x-2/4 -translate-x-2/4 -translate-y-2/4 z-[100] cursor-pointer',
           settings.layouts.demo1.sidebarCollapse
             ? 'ltr:rotate-180'
             : 'rtl:rotate-180',

@@ -14,8 +14,10 @@ export default async function SalarieRegulationPage() {
         redirect("/login")
     }
 
-    // 1. On cherche pour DEMAIN (Règle de base)
-    const tomorrowDate = addDays(new Date(), 1)
+    // 1. On cherche pour DEMAIN (Règle de base en forçant le fuseau horaire Paris)
+    // Cela évite les décalages si le serveur est en UTC.
+    const now = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Paris" }));
+    const tomorrowDate = addDays(now, 1)
     const dateStrTomorrow = format(tomorrowDate, 'yyyy-MM-dd')
     const myAssignment = await getMyAssignment(session.user.id, dateStrTomorrow)
     const showingDate = tomorrowDate
