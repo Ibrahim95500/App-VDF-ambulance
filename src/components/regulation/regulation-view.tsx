@@ -311,6 +311,8 @@ export function RegulationView() {
                                 teammateName={assignment?.teammate ? `${assignment.teammate.lastName} ${assignment.teammate.firstName}` : undefined}
                                 leaderDiploma={assignment?.leader?.diploma || undefined}
                                 teammateDiploma={assignment?.teammate?.diploma || undefined}
+                                leaderIsRegulateur={assignment?.leader?.isRegulateur || false}
+                                teammateIsRegulateur={assignment?.teammate?.isRegulateur || false}
                                 leaderValidated={assignment?.leaderValidated || false}
                                 teammateValidated={assignment?.teammateValidated || false}
                                 status={assignment?.status}

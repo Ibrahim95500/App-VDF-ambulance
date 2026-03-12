@@ -516,3 +516,35 @@ export async function updateCollaboratorAdmin(userId: string, formData: FormData
     }
 }
 
+export async function decrementOubliCount(userId: string) {
+    try {
+        const session = await auth();
+        const roles = (session?.user as any)?.roles || [];
+
+        if (!session?.user || (!roles.includes("ADMIN") && !roles.includes("RH"))) {
+            return { error: "Non autorisé. Seul un RH peut modifier un compte." };
+        }
+
+        const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { oubliCount: true, name: true }
+        });
+
+        if (!user) return { error: "Utilisateur non trouvé" };
+
+        const newCount = Math.max(0, (user.oubliCount || 0) - 1);
+
+        await prisma.user.update({
+            where: { id: userId },
+            data: { oubliCount: newCount }
+        });
+
+        revalidatePath("/dashboard/rh/collaborateurs");
+        return { success: `Compteur d'oublis de ${user.name} réduit à ${newCount}.` };
+    } catch (error: any) {
+        console.error("Decrement oubli error:", error);
+        return { error: "Une erreur s'est produite." };
+    }
+}
+
+

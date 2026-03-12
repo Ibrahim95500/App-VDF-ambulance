@@ -23,6 +23,11 @@ import { format } from "date-fns"
 import { fr } from "date-fns/locale"
 import { AppointmentRequest } from "@prisma/client"
 
+const isValidDate = (date: any) => {
+    const d = new Date(date);
+    return d instanceof Date && !isNaN(d.getTime());
+};
+
 export function AppointmentHistoryTable({ initialData }: { initialData: AppointmentRequest[] }) {
     const [searchTerm, setSearchTerm] = useState("")
     const [statusFilter, setStatusFilter] = useState("ALL")
@@ -102,9 +107,9 @@ export function AppointmentHistoryTable({ initialData }: { initialData: Appointm
 
     const exportData = useMemo(() => {
         return filteredData.map(req => ({
-            "Date de demande": format(new Date(req.createdAt), 'dd/MM/yyyy'),
+            "Date de demande": isValidDate(req.createdAt) ? format(new Date(req.createdAt), 'dd/MM/yyyy') : "-",
             "Motif": req.reason || "-",
-            "RDV Prévu": req.appointmentDate ? format(new Date(req.appointmentDate), "dd/MM/yyyy HH:mm") : "-",
+            "RDV Prévu": (req.appointmentDate && isValidDate(req.appointmentDate)) ? format(new Date(req.appointmentDate), "dd/MM/yyyy HH:mm") : "-",
             "Statut": req.status === 'PENDING' ? 'En Attente' : req.status === 'APPROVED' ? 'Approuvée' : 'Refusée'
         }))
     }, [filteredData])
@@ -152,7 +157,7 @@ export function AppointmentHistoryTable({ initialData }: { initialData: Appointm
                                 <div className="flex flex-col gap-1 min-w-0">
                                     <p className="font-bold text-foreground text-sm truncate">{req.reason}</p>
                                     <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
-                                        <Calendar className="size-3" /> Demandé le {format(new Date(req.createdAt), 'dd/MM/yyyy')}
+                                        <Calendar className="size-3" /> Demandé le {isValidDate(req.createdAt) ? format(new Date(req.createdAt), 'dd/MM/yyyy') : '-'}
                                     </div>
                                 </div>
                                 <div className="flex flex-col items-end gap-2 shrink-0">
@@ -170,7 +175,7 @@ export function AppointmentHistoryTable({ initialData }: { initialData: Appointm
                                     <div className="flex justify-between text-sm">
                                         <span className="text-green-700 font-semibold">RDV Prévu:</span>
                                         <span className="font-bold text-green-700">
-                                            {format(new Date(req.appointmentDate), "dd MMM yyyy 'à' HH:mm", { locale: fr })}
+                                            {isValidDate(req.appointmentDate) ? format(new Date(req.appointmentDate), "dd MMM yyyy 'à' HH:mm", { locale: fr }) : '-'}
                                         </span>
                                     </div>
                                 </div>
@@ -214,7 +219,7 @@ export function AppointmentHistoryTable({ initialData }: { initialData: Appointm
                                 paginatedData.map((req) => (
                                     <tr key={req.id} className="hover:bg-muted/10 transition-colors">
                                         <td className="px-5 py-4 font-medium text-foreground whitespace-nowrap">
-                                            {format(new Date(req.createdAt), 'dd/MM/yyyy')}
+                                            {isValidDate(req.createdAt) ? format(new Date(req.createdAt), 'dd/MM/yyyy') : '-'}
                                         </td>
                                         <td className="px-5 py-4 font-bold text-foreground">
                                             <span className="max-w-[200px] block truncate" title={req.reason || ""}>
@@ -225,10 +230,10 @@ export function AppointmentHistoryTable({ initialData }: { initialData: Appointm
                                             {req.status === 'APPROVED' && req.appointmentDate ? (
                                                 <div className="flex flex-col items-center">
                                                     <span className="text-green-600 font-semibold text-xs bg-green-50 px-2 py-0.5 rounded border border-green-200 block whitespace-nowrap">
-                                                        {format(new Date(req.appointmentDate), "dd MMM yyyy", { locale: fr })}
+                                                        {isValidDate(req.appointmentDate) ? format(new Date(req.appointmentDate), "dd MMM yyyy", { locale: fr }) : '-'}
                                                     </span>
                                                     <span className="text-[10px] font-bold text-muted-foreground mt-0.5">
-                                                        {format(new Date(req.appointmentDate), "HH:mm")}
+                                                        {isValidDate(req.appointmentDate) ? format(new Date(req.appointmentDate), "HH:mm") : '-'}
                                                     </span>
                                                 </div>
                                             ) : (
@@ -276,7 +281,7 @@ export function AppointmentHistoryTable({ initialData }: { initialData: Appointm
                         </div>
                         <DialogTitle className="text-lg font-black text-white">{selectedReq?.reason}</DialogTitle>
                         <DialogDescription className="text-slate-400 text-xs flex items-center gap-1 mt-1">
-                            <Calendar className="w-3 h-3" /> Demandé le {selectedReq ? format(new Date(selectedReq.createdAt), 'dd MMMM yyyy', { locale: fr }) : ''}
+                            <Calendar className="w-3 h-3" /> Demandé le {selectedReq && isValidDate(selectedReq.createdAt) ? format(new Date(selectedReq.createdAt), 'dd MMMM yyyy', { locale: fr }) : ''}
                         </DialogDescription>
                     </DialogHeader>
                     <div className="p-5 space-y-4 overflow-y-auto flex-1">
@@ -296,7 +301,7 @@ export function AppointmentHistoryTable({ initialData }: { initialData: Appointm
                                         <div className="flex flex-col">
                                             <span className="text-xs text-muted-foreground">Date et Heure</span>
                                             <span className="text-sm font-bold text-green-800">
-                                                {format(new Date(selectedReq.appointmentDate), "EEEE d MMMM yyyy 'à' HH:mm", { locale: fr })}
+                                                {isValidDate(selectedReq.appointmentDate) ? format(new Date(selectedReq.appointmentDate), "EEEE d MMMM yyyy 'à' HH:mm", { locale: fr }) : ''}
                                             </span>
                                         </div>
                                     </div>

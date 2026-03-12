@@ -53,6 +53,7 @@ export async function getAvailablePersonnel(dateStr: string) {
             isTeamLeader: true,
             structure: true,
             oubliCount: true,
+            isRegulateur: true,
         },
         orderBy: {
             lastName: 'asc'

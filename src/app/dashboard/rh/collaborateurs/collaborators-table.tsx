@@ -17,7 +17,7 @@ import {
     DialogFooter
 } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
-import { deactivateUser, reactivateUser } from "@/actions/users"
+import { deactivateUser, reactivateUser, decrementOubliCount } from "@/actions/users"
 import { toast } from "sonner"
 import { Trash2Icon, InfoIcon, ShieldCheckIcon, ShieldAlertIcon, UserCheckIcon, UserXIcon, MessageSquareIcon, Eye, RotateCcw, Calendar, Loader2, Pen } from "lucide-react"
 import { HRStatsCharts } from "../components/hr-stats-charts"
@@ -65,6 +65,7 @@ export function CollaboratorsTable({ initialData, services = [] }: { initialData
     const [selectedUser, setSelectedUser] = useState<User | null>(null)
     const [isEditingProfile, setIsEditingProfile] = useState(false)
     const [isReactivating, setIsReactivating] = useState<string | null>(null)
+    const [isReducingOubli, setIsReducingOubli] = useState(false)
 
     // Convocation state
     const [isConvoking, setIsConvoking] = useState(false)
@@ -224,6 +225,25 @@ export function CollaboratorsTable({ initialData, services = [] }: { initialData
             toast.error("Une erreur s'est produite lors de la réactivation.")
         } finally {
             setIsReactivating(null)
+        }
+    }
+
+    const handleReduceOubli = async () => {
+        if (!selectedUser) return;
+        setIsReducingOubli(true);
+        try {
+            const result = await decrementOubliCount(selectedUser.id);
+            if (result.success) {
+                toast.success(result.success);
+                // Mise à jour locale de l'objet selectedUser s'il existe
+                setSelectedUser({ ...selectedUser, oubliCount: Math.max(0, (selectedUser.oubliCount || 0) - 1) });
+            } else if (result.error) {
+                toast.error(result.error);
+            }
+        } catch {
+            toast.error("Erreur lors de la réduction des oublis.");
+        } finally {
+            setIsReducingOubli(false);
         }
     }
 
@@ -589,6 +609,26 @@ export function CollaboratorsTable({ initialData, services = [] }: { initialData
                                         <ShieldAlertIcon className="w-3 h-3" /> INACTIF
                                     </div>
                                 )}
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm text-muted-foreground">Oublis de validation</span>
+                                <div className="flex items-center gap-3">
+                                    <Badge variant={(selectedUser?.oubliCount ?? 0) >= 3 ? "destructive" : "outline"} className="font-bold">
+                                        {selectedUser?.oubliCount ?? 0} { (selectedUser?.oubliCount ?? 0) > 1 ? "oublis" : "oubli" }
+                                    </Badge>
+                                    {(selectedUser?.oubliCount ?? 0) > 0 && (
+                                        <Button 
+                                            size="sm" 
+                                            variant="ghost" 
+                                            className="h-7 text-[10px] text-blue-600 hover:bg-blue-50 border border-blue-100"
+                                            onClick={handleReduceOubli}
+                                            disabled={isReducingOubli}
+                                        >
+                                            {isReducingOubli ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : <RotateCcw className="w-3 h-3 mr-1" />}
+                                            Réduire de 1
+                                        </Button>
+                                    )}
+                                </div>
                             </div>
                             {selectedUser?.phone && (
                                 <div className="flex items-center justify-between">

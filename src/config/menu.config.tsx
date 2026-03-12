@@ -109,6 +109,11 @@ export const MENU_SIDEBAR: MenuConfig = [
     icon: Siren,
     path: '/dashboard/salarie/regulation',
   },
+  {
+    title: 'Mes Collègues',
+    icon: Users,
+    path: '/dashboard/salarie/collaborateurs',
+  },
 ];
 
 export const MENU_SIDEBAR_CUSTOM: MenuConfig = [
