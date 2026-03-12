@@ -25,9 +25,8 @@ export function getBrandedEmailHtml({
         <div>Directeur Général - VDF Ambulance</div>  
   `
 }: EmailTemplateOptions): string {
-  // PNG logo with blue background matching email header - works in all email clients including Gmail
-  // SVG is blocked by Gmail, data URIs are blocked too - PNG at a real URL is the only reliable option
-  const logoUrl = 'https://dev.vdf-ambulance.fr/brand/logo-mail.png';
+  // PNG logo for emails - using absolute URL from production domain for reliability
+  const logoUrl = 'https://dev.vdf-ambulance.fr/media/app/logo.png';
   const primaryColor = "#2c3e8a"; // VDF Blue
   const accentColor = "#f97316";  // VDF Orange
 
