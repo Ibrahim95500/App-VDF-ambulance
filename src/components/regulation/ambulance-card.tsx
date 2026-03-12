@@ -59,6 +59,7 @@ export function AmbulanceCard({
     }
 
     const PersonRow = ({
+        name,
         isLeader,
         validated,
         diploma,
