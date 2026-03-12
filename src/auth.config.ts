@@ -26,12 +26,14 @@ export const authConfig = {
             if (user) {
                 token.roles = (user as any).roles
                 token.isRegulateur = (user as any).isRegulateur
+                token.oubliCount = (user as any).oubliCount || 0
             }
 
             // Handle update signal from SessionSync
             if (trigger === "update" && session?.user) {
                 if (session.user.roles) token.roles = session.user.roles
                 if (session.user.isRegulateur !== undefined) token.isRegulateur = session.user.isRegulateur
+                if (session.user.oubliCount !== undefined) token.oubliCount = session.user.oubliCount
             }
 
             // We don't store the image in the JWT to avoid HTTP 431 (Cookie too large)
@@ -41,6 +43,7 @@ export const authConfig = {
             if (session.user) {
                 session.user.roles = token.roles
                 session.user.isRegulateur = token.isRegulateur
+                session.user.oubliCount = token.oubliCount || 0
                 if (token.sub) {
                     session.user.id = token.sub
                     // Dynamic image path to avoid cookie bloat

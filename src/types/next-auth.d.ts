@@ -11,6 +11,7 @@ declare module 'next-auth' {
       roleId?: string | null;
       roleName?: string | null;
       status: string;
+      oubliCount: number;
     };
   }
 
@@ -21,6 +22,7 @@ declare module 'next-auth' {
     avatar?: string | null;
     roleId?: string | null;
     status: string;
+    oubliCount: number;
   }
 }
 
@@ -33,5 +35,6 @@ declare module 'next-auth/jwt' {
     roleId?: string | null;
     roleName?: string | null;
     status: string;
+    oubliCount: number;
   }
 }
