@@ -198,7 +198,12 @@ export function AssignmentDialog({
                                     .map(p => (
                                         <SelectItem key={p.id} value={p.id} className="py-3">
                                             <div className="flex flex-col">
-                                                <span className="font-bold">{p.lastName} {p.firstName}</span>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="font-bold">{p.lastName} {p.firstName}</span>
+                                                    {p.diploma === 'REGULATEUR' && (
+                                                        <Badge variant="outline" className="text-[9px] bg-purple-50 text-purple-600 border-purple-200 uppercase px-1 h-4">Regul</Badge>
+                                                    )}
+                                                </div>
                                                 <span className="text-[10px] opacity-60 uppercase">{p.diploma || "DEA"} {p.isTeamLeader && "⭐ Chef"}</span>
                                             </div>
                                         </SelectItem>
@@ -218,6 +223,7 @@ export function AssignmentDialog({
                             </SelectTrigger>
                             <SelectContent>
                                 {availableTeammates
+                                    .filter(p => p.id !== leaderId) // Dynamique : On retire celui choisi en responsable
                                     .map(p => (
                                         <SelectItem key={p.id} value={p.id} className="py-3">
                                             <div className="flex flex-col">

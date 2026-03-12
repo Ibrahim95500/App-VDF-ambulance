@@ -10,6 +10,10 @@ export function InstallPWAPrompt() {
     const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
 
     useEffect(() => {
+        // Check if desktop
+        const isDesktop = window.innerWidth >= 1024
+        if (isDesktop) return
+
         // Check if app is already installed or running natively via Capacitor
         const isStandalone = window.matchMedia('(display-mode: standalone)').matches
         const isNativeCapacitor = typeof window !== 'undefined' && (window as any).Capacitor?.isNative

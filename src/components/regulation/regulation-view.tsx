@@ -205,6 +205,20 @@ export function RegulationView() {
                         <div className={`w-2 h-2 rounded-full ${statusObj.className.includes('blue') ? 'bg-blue-500' : statusObj.className.includes('orange') ? 'bg-orange-500' : statusObj.className.includes('green') ? 'bg-green-500' : statusObj.className.includes('purple') ? 'bg-purple-500' : 'bg-slate-500'}`}></div>
                         <span className="text-sm">{statusObj.label}</span>
                     </div>
+
+                    {/* Bouton Actualiser Stylé */}
+                    <Button 
+                        variant="outline" 
+                        size="icon" 
+                        onClick={loadData}
+                        disabled={loading}
+                        className="h-12 w-12 rounded-xl border-2 hover:bg-slate-50 hover:text-orange-500 hover:border-orange-200 transition-all duration-300 shadow-sm group"
+                    >
+                        <Loader2 className={cn(
+                            "size-5 transition-transform duration-500 group-hover:rotate-180",
+                            loading && "animate-spin"
+                        )} />
+                    </Button>
                 </div>
             </div>
 
