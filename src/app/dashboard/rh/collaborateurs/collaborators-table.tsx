@@ -133,51 +133,7 @@ export function CollaboratorsTable({ initialData, services = [] }: { initialData
         }
     }, [selectedUser, services]);
 
-    const filteredData = useMemo(() => {
-        return initialData.filter(user => {
-            // Search filter
-            const searchStr = `${user.name} ${user.email} ${user.firstName} ${user.lastName} ${user.phone}`.toLowerCase()
-            if (searchTerm && !searchStr.includes(searchTerm.toLowerCase())) return false
 
-            // Role filter
-            if (roleFilter !== "ALL" && !user.roles?.includes(roleFilter)) return false
-
-            // Active/Inactive filter
-            if (statusFilter !== "ALL") {
-                const isActive = (user as any).isActive !== false
-                if (statusFilter === "ACTIVE" && !isActive) return false
-                if (statusFilter === "INACTIVE" && isActive) return false
-            }
-
-            // Date filter (Creation date)
-            if (dateRange?.from && user.createdAt) {
-                const userDate = new Date(user.createdAt)
-                const start = startOfDay(dateRange.from)
-                const end = dateRange.to ? endOfDay(dateRange.to) : endOfDay(dateRange.from)
-                if (!isWithinInterval(userDate, { start, end })) return false
-            }
-
-            return true
-        })
-    }, [initialData, searchTerm, roleFilter, statusFilter, dateRange])
-
-    const paginatedData = useMemo(() => {
-        const start = (currentPage - 1) * PAGE_SIZE
-        return filteredData.slice(start, start + PAGE_SIZE)
-    }, [filteredData, currentPage])
-
-    const exportData = useMemo(() => {
-        return filteredData.map(user => ({
-            "Nom": user.lastName || "-",
-            "Prénom": user.firstName || "-",
-            "Email": user.email,
-            "Téléphone": user.phone || "-",
-            "Rôle": user.roles?.includes('RH') ? 'RH / Admin' : 'Salarié',
-            "Statut": (user as any).isActive !== false ? 'Actif' : 'Inactif',
-            "Motif Désactivation": (user as any).deletionReason || "-",
-            "Date d'inscription": user.createdAt ? new Date(user.createdAt).toLocaleDateString('fr-FR') : '-'
-        }))
-    }, [filteredData])
 
     const roleOptions = [
         { label: "Salariés", value: "SALARIE" },
@@ -291,8 +247,28 @@ export function CollaboratorsTable({ initialData, services = [] }: { initialData
             if (statusFilter === "DELETED" && !user.isDeleted) return false;
             if (statusFilter !== "DELETED" && user.isDeleted) return false;
 
-            if (statusFilter === "ACTIVE" && (user as any).isActive === false) return false
-            if (statusFilter === "INACTIVE" && (user as any).isActive !== false) return false
+            // Search filter
+            const searchStr = `${user.name} ${user.email} ${user.firstName} ${user.lastName} ${user.phone}`.toLowerCase()
+            if (searchTerm && !searchStr.includes(searchTerm.toLowerCase())) return false
+
+            // Role filter
+            if (roleFilter !== "ALL" && !user.roles?.includes(roleFilter)) return false
+
+            // Active/Inactive filter (only for non-deleted)
+            if (statusFilter !== "ALL" && statusFilter !== "DELETED") {
+                const isActive = (user as any).isActive !== false
+                if (statusFilter === "ACTIVE" && !isActive) return false
+                if (statusFilter === "INACTIVE" && isActive) return false
+            }
+
+            // Date filter (Creation date)
+            if (dateRange?.from && user.createdAt) {
+                const userDate = new Date(user.createdAt)
+                const start = startOfDay(dateRange.from)
+                const end = dateRange.to ? endOfDay(dateRange.to) : endOfDay(dateRange.from)
+                if (!isWithinInterval(userDate, { start, end })) return false
+            }
+
             return true
         })
     }, [initialData, searchTerm, roleFilter, statusFilter, dateRange])
