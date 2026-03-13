@@ -37,6 +37,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                     throw new Error("This account has been deactivated.")
                 }
 
+                if ((user as any).isDeleted) {
+                    throw new Error("This account has been deleted.")
+                }
+
                 const passwordMatch = await bcrypt.compare(
                     credentials.password as string,
                     user.password

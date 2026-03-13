@@ -18,7 +18,7 @@ export default async function CollaboratorsPage() {
         redirect("/dashboard/salarie");
     }
 
-    const users = await getAllUsers();
+    const users = await getAllUsers(true);
     const services = await getAllServiceRequests();
 
     return (

@@ -297,18 +297,27 @@ export function CollaboratorsTable({ initialData, services = [] }: { initialData
     return (
         <div className="flex flex-col gap-6">
             <div className="flex flex-wrap items-center gap-4">
-                <Badge variant="outline" className="px-4 py-2 bg-blue-50 text-blue-700 border-blue-200 flex items-center gap-2">
+                <button 
+                    onClick={() => setStatusFilter("ACTIVE")}
+                    className={`px-4 py-2 rounded-xl border flex items-center gap-2 transition-all ${statusFilter === "ACTIVE" ? "bg-green-50 text-green-700 border-green-200 shadow-sm" : "bg-background text-muted-foreground border-border hover:bg-muted"}`}
+                >
                     <UserCheckIcon className="w-4 h-4" />
                     <span className="font-bold">{activeCount}</span> Collaborateurs Actifs
-                </Badge>
-                <Badge variant="outline" className="px-4 py-2 bg-red-50 text-red-700 border-red-200 flex items-center gap-2">
+                </button>
+                <button 
+                    onClick={() => setStatusFilter("INACTIVE")}
+                    className={`px-4 py-2 rounded-xl border flex items-center gap-2 transition-all ${statusFilter === "INACTIVE" ? "bg-red-50 text-red-700 border-red-200 shadow-sm" : "bg-background text-muted-foreground border-border hover:bg-muted"}`}
+                >
                     <UserXIcon className="w-4 h-4" />
                     <span className="font-bold">{inactiveCount}</span> Collaborateurs Inactifs
-                </Badge>
-                <Badge variant="outline" className={`px-4 py-2 flex items-center gap-2 ${deletedCount > 0 ? "bg-slate-100 text-slate-600 border-slate-200 shadow-sm" : "bg-slate-50 text-slate-400 border-slate-100 opacity-60"}`}>
+                </button>
+                <button 
+                    onClick={() => setStatusFilter("DELETED")}
+                    className={`px-4 py-2 rounded-xl border flex items-center gap-2 transition-all ${statusFilter === "DELETED" ? "bg-slate-100 text-slate-800 border-slate-300 shadow-sm" : "bg-background text-muted-foreground border-border hover:bg-muted opacity-60"}`}
+                >
                     <TrashIcon className="w-4 h-4" />
                     <span className="font-bold">{deletedCount}</span> Supprimés (Virés)
-                </Badge>
+                </button>
             </div>
 
             <div className="border border-border rounded-xl p-6">
@@ -329,35 +338,12 @@ export function CollaboratorsTable({ initialData, services = [] }: { initialData
 
                 <div className="flex items-center gap-4 border-t pt-4">
                     <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Filtrer par compte :</span>
-                        <div className="flex bg-muted p-1 rounded-lg">
-                            <button
-                                onClick={() => setStatusFilter("ALL")}
-                                className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${statusFilter === "ALL" ? "bg-background shadow-sm text-primary" : "text-muted-foreground hover:text-foreground"}`}
-                            >
-                                Tous
-                            </button>
-                            <button
-                                onClick={() => setStatusFilter("ACTIVE")}
-                                className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${statusFilter === "ACTIVE" ? "bg-background shadow-sm text-green-600" : "text-muted-foreground hover:text-foreground"}`}
-                            >
-                                Actifs
-                            </button>
-                            <button
-                                onClick={() => setStatusFilter("INACTIVE")}
-                                className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${statusFilter === "INACTIVE" ? "bg-background shadow-sm text-red-600" : "text-muted-foreground hover:text-foreground"}`}
-                            >
-                                Inactifs
-                            </button>
-                            {deletedCount > 0 && (
-                                <button
-                                    onClick={() => setStatusFilter("DELETED")}
-                                    className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${statusFilter === "DELETED" ? "bg-background shadow-sm text-slate-900 border" : "text-muted-foreground hover:text-foreground"}`}
-                                >
-                                    Fired / Supprimés
-                                </button>
-                            )}
-                        </div>
+                        <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">État actuel :</span>
+                        <Badge variant="secondary" className="px-3 py-1 bg-secondary/10 text-secondary border-none">
+                            {statusFilter === "ALL" ? "Tous les collaborateurs" : 
+                             statusFilter === "ACTIVE" ? "Collaborateurs Actifs" : 
+                             statusFilter === "INACTIVE" ? "Collaborateurs Inactifs" : "Collaborateurs Virés (Archives)"}
+                        </Badge>
                     </div>
                 </div>
             </div>
