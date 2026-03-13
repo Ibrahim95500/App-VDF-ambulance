@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { 
     Users, 
     Search, 
+    Shield,
     ShieldCheck, 
     ShieldAlert, 
     Briefcase,
