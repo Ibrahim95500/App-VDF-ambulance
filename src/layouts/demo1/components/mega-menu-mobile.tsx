@@ -84,11 +84,39 @@ export function MegaMenuMobile() {
             {item.icon && <item.icon data-slot="accordion-menu-icon" />}
             <div className="flex items-center justify-between grow gap-2">
               <span data-slot="accordion-menu-title">{item.title}</span>
-              {item.badge && (
-                <Badge variant="secondary" size="sm" className="ms-auto">
-                  {item.badge}
-                </Badge>
-              )}
+              {(() => {
+                let count = 0;
+                const path = item.path || '';
+                
+                if (path.startsWith('/dashboard/rh')) {
+                  if (path.includes('acomptes')) count = stats.global.advances;
+                  if (path.includes('services')) count = stats.global.services + stats.global.leaves;
+                  if (path.includes('rendez-vous')) count = stats.global.appointments;
+                  if (path.includes('regulation')) count = stats.global.regulation;
+                } else if (path.startsWith('/dashboard/salarie')) {
+                  if (path.includes('acomptes')) count = stats.personal.advances;
+                  if (path.includes('services')) count = stats.personal.services + stats.personal.leaves;
+                  if (path.includes('rendez-vous')) count = stats.personal.appointments;
+                  if (path.includes('regulation')) count = stats.personal.mission;
+                }
+
+                if (count > 0) {
+                  return (
+                    <span className="ms-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white shadow-lg">
+                      {count > 99 ? '99+' : count}
+                    </span>
+                  );
+                }
+                
+                if (item.badge) {
+                  return (
+                    <span className="ms-auto text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-secondary text-secondary-foreground">
+                      {item.badge}
+                    </span>
+                  );
+                }
+                return null;
+              })()}
             </div>
           </AccordionMenuSubTrigger>
           <AccordionMenuSubContent
