@@ -13,7 +13,7 @@ import { Badge } from '@/components/ui/badge';
 
 export function BottomTabBar() {
     const pathname = usePathname();
-    const { data: session } = useSession();
+    const { data: session, status } = useSession();
     const isMobile = useIsMobile();
     const hasPrivilege = (session?.user as any)?.roles?.some((r: string) => ['RH', 'ADMIN', 'REGULATEUR'].includes(r));
     const isRegulateur = (session?.user as any)?.roles?.includes('REGULATEUR') || (session?.user as any)?.isRegulateur;

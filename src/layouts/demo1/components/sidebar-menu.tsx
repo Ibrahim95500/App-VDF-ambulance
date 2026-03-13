@@ -1,8 +1,9 @@
 'use client';
 
-import { JSX, useCallback } from 'react';
+import { JSX, useCallback, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { getNotificationStats } from '@/actions/notification-stats.actions';
 import { MENU_SIDEBAR } from '@/config/menu.config';
 import { MenuConfig, MenuItem } from '@/config/types';
 import { cn } from '@/lib/utils';
@@ -22,6 +23,19 @@ import { useSession } from 'next-auth/react';
 export function SidebarMenu() {
   const pathname = usePathname();
   const { data: session, status } = useSession();
+  const [stats, setStats] = useState({ advances: 0, services: 0, appointments: 0, leaves: 0, total: 0 });
+
+  useEffect(() => {
+    const loadStats = async () => {
+      const data = await getNotificationStats();
+      setStats(data);
+    };
+    if (status === 'authenticated') {
+      loadStats();
+      const interval = setInterval(loadStats, 5 * 60 * 1000);
+      return () => clearInterval(interval);
+    }
+  }, [status]);
 
   const roles = (session?.user as any)?.roles || [];
   let userRole = roles.includes('RH') || roles.includes('ADMIN') ? 'RH' : '';
@@ -139,6 +153,22 @@ export function SidebarMenu() {
           >
             {item.icon && <item.icon data-slot="accordion-menu-icon" />}
             <span data-slot="accordion-menu-title">{item.title}</span>
+            {(() => {
+              let count = 0;
+              if (item.path?.includes('acomptes')) count = stats.advances;
+              if (item.path?.includes('services')) count = stats.services + stats.leaves;
+              if (item.path?.includes('rendez-vous')) count = stats.appointments;
+              if (item.path === '/dashboard/rh/regulation') count = stats.total;
+
+              if (count > 0) {
+                return (
+                  <span className="ms-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white shadow-lg animate-in zoom-in">
+                    {count > 99 ? '99+' : count}
+                  </span>
+                );
+              }
+              return null;
+            })()}
           </Link>
         </AccordionMenuItem>
       );
@@ -230,7 +260,24 @@ export function SidebarMenu() {
           value={item.path || ''}
           className="text-[13px]"
         >
-          <Link href={item.path || '#'}>{item.title}</Link>
+          <Link href={item.path || '#'} className="flex items-center justify-between grow">
+            {item.title}
+            {(() => {
+              let count = 0;
+              if (item.path?.includes('acomptes')) count = stats.advances;
+              if (item.path?.includes('services')) count = stats.services + stats.leaves;
+              if (item.path?.includes('rendez-vous')) count = stats.appointments;
+              
+              if (count > 0) {
+                return (
+                  <span className="ms-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white shadow-lg animate-in zoom-in">
+                    {count > 99 ? '99+' : count}
+                  </span>
+                );
+              }
+              return null;
+            })()}
+          </Link>
         </AccordionMenuItem>
       );
     }
