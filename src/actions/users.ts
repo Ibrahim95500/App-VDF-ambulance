@@ -609,5 +609,72 @@ export async function restoreUser(userId: string) {
     }
 }
 
+export async function getUserDashboardStats() {
+    try {
+        const session = await auth();
+        if (!session?.user?.id) return { error: "Non autorisé" };
+        const userId = session.user.id;
+
+        // On récupère toutes les demandes liées à cet utilisateur
+        const [advances, services, appointments] = await Promise.all([
+            prisma.advanceRequest.findMany({ where: { userId } }),
+            prisma.serviceRequest.findMany({ where: { userId } }),
+            prisma.appointmentRequest.findMany({ where: { userId } })
+        ]);
+
+        // Helper pour formater les stats par mois
+        const formatByMonth = (data: any[]) => {
+            const counts: Record<string, number> = {};
+            data.forEach(item => {
+                const month = new Date(item.createdAt).toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' });
+                counts[month] = (counts[month] || 0) + 1;
+            });
+            return Object.entries(counts).map(([name, value]) => ({ name, value }));
+        };
+
+        // Helper pour les catégories
+        const formatByCategory = (data: any[], key: string = 'category') => {
+            const counts: Record<string, number> = {};
+            data.forEach(item => {
+                const cat = item[key] || 'Général';
+                counts[cat] = (counts[cat] || 0) + 1;
+            });
+            return Object.entries(counts).map(([name, value]) => ({ name, value }));
+        };
+
+        // Helper pour les statuts
+        const formatByStatus = (data: any[]) => {
+            const statusMap: Record<string, string> = { 'PENDING': 'En attente', 'APPROVED': 'Approuvé', 'REJECTED': 'Refusé' };
+            const counts: Record<string, number> = {};
+            data.forEach(item => {
+                const status = statusMap[item.status] || item.status;
+                counts[status] = (counts[status] || 0) + 1;
+            });
+            return Object.entries(counts).map(([name, value]) => ({ name, value }));
+        };
+
+        return {
+            advances: {
+                byStatus: formatByStatus(advances),
+                byMonth: formatByMonth(advances),
+                total: advances.length
+            },
+            services: {
+                byCategory: formatByCategory(services),
+                byMonth: formatByMonth(services),
+                total: services.length
+            },
+            appointments: {
+                byStatus: formatByStatus(appointments),
+                byMonth: formatByMonth(appointments),
+                total: appointments.length
+            }
+        };
+    } catch (error) {
+        console.error("getUserDashboardStats error:", error);
+        return { error: "Erreur lors de la récupération des statistiques" };
+    }
+}
+
 
 
