@@ -279,6 +279,7 @@ export function CollaboratorsClient({ initialUsers, session }: CollaboratorsClie
                             {currentUsers.map(u => {
                                 const isMark = u.structure === 'MARK';
                                 const isVdf = u.structure === 'VDF';
+                                const isBoth = u.structure === 'LES_2';
                                 
                                 return (
                                     <div 
@@ -289,19 +290,21 @@ export function CollaboratorsClient({ initialUsers, session }: CollaboratorsClie
                                                 ? "bg-gradient-to-br from-slate-900 via-slate-900 to-blue-900/40 border-slate-800 hover:border-blue-500/50" 
                                                 : isVdf 
                                                     ? "bg-gradient-to-br from-slate-900 via-slate-900 to-orange-900/40 border-slate-800 hover:border-orange-500/50"
-                                                    : "bg-white border-slate-100 shadow-xl hover:border-secondary/30"
+                                                    : isBoth
+                                                        ? "bg-gradient-to-br from-slate-900 via-blue-900/20 to-orange-900/40 border-slate-800 hover:border-secondary/50"
+                                                        : "bg-white border-slate-100 shadow-xl hover:border-secondary/30"
                                         )}
                                     >
                                         {/* Accent color background decoration */}
-                                        {(isMark || isVdf) && (
+                                        {(isMark || isVdf || isBoth) && (
                                             <Fragment>
                                                 <div className={cn(
                                                     "absolute -right-20 -top-20 size-48 blur-[100px] opacity-10 transition-opacity duration-700 group-hover:opacity-40",
-                                                    isMark ? "bg-blue-600" : "bg-orange-600"
+                                                    isMark ? "bg-blue-600" : isVdf ? "bg-orange-600" : "bg-gradient-to-br from-blue-600 to-orange-600"
                                                 )} />
                                                 <div className={cn(
                                                     "absolute -left-20 -bottom-20 size-40 blur-[80px] opacity-5 transition-opacity duration-700 group-hover:opacity-20",
-                                                    isMark ? "bg-cyan-500" : "bg-yellow-500"
+                                                    isMark ? "bg-cyan-500" : isVdf ? "bg-yellow-500" : "bg-gradient-to-tr from-cyan-500 to-yellow-500"
                                                 )} />
                                             </Fragment>
                                         )}
@@ -317,7 +320,9 @@ export function CollaboratorsClient({ initialUsers, session }: CollaboratorsClie
                                                             ? "bg-blue-600/10 text-blue-400 border-blue-500/30" 
                                                             : isVdf 
                                                                 ? "bg-orange-600/10 text-orange-400 border-orange-500/30"
-                                                                : "bg-secondary/10 text-secondary border-secondary/30"
+                                                                : isBoth
+                                                                    ? "bg-gradient-to-br from-blue-600/10 to-orange-600/10 text-white border-white/20"
+                                                                    : "bg-secondary/10 text-secondary border-secondary/30"
                                                     )}>
                                                         {u.firstName?.[0] || u.lastName?.[0] || '?'}
                                                     </div>
@@ -331,12 +336,12 @@ export function CollaboratorsClient({ initialUsers, session }: CollaboratorsClie
                                             <div className="flex flex-col min-w-0 pt-2">
                                                 <h3 className={cn(
                                                     "font-black text-2xl truncate leading-none mb-3 tracking-tighter",
-                                                    isMark || isVdf ? "text-white" : "text-slate-900"
+                                                    isMark || isVdf || isBoth ? "text-white" : "text-slate-900"
                                                 )}>
                                                     {u.firstName} <br/>
                                                     <span className={cn(
                                                         "opacity-90",
-                                                        isMark ? "text-blue-400" : isVdf ? "text-orange-400" : "text-secondary"
+                                                        isMark ? "text-blue-400" : isVdf ? "text-orange-400" : isBoth ? "text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-orange-400" : "text-secondary"
                                                     )}>{u.lastName}</span>
                                                 </h3>
                                                 <div className="flex items-center gap-1.5 flex-wrap">
@@ -348,6 +353,8 @@ export function CollaboratorsClient({ initialUsers, session }: CollaboratorsClie
                                                         <Badge className="bg-gradient-to-r from-orange-600 to-amber-600 text-white border-none text-[9px] px-3 py-1 uppercase font-black tracking-widest rounded-lg shadow-lg">Équipe VDF</Badge>
                                                     ) : u.structure === 'MARK' ? (
                                                         <Badge className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-none text-[9px] px-3 py-1 uppercase font-black tracking-widest rounded-lg shadow-lg">Équipe MARK</Badge>
+                                                    ) : u.structure === 'LES_2' ? (
+                                                        <Badge className="bg-gradient-to-r from-blue-600 via-secondary to-orange-600 text-white border-none text-[9px] px-3 py-1 uppercase font-black tracking-widest rounded-lg shadow-lg">Expert Mixte</Badge>
                                                     ) : (
                                                         <Badge className="bg-slate-700 text-white border-none text-[9px] px-3 py-1 uppercase font-black tracking-widest rounded-lg">Collaborateur</Badge>
                                                     )}
@@ -358,19 +365,19 @@ export function CollaboratorsClient({ initialUsers, session }: CollaboratorsClie
                                         <div className="space-y-4 mb-10 relative z-10 p-4 rounded-[1.5rem] bg-white/5 border border-white/5 backdrop-blur-sm">
                                             <div className={cn(
                                                 "flex items-center gap-4 text-[0.95rem] font-black italic uppercase tracking-tight",
-                                                isMark || isVdf ? "text-slate-300" : "text-slate-600"
+                                                isMark || isVdf || isBoth ? "text-slate-300" : "text-slate-600"
                                             )}>
-                                                <div className={cn("p-2.5 rounded-xl transition-colors duration-500", isMark || isVdf ? "bg-slate-800 group-hover:bg-slate-700" : "bg-slate-50")}>
-                                                    <GraduationCap size={20} className={isMark ? "text-blue-400" : isVdf ? "text-orange-400" : "text-secondary"} />
+                                                <div className={cn("p-2.5 rounded-xl transition-colors duration-500", isMark || isVdf || isBoth ? "bg-slate-800 group-hover:bg-slate-700" : "bg-slate-50")}>
+                                                    <GraduationCap size={20} className={isMark ? "text-blue-400" : isVdf ? "text-orange-400" : isBoth ? "text-secondary" : "text-secondary"} />
                                                 </div>
                                                 <span>{u.diploma === 'DEA' ? 'Ambulancier DEA' : 'Auxiliaire Transport'}</span>
                                             </div>
                                             <div className={cn(
                                                 "flex items-center gap-4 text-[0.95rem] font-black italic uppercase tracking-tight",
-                                                isMark || isVdf ? "text-slate-300" : "text-slate-600"
+                                                isMark || isVdf || isBoth ? "text-slate-300" : "text-slate-600"
                                             )}>
-                                                <div className={cn("p-2.5 rounded-xl transition-colors duration-500", isMark || isVdf ? "bg-slate-800 group-hover:bg-slate-700" : "bg-slate-50")}>
-                                                    <Briefcase size={20} className={isMark ? "text-blue-400" : isVdf ? "text-orange-400" : "text-secondary"} />
+                                                <div className={cn("p-2.5 rounded-xl transition-colors duration-500", isMark || isVdf || isBoth ? "bg-slate-800 group-hover:bg-slate-700" : "bg-slate-50")}>
+                                                    <Briefcase size={20} className={isMark ? "text-blue-400" : isVdf ? "text-orange-400" : isBoth ? "text-secondary" : "text-secondary"} />
                                                 </div>
                                                 <span>Contrat {u.shift === 'JOUR' ? 'En JOURNEE' : u.shift === 'NUIT' ? 'En NUIT' : 'Vacataire'}</span>
                                             </div>
@@ -386,7 +393,9 @@ export function CollaboratorsClient({ initialUsers, session }: CollaboratorsClie
                                                         ? "bg-gradient-to-r from-blue-700 to-blue-500 hover:from-blue-600 hover:to-blue-400 text-white border-none" 
                                                         : isVdf 
                                                             ? "bg-gradient-to-r from-orange-700 to-orange-500 hover:from-orange-600 hover:to-orange-400 text-white border-none"
-                                                            : "bg-slate-100 hover:bg-secondary hover:text-white text-slate-800 border-none"
+                                                            : isBoth
+                                                                ? "bg-gradient-to-r from-blue-600 via-secondary to-orange-600 hover:scale-[1.02] text-white border-none"
+                                                                : "bg-slate-100 hover:bg-secondary hover:text-white text-slate-800 border-none"
                                                 )}
                                                 onClick={() => {
                                                     setSelectedUser(u)
