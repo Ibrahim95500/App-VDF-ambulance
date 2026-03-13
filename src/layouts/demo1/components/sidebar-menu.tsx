@@ -36,7 +36,7 @@ export function SidebarMenu() {
     };
     if (status === 'authenticated') {
       loadStats();
-      const interval = setInterval(loadStats, 5 * 60 * 1000);
+      const interval = setInterval(loadStats, 20 * 1000);
       return () => clearInterval(interval);
     }
   }, [status, session?.user]);

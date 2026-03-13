@@ -18,6 +18,7 @@ import {
   AccordionMenuSubContent,
   AccordionMenuSubTrigger,
 } from '@/components/ui/accordion-menu';
+import { Badge } from '@/components/ui/badge';
 
 export interface MenuItem {
   title?: string;
@@ -54,7 +55,7 @@ export function MegaMenuMobile() {
     };
     if (status === 'authenticated') {
       loadStats();
-      const interval = setInterval(loadStats, 5 * 60 * 1000);
+      const interval = setInterval(loadStats, 20 * 1000);
       return () => clearInterval(interval);
     }
   }, [status, session?.user]);
