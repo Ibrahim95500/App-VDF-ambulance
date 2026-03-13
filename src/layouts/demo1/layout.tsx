@@ -30,22 +30,6 @@ export function Demo1Layout({ children, notificationsCount = 0 }: { children: Re
     setOption('layout', 'demo1');
   }, [setOption]);
 
-  useEffect(() => {
-    // Astuce de pirate (FIABLE): F5 automatique garanti au tout premier atterrissage sur le Dashboard après login.
-    // On ne dépend même plus de 'session', on regarde juste si on est côté client et sur le dashboard.
-    if (typeof window !== "undefined") {
-      const cacheKey = "vdf_pirate_f5_done";
-      if (!sessionStorage.getItem(cacheKey)) {
-        sessionStorage.setItem(cacheKey, "true");
-        console.log("Astuce F5 : Hard Reload à l'atterrissage du Dashboard !");
-
-        // Timeout minimal 100ms
-        setTimeout(() => {
-          window.location.reload();
-        }, 100);
-      }
-    }
-  }, []);
 
   useEffect(() => {
     const bodyClass = document.body.classList;

@@ -36,7 +36,7 @@ export function SidebarMenu() {
     };
     if (status === 'authenticated') {
       loadStats();
-      const interval = setInterval(loadStats, 2000);
+      const interval = setInterval(loadStats, 5000);
       return () => clearInterval(interval);
     }
   }, [status, session?.user]);
@@ -85,7 +85,8 @@ export function SidebarMenu() {
 
   // Memoize matchPath to prevent unnecessary re-renders
   const matchPath = useCallback(
-    (path: string): boolean => {
+    (path: string | undefined): boolean => {
+      if (!path) return false;
       if (path === '/dashboard/rh' && pathname === '/dashboard/rh') {
         return true;
       }

@@ -55,15 +55,17 @@ export function MegaMenuMobile() {
     };
     if (status === 'authenticated') {
       loadStats();
-      const interval = setInterval(loadStats, 2000);
+      const interval = setInterval(loadStats, 5000);
       return () => clearInterval(interval);
     }
   }, [status, session?.user]);
 
   // Memoize matchPath to prevent unnecessary re-renders
   const matchPath = useCallback(
-    (path: string): boolean =>
-      path === pathname || (path.length > 1 && pathname.startsWith(path)),
+    (path: string | undefined): boolean => {
+      if (!path) return false;
+      return path === pathname || (path.length > 1 && pathname.startsWith(path));
+    },
     [pathname],
   );
 

@@ -41,9 +41,9 @@ export function BottomTabBar() {
         };
         if (status === 'authenticated') {
             loadStats();
+            const interval = setInterval(loadStats, 5000);
+            return () => clearInterval(interval);
         }
-        const interval = setInterval(loadStats, 2000);
-        return () => clearInterval(interval);
     }, [status, session?.user]);
 
     const isRHSection = pathname.startsWith('/dashboard/rh');
