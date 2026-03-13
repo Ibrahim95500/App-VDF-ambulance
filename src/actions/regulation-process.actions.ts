@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { sendBrandedEmail } from "@/lib/mail"
+import { createNotification } from "@/actions/notifications.actions"
 import { format } from "date-fns"
 import { fr } from "date-fns/locale"
 
@@ -81,6 +82,15 @@ export async function sendPlanningsToEmployees(dateStr: string) {
                         <div>VDF Ambulance</div>
                     `
                 }).catch(console.error)
+                
+                await createNotification({
+                    userId: leader.id,
+                    title: "Nouvelle Mission 🚑",
+                    message: `Vous êtes assigné au véhicule ${vehicle.plateNumber} pour le ${dateDisplay}. Pensez à valider avant 21h !`,
+                    type: "MISSION",
+                    link: "/dashboard/salarie/regulation"
+                }).catch(console.error)
+
                 emailsSent++;
             }
 
@@ -116,6 +126,15 @@ export async function sendPlanningsToEmployees(dateStr: string) {
                         <div>VDF Ambulance</div>
                     `
                 }).catch(console.error)
+
+                await createNotification({
+                    userId: teammate.id,
+                    title: "Nouvelle Mission 🚑",
+                    message: `Vous êtes assigné au véhicule ${vehicle.plateNumber} pour le ${dateDisplay}. Pensez à valider avant 21h !`,
+                    type: "MISSION",
+                    link: "/dashboard/salarie/regulation"
+                }).catch(console.error)
+
                 emailsSent++;
             }
         }

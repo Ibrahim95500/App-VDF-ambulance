@@ -55,6 +55,7 @@ export function CollaboratorsClient({ initialUsers, session }: CollaboratorsClie
     const itemsPerPage = 9
 
     const myOublis = session?.user?.oubliCount ?? 0
+    const isAdminOrRegul = session?.user?.roles?.some((r: string) => ['ADMIN', 'REGULATEUR'].includes(r)) || session?.user?.isRegulateur
 
     useEffect(() => {
         const fetchStats = async () => {
@@ -357,11 +358,11 @@ export function CollaboratorsClient({ initialUsers, session }: CollaboratorsClie
                                                     ) : u.isRegulateur ? (
                                                         <Badge className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white border-none text-[9px] px-3 py-1 uppercase font-black tracking-widest rounded-lg shadow-lg">Régulation</Badge>
                                                     ) : u.structure === 'VDF' ? (
-                                                        <Badge className="bg-gradient-to-r from-orange-600 to-amber-600 text-white border-none text-[9px] px-3 py-1 uppercase font-black tracking-widest rounded-lg shadow-lg">Équipe VDF</Badge>
+                                                        <Badge className="bg-gradient-to-r from-orange-600 to-amber-600 text-white border-none text-[9px] px-3 py-1 uppercase font-black tracking-widest rounded-lg shadow-lg">VDF</Badge>
                                                     ) : u.structure === 'MARK' ? (
-                                                        <Badge className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-none text-[9px] px-3 py-1 uppercase font-black tracking-widest rounded-lg shadow-lg">Équipe MARK</Badge>
+                                                        <Badge className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-none text-[9px] px-3 py-1 uppercase font-black tracking-widest rounded-lg shadow-lg">MARK</Badge>
                                                     ) : u.structure === 'LES_2' ? (
-                                                        <Badge className="bg-gradient-to-r from-blue-600 via-secondary to-orange-600 text-white border-none text-[9px] px-3 py-1 uppercase font-black tracking-widest rounded-lg shadow-lg">Équipe Mixte</Badge>
+                                                        <Badge className="bg-gradient-to-r from-blue-600 via-secondary to-orange-600 text-white border-none text-[9px] px-3 py-1 uppercase font-black tracking-widest rounded-lg shadow-lg">MIXTE</Badge>
                                                     ) : (
                                                         <Badge className="bg-slate-700 text-white border-none text-[9px] px-3 py-1 uppercase font-black tracking-widest rounded-lg">Collaborateur</Badge>
                                                     )}
@@ -377,7 +378,7 @@ export function CollaboratorsClient({ initialUsers, session }: CollaboratorsClie
                                                 <div className={cn("p-2 rounded-xl transition-colors duration-500", isMark || isVdf || isBoth ? "bg-slate-800 group-hover:bg-slate-700" : "bg-slate-50")}>
                                                     <GraduationCap size={16} className={isMark ? "text-blue-400" : isVdf ? "text-orange-400" : isBoth ? "text-secondary" : "text-secondary"} />
                                                 </div>
-                                                <span className="truncate">{u.diploma === 'DEA' ? 'Ambulancier DEA' : 'Auxiliaire Transport'}</span>
+                                                <span className="truncate">{u.diploma === 'DEA' ? 'DEA' : 'AUXI'}</span>
                                             </div>
                                             <div className={cn(
                                                 "flex items-center gap-3 text-[0.8rem] font-black italic uppercase tracking-tight",
@@ -525,7 +526,7 @@ export function CollaboratorsClient({ initialUsers, session }: CollaboratorsClie
                                     <div className="absolute top-0 right-0 size-16 bg-secondary/5 blur-2xl rounded-full" />
                                     <GraduationCap className="size-10 text-secondary mb-4 mx-auto transition-transform group-hover/stat:-rotate-12 duration-500" />
                                     <p className="text-[10px] text-slate-600 uppercase font-black tracking-[0.3em] mb-2">Diplôme</p>
-                                    <p className="text-lg font-black text-slate-100 italic">{selectedUser?.diploma === 'DEA' ? 'DEA Ambulancier' : 'Auxiliaire'}</p>
+                                    <p className="text-lg font-black text-slate-100 italic">{selectedUser?.diploma === 'DEA' ? 'DEA' : 'AUXI'}</p>
                                 </div>
                                 <div className="bg-slate-900/40 p-6 rounded-[2rem] border border-white/5 hover:border-secondary/30 transition-all group/stat relative overflow-hidden shadow-inner">
                                     <div className="absolute top-0 right-0 size-16 bg-blue-600/5 blur-2xl rounded-full" />
@@ -536,22 +537,24 @@ export function CollaboratorsClient({ initialUsers, session }: CollaboratorsClie
                             </div>
 
                             <div className="w-full space-y-5">
-                                <a 
-                                    href={`tel:${selectedUser?.phone}`}
-                                    className="flex items-center gap-6 w-full p-7 rounded-[2.2rem] bg-slate-900/80 hover:bg-slate-800 border-2 border-white/5 hover:border-secondary/50 transition-all group/link shadow-2xl relative overflow-hidden"
-                                >
-                                    <div className="absolute inset-0 bg-gradient-to-r from-secondary/5 to-transparent opacity-0 group-hover/link:opacity-100 transition-opacity" />
-                                    <div className="size-16 rounded-[1.2rem] bg-secondary/10 flex items-center justify-center text-secondary group-hover/link:bg-secondary group-hover/link:text-white transition-all shadow-inner group-hover/link:scale-110 duration-500">
-                                        <PhoneCall size={32} />
-                                    </div>
-                                    <div className="text-left flex-1 min-w-0 relative z-10">
-                                        <p className="text-[10px] text-slate-600 uppercase font-black tracking-[0.4em] mb-1">Ligne Directe</p>
-                                        <p className="text-2xl font-black text-slate-50 tabular-nums">{selectedUser?.phone || "Private"}</p>
-                                    </div>
-                                    <div className="size-12 rounded-full border border-white/5 flex items-center justify-center text-slate-700 group-hover/link:text-white group-hover/link:border-white/20 transition-all relative z-10">
-                                        <ChevronRight size={24} />
-                                    </div>
-                                </a>
+                                {isAdminOrRegul && (
+                                    <a 
+                                        href={`tel:${selectedUser?.phone}`}
+                                        className="flex items-center gap-6 w-full p-7 rounded-[2.2rem] bg-slate-900/80 hover:bg-slate-800 border-2 border-white/5 hover:border-secondary/50 transition-all group/link shadow-2xl relative overflow-hidden"
+                                    >
+                                        <div className="absolute inset-0 bg-gradient-to-r from-secondary/5 to-transparent opacity-0 group-hover/link:opacity-100 transition-opacity" />
+                                        <div className="size-16 rounded-[1.2rem] bg-secondary/10 flex items-center justify-center text-secondary group-hover/link:bg-secondary group-hover/link:text-white transition-all shadow-inner group-hover/link:scale-110 duration-500">
+                                            <PhoneCall size={32} />
+                                        </div>
+                                        <div className="text-left flex-1 min-w-0 relative z-10">
+                                            <p className="text-[10px] text-slate-600 uppercase font-black tracking-[0.4em] mb-1">Ligne Directe</p>
+                                            <p className="text-2xl font-black text-slate-50 tabular-nums">{selectedUser?.phone || "Private"}</p>
+                                        </div>
+                                        <div className="size-12 rounded-full border border-white/5 flex items-center justify-center text-slate-700 group-hover/link:text-white group-hover/link:border-white/20 transition-all relative z-10">
+                                            <ChevronRight size={24} />
+                                        </div>
+                                    </a>
+                                )}
 
                                 <a 
                                     href={`mailto:${selectedUser?.email}`}
