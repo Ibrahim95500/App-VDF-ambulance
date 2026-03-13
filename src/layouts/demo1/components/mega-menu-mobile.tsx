@@ -1,7 +1,6 @@
 'use client';
-'use client';
 
-import { JSX, useCallback } from 'react';
+import { JSX, useCallback, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { LucideIcon } from 'lucide-react';
@@ -9,7 +8,6 @@ import { MENU_MEGA_MOBILE } from '@/config/menu.config';
 import { cn } from '@/lib/utils';
 import { useSession } from 'next-auth/react';
 import { getNotificationStats } from '@/actions/notification-stats.actions';
-import { useState, useEffect } from 'react';
 import {
   AccordionMenu,
   AccordionMenuClassNames,
@@ -41,6 +39,25 @@ export type MenuConfig = MenuItem[];
 
 export function MegaMenuMobile() {
   const pathname = usePathname();
+  const { data: session, status } = useSession();
+
+  const [stats, setStats] = useState({
+    global: { advances: 0, services: 0, appointments: 0, leaves: 0, regulation: 0, total: 0 },
+    personal: { advances: 0, services: 0, appointments: 0, leaves: 0, mission: 0, total: 0 }
+  });
+
+  useEffect(() => {
+    const loadStats = async () => {
+      const userId = (session?.user as any)?.id;
+      const data = await getNotificationStats(userId);
+      if (data) setStats(data);
+    };
+    if (status === 'authenticated') {
+      loadStats();
+      const interval = setInterval(loadStats, 5 * 60 * 1000);
+      return () => clearInterval(interval);
+    }
+  }, [status, session?.user]);
 
   // Memoize matchPath to prevent unnecessary re-renders
   const matchPath = useCallback(
