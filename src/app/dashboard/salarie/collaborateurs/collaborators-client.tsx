@@ -475,14 +475,6 @@ export function CollaboratorsClient({ initialUsers, session }: CollaboratorsClie
                     )}>
                         <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
                         <div className="absolute inset-0 bg-gradient-to-t from-slate-950 to-transparent" />
-                        <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="absolute top-8 right-8 text-white/40 hover:text-white hover:bg-white/10 rounded-full transition-all size-12 shadow-2xl backdrop-blur-md"
-                            onClick={() => setIsDialogOpen(false)}
-                        >
-                            <X size={28} />
-                        </Button>
                     </div>
 
                     <div className="px-12 pb-16 -mt-20 relative">
@@ -565,8 +557,18 @@ export function CollaboratorsClient({ initialUsers, session }: CollaboratorsClie
                             </div>
                         </div>
                     </div>
-                    <div className="p-6 bg-slate-900/90 backdrop-blur-3xl flex justify-center border-t border-white/5">
-                        <p className="text-[11px] text-slate-700 font-black uppercase tracking-[0.5em] italic">VDF Ambulance • Espace Collaborateur Elite</p>
+                    <div className="p-8 bg-slate-900/90 backdrop-blur-3xl flex flex-col items-center gap-2 border-t border-white/5 relative">
+                        {/* Status d'équipage bien visible */}
+                        <div className={cn(
+                            "px-6 py-2 rounded-full text-[10px] font-black uppercase tracking-[0.3em] shadow-2xl border flex items-center gap-2",
+                            selectedUser?.isTeamLeader 
+                                ? "bg-secondary/20 text-secondary border-secondary/30" 
+                                : "bg-slate-800 text-slate-400 border-white/5"
+                        )}>
+                            <div className={cn("size-2 rounded-full animate-pulse", selectedUser?.isTeamLeader ? "bg-secondary" : "bg-slate-500")} />
+                            {selectedUser?.isTeamLeader ? "Responsable d'équipage" : "Équipier d'équipage"}
+                        </div>
+                        <p className="text-[9px] text-slate-700 font-bold uppercase tracking-[0.3em] mt-2 italic">VDF Ambulance • Engagement & Excellence</p>
                     </div>
                 </DialogContent>
             </Dialog>
