@@ -14,8 +14,23 @@ import {
     MapPin,
     AlertTriangle,
     CheckCircle2,
-    Clock
+    Clock,
+    Eye,
+    Phone,
+    Mail,
+    PhoneCall,
+    Info,
+    X
 } from "lucide-react"
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+} from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 
 interface CollaboratorsClientProps {
     initialUsers: any[]
@@ -24,6 +39,8 @@ interface CollaboratorsClientProps {
 
 export function CollaboratorsClient({ initialUsers, session }: CollaboratorsClientProps) {
     const [searchTerm, setSearchTerm] = useState("")
+    const [selectedUser, setSelectedUser] = useState<any>(null)
+    const [isDialogOpen, setIsDialogOpen] = useState(false)
 
     const myOublis = session?.user?.oubliCount ?? 0
 
@@ -136,11 +153,15 @@ export function CollaboratorsClient({ initialUsers, session }: CollaboratorsClie
                                             </h3>
                                             <div className="flex items-center gap-1.5 flex-wrap mt-1">
                                                 {u.roles?.includes('RH') || u.roles?.includes('ADMIN') ? (
-                                                    <Badge variant="outline" className="text-[9px] bg-purple-50 text-purple-600 border-purple-200 uppercase px-1.5 py-0">Direction / RH</Badge>
+                                                    <Badge variant="outline" className="text-[9px] bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-purple-200 dark:border-purple-800 uppercase px-1.5 py-0">Direction / RH</Badge>
                                                 ) : u.isRegulateur ? (
-                                                    <Badge variant="outline" className="text-[9px] bg-blue-50 text-blue-600 border-blue-200 uppercase px-1.5 py-0">Régulateur</Badge>
+                                                    <Badge variant="outline" className="text-[9px] bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-blue-200 dark:border-blue-800 uppercase px-1.5 py-0">Régulateur</Badge>
+                                                ) : u.structure === 'VDF' ? (
+                                                    <Badge variant="outline" className="text-[9px] bg-orange-100 dark:bg-orange-950/40 text-orange-700 dark:text-orange-400 border-orange-200 dark:border-orange-800/50 uppercase px-1.5 py-0 font-bold">VDF</Badge>
+                                                ) : u.structure === 'MARK' ? (
+                                                    <Badge variant="outline" className="text-[9px] bg-blue-100 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800/50 uppercase px-1.5 py-0 font-bold">MARK</Badge>
                                                 ) : (
-                                                    <Badge variant="outline" className="text-[9px] bg-slate-50 text-slate-600 border-slate-200 uppercase px-1.5 py-0">Salarié</Badge>
+                                                    <Badge variant="outline" className="text-[9px] bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 uppercase px-1.5 py-0">Salarié</Badge>
                                                 )}
                                             </div>
                                         </div>
@@ -160,9 +181,118 @@ export function CollaboratorsClient({ initialUsers, session }: CollaboratorsClie
                                             <span>Structure {u.structure || 'VDF'}</span>
                                         </div>
                                     </div>
+
+                                    <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+                                        <Button 
+                                            variant="ghost" 
+                                            size="sm" 
+                                            className="text-secondary hover:text-secondary hover:bg-secondary/10 font-bold gap-2 rounded-xl group-hover:scale-105 transition-transform"
+                                            onClick={() => {
+                                                setSelectedUser(u);
+                                                setIsDialogOpen(true);
+                                            }}
+                                        >
+                                            <Eye size={16} />
+                                            Voir profil
+                                        </Button>
+                                    </div>
                                 </div>
                             ))}
                         </div>
+
+                        {/* User Profile Dialog */}
+                        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                            <DialogContent className="sm:max-w-[425px] p-0 overflow-hidden border-none bg-background shadow-2xl rounded-3xl">
+                                {selectedUser && (
+                                    <div className="flex flex-col">
+                                        {/* Cover / Header */}
+                                        <div className={cn(
+                                            "h-32 w-full relative",
+                                            selectedUser.structure === 'MARK' ? "bg-gradient-to-r from-blue-600 to-blue-400" : "bg-gradient-to-r from-orange-500 to-orange-400"
+                                        )}>
+                                            <div className="absolute -bottom-12 left-6">
+                                                {selectedUser.image ? (
+                                                    <img src={selectedUser.image} className="size-24 rounded-3xl object-cover border-4 border-background shadow-lg" alt="" />
+                                                ) : (
+                                                    <div className="size-24 rounded-3xl bg-background flex items-center justify-center text-secondary font-black text-3xl border-4 border-background shadow-lg">
+                                                        {selectedUser.firstName?.[0] || '?'}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <button 
+                                                onClick={() => setIsDialogOpen(false)}
+                                                className="absolute top-4 right-4 p-2 bg-black/20 hover:bg-black/40 rounded-full text-white transition-colors"
+                                            >
+                                                <X size={18} />
+                                            </button>
+                                        </div>
+
+                                        <div className="pt-16 pb-8 px-6 space-y-6">
+                                            {/* Name & Role */}
+                                            <div>
+                                                <h2 className="text-2xl font-black text-foreground">{selectedUser.firstName} {selectedUser.lastName}</h2>
+                                                <div className="flex items-center gap-2 mt-1">
+                                                    <span className="text-sm font-bold text-muted-foreground uppercase">{selectedUser.structure || 'VDF'} AMBULANCE</span>
+                                                    <span className="text-muted-foreground">/</span>
+                                                    <span className="text-sm font-medium text-secondary">{selectedUser.diploma === 'DEA' ? 'Ambulancier DEA' : 'Auxiliaire de transport'}</span>
+                                                </div>
+                                            </div>
+
+                                            {/* Contact Info */}
+                                            <div className="space-y-3">
+                                                <h3 className="text-[10px] font-black uppercase text-muted-foreground tracking-widest flex items-center gap-2">
+                                                    <Info size={12} className="text-secondary" /> Coordonnées directes
+                                                </h3>
+                                                <div className="grid grid-cols-1 gap-2">
+                                                    {selectedUser.phone && (
+                                                        <a 
+                                                            href={`tel:${selectedUser.phone}`}
+                                                            className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 hover:border-secondary/30 hover:bg-secondary/5 transition-all group"
+                                                        >
+                                                            <div className="p-2 bg-white dark:bg-slate-800 rounded-xl shadow-sm text-secondary group-hover:bg-secondary group-hover:text-white transition-colors">
+                                                                <PhoneCall size={18} />
+                                                            </div>
+                                                            <div className="flex flex-col">
+                                                                <span className="text-[10px] font-bold text-muted-foreground uppercase">Téléphone</span>
+                                                                <span className="text-sm font-black text-foreground">{selectedUser.phone}</span>
+                                                            </div>
+                                                        </a>
+                                                    )}
+                                                    {selectedUser.email && (
+                                                        <a 
+                                                            href={`mailto:${selectedUser.email}`}
+                                                            className="flex items-center gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 hover:border-secondary/30 hover:bg-secondary/5 transition-all group"
+                                                        >
+                                                            <div className="p-2 bg-white dark:bg-slate-800 rounded-xl shadow-sm text-secondary group-hover:bg-secondary group-hover:text-white transition-colors">
+                                                                <Mail size={18} />
+                                                            </div>
+                                                            <div className="flex flex-col">
+                                                                <span className="text-[10px] font-bold text-muted-foreground uppercase">Email</span>
+                                                                <span className="text-sm font-black text-foreground">{selectedUser.email}</span>
+                                                            </div>
+                                                        </a>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {/* Other details */}
+                                            <div className="pt-4 border-t border-slate-100 dark:border-slate-800 grid grid-cols-2 gap-4">
+                                                <div className="space-y-1">
+                                                    <span className="text-[10px] font-bold text-muted-foreground uppercase">Équipe</span>
+                                                    <p className="text-sm font-bold text-foreground">{selectedUser.shift === 'JOUR' ? '🚗 Équipe Jour' : selectedUser.shift === 'NUIT' ? '🌙 Équipe Nuit' : '🏢 Vacataire'}</p>
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <span className="text-[10px] font-bold text-muted-foreground uppercase">Statut</span>
+                                                    <p className="text-sm font-bold text-green-600 flex items-center gap-1.5">
+                                                        <ShieldCheck size={14} /> Actif
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </DialogContent>
+                        </Dialog>
                         
                         {filteredUsers.length === 0 && (
                             <div className="py-20 flex flex-col items-center justify-center text-center bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
