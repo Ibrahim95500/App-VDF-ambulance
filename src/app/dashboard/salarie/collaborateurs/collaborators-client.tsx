@@ -110,13 +110,19 @@ export function CollaboratorsClient({ initialUsers, session }: CollaboratorsClie
                         </div>
 
                         <TabsList className="bg-slate-100 p-1.5 rounded-2xl border border-slate-200 shadow-sm">
-                            <TabsTrigger value="dashboard" className="rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-md px-8 py-2.5 font-bold transition-all">
-                                <LayoutDashboard className="size-4 mr-2" />
-                                Stats & Pilotage
+                            <TabsTrigger 
+                                value="dashboard" 
+                                className="rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-md px-8 py-2.5 font-bold transition-all group hover:text-secondary"
+                            >
+                                <LayoutDashboard className="size-4 mr-2 transition-colors group-hover:text-secondary group-data-[state=active]:text-secondary" />
+                                <span className="transition-colors group-hover:text-secondary group-data-[state=active]:text-secondary font-black">Stats</span>
                             </TabsTrigger>
-                            <TabsTrigger value="annuaire" className="rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-md px-8 py-2.5 font-bold transition-all">
-                                <Users className="size-4 mr-2" />
-                                Annuaire
+                            <TabsTrigger 
+                                value="annuaire" 
+                                className="rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-md px-8 py-2.5 font-bold transition-all group hover:text-secondary"
+                            >
+                                <Users className="size-4 mr-2 transition-colors group-hover:text-secondary group-data-[state=active]:text-secondary" />
+                                <span className="transition-colors group-hover:text-secondary group-data-[state=active]:text-secondary font-black">Annuaire</span>
                             </TabsTrigger>
                         </TabsList>
                     </div>
@@ -288,11 +294,11 @@ export function CollaboratorsClient({ initialUsers, session }: CollaboratorsClie
                                         className={cn(
                                             "relative overflow-hidden p-8 rounded-[2.8rem] border-[3px] transition-all duration-500 hover:scale-[1.03] hover:shadow-[0_40px_80px_-15px_rgba(0,0,0,0.3)] group",
                                             isMark 
-                                                ? "bg-gradient-to-br from-slate-900 via-slate-900 to-blue-900/40 border-slate-800 hover:border-blue-500/50" 
+                                                ? "bg-gradient-to-br from-slate-900 via-slate-900 to-blue-900/40 border-slate-800 hover:border-blue-500/50 shadow-2xl" 
                                                 : isVdf 
-                                                    ? "bg-gradient-to-br from-slate-900 via-slate-900 to-orange-900/40 border-slate-800 hover:border-orange-500/50"
+                                                    ? "bg-gradient-to-br from-slate-900 via-slate-900 to-orange-900/40 border-slate-800 hover:border-orange-500/50 shadow-2xl"
                                                     : isBoth
-                                                        ? "bg-gradient-to-br from-slate-900 via-blue-900/20 to-orange-900/40 border-slate-800 hover:border-secondary/50"
+                                                        ? "bg-gradient-to-br from-slate-900 via-blue-900/30 to-orange-900/50 border-slate-800 hover:border-secondary shadow-2xl"
                                                         : "bg-white border-slate-100 shadow-xl hover:border-secondary/30"
                                         )}
                                     >
@@ -355,7 +361,7 @@ export function CollaboratorsClient({ initialUsers, session }: CollaboratorsClie
                                                     ) : u.structure === 'MARK' ? (
                                                         <Badge className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-none text-[9px] px-3 py-1 uppercase font-black tracking-widest rounded-lg shadow-lg">Équipe MARK</Badge>
                                                     ) : u.structure === 'LES_2' ? (
-                                                        <Badge className="bg-gradient-to-r from-blue-600 via-secondary to-orange-600 text-white border-none text-[9px] px-3 py-1 uppercase font-black tracking-widest rounded-lg shadow-lg">Expert Mixte</Badge>
+                                                        <Badge className="bg-gradient-to-r from-blue-600 via-secondary to-orange-600 text-white border-none text-[9px] px-3 py-1 uppercase font-black tracking-widest rounded-lg shadow-lg">Équipe Mixte</Badge>
                                                     ) : (
                                                         <Badge className="bg-slate-700 text-white border-none text-[9px] px-3 py-1 uppercase font-black tracking-widest rounded-lg">Collaborateur</Badge>
                                                     )}
@@ -468,7 +474,7 @@ export function CollaboratorsClient({ initialUsers, session }: CollaboratorsClie
 
             {/* Profile Detail Dialog */}
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogContent className="sm:max-w-md bg-slate-950 border-slate-900 text-white rounded-[3.5rem] p-0 overflow-hidden shadow-[0_50px_100px_-20px_rgba(0,0,0,0.6)] border-2">
+                <DialogContent className="sm:max-w-md w-[95vw] bg-slate-950 border-slate-900 text-white rounded-[2.5rem] sm:rounded-[3.5rem] p-0 overflow-y-auto max-h-[90vh] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.6)] border-2">
                     {/* Header Image/Pattern */}
                     <div className={cn(
                         "h-48 w-full relative",
@@ -476,6 +482,14 @@ export function CollaboratorsClient({ initialUsers, session }: CollaboratorsClie
                     )}>
                         <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
                         <div className="absolute inset-0 bg-gradient-to-t from-slate-950 to-transparent" />
+                        <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="absolute top-4 right-4 text-white/40 hover:text-white hover:bg-white/10 rounded-full transition-all size-10 shadow-2xl backdrop-blur-md z-50 sm:hidden"
+                            onClick={() => setIsDialogOpen(false)}
+                        >
+                            <X size={24} />
+                        </Button>
                     </div>
 
                     <div className="px-12 pb-16 -mt-20 relative">

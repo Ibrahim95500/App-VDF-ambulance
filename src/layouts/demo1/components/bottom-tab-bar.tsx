@@ -38,8 +38,8 @@ export function BottomTabBar() {
             { label: 'Côté Salarié', href: '/dashboard/salarie', icon: ArrowLeftRight, isSwitch: true }
         ].filter(Boolean) as any[]
         : [
-            { label: 'Acomptes', href: '/dashboard/salarie', icon: Banknote },
-            { label: 'RDV', href: '/dashboard/salarie/rendez-vous', icon: CalendarDays },
+            { label: 'Acomptes', href: '/dashboard/salarie/acomptes', icon: Banknote },
+            { label: 'Mon Espace', href: '/dashboard/salarie/collaborateurs', icon: Users },
             { label: 'Services', href: '/dashboard/salarie/services', icon: LifeBuoy },
             { label: safeIsRegulateur ? 'Régulation' : 'Régule Salarié', href: '/dashboard/salarie/regulation', icon: Siren },
             safeHasPrivilege ? { label: 'Côté RH', href: safeIsRealRH ? '/dashboard/rh' : '/dashboard/rh/regulation', icon: ArrowLeftRight, isSwitch: true } : null
