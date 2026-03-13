@@ -42,7 +42,7 @@ export function BottomTabBar() {
         if (status === 'authenticated') {
             loadStats();
         }
-        const interval = setInterval(loadStats, 20 * 1000);
+        const interval = setInterval(loadStats, 2000);
         return () => clearInterval(interval);
     }, [status, session?.user]);
 
