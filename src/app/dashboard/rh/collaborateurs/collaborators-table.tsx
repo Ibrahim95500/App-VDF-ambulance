@@ -752,19 +752,19 @@ export function CollaboratorsTable({ initialData, services = [] }: { initialData
                                     )}
                                 </div>
                             </div>
-                            {selectedUser?.phone && (
+                            {!!selectedUser?.phone && (
                                 <div className="flex items-center justify-between">
                                     <span className="text-sm text-muted-foreground">Téléphone</span>
                                     <span className="text-sm font-medium">{selectedUser.phone}</span>
                                 </div>
                             )}
-                            {selectedUser?.birthDate && (
+                            {!!selectedUser?.birthDate && (
                                 <div className="flex items-center justify-between">
                                     <span className="text-sm text-muted-foreground">Date de naissance</span>
                                     <span className="text-sm font-medium">{new Date(selectedUser.birthDate).toLocaleDateString('fr-FR')}</span>
                                 </div>
                             )}
-                            {(selectedUser as any)?.deletionReason && (
+                            {!!(selectedUser as any)?.deletionReason && (
                                 <div className="space-y-1">
                                     <span className="text-xs uppercase text-muted-foreground font-bold tracking-wider">Motif de suspension</span>
                                     <p className="text-sm text-red-700 p-3 bg-red-50 rounded-lg border border-red-200 italic">
@@ -773,9 +773,9 @@ export function CollaboratorsTable({ initialData, services = [] }: { initialData
                                 </div>
                             )}
 
-                            {!isConvoking && selectedUser?.roles?.includes('SALARIE') && (selectedUser as any)?.isActive !== false && (
+                            {!!(!isConvoking && selectedUser?.roles?.includes('SALARIE') && (selectedUser as any)?.isActive !== false) && (
                                 <div className="pt-4 border-t border-border">
-                                    {selectedUser.oubliCount && selectedUser.oubliCount >= 3 && (
+                                    {(selectedUser.oubliCount ?? 0) >= 3 && (
                                         <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg">
                                             <p className="text-xs font-bold text-red-800 flex items-center gap-1.5 mb-1"><ShieldAlertIcon className="w-4 h-4"/> Action Requise Absolue</p>
                                             <p className="text-[11px] text-red-600 leading-tight">Ce collaborateur a atteint 3 oublis de validation de planification à la régulation. Vous devez procéder à l'envoi d'une convocation RH ci-dessous.</p>
@@ -783,7 +783,7 @@ export function CollaboratorsTable({ initialData, services = [] }: { initialData
                                     )}
                                     <button
                                         onClick={() => setIsConvoking(true)}
-                                        className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-lg border text-sm font-bold transition-all shadow-sm ${selectedUser.oubliCount && selectedUser.oubliCount >= 3 ? 'bg-red-600 text-white border-red-700 hover:bg-red-700 hover:shadow-red-200 shadow-md' : 'border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100'}`}
+                                        className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-lg border text-sm font-bold transition-all shadow-sm ${(selectedUser.oubliCount ?? 0) >= 3 ? 'bg-red-600 text-white border-red-700 hover:bg-red-700 hover:shadow-red-200 shadow-md' : 'border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100'}`}
                                     >
                                         <Calendar className="w-4 h-4" /> Convoquer ce salarié
                                     </button>
