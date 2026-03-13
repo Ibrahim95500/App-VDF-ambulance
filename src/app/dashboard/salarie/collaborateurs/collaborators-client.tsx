@@ -474,7 +474,7 @@ export function CollaboratorsClient({ initialUsers, session }: CollaboratorsClie
 
             {/* Profile Detail Dialog */}
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogContent className="sm:max-w-md w-full h-full sm:h-auto sm:w-[95vw] bg-slate-950 border-slate-900 text-white sm:rounded-[3.5rem] p-0 overflow-y-auto shadow-[0_50px_100px_-20px_rgba(0,0,0,0.6)] border-none sm:border-2">
+                <DialogContent className="sm:max-w-md w-full h-full sm:h-auto sm:w-[95vw] bg-slate-950 border-slate-900 text-white sm:rounded-[3.5rem] p-0 overflow-y-auto shadow-[0_50px_100px_-20px_rgba(0,0,0,0.6)] border-none sm:border-2 [&>button]:hidden top-0 translate-y-0 sm:top-1/2 sm:-translate-y-1/2">
                     {/* Header Image/Pattern */}
                     <div className={cn(
                         "h-48 w-full relative",
