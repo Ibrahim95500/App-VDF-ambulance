@@ -97,7 +97,7 @@ export const MENU_SIDEBAR: MenuConfig = [
   {
     title: 'Acomptes',
     icon: Euro,
-    path: '/dashboard/salarie',
+    path: '/dashboard/salarie/acomptes',
   },
   {
     title: 'Rendez-vous',

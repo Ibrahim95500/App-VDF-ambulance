@@ -334,14 +334,14 @@ export function CollaboratorsClient({ initialUsers, session }: CollaboratorsClie
                                                     </div>
                                                 )}
                                             </div>
-                                            <div className="flex flex-col min-w-0 pt-2">
+                                            <div className="flex flex-col min-w-0 pt-1">
                                                 <h3 className={cn(
-                                                    "font-black text-2xl truncate leading-none mb-3 tracking-tighter",
+                                                    "font-black text-lg truncate leading-none mb-2 tracking-tighter",
                                                     isMark || isVdf || isBoth ? "text-white" : "text-slate-900"
                                                 )}>
                                                     {u.firstName} <br/>
                                                     <span className={cn(
-                                                        "opacity-90",
+                                                        "opacity-90 block truncate",
                                                         isMark ? "text-blue-400" : isVdf ? "text-orange-400" : isBoth ? "text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-orange-400" : "text-secondary"
                                                     )}>{u.lastName}</span>
                                                 </h3>
@@ -363,24 +363,24 @@ export function CollaboratorsClient({ initialUsers, session }: CollaboratorsClie
                                             </div>
                                         </div>
                                         
-                                        <div className="space-y-4 mb-10 relative z-10 p-4 rounded-[1.5rem] bg-white/5 border border-white/5 backdrop-blur-sm">
+                                        <div className="space-y-3 mb-8 relative z-10 p-4 rounded-[1.5rem] bg-white/5 border border-white/5 backdrop-blur-sm">
                                             <div className={cn(
-                                                "flex items-center gap-4 text-[0.95rem] font-black italic uppercase tracking-tight",
+                                                "flex items-center gap-3 text-[0.8rem] font-black italic uppercase tracking-tight",
                                                 isMark || isVdf || isBoth ? "text-slate-300" : "text-slate-600"
                                             )}>
-                                                <div className={cn("p-2.5 rounded-xl transition-colors duration-500", isMark || isVdf || isBoth ? "bg-slate-800 group-hover:bg-slate-700" : "bg-slate-50")}>
-                                                    <GraduationCap size={20} className={isMark ? "text-blue-400" : isVdf ? "text-orange-400" : isBoth ? "text-secondary" : "text-secondary"} />
+                                                <div className={cn("p-2 rounded-xl transition-colors duration-500", isMark || isVdf || isBoth ? "bg-slate-800 group-hover:bg-slate-700" : "bg-slate-50")}>
+                                                    <GraduationCap size={16} className={isMark ? "text-blue-400" : isVdf ? "text-orange-400" : isBoth ? "text-secondary" : "text-secondary"} />
                                                 </div>
-                                                <span>{u.diploma === 'DEA' ? 'Ambulancier DEA' : 'Auxiliaire Transport'}</span>
+                                                <span className="truncate">{u.diploma === 'DEA' ? 'Ambulancier DEA' : 'Auxiliaire Transport'}</span>
                                             </div>
                                             <div className={cn(
-                                                "flex items-center gap-4 text-[0.95rem] font-black italic uppercase tracking-tight",
+                                                "flex items-center gap-3 text-[0.8rem] font-black italic uppercase tracking-tight",
                                                 isMark || isVdf || isBoth ? "text-slate-300" : "text-slate-600"
                                             )}>
-                                                <div className={cn("p-2.5 rounded-xl transition-colors duration-500", isMark || isVdf || isBoth ? "bg-slate-800 group-hover:bg-slate-700" : "bg-slate-50")}>
-                                                    <Briefcase size={20} className={isMark ? "text-blue-400" : isVdf ? "text-orange-400" : isBoth ? "text-secondary" : "text-secondary"} />
+                                                <div className={cn("p-2 rounded-xl transition-colors duration-500", isMark || isVdf || isBoth ? "bg-slate-800 group-hover:bg-slate-700" : "bg-slate-50")}>
+                                                    <Briefcase size={16} className={isMark ? "text-blue-400" : isVdf ? "text-orange-400" : isBoth ? "text-secondary" : "text-secondary"} />
                                                 </div>
-                                                <span>Contrat {u.shift === 'JOUR' ? 'En JOURNEE' : u.shift === 'NUIT' ? 'En NUIT' : 'Vacataire'}</span>
+                                                <span className="truncate">Contrat {u.shift === 'JOUR' ? 'JOUR' : u.shift === 'NUIT' ? 'NUIT' : 'Vacataire'}</span>
                                             </div>
                                         </div>
 
@@ -389,7 +389,7 @@ export function CollaboratorsClient({ initialUsers, session }: CollaboratorsClie
                                                 variant="secondary" 
                                                 size="sm" 
                                                 className={cn(
-                                                    "w-full h-14 rounded-2xl font-black transition-all text-[1rem] uppercase tracking-tighter shadow-2xl group/btn overflow-hidden relative",
+                                                    "w-full h-12 rounded-2xl font-black transition-all text-[0.85rem] uppercase tracking-tighter shadow-2xl group/btn overflow-hidden relative",
                                                     isMark 
                                                         ? "bg-gradient-to-r from-blue-700 to-blue-500 hover:from-blue-600 hover:to-blue-400 text-white border-none" 
                                                         : isVdf 
@@ -404,7 +404,7 @@ export function CollaboratorsClient({ initialUsers, session }: CollaboratorsClie
                                                 }}
                                             >
                                                 <div className="absolute inset-0 bg-white/20 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300" />
-                                                <Eye className="size-6 mr-3 relative z-10" />
+                                                <Eye className="size-5 mr-2 relative z-10" />
                                                 <span className="relative z-10">Détails Collaborateur</span>
                                             </Button>
                                         </div>
