@@ -474,7 +474,7 @@ export function CollaboratorsClient({ initialUsers, session }: CollaboratorsClie
 
             {/* Profile Detail Dialog */}
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogContent className="sm:max-w-md w-[95vw] bg-slate-950 border-slate-900 text-white rounded-[2.5rem] sm:rounded-[3.5rem] p-0 overflow-y-auto max-h-[90vh] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.6)] border-2">
+                <DialogContent className="sm:max-w-md w-full h-full sm:h-auto sm:w-[95vw] bg-slate-950 border-slate-900 text-white sm:rounded-[3.5rem] p-0 overflow-y-auto shadow-[0_50px_100px_-20px_rgba(0,0,0,0.6)] border-none sm:border-2">
                     {/* Header Image/Pattern */}
                     <div className={cn(
                         "h-48 w-full relative",
@@ -485,10 +485,10 @@ export function CollaboratorsClient({ initialUsers, session }: CollaboratorsClie
                         <Button 
                             variant="ghost" 
                             size="icon" 
-                            className="absolute top-4 right-4 text-white/40 hover:text-white hover:bg-white/10 rounded-full transition-all size-10 shadow-2xl backdrop-blur-md z-50 sm:hidden"
+                            className="absolute top-6 right-6 text-white/40 hover:text-white hover:bg-white/10 rounded-full transition-all size-12 shadow-2xl backdrop-blur-md z-50 flex items-center justify-center border border-white/5"
                             onClick={() => setIsDialogOpen(false)}
                         >
-                            <X size={24} />
+                            <X size={32} />
                         </Button>
                     </div>
 
