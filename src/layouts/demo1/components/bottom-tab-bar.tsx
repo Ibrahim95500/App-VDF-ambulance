@@ -7,6 +7,9 @@ import { Home, CalendarClock, Euro, Users, User, LayoutList, LifeBuoy, CalendarR
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { motion } from 'motion/react';
+import { useState, useEffect } from 'react';
+import { getNotificationStats } from '@/actions/notification-stats.actions';
+import { Badge } from '@/components/ui/badge';
 
 export function BottomTabBar() {
     const pathname = usePathname();
@@ -27,20 +30,33 @@ export function BottomTabBar() {
     const safeIsAdmin = isLoadingOrEmpty ? true : (session?.user as any)?.roles?.includes('ADMIN');
     const safeIsRealRH = isLoadingOrEmpty ? true : isRealRH;
 
+    const [stats, setStats] = useState({ advances: 0, services: 0, appointments: 0, leaves: 0, total: 0 });
+
+    useEffect(() => {
+        const loadStats = async () => {
+            const data = await getNotificationStats();
+            setStats(data);
+        };
+        loadStats();
+        // Optionnel : refresh toutes les 5 min
+        const interval = setInterval(loadStats, 5 * 60 * 1000);
+        return () => clearInterval(interval);
+    }, []);
+
     const isRHSection = pathname.startsWith('/dashboard/rh');
 
     // Determine tabs based on current view
     const navItems = isRHSection
         ? [
             safeIsRealRH ? { label: 'Accueil', href: '/dashboard/rh', icon: Home } : null,
-            { label: 'Régule RH', href: '/dashboard/rh/regulation', icon: Siren },
+            { label: 'Régule RH', href: '/dashboard/rh/regulation', icon: Siren, badgeCount: stats.total },
             safeIsRealRH ? { label: 'Équipe', href: '/dashboard/rh/collaborateurs', icon: Users } : null,
             { label: 'Côté Salarié', href: '/dashboard/salarie', icon: ArrowLeftRight, isSwitch: true }
         ].filter(Boolean) as any[]
         : [
-            { label: 'Acomptes', href: '/dashboard/salarie/acomptes', icon: Banknote },
+            { label: 'Acomptes', href: '/dashboard/salarie/acomptes', icon: Banknote, badgeCount: stats.advances },
             { label: 'Mon Espace', href: '/dashboard/salarie/collaborateurs', icon: Users },
-            { label: 'Services', href: '/dashboard/salarie/services', icon: LifeBuoy },
+            { label: 'Services', href: '/dashboard/salarie/services', icon: LifeBuoy, badgeCount: stats.services + stats.leaves },
             { label: safeIsRegulateur ? 'Régulation' : 'Régule Salarié', href: '/dashboard/salarie/regulation', icon: Siren },
             safeHasPrivilege ? { label: 'Côté RH', href: safeIsRealRH ? '/dashboard/rh' : '/dashboard/rh/regulation', icon: ArrowLeftRight, isSwitch: true } : null
         ].filter(Boolean) as any[];
@@ -67,10 +83,15 @@ export function BottomTabBar() {
                                 transition={{ type: "spring", stiffness: 400, damping: 17 }}
                             >
                                 <div className={cn(
-                                    "flex items-center justify-center p-1.5 rounded-full transition-all duration-200",
+                                    "flex items-center justify-center p-1.5 rounded-full transition-all duration-200 relative",
                                     isActive && "bg-primary/10 dark:bg-blue-500/10"
                                 )}>
                                     <Icon className={cn("size-5", isActive && "stroke-[2.5px]")} />
+                                    {item.badgeCount > 0 && (
+                                        <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white ring-2 ring-background animate-in zoom-in">
+                                            {item.badgeCount > 99 ? '99+' : item.badgeCount}
+                                        </span>
+                                    )}
                                 </div>
                                 <span className={cn(
                                     "text-[10px] font-medium leading-none",

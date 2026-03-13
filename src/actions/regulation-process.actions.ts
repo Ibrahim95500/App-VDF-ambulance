@@ -17,6 +17,21 @@ export async function sendPlanningsToEmployees(dateStr: string) {
         const startOfDay = new Date(`${dateStr}T00:00:00.000Z`)
         const endOfDay = new Date(`${dateStr}T23:59:59.999Z`)
 
+        // 1. Vérifier si un job a déjà été exécuté avec succès pour ce type et cette date
+        const existingJob = await prisma.cronJob.findUnique({
+            where: {
+                type_date: {
+                    type: 'SEND_PLANNING',
+                    date: dateStr
+                }
+            }
+        });
+
+        if (existingJob) {
+            console.log(`[CRON 19H] Skip: Plannings déjà envoyés pour le ${dateStr}`);
+            return { success: true, message: "Plannings déjà envoyés pour cette date." };
+        }
+
         // On récupère les assignations pour CE jour exact
         const assignments = await prisma.planningAssignment.findMany({
             where: {
@@ -139,6 +154,15 @@ export async function sendPlanningsToEmployees(dateStr: string) {
             }
         }
 
+        // 5. Enregistrer le succès du job pour éviter les doublons
+        await prisma.cronJob.create({
+            data: {
+                type: 'SEND_PLANNING',
+                date: dateStr,
+                status: 'SUCCESS'
+            }
+        });
+
         return { success: true, message: `Equipages figés ! ${emailsSent} emails ont été envoyés.` }
     } catch (error: any) {
         console.error("Error sendPlanningsToEmployees:", error)
@@ -154,6 +178,21 @@ export async function checkConfirmationsAndPenalize(dateStr: string) {
     try {
         const startOfDay = new Date(`${dateStr}T00:00:00.000Z`)
         const endOfDay = new Date(`${dateStr}T23:59:59.999Z`)
+
+        // 1. Vérifier si un job a déjà été exécuté avec succès pour ce type et cette date
+        const existingJob = await prisma.cronJob.findUnique({
+            where: {
+                type_date: {
+                    type: 'CHECK_VALIDATION',
+                    date: dateStr
+                }
+            }
+        });
+
+        if (existingJob) {
+            console.log(`[CRON 21H] Skip: Vérifications déjà effectuées pour le ${dateStr}`);
+            return { success: true, message: "Vérifications déjà effectuées pour cette date." };
+        }
 
         // On cherche toutes les assignations du jour cible
         const assignments = await prisma.planningAssignment.findMany({
@@ -281,6 +320,15 @@ export async function checkConfirmationsAndPenalize(dateStr: string) {
                 }).catch(console.error);
             }
         }
+
+        // 6. Enregistrer le succès du job
+        await prisma.cronJob.create({
+            data: {
+                type: 'CHECK_VALIDATION',
+                date: dateStr,
+                status: 'SUCCESS'
+            }
+        });
 
         return { success: true, message: `Vérification terminée. ${penalitiesCount} pénalités. Rapport global envoyé aux admins.` }
     } catch (error: any) {

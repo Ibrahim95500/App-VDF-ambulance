@@ -282,3 +282,13 @@ model PlanningAssignment {
   leader      User             @relation("Leader", fields: [leaderId], references: [id])
   teammate    User             @relation("Teammate", fields: [teammateId], references: [id])
 }
+
+model CronJob {
+  id        String   @id @default(cuid())
+  type      String   // SEND_PLANNING, CHECK_VALIDATION
+  date      String   // Format yyyy-MM-dd
+  status    String   @default("SUCCESS")
+  createdAt DateTime @default(now())
+
+  @@unique([type, date])
+}

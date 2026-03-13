@@ -148,7 +148,18 @@ export default async function RHDashboard() {
                         {/* Advance Requests Card */}
                         <Card className="border-secondary/50 shadow-sm border-t-4 border-t-secondary">
                             <CardHeader className="pb-3 border-b border-border">
-                                <CardTitle className="text-base font-semibold">Demandes d'Acompte en Attente</CardTitle>
+                                <div className="flex items-center justify-between gap-2">
+                                    <CardTitle className="text-base font-semibold">Demandes d'Acompte en Attente</CardTitle>
+                                    {pendingRequests.length > 0 && (
+                                        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-red-100 text-red-600 border border-red-200 animate-pulse">
+                                            <span className="relative flex h-2 w-2">
+                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                                <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                                            </span>
+                                            <span className="text-[10px] font-black">{pendingRequests.length}</span>
+                                        </div>
+                                    )}
+                                </div>
                                 <CardDescription>
                                     {pendingRequests.length} demande(s) nécessite(nt) votre attention.
                                 </CardDescription>
@@ -207,7 +218,18 @@ export default async function RHDashboard() {
                         {/* Service Requests Card */}
                         <Card className="border-secondary/50 shadow-sm border-t-4 border-t-secondary">
                             <CardHeader className="pb-3 border-b border-border">
-                                <CardTitle className="text-base font-semibold">Demandes de Service en Attente</CardTitle>
+                                <div className="flex items-center justify-between gap-2">
+                                    <CardTitle className="text-base font-semibold">Demandes de Service en Attente</CardTitle>
+                                    {pendingServices.length > 0 && (
+                                        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-red-100 text-red-600 border border-red-200 animate-pulse">
+                                            <span className="relative flex h-2 w-2">
+                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                                <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                                            </span>
+                                            <span className="text-[10px] font-black">{pendingServices.length}</span>
+                                        </div>
+                                    )}
+                                </div>
                                 <CardDescription>
                                     {pendingServices.length} demande(s) nécessite(nt) votre attention.
                                 </CardDescription>
@@ -266,7 +288,18 @@ export default async function RHDashboard() {
                     <div className="flex flex-col gap-8">
                         <Card className="border-secondary/50 shadow-sm border-t-4 border-t-secondary">
                             <CardHeader className="pb-3 border-b border-border">
-                                <CardTitle className="text-base font-semibold">Demande de Rendez-vous en Attente</CardTitle>
+                                <div className="flex items-center justify-between gap-2">
+                                    <CardTitle className="text-base font-semibold">Demande de Rendez-vous en Attente</CardTitle>
+                                    {pendingAppointments.length > 0 && (
+                                        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-red-100 text-red-600 border border-red-200 animate-pulse">
+                                            <span className="relative flex h-2 w-2">
+                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                                <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                                            </span>
+                                            <span className="text-[10px] font-black">{pendingAppointments.length}</span>
+                                        </div>
+                                    )}
+                                </div>
                                 <CardDescription>
                                     {pendingAppointments.length} demande(s) nécessite(nt) votre attention.
                                 </CardDescription>
