@@ -138,14 +138,16 @@ export function CollaboratorsTable({ initialData, services = [] }: { initialData
 
     const roleOptions = [
         { label: "Salariés", value: "SALARIE" },
-        { label: "RH / Admin", value: "RH" }
+        { label: "Régulateurs", value: "REGULATEUR" },
+        { label: "Admin", value: "ADMIN" }
     ]
 
     const filterCounts = useMemo(() => {
-        const counts = { ALL: initialData.length, SALARIE: 0, RH: 0 }
+        const counts = { ALL: initialData.length, SALARIE: 0, REGULATEUR: 0, ADMIN: 0 }
         initialData.forEach(user => {
             if (user.roles?.includes('SALARIE')) counts.SALARIE++
-            if (user.roles?.includes('RH')) counts.RH++
+            if (user.roles?.includes('REGULATEUR')) counts.REGULATEUR++
+            if (user.roles?.includes('ADMIN')) counts.ADMIN++
         })
         return counts
     }, [initialData])
@@ -285,7 +287,7 @@ export function CollaboratorsTable({ initialData, services = [] }: { initialData
             "Prénom": user.firstName || "-",
             "Email": user.email,
             "Téléphone": user.phone || "-",
-            "Rôle": user.roles?.includes('RH') ? 'RH / Admin' : 'Salarié',
+            "Rôle": user.roles?.includes('ADMIN') ? 'Admin' : user.roles?.includes('REGULATEUR') ? 'Régulateur' : user.roles?.includes('RH') ? 'RH' : 'Salarié',
             "Statut": user.isDeleted ? 'Supprimé' : (user as any).isActive !== false ? 'Actif' : 'Inactif',
             "Motif Désactivation": (user as any).deletionReason || "-",
             "Date d'inscription": user.createdAt ? new Date(user.createdAt).toLocaleDateString('fr-FR') : '-'
@@ -303,12 +305,10 @@ export function CollaboratorsTable({ initialData, services = [] }: { initialData
                     <UserXIcon className="w-4 h-4" />
                     <span className="font-bold">{inactiveCount}</span> Collaborateurs Inactifs
                 </Badge>
-                {deletedCount > 0 && (
-                    <Badge variant="outline" className="px-4 py-2 bg-slate-100 text-slate-600 border-slate-200 flex items-center gap-2">
-                        <TrashIcon className="w-4 h-4" />
-                        <span className="font-bold">{deletedCount}</span> Supprimés (Virés)
-                    </Badge>
-                )}
+                <Badge variant="outline" className={`px-4 py-2 flex items-center gap-2 ${deletedCount > 0 ? "bg-slate-100 text-slate-600 border-slate-200 shadow-sm" : "bg-slate-50 text-slate-400 border-slate-100 opacity-60"}`}>
+                    <TrashIcon className="w-4 h-4" />
+                    <span className="font-bold">{deletedCount}</span> Supprimés (Virés)
+                </Badge>
             </div>
 
             <div className="border border-border rounded-xl p-6">
@@ -492,8 +492,8 @@ export function CollaboratorsTable({ initialData, services = [] }: { initialData
                                     <td className="px-5 py-4 text-center">
                                         <div className="flex items-center justify-center gap-1.5 flex-wrap">
                                             {(user.roles || []).map((role: string) => (
-                                                <Badge key={role} variant="outline" className={`px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${role === 'RH' ? 'text-purple-600 bg-purple-50 border-purple-200' : 'text-secondary bg-secondary/10 border-secondary/20'}`}>
-                                                    {role === 'RH' ? 'RH / Admin' : role}
+                                                <Badge key={role} variant="outline" className={`px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${role === 'ADMIN' ? 'text-orange-600 bg-orange-50 border-orange-200' : role === 'RH' ? 'text-purple-600 bg-purple-50 border-purple-200' : role === 'REGULATEUR' ? 'text-blue-600 bg-blue-50 border-blue-200' : 'text-secondary bg-secondary/10 border-secondary/20'}`}>
+                                                    {role === 'REGULATEUR' ? 'Régulateur' : role}
                                                 </Badge>
                                             ))}
                                         </div>
