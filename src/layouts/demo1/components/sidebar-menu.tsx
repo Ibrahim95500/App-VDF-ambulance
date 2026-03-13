@@ -17,25 +17,28 @@ import {
   AccordionMenuSubContent,
   AccordionMenuSubTrigger,
 } from '@/components/ui/accordion-menu';
-import { Badge } from '@/components/ui/badge';
 import { useSession } from 'next-auth/react';
 
 export function SidebarMenu() {
   const pathname = usePathname();
   const { data: session, status } = useSession();
-  const [stats, setStats] = useState({ advances: 0, services: 0, appointments: 0, leaves: 0, total: 0 });
+  const [stats, setStats] = useState({
+    global: { advances: 0, services: 0, appointments: 0, leaves: 0, regulation: 0, total: 0 },
+    personal: { advances: 0, services: 0, appointments: 0, leaves: 0, mission: 0, total: 0 }
+  });
 
   useEffect(() => {
     const loadStats = async () => {
-      const data = await getNotificationStats();
-      setStats(data);
+      const userId = (session?.user as any)?.id;
+      const data = await getNotificationStats(userId);
+      if (data) setStats(data);
     };
     if (status === 'authenticated') {
       loadStats();
       const interval = setInterval(loadStats, 5 * 60 * 1000);
       return () => clearInterval(interval);
     }
-  }, [status]);
+  }, [status, session?.user]);
 
   const roles = (session?.user as any)?.roles || [];
   let userRole = roles.includes('RH') || roles.includes('ADMIN') ? 'RH' : '';
@@ -155,10 +158,21 @@ export function SidebarMenu() {
             <span data-slot="accordion-menu-title">{item.title}</span>
             {(() => {
               let count = 0;
-              if (item.path?.includes('acomptes')) count = stats.advances;
-              if (item.path?.includes('services')) count = stats.services + stats.leaves;
-              if (item.path?.includes('rendez-vous')) count = stats.appointments;
-              if (item.path === '/dashboard/rh/regulation') count = stats.total;
+              const path = item.path || '';
+              
+              if (path.startsWith('/dashboard/rh')) {
+                // Section ADMIN / RH
+                if (path.includes('acomptes')) count = stats.global.advances;
+                if (path.includes('services')) count = stats.global.services + stats.global.leaves;
+                if (path.includes('rendez-vous')) count = stats.global.appointments;
+                if (path.includes('regulation')) count = stats.global.regulation;
+              } else if (path.startsWith('/dashboard/salarie')) {
+                // Section SALARIE
+                if (path.includes('acomptes')) count = stats.personal.advances;
+                if (path.includes('services')) count = stats.personal.services + stats.personal.leaves;
+                if (path.includes('rendez-vous')) count = stats.personal.appointments;
+                if (path.includes('regulation')) count = stats.personal.mission;
+              }
 
               if (count > 0) {
                 return (
@@ -264,9 +278,19 @@ export function SidebarMenu() {
             {item.title}
             {(() => {
               let count = 0;
-              if (item.path?.includes('acomptes')) count = stats.advances;
-              if (item.path?.includes('services')) count = stats.services + stats.leaves;
-              if (item.path?.includes('rendez-vous')) count = stats.appointments;
+              const path = item.path || '';
+              
+              if (path.startsWith('/dashboard/rh')) {
+                if (path.includes('acomptes')) count = stats.global.advances;
+                if (path.includes('services')) count = stats.global.services + stats.global.leaves;
+                if (path.includes('rendez-vous')) count = stats.global.appointments;
+                if (path.includes('regulation')) count = stats.global.regulation;
+              } else if (path.startsWith('/dashboard/salarie')) {
+                if (path.includes('acomptes')) count = stats.personal.advances;
+                if (path.includes('services')) count = stats.personal.services + stats.personal.leaves;
+                if (path.includes('rendez-vous')) count = stats.personal.appointments;
+                if (path.includes('regulation')) count = stats.personal.mission;
+              }
               
               if (count > 0) {
                 return (

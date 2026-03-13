@@ -56,10 +56,16 @@ export function RegulationView() {
     // Dialog State
     const [selectedVehicle, setSelectedVehicle] = useState<any>(null)
     const [isDialogOpen, setIsDialogOpen] = useState(false)
+    const [page, setPage] = useState(1)
 
     useEffect(() => {
+        setPage(1)
         loadData()
     }, [date])
+
+    useEffect(() => {
+        setPage(1)
+    }, [searchTerm, activeTab])
 
     useEffect(() => {
         if (viewMode === 'HISTORY' && historyData.length === 0) {
@@ -299,32 +305,59 @@ export function RegulationView() {
                     <p className="text-slate-400 text-sm">Réessayez avec une autre recherche ou une autre date.</p>
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 animate-in fade-in transition-all">
-                    {filteredVehicles.map(vehicle => {
-                        const assignment = vehicle.assignments?.[0]
-                        return (
-                            <AmbulanceCard
-                                key={vehicle.id}
-                                plateNumber={vehicle.plateNumber}
-                                category={vehicle.category}
-                                leaderName={assignment?.leader ? `${assignment.leader.lastName} ${assignment.leader.firstName}` : undefined}
-                                teammateName={assignment?.teammate ? `${assignment.teammate.lastName} ${assignment.teammate.firstName}` : undefined}
-                                leaderDiploma={assignment?.leader?.diploma || undefined}
-                                teammateDiploma={assignment?.teammate?.diploma || undefined}
-                                leaderIsRegulateur={assignment?.leader?.isRegulateur || false}
-                                teammateIsRegulateur={assignment?.teammate?.isRegulateur || false}
-                                leaderValidated={assignment?.leaderValidated || false}
-                                teammateValidated={assignment?.teammateValidated || false}
-                                status={assignment?.status}
-                                startTime={assignment?.startTime}
-                                onClick={() => {
-                                    setSelectedVehicle(vehicle)
-                                    setIsDialogOpen(true)
-                                }}
-                            />
-                        )
-                    })}
-                </div>
+                <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 animate-in fade-in transition-all">
+                        {filteredVehicles.slice((page - 1) * 10, page * 10).map(vehicle => {
+                            const assignment = vehicle.assignments?.[0]
+                            return (
+                                <AmbulanceCard
+                                    key={vehicle.id}
+                                    plateNumber={vehicle.plateNumber}
+                                    category={vehicle.category}
+                                    leaderName={assignment?.leader ? `${assignment.leader.lastName} ${assignment.leader.firstName}` : undefined}
+                                    teammateName={assignment?.teammate ? `${assignment.teammate.lastName} ${assignment.teammate.firstName}` : undefined}
+                                    leaderDiploma={assignment?.leader?.diploma || undefined}
+                                    teammateDiploma={assignment?.teammate?.diploma || undefined}
+                                    leaderIsRegulateur={assignment?.leader?.isRegulateur || false}
+                                    teammateIsRegulateur={assignment?.teammate?.isRegulateur || false}
+                                    leaderValidated={assignment?.leaderValidated || false}
+                                    teammateValidated={assignment?.teammateValidated || false}
+                                    status={assignment?.status}
+                                    startTime={assignment?.startTime}
+                                    onClick={() => {
+                                        setSelectedVehicle(vehicle)
+                                        setIsDialogOpen(true)
+                                    }}
+                                />
+                            )
+                        })}
+                    </div>
+
+                    {/* Pagination UI */}
+                    {filteredVehicles.length > 10 && (
+                        <div className="flex items-center justify-center gap-4 mt-8 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 shadow-sm">
+                            <Button
+                                variant="outline"
+                                onClick={() => setPage(p => Math.max(1, p - 1))}
+                                disabled={page === 1}
+                                className="h-10 px-4 font-bold rounded-xl"
+                            >
+                                Précédent
+                            </Button>
+                            <span className="text-sm font-black">
+                                Page <span className="text-orange-600">{page}</span> sur {Math.ceil(filteredVehicles.length / 10)}
+                            </span>
+                            <Button
+                                variant="outline"
+                                onClick={() => setPage(p => Math.min(Math.ceil(filteredVehicles.length / 10), p + 1))}
+                                disabled={page === Math.ceil(filteredVehicles.length / 10)}
+                                className="h-10 px-4 font-bold rounded-xl"
+                            >
+                                Suivant
+                            </Button>
+                        </div>
+                    )}
+                </>
             )}
             </>
             )}

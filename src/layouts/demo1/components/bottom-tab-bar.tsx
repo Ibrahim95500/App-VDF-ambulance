@@ -9,7 +9,6 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { motion } from 'motion/react';
 import { useState, useEffect } from 'react';
 import { getNotificationStats } from '@/actions/notification-stats.actions';
-import { Badge } from '@/components/ui/badge';
 
 export function BottomTabBar() {
     const pathname = usePathname();
@@ -30,18 +29,22 @@ export function BottomTabBar() {
     const safeIsAdmin = isLoadingOrEmpty ? true : (session?.user as any)?.roles?.includes('ADMIN');
     const safeIsRealRH = isLoadingOrEmpty ? true : isRealRH;
 
-    const [stats, setStats] = useState({ advances: 0, services: 0, appointments: 0, leaves: 0, total: 0 });
+    const [stats, setStats] = useState({
+        global: { advances: 0, services: 0, appointments: 0, leaves: 0, regulation: 0, total: 0 },
+        personal: { advances: 0, services: 0, appointments: 0, leaves: 0, mission: 0, total: 0 }
+    });
 
     useEffect(() => {
         const loadStats = async () => {
-            const data = await getNotificationStats();
-            setStats(data);
+            const data = await getNotificationStats((session?.user as any)?.id);
+            if (data) setStats(data);
         };
-        loadStats();
-        // Optionnel : refresh toutes les 5 min
+        if (status === 'authenticated') {
+            loadStats();
+        }
         const interval = setInterval(loadStats, 5 * 60 * 1000);
         return () => clearInterval(interval);
-    }, []);
+    }, [status, session?.user]);
 
     const isRHSection = pathname.startsWith('/dashboard/rh');
 
@@ -49,15 +52,15 @@ export function BottomTabBar() {
     const navItems = isRHSection
         ? [
             safeIsRealRH ? { label: 'Accueil', href: '/dashboard/rh', icon: Home } : null,
-            { label: 'Régule RH', href: '/dashboard/rh/regulation', icon: Siren, badgeCount: stats.total },
+            { label: 'Régule RH', href: '/dashboard/rh/regulation', icon: Siren, badgeCount: stats.global.regulation },
             safeIsRealRH ? { label: 'Équipe', href: '/dashboard/rh/collaborateurs', icon: Users } : null,
             { label: 'Côté Salarié', href: '/dashboard/salarie', icon: ArrowLeftRight, isSwitch: true }
         ].filter(Boolean) as any[]
         : [
-            { label: 'Acomptes', href: '/dashboard/salarie/acomptes', icon: Banknote, badgeCount: stats.advances },
+            { label: 'Acomptes', href: '/dashboard/salarie/acomptes', icon: Banknote, badgeCount: stats.personal.advances },
             { label: 'Mon Espace', href: '/dashboard/salarie/collaborateurs', icon: Users },
-            { label: 'Services', href: '/dashboard/salarie/services', icon: LifeBuoy, badgeCount: stats.services + stats.leaves },
-            { label: safeIsRegulateur ? 'Régulation' : 'Régule Salarié', href: '/dashboard/salarie/regulation', icon: Siren },
+            { label: 'Services', href: '/dashboard/salarie/services', icon: LifeBuoy, badgeCount: stats.personal.services + stats.personal.leaves },
+            { label: safeIsRegulateur ? 'Régulation' : 'Régule Salarié', href: '/dashboard/salarie/regulation', icon: Siren, badgeCount: stats.personal.mission },
             safeHasPrivilege ? { label: 'Côté RH', href: safeIsRealRH ? '/dashboard/rh' : '/dashboard/rh/regulation', icon: ArrowLeftRight, isSwitch: true } : null
         ].filter(Boolean) as any[];
 
