@@ -616,11 +616,27 @@ export async function getUserDashboardStats() {
         const userId = session.user.id;
 
         // On récupère toutes les demandes liées à cet utilisateur
-        const [advances, services, appointments] = await Promise.all([
+        const [advances, services, appointments, assignments] = await Promise.all([
             prisma.advanceRequest.findMany({ where: { userId } }),
             prisma.serviceRequest.findMany({ where: { userId } }),
-            prisma.appointmentRequest.findMany({ where: { userId } })
+            prisma.appointmentRequest.findMany({ where: { userId } }),
+            prisma.planningAssignment.findMany({
+                where: {
+                    OR: [
+                        { leaderId: userId },
+                        { teammateId: userId }
+                    ]
+                }
+            })
         ]);
+
+        // Interventions de la semaine (du lundi au dimanche)
+        const now = new Date();
+        const startOfWeek = new Date(now);
+        startOfWeek.setDate(now.getDate() - (now.getDay() || 7) + 1);
+        startOfWeek.setHours(0, 0, 0, 0);
+
+        const interventionsThisWeek = assignments.filter(a => new Date(a.date) >= startOfWeek).length;
 
         // Helper pour formater les stats par mois
         const formatByMonth = (data: any[]) => {
@@ -668,6 +684,10 @@ export async function getUserDashboardStats() {
                 byStatus: formatByStatus(appointments),
                 byMonth: formatByMonth(appointments),
                 total: appointments.length
+            },
+            interventions: {
+                total: assignments.length,
+                thisWeek: interventionsThisWeek
             }
         };
     } catch (error) {

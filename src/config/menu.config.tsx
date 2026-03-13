@@ -90,6 +90,11 @@ export const MENU_SIDEBAR: MenuConfig = [
   },
   { heading: 'Mes Démarches' },
   {
+    title: 'Mon Espace VDF',
+    icon: Users,
+    path: '/dashboard/salarie/collaborateurs',
+  },
+  {
     title: 'Acomptes',
     icon: Euro,
     path: '/dashboard/salarie',
@@ -108,11 +113,6 @@ export const MENU_SIDEBAR: MenuConfig = [
     title: 'Régule Salarié',
     icon: Siren,
     path: '/dashboard/salarie/regulation',
-  },
-  {
-    title: 'Mes Collègues',
-    icon: Users,
-    path: '/dashboard/salarie/collaborateurs',
   },
 ];
 

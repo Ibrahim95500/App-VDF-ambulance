@@ -24,6 +24,7 @@ import {
     LayoutDashboard,
     ChevronLeft,
     ChevronRight,
+    Zap
 } from "lucide-react"
 import {
     Dialog,
@@ -97,87 +98,122 @@ export function CollaboratorsClient({ initialUsers, session }: CollaboratorsClie
                                     <Users className="size-8 text-secondary" />
                                 )}
                                 <h1 className="text-3xl font-bold tracking-tight text-secondary">
-                                    {activeTab === "dashboard" ? "Mon Tableau de bord" : "Annuaire de l'équipe"}
+                                    {activeTab === "dashboard" ? "Mon Espace Personnel" : "Annuaire d'Entreprise"}
                                 </h1>
                             </div>
                             <p className="text-muted-foreground ml-[2.7rem]">
                                 {activeTab === "dashboard" 
-                                    ? "Consultez vos statistiques personnelles et votre situation." 
-                                    : "Retrouvez tous les membres de l'équipe VDF Ambulance."}
+                                    ? "Consultez vos statistiques de travail, vos démarches et votre situation." 
+                                    : "Retrouvez et contactez facilement tous vos collègues VDF Ambulance."}
                             </p>
                         </div>
 
-                        <TabsList className="bg-slate-100 p-1 rounded-xl border border-slate-200">
-                            <TabsTrigger value="dashboard" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm px-6 py-2 transition-all">
+                        <TabsList className="bg-slate-100 p-1.5 rounded-2xl border border-slate-200 shadow-sm">
+                            <TabsTrigger value="dashboard" className="rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-md px-8 py-2.5 font-bold transition-all">
                                 <LayoutDashboard className="size-4 mr-2" />
-                                Stats Perso
+                                Stats & Pilotage
                             </TabsTrigger>
-                            <TabsTrigger value="annuaire" className="rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm px-6 py-2 transition-all">
+                            <TabsTrigger value="annuaire" className="rounded-xl data-[state=active]:bg-white data-[state=active]:shadow-md px-8 py-2.5 font-bold transition-all">
                                 <Users className="size-4 mr-2" />
-                                Collègues
+                                Annuaire
                             </TabsTrigger>
                         </TabsList>
                     </div>
 
                     <TabsContent value="dashboard" className="space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-300 outline-none">
                         {/* Ma Situation Card - SOMBRE */}
-                        <div className={`p-8 rounded-3xl border-2 flex flex-col md:flex-row items-center justify-between gap-8 transition-all shadow-xl bg-slate-900 border-slate-800 relative overflow-hidden group`}>
+                        <div className={`p-8 rounded-[2.5rem] border-2 flex flex-col md:flex-row items-center justify-between gap-8 transition-all shadow-2xl bg-slate-900 border-slate-800 relative overflow-hidden group`}>
                             {/* Éclat décoratif */}
-                            <div className="absolute top-0 right-0 w-64 h-64 bg-secondary/10 rounded-full blur-3xl -mr-32 -mt-32 group-hover:bg-secondary/20 transition-colors duration-500" />
+                            <div className="absolute top-0 right-0 w-80 h-80 bg-secondary/10 rounded-full blur-[100px] -mr-32 -mt-32 group-hover:bg-secondary/20 transition-colors duration-700" />
+                            <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-600/5 rounded-full blur-[80px] -ml-32 -mb-32" />
                             
                             <div className="flex items-center gap-6 relative z-10">
-                                <div className={`p-5 rounded-2xl text-white shadow-2xl ${myOublis >= 3 ? 'bg-red-600 shadow-red-900/50 animate-pulse' : 'bg-secondary shadow-secondary/20'}`}>
-                                    {myOublis >= 3 ? <ShieldAlert size={40} /> : <ShieldCheck size={40} />}
+                                <div className={`p-6 rounded-[1.5rem] text-white shadow-2xl transition-transform group-hover:scale-110 duration-500 ${myOublis >= 3 ? 'bg-gradient-to-br from-red-600 to-red-800 shadow-red-900/50 animate-pulse' : 'bg-gradient-to-br from-secondary to-orange-700 shadow-secondary/20'}`}>
+                                    {myOublis >= 3 ? <ShieldAlert size={44} /> : <ShieldCheck size={44} />}
                                 </div>
                                 <div className="text-center md:text-left">
-                                    <h2 className="text-2xl font-black text-white mb-1">Ma Situation Régulation</h2>
-                                    <p className="text-slate-400 font-medium tracking-wide flex items-center gap-2">
-                                        <Info size={16} className="text-secondary" />
+                                    <h2 className="text-3xl font-black text-white mb-2 tracking-tight">Ma Situation Régulation</h2>
+                                    <p className="text-slate-400 font-bold tracking-wide flex items-center gap-2">
+                                        <Info size={18} className="text-secondary" />
                                         Compteur officiel des oublis de validation
                                     </p>
                                 </div>
                             </div>
                             
                             <div className="flex flex-col items-center md:items-end relative z-10">
-                                <span className={`text-7xl font-black mb-1 drop-shadow-md ${myOublis >= 3 ? 'text-red-500' : 'text-secondary'}`}>{myOublis}</span>
-                                <Badge variant={myOublis >= 3 ? "destructive" : "secondary"} className="font-bold uppercase tracking-widest text-xs px-4 py-1.5 shadow-lg">
+                                <span className={`text-8xl font-black mb-1 drop-shadow-2xl ${myOublis >= 3 ? 'text-transparent bg-clip-text bg-gradient-to-br from-red-500 to-orange-500' : 'text-transparent bg-clip-text bg-gradient-to-br from-secondary to-orange-400'}`}>{myOublis}</span>
+                                <Badge variant={myOublis >= 3 ? "destructive" : "secondary"} className="font-black uppercase tracking-[0.2em] text-[10px] px-5 py-2 shadow-xl border-none">
                                     {myOublis > 1 ? "Oublis cumulés" : "Oubli cumulé"}
                                 </Badge>
                             </div>
 
                             <div className="max-w-md w-full md:w-auto relative z-10">
                                 {myOublis >= 3 ? (
-                                    <div className="p-4 rounded-2xl bg-red-950/30 border border-red-900/50 backdrop-blur-sm">
-                                        <div className="flex items-center gap-2 text-red-500 font-bold mb-2">
-                                            <AlertTriangle size={18} />
+                                    <div className="p-5 rounded-[2rem] bg-red-950/40 border border-red-900/50 backdrop-blur-xl shadow-2xl">
+                                        <div className="flex items-center gap-2 text-red-500 font-black mb-2 uppercase tracking-widest text-xs">
+                                            <AlertTriangle size={20} />
                                             <span>ACTION RH REQUISE</span>
                                         </div>
-                                        <p className="text-sm text-red-400/90 leading-relaxed font-medium">
-                                            Seuil critique atteint (3 oublis). Une convocation RH est à prévoir. Pensez à l'avenir à valider votre planning.
+                                        <p className="text-sm text-red-300 leading-relaxed font-bold">
+                                            Seuil critique atteint (3 oublis). Une convocation RH est à prévoir. Pensez à l'avenir à valider votre planning chaque jour.
                                         </p>
                                     </div>
                                 ) : myOublis > 0 ? (
-                                    <div className="p-4 rounded-2xl bg-amber-950/30 border border-amber-900/50 backdrop-blur-sm">
-                                        <div className="flex items-center gap-2 text-amber-500 font-bold mb-2">
-                                            <Clock size={18} />
+                                    <div className="p-5 rounded-[2rem] bg-amber-950/40 border border-amber-900/50 backdrop-blur-xl shadow-2xl">
+                                        <div className="flex items-center gap-2 text-amber-500 font-black mb-2 uppercase tracking-widest text-xs">
+                                            <Clock size={20} />
                                             <span>VIGILANCE CONSEILLÉE</span>
                                         </div>
-                                        <p className="text-sm text-amber-400/90 leading-relaxed font-medium">
+                                        <p className="text-sm text-amber-300 leading-relaxed font-bold">
                                             Vous avez des oublis. Un rappel : validez votre planning chaque soir avant 21h pour rester à zéro.
                                         </p>
                                     </div>
                                 ) : (
-                                    <div className="p-4 rounded-2xl bg-emerald-950/30 border border-emerald-900/50 backdrop-blur-sm">
-                                        <div className="flex items-center gap-2 text-emerald-500 font-bold mb-2">
-                                            <CheckCircle2 size={18} />
+                                    <div className="p-5 rounded-[2rem] bg-emerald-950/40 border border-emerald-900/50 backdrop-blur-xl shadow-2xl">
+                                        <div className="flex items-center gap-2 text-emerald-500 font-black mb-2 uppercase tracking-widest text-xs">
+                                            <CheckCircle2 size={20} />
                                             <span>SITUATION PARFAITE</span>
                                         </div>
-                                        <p className="text-sm text-emerald-400/90 leading-relaxed font-medium">
+                                        <p className="text-sm text-emerald-300 leading-relaxed font-bold">
                                             Zéro oubli ! Votre assiduité est exemplaire et contribue à la fluidité de la régulation. Bravo.
                                         </p>
                                     </div>
                                 )}
                             </div>
+                        </div>
+
+                        {/* BANDEAU INTERVENTIONS SEMAINE */}
+                        <div className="p-8 rounded-[2.5rem] bg-gradient-to-r from-blue-900/90 via-slate-900 to-orange-900/90 border-2 border-white/5 shadow-2xl relative overflow-hidden group">
+                           <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:32px_32px]" />
+                           <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+                                <div className="flex items-center gap-6">
+                                    <div className="size-20 rounded-[1.5rem] bg-white/5 border border-white/10 flex items-center justify-center text-secondary shadow-inner group-hover:rotate-12 transition-transform duration-500">
+                                        <Zap size={40} className="fill-secondary/20" />
+                                    </div>
+                                    <div className="text-center md:text-left">
+                                        <h3 className="text-2xl font-black text-white italic tracking-tighter">MES INTERVENTIONS</h3>
+                                        <p className="text-slate-400 font-bold text-sm tracking-widest uppercase">Activité intense cette semaine</p>
+                                    </div>
+                                </div>
+                                
+                                <div className="flex gap-12 items-center">
+                                    <div className="flex flex-col items-center">
+                                        <span className="text-6xl font-black text-white tabular-nums drop-shadow-lg">{stats?.interventions?.thisWeek ?? 0}</span>
+                                        <span className="text-[10px] font-black text-blue-400 uppercase tracking-[0.3em]">Cette Semaine</span>
+                                    </div>
+                                    <div className="h-16 w-px bg-white/10 hidden md:block" />
+                                    <div className="flex flex-col items-center">
+                                        <span className="text-6xl font-black text-slate-500 tabular-nums drop-shadow-lg">{stats?.interventions?.total ?? 0}</span>
+                                        <span className="text-[10px] font-black text-slate-600 uppercase tracking-[0.3em]">Au total</span>
+                                    </div>
+                                </div>
+
+                                <div className="hidden lg:block max-w-[200px] text-right">
+                                    <p className="text-sm text-slate-400 font-bold leading-tight uppercase italic">
+                                        Chaque mission compte. Votre engagement fait notre force collective.
+                                    </p>
+                                </div>
+                           </div>
                         </div>
 
                         {/* Stats Perso - Design DASHBOARD RH */}
@@ -215,7 +251,7 @@ export function CollaboratorsClient({ initialUsers, session }: CollaboratorsClie
                         {!stats && (
                             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                                 {[1,2,3].map(i => (
-                                    <div key={i} className="h-[400px] w-full rounded-3xl bg-slate-50 border-2 border-slate-100 animate-pulse flex items-center justify-center">
+                                    <div key={i} className="h-[400px] w-full rounded-[2.5rem] bg-slate-50 border-2 border-slate-100 animate-pulse flex items-center justify-center">
                                         <div className="flex flex-col items-center gap-4">
                                             <div className="size-12 rounded-full bg-slate-200" />
                                             <div className="h-4 w-32 bg-slate-200 rounded" />
@@ -229,17 +265,17 @@ export function CollaboratorsClient({ initialUsers, session }: CollaboratorsClie
                     <TabsContent value="annuaire" className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300 outline-none">
                         {/* Search */}
                         <div className="relative">
-                            <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400" size={24} />
+                            <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400" size={28} />
                             <Input 
                                 placeholder="Rechercher un collègue par nom ou prénom..." 
-                                className="pl-14 h-16 rounded-2xl border-2 border-slate-200 focus-visible:ring-secondary text-xl font-medium shadow-sm transition-all focus:border-secondary/50 placeholder:text-slate-300"
+                                className="pl-16 h-20 rounded-[1.5rem] border-2 border-slate-200 focus-visible:ring-secondary text-2xl font-black shadow-xl transition-all focus:border-secondary/50 placeholder:text-slate-300 placeholder:font-bold italic"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
                         </div>
 
-                        {/* List - Cards style REGULATION */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mt-2">
+                        {/* List - Cards style REGULATION avec DEGRAGES */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mt-4">
                             {currentUsers.map(u => {
                                 const isMark = u.structure === 'MARK';
                                 const isVdf = u.structure === 'VDF';
@@ -248,100 +284,118 @@ export function CollaboratorsClient({ initialUsers, session }: CollaboratorsClie
                                     <div 
                                         key={u.id} 
                                         className={cn(
-                                            "relative overflow-hidden p-7 rounded-[2.5rem] border-2 transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl group",
+                                            "relative overflow-hidden p-8 rounded-[2.8rem] border-[3px] transition-all duration-500 hover:scale-[1.03] hover:shadow-[0_40px_80px_-15px_rgba(0,0,0,0.3)] group",
                                             isMark 
-                                                ? "bg-slate-900 border-blue-900/50 hover:border-blue-500/50" 
+                                                ? "bg-gradient-to-br from-slate-900 via-slate-900 to-blue-900/40 border-slate-800 hover:border-blue-500/50" 
                                                 : isVdf 
-                                                    ? "bg-slate-900 border-orange-900/50 hover:border-orange-500/50"
-                                                    : "bg-white border-slate-100 shadow-sm hover:border-secondary/30"
+                                                    ? "bg-gradient-to-br from-slate-900 via-slate-900 to-orange-900/40 border-slate-800 hover:border-orange-500/50"
+                                                    : "bg-white border-slate-100 shadow-xl hover:border-secondary/30"
                                         )}
                                     >
                                         {/* Accent color background decoration */}
                                         {(isMark || isVdf) && (
-                                            <div className={cn(
-                                                "absolute -right-16 -top-16 size-40 blur-[80px] opacity-10 transition-opacity group-hover:opacity-30",
-                                                isMark ? "bg-blue-600" : "bg-orange-600"
-                                            )} />
+                                            <Fragment>
+                                                <div className={cn(
+                                                    "absolute -right-20 -top-20 size-48 blur-[100px] opacity-10 transition-opacity duration-700 group-hover:opacity-40",
+                                                    isMark ? "bg-blue-600" : "bg-orange-600"
+                                                )} />
+                                                <div className={cn(
+                                                    "absolute -left-20 -bottom-20 size-40 blur-[80px] opacity-5 transition-opacity duration-700 group-hover:opacity-20",
+                                                    isMark ? "bg-cyan-500" : "bg-yellow-500"
+                                                )} />
+                                            </Fragment>
                                         )}
 
-                                        <div className="flex items-start gap-5 mb-8 relative z-10">
-                                            {u.image ? (
-                                                <img src={u.image} className="size-20 rounded-[1.5rem] object-cover ring-2 ring-slate-800 ring-offset-2 ring-offset-slate-900" />
-                                            ) : (
-                                                <div className={cn(
-                                                    "size-20 rounded-[1.5rem] flex items-center justify-center font-black text-3xl border-2 transition-transform duration-300 group-hover:rotate-6",
-                                                    isMark 
-                                                        ? "bg-blue-600/10 text-blue-400 border-blue-500/20" 
-                                                        : isVdf 
-                                                            ? "bg-orange-600/10 text-orange-400 border-orange-500/20"
-                                                            : "bg-secondary/10 text-secondary border-secondary/20"
-                                                )}>
-                                                    {u.firstName?.[0] || u.lastName?.[0] || '?'}
-                                                </div>
-                                            )}
-                                            <div className="flex flex-col min-w-0 pt-1">
+                                        <div className="flex items-start gap-6 mb-10 relative z-10">
+                                            <div className="relative">
+                                                {u.image ? (
+                                                    <img src={u.image} className="size-24 rounded-[1.8rem] object-cover ring-[4px] ring-slate-800/50 ring-offset-[4px] ring-offset-slate-900 transition-transform duration-500 group-hover:rotate-3 shadow-2xl" />
+                                                ) : (
+                                                    <div className={cn(
+                                                        "size-24 rounded-[1.8rem] flex items-center justify-center font-black text-4xl border-[3px] transition-all duration-500 group-hover:-rotate-3 shadow-2xl",
+                                                        isMark 
+                                                            ? "bg-blue-600/10 text-blue-400 border-blue-500/30" 
+                                                            : isVdf 
+                                                                ? "bg-orange-600/10 text-orange-400 border-orange-500/30"
+                                                                : "bg-secondary/10 text-secondary border-secondary/30"
+                                                    )}>
+                                                        {u.firstName?.[0] || u.lastName?.[0] || '?'}
+                                                    </div>
+                                                )}
+                                                {u.isRegulateur && (
+                                                    <div className="absolute -right-2 -top-2 size-8 bg-blue-600 rounded-full border-4 border-slate-900 flex items-center justify-center text-white shadow-xl">
+                                                        <Shield size={14} className="fill-white" />
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="flex flex-col min-w-0 pt-2">
                                                 <h3 className={cn(
-                                                    "font-black text-2xl truncate leading-tight mb-2",
+                                                    "font-black text-2xl truncate leading-none mb-3 tracking-tighter",
                                                     isMark || isVdf ? "text-white" : "text-slate-900"
                                                 )}>
-                                                    {u.firstName} {u.lastName}
+                                                    {u.firstName} <br/>
+                                                    <span className={cn(
+                                                        "opacity-90",
+                                                        isMark ? "text-blue-400" : isVdf ? "text-orange-400" : "text-secondary"
+                                                    )}>{u.lastName}</span>
                                                 </h3>
                                                 <div className="flex items-center gap-1.5 flex-wrap">
                                                     {u.roles?.includes('RH') || u.roles?.includes('ADMIN') ? (
-                                                        <Badge className="bg-purple-600/90 text-white border-none text-[10px] px-2 py-0.5 uppercase font-black tracking-tighter">Direction / RH</Badge>
+                                                        <Badge className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white border-none text-[9px] px-3 py-1 uppercase font-black tracking-widest rounded-lg shadow-lg">Pilotage RH</Badge>
                                                     ) : u.isRegulateur ? (
-                                                        <Badge className="bg-blue-600/90 text-white border-none text-[10px] px-2 py-0.5 uppercase font-black tracking-tighter">Régulateur</Badge>
+                                                        <Badge className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white border-none text-[9px] px-3 py-1 uppercase font-black tracking-widest rounded-lg shadow-lg">Régulation</Badge>
                                                     ) : u.structure === 'VDF' ? (
-                                                        <Badge className="bg-orange-500/90 text-white border-none text-[10px] px-2 py-0.5 uppercase font-black tracking-tighter">Équipe VDF</Badge>
+                                                        <Badge className="bg-gradient-to-r from-orange-600 to-amber-600 text-white border-none text-[9px] px-3 py-1 uppercase font-black tracking-widest rounded-lg shadow-lg">Équipe VDF</Badge>
                                                     ) : u.structure === 'MARK' ? (
-                                                        <Badge className="bg-blue-500/90 text-white border-none text-[10px] px-2 py-0.5 uppercase font-black tracking-tighter">Équipe MARK</Badge>
+                                                        <Badge className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-none text-[9px] px-3 py-1 uppercase font-black tracking-widest rounded-lg shadow-lg">Équipe MARK</Badge>
                                                     ) : (
-                                                        <Badge className="bg-slate-500/90 text-white border-none text-[10px] px-2 py-0.5 uppercase font-black tracking-tighter">Équipier</Badge>
+                                                        <Badge className="bg-slate-700 text-white border-none text-[9px] px-3 py-1 uppercase font-black tracking-widest rounded-lg">Collaborateur</Badge>
                                                     )}
                                                 </div>
                                             </div>
                                         </div>
                                         
-                                        <div className="space-y-4 mb-8 relative z-10">
+                                        <div className="space-y-4 mb-10 relative z-10 p-4 rounded-[1.5rem] bg-white/5 border border-white/5 backdrop-blur-sm">
                                             <div className={cn(
-                                                "flex items-center gap-4 text-[0.9rem] font-bold",
-                                                isMark || isVdf ? "text-slate-400" : "text-slate-500"
+                                                "flex items-center gap-4 text-[0.95rem] font-black italic uppercase tracking-tight",
+                                                isMark || isVdf ? "text-slate-300" : "text-slate-600"
                                             )}>
-                                                <div className={cn("p-2 rounded-xl", isMark || isVdf ? "bg-slate-800" : "bg-slate-50")}>
-                                                    <GraduationCap size={18} className={isMark ? "text-blue-400" : isVdf ? "text-orange-400" : "text-secondary"} />
+                                                <div className={cn("p-2.5 rounded-xl transition-colors duration-500", isMark || isVdf ? "bg-slate-800 group-hover:bg-slate-700" : "bg-slate-50")}>
+                                                    <GraduationCap size={20} className={isMark ? "text-blue-400" : isVdf ? "text-orange-400" : "text-secondary"} />
                                                 </div>
-                                                <span>{u.diploma === 'DEA' ? 'Ambulancier DEA' : 'Auxiliaire de transport'}</span>
+                                                <span>{u.diploma === 'DEA' ? 'Ambulancier DEA' : 'Auxiliaire Transport'}</span>
                                             </div>
                                             <div className={cn(
-                                                "flex items-center gap-4 text-[0.9rem] font-bold",
-                                                isMark || isVdf ? "text-slate-400" : "text-slate-500"
+                                                "flex items-center gap-4 text-[0.95rem] font-black italic uppercase tracking-tight",
+                                                isMark || isVdf ? "text-slate-300" : "text-slate-600"
                                             )}>
-                                                <div className={cn("p-2 rounded-xl", isMark || isVdf ? "bg-slate-800" : "bg-slate-50")}>
-                                                    <Briefcase size={18} className={isMark ? "text-blue-400" : isVdf ? "text-orange-400" : "text-secondary"} />
+                                                <div className={cn("p-2.5 rounded-xl transition-colors duration-500", isMark || isVdf ? "bg-slate-800 group-hover:bg-slate-700" : "bg-slate-50")}>
+                                                    <Briefcase size={20} className={isMark ? "text-blue-400" : isVdf ? "text-orange-400" : "text-secondary"} />
                                                 </div>
-                                                <span>Contrat {u.shift === 'JOUR' ? 'Jour' : u.shift === 'NUIT' ? 'Nuit' : 'Vacataire'}</span>
+                                                <span>Contrat {u.shift === 'JOUR' ? 'En JOURNEE' : u.shift === 'NUIT' ? 'En NUIT' : 'Vacataire'}</span>
                                             </div>
                                         </div>
 
-                                        <div className="flex gap-2 relative z-10">
+                                        <div className="relative z-10 flex flex-col gap-3">
                                             <Button 
                                                 variant="secondary" 
                                                 size="sm" 
                                                 className={cn(
-                                                    "w-full h-12 rounded-2xl font-black transition-all text-sm",
+                                                    "w-full h-14 rounded-2xl font-black transition-all text-[1rem] uppercase tracking-tighter shadow-2xl group/btn overflow-hidden relative",
                                                     isMark 
-                                                        ? "bg-blue-600 hover:bg-blue-500 text-white border-none shadow-lg shadow-blue-900/20" 
+                                                        ? "bg-gradient-to-r from-blue-700 to-blue-500 hover:from-blue-600 hover:to-blue-400 text-white border-none" 
                                                         : isVdf 
-                                                            ? "bg-orange-600 hover:bg-orange-500 text-white border-none shadow-lg shadow-orange-900/20"
-                                                            : "bg-slate-100 hover:bg-secondary hover:text-white text-slate-700 border-none"
+                                                            ? "bg-gradient-to-r from-orange-700 to-orange-500 hover:from-orange-600 hover:to-orange-400 text-white border-none"
+                                                            : "bg-slate-100 hover:bg-secondary hover:text-white text-slate-800 border-none"
                                                 )}
                                                 onClick={() => {
                                                     setSelectedUser(u)
                                                     setIsDialogOpen(true)
                                                 }}
                                             >
-                                                <Eye className="size-5 mr-3" />
-                                                Voir Profil
+                                                <div className="absolute inset-0 bg-white/20 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300" />
+                                                <Eye className="size-6 mr-3 relative z-10" />
+                                                <span className="relative z-10">Détails Collaborateur</span>
                                             </Button>
                                         </div>
                                     </div>
@@ -351,26 +405,26 @@ export function CollaboratorsClient({ initialUsers, session }: CollaboratorsClie
 
                         {/* Pagination UI */}
                         {totalPages > 1 && (
-                            <div className="flex items-center justify-center gap-3 mt-12 mb-8">
+                            <div className="flex items-center justify-center gap-4 mt-16 mb-12">
                                 <Button
                                     variant="outline"
                                     size="icon"
-                                    className="rounded-2xl size-14 border-2"
+                                    className="rounded-[1.2rem] size-16 border-[3px] hover:bg-secondary hover:text-white hover:border-secondary transition-all shadow-xl"
                                     disabled={currentPage === 1}
                                     onClick={() => setCurrentPage(prev => prev - 1)}
                                 >
-                                    <ChevronLeft size={24} />
+                                    <ChevronLeft size={32} />
                                 </Button>
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-3">
                                     {Array.from({ length: totalPages }).map((_, i) => (
                                         <Button
                                             key={i}
                                             variant={currentPage === i + 1 ? "secondary" : "outline"}
                                             className={cn(
-                                                "size-14 rounded-2xl text-xl font-black border-2 transition-all",
+                                                "size-16 rounded-[1.2rem] text-2xl font-black border-[3px] transition-all transform active:scale-95",
                                                 currentPage === i + 1 
-                                                    ? "bg-secondary text-white border-secondary shadow-lg shadow-secondary/20" 
-                                                    : "border-slate-200 text-slate-400 hover:text-secondary hover:border-secondary/30"
+                                                    ? "bg-secondary text-white border-secondary shadow-[0_15px_30px_-5px_rgba(249,115,22,0.4)] scale-110" 
+                                                    : "border-slate-200 text-slate-300 hover:text-secondary hover:border-secondary/40 hover:shadow-lg"
                                             )}
                                             onClick={() => setCurrentPage(i + 1)}
                                         >
@@ -381,21 +435,21 @@ export function CollaboratorsClient({ initialUsers, session }: CollaboratorsClie
                                 <Button
                                     variant="outline"
                                     size="icon"
-                                    className="rounded-2xl size-14 border-2"
+                                    className="rounded-[1.2rem] size-16 border-[3px] hover:bg-secondary hover:text-white hover:border-secondary transition-all shadow-xl"
                                     disabled={currentPage === totalPages}
                                     onClick={() => setCurrentPage(prev => prev + 1)}
                                 >
-                                    <ChevronRight size={24} />
+                                    <ChevronRight size={32} />
                                 </Button>
                             </div>
                         )}
                         {filteredUsers.length === 0 && (
-                            <div className="flex flex-col items-center justify-center py-24 text-center">
-                                <div className="size-24 bg-slate-50 rounded-[2.5rem] flex items-center justify-center text-slate-200 mb-8">
-                                    <Search size={48} />
+                            <div className="flex flex-col items-center justify-center py-32 text-center animate-in fade-in zoom-in duration-500">
+                                <div className="size-32 bg-slate-50 rounded-[3rem] flex items-center justify-center text-slate-200 mb-10 shadow-inner">
+                                    <Search size={64} />
                                 </div>
-                                <h3 className="text-3xl font-black text-slate-800 mb-3">Aucun collègue trouvé</h3>
-                                <p className="text-slate-400 max-w-sm text-lg font-medium">Réessayez avec un autre nom ou prénom pour trouver votre équipier.</p>
+                                <h3 className="text-4xl font-black text-slate-800 mb-4 tracking-tighter uppercase italic">Aucun membre trouvé</h3>
+                                <p className="text-slate-400 max-w-sm text-xl font-bold italic">Vérifiez l'orthographe ou essayez un autre nom pour votre collègue.</p>
                             </div>
                         )}
                     </TabsContent>
@@ -404,96 +458,106 @@ export function CollaboratorsClient({ initialUsers, session }: CollaboratorsClie
 
             {/* Profile Detail Dialog */}
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogContent className="sm:max-w-md bg-slate-950 border-slate-900 text-white rounded-[3rem] p-0 overflow-hidden shadow-2xl">
+                <DialogContent className="sm:max-w-md bg-slate-950 border-slate-900 text-white rounded-[3.5rem] p-0 overflow-hidden shadow-[0_50px_100px_-20px_rgba(0,0,0,0.6)] border-2">
                     {/* Header Image/Pattern */}
                     <div className={cn(
-                        "h-40 w-full relative",
-                        selectedUser?.structure === 'MARK' ? "bg-blue-600/30" : selectedUser?.structure === 'VDF' ? "bg-orange-600/30" : "bg-secondary/30"
+                        "h-48 w-full relative",
+                        selectedUser?.structure === 'MARK' ? "bg-gradient-to-br from-blue-900 to-blue-700" : selectedUser?.structure === 'VDF' ? "bg-gradient-to-br from-orange-900 to-orange-700" : "bg-gradient-to-br from-slate-800 to-slate-700"
                     )}>
-                        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '32px 32px' }} />
+                        <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 to-transparent" />
                         <Button 
                             variant="ghost" 
                             size="icon" 
-                            className="absolute top-6 right-6 text-white/40 hover:text-white hover:bg-white/10 rounded-full transition-all"
+                            className="absolute top-8 right-8 text-white/40 hover:text-white hover:bg-white/10 rounded-full transition-all size-12 shadow-2xl backdrop-blur-md"
                             onClick={() => setIsDialogOpen(false)}
                         >
-                            <X size={24} />
+                            <X size={28} />
                         </Button>
                     </div>
 
-                    <div className="px-10 pb-12 -mt-16 relative">
+                    <div className="px-12 pb-16 -mt-20 relative">
                         <div className="flex flex-col items-center text-center">
-                            {selectedUser?.image ? (
-                                <img src={selectedUser.image} className="size-32 rounded-3xl object-cover ring-[6px] ring-slate-950 shadow-2xl mb-6 scale-110" />
-                            ) : (
-                                <div className="size-32 rounded-3xl bg-slate-900 border-2 border-slate-800 flex items-center justify-center text-5xl font-black text-slate-600 ring-[6px] ring-slate-950 shadow-2xl mb-6 scale-110">
-                                    {selectedUser?.firstName?.[0] || selectedUser?.lastName?.[0] || '?'}
+                            <div className="relative group/avatar cursor-pointer">
+                                {selectedUser?.image ? (
+                                    <img src={selectedUser.image} className="size-40 rounded-[2.5rem] object-cover ring-[8px] ring-slate-950 shadow-[0_30px_60px_-10px_rgba(0,0,0,0.5)] mb-8 scale-110 group-hover/avatar:scale-115 transition-transform duration-500" />
+                                ) : (
+                                    <div className="size-40 rounded-[2.5rem] bg-slate-900 border-[3px] border-white/10 flex items-center justify-center text-6xl font-black text-slate-700 ring-[8px] ring-slate-950 shadow-2xl mb-8 scale-110 group-hover/avatar:scale-115 transition-transform duration-500">
+                                        {selectedUser?.firstName?.[0] || selectedUser?.lastName?.[0] || '?'}
+                                    </div>
+                                )}
+                                <div className="absolute inset-0 rounded-[2.5rem] bg-secondary/20 opacity-0 group-hover/avatar:opacity-100 transition-opacity flex items-center justify-center scale-110">
+                                    <Zap className="text-white size-10 animate-pulse" />
                                 </div>
-                            )}
+                            </div>
 
-                            <h2 className="text-3xl font-black mb-2 tracking-tight">{selectedUser?.firstName} {selectedUser?.lastName}</h2>
-                            <div className="flex gap-2 mb-10">
-                                <Badge variant="outline" className="border-slate-800 text-slate-500 bg-slate-900/50 uppercase text-[10px] tracking-[0.2em] font-black px-3 py-1">
-                                    {selectedUser?.isRegulateur ? "Régulateur" : "Équipier"}
+                            <h2 className="text-4xl font-black mb-3 tracking-tighter">{selectedUser?.firstName} <span className="text-secondary italic">{selectedUser?.lastName}</span></h2>
+                            <div className="flex gap-3 mb-12">
+                                <Badge variant="outline" className="border-slate-800 text-slate-600 bg-slate-900/50 uppercase text-[11px] tracking-[0.3em] font-black px-5 py-1.5 rounded-full">
+                                    {selectedUser?.isRegulateur ? "Régulateur" : "Équipier VDF"}
                                 </Badge>
                                 <Badge className={cn(
-                                    "border-none text-[10px] tracking-[0.2em] font-black uppercase px-3 py-1",
-                                    selectedUser?.structure === 'MARK' ? "bg-blue-600 text-white" : selectedUser?.structure === 'VDF' ? "bg-orange-600 text-white" : "bg-secondary text-white"
+                                    "border-none text-[11px] tracking-[0.3em] font-black uppercase px-5 py-1.5 rounded-full shadow-lg",
+                                    selectedUser?.structure === 'MARK' ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white" : selectedUser?.structure === 'VDF' ? "bg-gradient-to-r from-orange-600 to-amber-600 text-white" : "bg-secondary text-white"
                                 )}>
                                     {selectedUser?.structure || "VDF"}
                                 </Badge>
                             </div>
 
-                            <div className="w-full grid grid-cols-2 gap-4 mb-10">
-                                <div className="bg-slate-900/50 p-5 rounded-[1.5rem] border border-slate-800 hover:border-slate-700 transition-all group">
-                                    <GraduationCap className="size-7 text-secondary mb-3 mx-auto transition-transform group-hover:-rotate-12" />
-                                    <p className="text-[10px] text-slate-600 uppercase font-black tracking-widest mb-1">Diplôme</p>
-                                    <p className="text-base font-black text-slate-100">{selectedUser?.diploma === 'DEA' ? 'DEA' : 'Auxiliaire'}</p>
+                            <div className="w-full grid grid-cols-2 gap-5 mb-12">
+                                <div className="bg-slate-900/40 p-6 rounded-[2rem] border border-white/5 hover:border-secondary/30 transition-all group/stat relative overflow-hidden shadow-inner">
+                                    <div className="absolute top-0 right-0 size-16 bg-secondary/5 blur-2xl rounded-full" />
+                                    <GraduationCap className="size-10 text-secondary mb-4 mx-auto transition-transform group-hover/stat:-rotate-12 duration-500" />
+                                    <p className="text-[10px] text-slate-600 uppercase font-black tracking-[0.3em] mb-2">Diplôme</p>
+                                    <p className="text-lg font-black text-slate-100 italic">{selectedUser?.diploma === 'DEA' ? 'DEA Ambulancier' : 'Auxiliaire'}</p>
                                 </div>
-                                <div className="bg-slate-900/50 p-5 rounded-[1.5rem] border border-slate-800 hover:border-slate-700 transition-all group">
-                                    <Briefcase className="size-7 text-secondary mb-3 mx-auto transition-transform group-hover:rotate-12" />
-                                    <p className="text-[10px] text-slate-600 uppercase font-black tracking-widest mb-1">Contrat</p>
-                                    <p className="text-base font-black text-slate-100">{selectedUser?.shift || "JOUR"}</p>
+                                <div className="bg-slate-900/40 p-6 rounded-[2rem] border border-white/5 hover:border-secondary/30 transition-all group/stat relative overflow-hidden shadow-inner">
+                                    <div className="absolute top-0 right-0 size-16 bg-blue-600/5 blur-2xl rounded-full" />
+                                    <Briefcase className="size-10 text-secondary mb-4 mx-auto transition-transform group-hover/stat:rotate-12 duration-500" />
+                                    <p className="text-[10px] text-slate-600 uppercase font-black tracking-[0.3em] mb-2">Contrat</p>
+                                    <p className="text-lg font-black text-slate-100 italic">{selectedUser?.shift || "JOURNEE"}</p>
                                 </div>
                             </div>
 
-                            <div className="w-full space-y-4">
+                            <div className="w-full space-y-5">
                                 <a 
                                     href={`tel:${selectedUser?.phone}`}
-                                    className="flex items-center gap-6 w-full p-6 rounded-[1.5rem] bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-secondary/50 transition-all group shadow-xl"
+                                    className="flex items-center gap-6 w-full p-7 rounded-[2.2rem] bg-slate-900/80 hover:bg-slate-800 border-2 border-white/5 hover:border-secondary/50 transition-all group/link shadow-2xl relative overflow-hidden"
                                 >
-                                    <div className="size-14 rounded-2xl bg-secondary/10 flex items-center justify-center text-secondary group-hover:bg-secondary group-hover:text-white transition-all">
-                                        <PhoneCall size={28} />
+                                    <div className="absolute inset-0 bg-gradient-to-r from-secondary/5 to-transparent opacity-0 group-hover/link:opacity-100 transition-opacity" />
+                                    <div className="size-16 rounded-[1.2rem] bg-secondary/10 flex items-center justify-center text-secondary group-hover/link:bg-secondary group-hover/link:text-white transition-all shadow-inner group-hover/link:scale-110 duration-500">
+                                        <PhoneCall size={32} />
                                     </div>
-                                    <div className="text-left flex-1 min-w-0">
-                                        <p className="text-[10px] text-slate-600 uppercase font-black tracking-widest mb-1">Téléphone mobile</p>
-                                        <p className="text-xl font-black text-slate-50 truncate">{selectedUser?.phone || "Non renseigné"}</p>
+                                    <div className="text-left flex-1 min-w-0 relative z-10">
+                                        <p className="text-[10px] text-slate-600 uppercase font-black tracking-[0.4em] mb-1">Ligne Directe</p>
+                                        <p className="text-2xl font-black text-slate-50 tabular-nums">{selectedUser?.phone || "Private"}</p>
                                     </div>
-                                    <div className="size-10 rounded-full border border-slate-800 flex items-center justify-center text-slate-600 group-hover:text-white group-hover:border-white/20 transition-all">
-                                        <ChevronRight size={20} />
+                                    <div className="size-12 rounded-full border border-white/5 flex items-center justify-center text-slate-700 group-hover/link:text-white group-hover/link:border-white/20 transition-all relative z-10">
+                                        <ChevronRight size={24} />
                                     </div>
                                 </a>
 
                                 <a 
                                     href={`mailto:${selectedUser?.email}`}
-                                    className="flex items-center gap-6 w-full p-6 rounded-[1.5rem] bg-slate-900 hover:bg-slate-800 border border-slate-800 hover:border-secondary/50 transition-all group shadow-xl"
+                                    className="flex items-center gap-6 w-full p-7 rounded-[2.2rem] bg-slate-900/80 hover:bg-slate-800 border-2 border-white/5 hover:border-secondary/50 transition-all group/link shadow-2xl relative overflow-hidden"
                                 >
-                                    <div className="size-14 rounded-2xl bg-secondary/10 flex items-center justify-center text-secondary group-hover:bg-secondary group-hover:text-white transition-all">
-                                        <Mail size={28} />
+                                    <div className="absolute inset-0 bg-gradient-to-r from-blue-600/5 to-transparent opacity-0 group-hover/link:opacity-100 transition-opacity" />
+                                    <div className="size-16 rounded-[1.2rem] bg-blue-600/10 flex items-center justify-center text-blue-400 group-hover/link:bg-blue-600 group-hover/link:text-white transition-all shadow-inner group-hover/link:scale-110 duration-500">
+                                        <Mail size={32} />
                                     </div>
-                                    <div className="text-left flex-1 min-w-0">
-                                        <p className="text-[10px] text-slate-600 uppercase font-black tracking-widest mb-1">Email professionnel</p>
+                                    <div className="text-left flex-1 min-w-0 relative z-10">
+                                        <p className="text-[10px] text-slate-600 uppercase font-black tracking-[0.4em] mb-1">Email Pro</p>
                                         <p className="text-xl font-black text-slate-50 truncate">{selectedUser?.email}</p>
                                     </div>
-                                    <div className="size-10 rounded-full border border-slate-800 flex items-center justify-center text-slate-600 group-hover:text-white group-hover:border-white/20 transition-all">
-                                        <ChevronRight size={20} />
+                                    <div className="size-12 rounded-full border border-white/5 flex items-center justify-center text-slate-700 group-hover/link:text-white group-hover/link:border-white/20 transition-all relative z-10">
+                                        <ChevronRight size={24} />
                                     </div>
                                 </a>
                             </div>
                         </div>
                     </div>
-                    <div className="p-5 bg-slate-900/80 backdrop-blur-md flex justify-center border-t border-white/5">
-                        <p className="text-[10px] text-slate-700 font-black uppercase tracking-[0.3em]">VDF Ambulance Digital Experience</p>
+                    <div className="p-6 bg-slate-900/90 backdrop-blur-3xl flex justify-center border-t border-white/5">
+                        <p className="text-[11px] text-slate-700 font-black uppercase tracking-[0.5em] italic">VDF Ambulance • Espace Collaborateur Elite</p>
                     </div>
                 </DialogContent>
             </Dialog>
