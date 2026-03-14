@@ -36,7 +36,9 @@ export function BottomTabBar() {
 
     useEffect(() => {
         const loadStats = async () => {
-            const data = await getNotificationStats((session?.user as any)?.id);
+            const userId = (session?.user as any)?.id;
+            if (!userId) return; // Sécurisation supplémentaire
+            const data = await getNotificationStats(userId);
             if (data) setStats(data);
         };
         if (status === 'authenticated') {

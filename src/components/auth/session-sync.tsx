@@ -21,12 +21,15 @@ export function SessionSync() {
 
             const data = await res.json();
 
-            const currentRoles = (session.user as any).roles || [];
-            const currentIsReg = (session.user as any).isRegulateur;
+            const currentRoles = Array.isArray((session.user as any).roles) ? [...(session.user as any).roles] : [];
+            const currentIsReg = !!(session.user as any).isRegulateur;
 
-            // Vérifier s'il y a un changement
-            const rolesChanged = JSON.stringify(currentRoles.sort()) !== JSON.stringify(data.roles.sort());
-            const regChanged = currentIsReg !== data.isRegulateur;
+            const newRoles = Array.isArray(data.roles) ? [...data.roles] : [];
+            const newIsReg = !!data.isRegulateur;
+
+            // Vérifier s'il y a un changement (tri sécurisé)
+            const rolesChanged = JSON.stringify([...currentRoles].sort()) !== JSON.stringify([...newRoles].sort());
+            const regChanged = currentIsReg !== newIsReg;
 
             if (rolesChanged || regChanged) {
                 console.log("IAM Sync: Changement détecté, mise à jour de la session...");
