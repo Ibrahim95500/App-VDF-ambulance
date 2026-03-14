@@ -73,6 +73,7 @@ export function Demo1Layout({ children, notificationsCount = 0 }: { children: Re
   return (
     <>
       <SessionSync />
+      {/* Sidebar uniquement sur Desktop */}
       {!isMobile && <Sidebar />}
 
       <div className="wrapper flex grow flex-col lg:pb-0">
@@ -81,8 +82,14 @@ export function Demo1Layout({ children, notificationsCount = 0 }: { children: Re
         <main
           className="grow pt-5"
           role="content"
-          style={{ paddingBottom: isMobile ? 'calc(6rem + env(safe-area-inset-bottom))' : undefined }}
+          style={{ paddingBottom: isMobile ? '7rem' : undefined }}
         >
+          {/* Debug simple pour voir si React revit sur mobile */}
+          {isMobile && (
+            <div className="flex lg:hidden bg-green-500/10 border-b border-green-500/20 p-2 justify-center">
+              <span className="text-[10px] text-green-600 font-bold uppercase tracking-widest">Connectivité Mobile OK</span>
+            </div>
+          )}
           {children}
         </main>
 
