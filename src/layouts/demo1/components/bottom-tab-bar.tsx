@@ -19,16 +19,6 @@ export function BottomTabBar() {
 
     const isRealRH = (session?.user as any)?.roles?.includes('RH') || (session?.user as any)?.roles?.includes('ADMIN');
 
-    // Desktop: hidden.
-    if (!isMobile) return null;
-
-    // If loading or roles not yet synchronized, assume basic privileges to prevent empty bar
-    const isLoadingOrEmpty = status === 'loading' || !session?.user || (session.user as any)?.roles?.length === 0;
-    const safeHasPrivilege = isLoadingOrEmpty ? true : hasPrivilege;
-    const safeIsRegulateur = isLoadingOrEmpty ? true : isRegulateur;
-    const safeIsAdmin = isLoadingOrEmpty ? true : (session?.user as any)?.roles?.includes('ADMIN');
-    const safeIsRealRH = isLoadingOrEmpty ? true : isRealRH;
-
     const [stats, setStats] = useState({
         global: { advances: 0, services: 0, appointments: 0, leaves: 0, regulation: 0, total: 0 },
         personal: { advances: 0, services: 0, appointments: 0, leaves: 0, mission: 0, total: 0 }
@@ -43,10 +33,21 @@ export function BottomTabBar() {
         };
         if (status === 'authenticated') {
             loadStats();
-            const interval = setInterval(loadStats, 5000);
+            // Rafraîchissement toutes les 2 secondes comme demandé par l'utilisateur
+            const interval = setInterval(loadStats, 2000);
             return () => clearInterval(interval);
         }
     }, [status, session?.user]);
+
+    // Desktop: hidden.
+    if (!isMobile) return null;
+
+    // If loading or roles not yet synchronized, assume basic privileges to prevent empty bar
+    const isLoadingOrEmpty = status === 'loading' || !session?.user || (session.user as any)?.roles?.length === 0;
+    const safeHasPrivilege = isLoadingOrEmpty ? true : hasPrivilege;
+    const safeIsRegulateur = isLoadingOrEmpty ? true : isRegulateur;
+    const safeIsAdmin = isLoadingOrEmpty ? true : (session?.user as any)?.roles?.includes('ADMIN');
+    const safeIsRealRH = isLoadingOrEmpty ? true : isRealRH;
 
     const isRHSection = pathname.startsWith('/dashboard/rh');
 
