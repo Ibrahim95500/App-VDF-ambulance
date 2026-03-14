@@ -14,7 +14,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Search, Eye, Calendar as CalendarIcon, User, Ambulance, FileSpreadsheet, FileText, Download } from "lucide-react"
+import { Search, Eye, Calendar as CalendarIcon, User, Ambulance, FileSpreadsheet, FileText, Download, ChevronLeft, ChevronRight } from "lucide-react"
 import * as XLSX from 'xlsx'
 import { jsPDF } from 'jspdf'
 import 'jspdf-autotable'
