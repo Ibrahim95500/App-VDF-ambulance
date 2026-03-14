@@ -873,7 +873,7 @@ export const MENU_MEGA_MOBILE: MenuConfig = [
         children: [
           {
             title: 'Default',
-            icon: Badge,
+            icon: Shield,
             path: '/public-profile/profiles/default',
           },
           {

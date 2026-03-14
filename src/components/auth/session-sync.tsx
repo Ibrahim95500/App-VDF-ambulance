@@ -20,9 +20,11 @@ export function SessionSync() {
             if (!res.ok) return;
 
             const data = await res.json();
+            const user = session?.user as any;
+            if (!user) return;
 
-            const currentRoles = Array.isArray((session.user as any).roles) ? [...(session.user as any).roles] : [];
-            const currentIsReg = !!(session.user as any).isRegulateur;
+            const currentRoles = Array.isArray(user.roles) ? [...user.roles] : [];
+            const currentIsReg = !!user.isRegulateur;
 
             const newRoles = Array.isArray(data.roles) ? [...data.roles] : [];
             const newIsReg = !!data.isRegulateur;
