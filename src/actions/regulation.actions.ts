@@ -94,7 +94,9 @@ export async function saveAssignment(data: {
                     endTime: data.endTime,
                     status: 'PENDING',
                     leaderValidated: false,
-                    teammateValidated: false
+                    leaderValidatedAt: null,
+                    teammateValidated: false,
+                    teammateValidatedAt: null
                 }
             })
         } else {
@@ -108,7 +110,9 @@ export async function saveAssignment(data: {
                     endTime: data.endTime,
                     status: 'PENDING',
                     leaderValidated: false,
-                    teammateValidated: false
+                    leaderValidatedAt: null,
+                    teammateValidated: false,
+                    teammateValidatedAt: null
                 }
             })
         }
@@ -133,8 +137,10 @@ export async function validateMyPlanning(userId: string, assignmentId: string) {
         const isTeammate = assignment.teammateId === userId
         if (!isLeader && !isTeammate) return { error: 'Non autorisé' }
 
-        const updateField = isLeader ? { leaderValidated: true } : { teammateValidated: true }
-
+        const updateField = isLeader 
+            ? { leaderValidated: true, leaderValidatedAt: new Date() } 
+            : { teammateValidated: true, teammateValidatedAt: new Date() }
+    
         const updated = await prisma.planningAssignment.update({
             where: { id: assignmentId },
             data: updateField

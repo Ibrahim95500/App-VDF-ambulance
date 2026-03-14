@@ -22,7 +22,7 @@ description: Procédure de déploiement Docker sur le serveur DEV Hostinger (srv
    
    // turbo
    ```bash
-   ssh root@srv1437657 "cd /var/www/vdf-ambulance && git pull origin develop && docker compose -f docker-compose.dev.yml up -d --build app-dev"
+   ssh root@srv1437657 "cd /var/www/vdf-ambulance && git pull origin develop && docker compose -f docker-compose.dev.yml up -d --build app-dev && docker exec vdf-app-dev npx prisma db push"
    ```
 
 ## Points de Capitalisation DEV

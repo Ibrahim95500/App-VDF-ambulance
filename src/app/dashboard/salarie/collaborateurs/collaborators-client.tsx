@@ -270,20 +270,20 @@ export function CollaboratorsClient({ initialUsers, session }: CollaboratorsClie
                         )}
                     </TabsContent>
 
-                    <TabsContent value="annuaire" className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300 outline-none">
+                    <TabsContent value="annuaire" className="space-y-4 md:space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300 outline-none">
                         {/* Search */}
-                        <div className="relative">
-                            <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400" size={28} />
+                        <div className="relative px-2 md:px-0">
+                            <Search className="absolute left-6 md:left-6 top-1/2 -translate-y-1/2 text-slate-400 size-5 md:size-7" />
                             <Input 
-                                placeholder="Rechercher un collègue par nom ou prénom..." 
-                                className="pl-16 h-20 rounded-[1.5rem] border-2 border-slate-200 focus-visible:ring-secondary text-2xl font-black shadow-xl transition-all focus:border-secondary/50 placeholder:text-slate-300 placeholder:font-bold italic"
+                                placeholder="Rechercher..." 
+                                className="pl-12 md:pl-16 h-14 md:h-20 rounded-xl md:rounded-[1.5rem] border-2 border-slate-200 focus-visible:ring-secondary text-base md:text-2xl font-black shadow-lg transition-all focus:border-secondary/50 placeholder:text-slate-300 placeholder:font-bold italic"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                             />
                         </div>
 
                         {/* List - Cards style REGULATION avec DEGRAGES */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mt-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8 mt-2 md:mt-4 px-2 md:px-0">
                             {currentUsers.map(u => {
                                 const isMark = u.structure === 'MARK';
                                 const isVdf = u.structure === 'VDF';
@@ -293,7 +293,7 @@ export function CollaboratorsClient({ initialUsers, session }: CollaboratorsClie
                                     <div 
                                         key={u.id} 
                                         className={cn(
-                                            "relative overflow-hidden p-6 md:p-8 rounded-[2rem] md:rounded-[2.8rem] border-2 md:border-[3px] transition-all duration-500 hover:scale-[1.03] hover:shadow-[0_40px_80px_-15px_rgba(0,0,0,0.3)] group",
+                                            "relative overflow-hidden p-4 md:p-8 rounded-[1.5rem] md:rounded-[2.8rem] border-2 md:border-[3px] transition-all duration-500 hover:scale-[1.03] hover:shadow-[0_40px_80px_-15px_rgba(0,0,0,0.3)] group",
                                             isMark 
                                                 ? "bg-gradient-to-br from-slate-900 via-slate-900 to-blue-900/40 border-slate-800 hover:border-blue-500/50 shadow-2xl" 
                                                 : isVdf 
@@ -310,20 +310,16 @@ export function CollaboratorsClient({ initialUsers, session }: CollaboratorsClie
                                                     "absolute -right-20 -top-20 size-48 blur-[100px] opacity-10 transition-opacity duration-700 group-hover:opacity-40",
                                                     isMark ? "bg-blue-600" : isVdf ? "bg-orange-600" : "bg-gradient-to-br from-blue-600 to-orange-600"
                                                 )} />
-                                                <div className={cn(
-                                                    "absolute -left-20 -bottom-20 size-40 blur-[80px] opacity-5 transition-opacity duration-700 group-hover:opacity-20",
-                                                    isMark ? "bg-cyan-500" : isVdf ? "bg-yellow-500" : "bg-gradient-to-tr from-cyan-500 to-yellow-500"
-                                                )} />
                                             </Fragment>
                                         )}
 
-                                        <div className="flex items-start gap-4 md:gap-6 mb-6 md:mb-10 relative z-10">
-                                            <div className="relative">
+                                        <div className="flex items-center gap-3 md:gap-6 mb-4 md:mb-10 relative z-10">
+                                            <div className="relative shrink-0">
                                                 {u.image ? (
-                                                    <img src={u.image} className="size-16 md:size-24 rounded-[1.2rem] md:rounded-[1.8rem] object-cover ring-[4px] ring-slate-800/50 ring-offset-[4px] ring-offset-slate-900 transition-transform duration-500 group-hover:rotate-3 shadow-2xl" />
+                                                    <img src={u.image} className="size-12 md:size-24 rounded-[1rem] md:rounded-[1.8rem] object-cover ring-2 md:ring-[4px] ring-slate-800/50 ring-offset-2 md:ring-offset-[4px] ring-offset-slate-900 transition-transform duration-500 group-hover:rotate-3 shadow-2xl" />
                                                 ) : (
                                                     <div className={cn(
-                                                        "size-16 md:size-24 rounded-[1.2rem] md:rounded-[1.8rem] flex items-center justify-center font-black text-2xl md:text-4xl border-[3px] transition-all duration-500 group-hover:-rotate-3 shadow-2xl",
+                                                        "size-12 md:size-24 rounded-[1rem] md:rounded-[1.8rem] flex items-center justify-center font-black text-xl md:text-4xl border-2 md:border-[3px] transition-all duration-500 group-hover:-rotate-3 shadow-2xl",
                                                         isMark 
                                                             ? "bg-blue-600/10 text-blue-400 border-blue-500/30" 
                                                             : isVdf 
@@ -336,17 +332,18 @@ export function CollaboratorsClient({ initialUsers, session }: CollaboratorsClie
                                                     </div>
                                                 )}
                                                 {u.isRegulateur && (
-                                                    <div className="absolute -right-2 -top-2 size-8 bg-blue-600 rounded-full border-4 border-slate-900 flex items-center justify-center text-white shadow-xl">
-                                                        <Shield size={14} className="fill-white" />
+                                                    <div className="absolute -right-1 -top-1 size-5 md:size-8 bg-blue-600 rounded-full border-2 md:border-4 border-slate-900 flex items-center justify-center text-white shadow-xl">
+                                                        <Shield size={10} className="fill-white md:hidden" />
+                                                        <Shield size={14} className="fill-white hidden md:block" />
                                                     </div>
                                                 )}
                                             </div>
-                                            <div className="flex flex-col min-w-0 pt-1">
+                                            <div className="flex flex-col min-w-0 pt-0.5">
                                                 <h3 className={cn(
-                                                    "font-black text-base md:text-lg truncate leading-tight md:leading-none mb-1 md:mb-2 tracking-tighter",
+                                                    "font-black text-sm md:text-lg truncate leading-tight md:leading-none mb-0.5 md:mb-2 tracking-tighter",
                                                     isMark || isVdf || isBoth ? "text-white" : "text-slate-900"
                                                 )}>
-                                                    {u.firstName} <br/>
+                                                    <span className="block truncate">{u.firstName}</span>
                                                     <span className={cn(
                                                         "opacity-90 block truncate",
                                                         isMark ? "text-blue-400" : isVdf ? "text-orange-400" : isBoth ? "text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-orange-400" : "text-secondary"
@@ -354,56 +351,56 @@ export function CollaboratorsClient({ initialUsers, session }: CollaboratorsClie
                                                 </h3>
                                                 <div className="flex items-center gap-1.5 flex-wrap">
                                                     {u.roles?.includes('RH') || u.roles?.includes('ADMIN') ? (
-                                                        <Badge className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white border-none text-[9px] px-3 py-1 uppercase font-black tracking-widest rounded-lg shadow-lg">Pilotage RH</Badge>
+                                                        <Badge className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white border-none text-[8px] md:text-[9px] px-2 md:px-3 py-0.5 md:py-1 uppercase font-black tracking-widest rounded-lg shadow-lg">Pilotage RH</Badge>
                                                     ) : u.isRegulateur ? (
-                                                        <Badge className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white border-none text-[9px] px-3 py-1 uppercase font-black tracking-widest rounded-lg shadow-lg">Régulation</Badge>
+                                                        <Badge className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white border-none text-[8px] md:text-[9px] px-2 md:px-3 py-0.5 md:py-1 uppercase font-black tracking-widest rounded-lg shadow-lg">Régule</Badge>
                                                     ) : u.structure === 'VDF' ? (
-                                                        <Badge className="bg-gradient-to-r from-orange-600 to-amber-600 text-white border-none text-[9px] px-3 py-1 uppercase font-black tracking-widest rounded-lg shadow-lg">VDF</Badge>
+                                                        <Badge className="bg-gradient-to-r from-orange-600 to-amber-600 text-white border-none text-[8px] md:text-[9px] px-2 md:px-3 py-0.5 md:py-1 uppercase font-black tracking-widest rounded-lg shadow-lg">VDF</Badge>
                                                     ) : u.structure === 'MARK' ? (
-                                                        <Badge className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-none text-[9px] px-3 py-1 uppercase font-black tracking-widest rounded-lg shadow-lg">MARK</Badge>
+                                                        <Badge className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-none text-[8px] md:text-[9px] px-2 md:px-3 py-0.5 md:py-1 uppercase font-black tracking-widest rounded-lg shadow-lg">MARK</Badge>
                                                     ) : u.structure === 'LES_2' ? (
-                                                        <Badge className="bg-gradient-to-r from-blue-600 via-secondary to-orange-600 text-white border-none text-[9px] px-3 py-1 uppercase font-black tracking-widest rounded-lg shadow-lg">MIXTE</Badge>
+                                                        <Badge className="bg-gradient-to-r from-blue-600 via-secondary to-orange-600 text-white border-none text-[8px] md:text-[9px] px-2 md:px-3 py-0.5 md:py-1 uppercase font-black tracking-widest rounded-lg shadow-lg">MIXTE</Badge>
                                                     ) : (
-                                                        <Badge className="bg-slate-700 text-white border-none text-[9px] px-3 py-1 uppercase font-black tracking-widest rounded-lg">Collaborateur</Badge>
+                                                        <Badge className="bg-slate-700 text-white border-none text-[8px] md:text-[9px] px-2 md:px-3 py-0.5 md:py-1 uppercase font-black tracking-widest rounded-lg">Collab</Badge>
                                                     )}
                                                 </div>
                                             </div>
                                         </div>
                                         
-                                        <div className="grid grid-cols-1 xs:grid-cols-2 gap-2 md:block md:space-y-3 mb-6 md:mb-8 relative z-10 md:p-4 rounded-[1.2rem] md:rounded-[1.5rem] bg-white/5 border border-white/5 backdrop-blur-sm p-3">
+                                        <div className="grid grid-cols-2 md:block md:space-y-3 mb-4 md:mb-8 relative z-10 p-2 md:p-4 rounded-xl md:rounded-[1.5rem] bg-white/5 border border-white/5 backdrop-blur-sm gap-2">
                                             <div className={cn(
-                                                "flex items-center gap-3 text-[0.8rem] font-black italic uppercase tracking-tight",
+                                                "flex items-center gap-2 md:gap-3 text-xs md:text-[0.8rem] font-black italic uppercase tracking-tight",
                                                 isMark || isVdf || isBoth ? "text-slate-300" : "text-slate-600"
                                             )}>
                                                 <div className={cn("p-1.5 md:p-2 rounded-lg md:rounded-xl transition-colors duration-500", isMark || isVdf || isBoth ? "bg-slate-800 group-hover:bg-slate-700" : "bg-slate-50")}>
-                                                    <GraduationCap size={14} className={cn("md:size-4", isMark ? "text-blue-400" : isVdf ? "text-orange-400" : isBoth ? "text-secondary" : "text-secondary")} />
+                                                    <GraduationCap size={12} className={cn("md:size-4", isMark ? "text-blue-400" : isVdf ? "text-orange-400" : isBoth ? "text-secondary" : "text-secondary")} />
                                                 </div>
                                                 <span className="truncate">{u.diploma === 'DEA' ? 'DEA' : 'AUXI'}</span>
                                             </div>
                                             <div className={cn(
-                                                "flex items-center gap-3 text-[0.8rem] font-black italic uppercase tracking-tight",
+                                                "flex items-center gap-2 md:gap-3 text-xs md:text-[0.8rem] font-black italic uppercase tracking-tight",
                                                 isMark || isVdf || isBoth ? "text-slate-300" : "text-slate-600"
                                             )}>
                                                 <div className={cn("p-1.5 md:p-2 rounded-lg md:rounded-xl transition-colors duration-500", isMark || isVdf || isBoth ? "bg-slate-800 group-hover:bg-slate-700" : "bg-slate-50")}>
-                                                    <Briefcase size={14} className={cn("md:size-4", isMark ? "text-blue-400" : isVdf ? "text-orange-400" : isBoth ? "text-secondary" : "text-secondary")} />
+                                                    <Briefcase size={12} className={cn("md:size-4", isMark ? "text-blue-400" : isVdf ? "text-orange-400" : isBoth ? "text-secondary" : "text-secondary")} />
                                                 </div>
-                                                <span className="truncate">Contrat {u.shift === 'JOUR' ? 'JOUR' : u.shift === 'NUIT' ? 'NUIT' : 'Vacataire'}</span>
+                                                <span className="truncate md:inline block">{u.shift === 'JOUR' ? 'JOUR' : u.shift === 'NUIT' ? 'NUIT' : 'Vacat.'}</span>
                                             </div>
                                         </div>
 
-                                        <div className="relative z-10 mt-auto flex flex-col gap-3">
+                                        <div className="relative z-10 mt-auto">
                                             <Button 
                                                 variant="secondary" 
                                                 size="sm" 
                                                 className={cn(
-                                                    "w-full h-11 md:h-12 rounded-xl md:rounded-2xl font-black transition-all text-xs md:text-[0.85rem] uppercase tracking-tighter shadow-2xl group/btn overflow-hidden relative",
+                                                    "w-full h-10 md:h-12 rounded-xl md:rounded-2xl font-black transition-all text-[10px] md:text-[0.85rem] uppercase tracking-tighter shadow-2xl group/btn overflow-hidden relative",
                                                     isMark 
                                                         ? "bg-gradient-to-r from-blue-700 to-blue-500 hover:from-blue-600 hover:to-blue-400 text-white border-none" 
                                                         : isVdf 
                                                             ? "bg-gradient-to-r from-orange-700 to-orange-500 hover:from-orange-600 hover:to-orange-400 text-white border-none"
                                                             : isBoth
                                                                 ? "bg-gradient-to-r from-blue-600 via-secondary to-orange-600 hover:scale-[1.02] text-white border-none"
-                                                                : "bg-slate-100 hover:bg-secondary hover:text-white text-slate-800 border-none"
+                                                                : "bg-slate-100 hover:bg-secondary hover:text-white text-slate-800 border-none shadow-none"
                                                 )}
                                                 onClick={() => {
                                                     setSelectedUser(u)
@@ -411,8 +408,8 @@ export function CollaboratorsClient({ initialUsers, session }: CollaboratorsClie
                                                 }}
                                             >
                                                 <div className="absolute inset-0 bg-white/20 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300" />
-                                                <Eye className="size-5 mr-2 relative z-10" />
-                                                <span className="relative z-10">Détails Collaborateur</span>
+                                                <Eye className="size-4 md:size-5 mr-2 relative z-10" />
+                                                <span className="relative z-10">Détails</span>
                                             </Button>
                                         </div>
                                     </div>

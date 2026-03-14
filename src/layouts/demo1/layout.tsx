@@ -84,12 +84,6 @@ export function Demo1Layout({ children, notificationsCount = 0 }: { children: Re
           role="content"
           style={{ paddingBottom: isMobile ? '7rem' : undefined }}
         >
-          {/* Debug simple pour voir si React revit sur mobile */}
-          {isMobile && (
-            <div className="flex lg:hidden bg-green-500/10 border-b border-green-500/20 p-2 justify-center">
-              <span className="text-[10px] text-green-600 font-bold uppercase tracking-widest">Connectivité Mobile OK</span>
-            </div>
-          )}
           {children}
         </main>
 

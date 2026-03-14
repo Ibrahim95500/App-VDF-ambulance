@@ -99,6 +99,9 @@ export function HistoryDetailsDialog({ isOpen, onOpenChange, assignment }: Histo
                             <div className="flex flex-col">
                                 <div className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Responsable / Chef de bord</div>
                                 <div className="font-bold text-base">{leaderName.trim() || 'Non assigné'}</div>
+                                {assignment.leaderValidatedAt && (
+                                    <div className="text-[10px] font-black text-green-600 italic">Validé à {format(new Date(assignment.leaderValidatedAt), 'HH:mm')}</div>
+                                )}
                             </div>
                         </div>
 
@@ -110,6 +113,9 @@ export function HistoryDetailsDialog({ isOpen, onOpenChange, assignment }: Histo
                             <div className="flex flex-col">
                                 <div className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Co-équipier</div>
                                 <div className="font-bold text-base">{teammateName.trim() || 'Non assigné'}</div>
+                                {assignment.teammateValidatedAt && (
+                                    <div className="text-[10px] font-black text-green-600 italic">Validé à {format(new Date(assignment.teammateValidatedAt), 'HH:mm')}</div>
+                                )}
                             </div>
                         </div>
                     </div>

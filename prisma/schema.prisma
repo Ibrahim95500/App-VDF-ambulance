@@ -272,7 +272,9 @@ model PlanningAssignment {
   teammateId         String
   status             AssignmentStatus @default(PENDING)
   leaderValidated    Boolean          @default(false)
+  leaderValidatedAt  DateTime?
   teammateValidated  Boolean          @default(false)
+  teammateValidatedAt DateTime?
   startTime          String?
   endTime            String?
   createdAt          DateTime         @default(now())
