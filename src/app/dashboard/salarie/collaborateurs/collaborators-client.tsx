@@ -419,41 +419,57 @@ export function CollaboratorsClient({ initialUsers, session }: CollaboratorsClie
 
                         {/* Pagination UI */}
                         {totalPages > 1 && (
-                            <div className="flex items-center justify-center gap-4 mt-16 mb-12">
+                            <div className="flex items-center justify-center gap-2 md:gap-4 mt-16 mb-12">
                                 <Button
                                     variant="outline"
                                     size="icon"
-                                    className="rounded-[1.2rem] size-16 border-[3px] hover:bg-secondary hover:text-white hover:border-secondary transition-all shadow-xl"
+                                    className="rounded-xl md:rounded-[1.2rem] size-12 md:size-16 border-2 md:border-[3px] hover:bg-secondary hover:text-white hover:border-secondary transition-all shadow-xl"
                                     disabled={currentPage === 1}
                                     onClick={() => setCurrentPage(prev => prev - 1)}
                                 >
-                                    <ChevronLeft size={32} />
+                                    <ChevronLeft size={20} className="md:size-8" />
                                 </Button>
-                                <div className="flex items-center gap-3">
-                                    {Array.from({ length: totalPages }).map((_, i) => (
-                                        <Button
-                                            key={i}
-                                            variant={currentPage === i + 1 ? "secondary" : "outline"}
-                                            className={cn(
-                                                "size-16 rounded-[1.2rem] text-2xl font-black border-[3px] transition-all transform active:scale-95",
-                                                currentPage === i + 1 
-                                                    ? "bg-secondary text-white border-secondary shadow-[0_15px_30px_-5px_rgba(249,115,22,0.4)] scale-110" 
-                                                    : "border-slate-200 text-slate-300 hover:text-secondary hover:border-secondary/40 hover:shadow-lg"
-                                            )}
-                                            onClick={() => setCurrentPage(i + 1)}
-                                        >
-                                            {i + 1}
-                                        </Button>
-                                    ))}
+                                
+                                <div className="flex items-center gap-1.5 md:gap-3">
+                                    {(() => {
+                                        const pages = []
+                                        const maxVisible = typeof window !== 'undefined' && window.innerWidth < 640 ? 3 : 5
+                                        let start = Math.max(1, currentPage - Math.floor(maxVisible / 2))
+                                        let end = Math.min(totalPages, start + maxVisible - 1)
+                                        
+                                        if (end - start + 1 < maxVisible) {
+                                            start = Math.max(1, end - maxVisible + 1)
+                                        }
+
+                                        for (let i = start; i <= end; i++) {
+                                            pages.push(
+                                                <Button
+                                                    key={i}
+                                                    variant={currentPage === i ? "secondary" : "outline"}
+                                                    className={cn(
+                                                        "size-12 md:size-16 rounded-xl md:rounded-[1.2rem] text-lg md:text-2xl font-black border-2 md:border-[3px] transition-all transform active:scale-95",
+                                                        currentPage === i 
+                                                            ? "bg-secondary text-white border-secondary shadow-lg scale-110" 
+                                                            : "border-slate-200 text-slate-300 hover:text-secondary hover:border-secondary/40 hover:shadow-md"
+                                                    )}
+                                                    onClick={() => setCurrentPage(i)}
+                                                >
+                                                    {i}
+                                                </Button>
+                                            )
+                                        }
+                                        return pages
+                                    })()}
                                 </div>
+
                                 <Button
                                     variant="outline"
                                     size="icon"
-                                    className="rounded-[1.2rem] size-16 border-[3px] hover:bg-secondary hover:text-white hover:border-secondary transition-all shadow-xl"
+                                    className="rounded-xl md:rounded-[1.2rem] size-12 md:size-16 border-2 md:border-[3px] hover:bg-secondary hover:text-white hover:border-secondary transition-all shadow-xl"
                                     disabled={currentPage === totalPages}
                                     onClick={() => setCurrentPage(prev => prev + 1)}
                                 >
-                                    <ChevronRight size={32} />
+                                    <ChevronRight size={20} className="md:size-8" />
                                 </Button>
                             </div>
                         )}

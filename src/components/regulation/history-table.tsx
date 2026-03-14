@@ -14,7 +14,11 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Search, Eye, Calendar as CalendarIcon, User, Ambulance } from "lucide-react"
+import { Search, Eye, Calendar as CalendarIcon, User, Ambulance, FileSpreadsheet, FileText, Download } from "lucide-react"
+import * as XLSX from 'xlsx'
+import { jsPDF } from 'jspdf'
+import 'jspdf-autotable'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { HistoryDetailsDialog } from "./history-details-dialog"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
@@ -66,8 +70,8 @@ export function HistoryTable({ data }: HistoryTableProps) {
             `${item.teammate?.lastName} ${item.teammate?.firstName}`,
             item.startTime || "",
             item.status,
-            item.leaderValidatedAt ? format(new Date(item.leaderValidatedAt), 'dd/MM HH:mm') : "N/A",
-            item.teammateValidatedAt ? format(new Date(item.teammateValidatedAt), 'dd/MM HH:mm') : "N/A"
+            item.leaderValidatedAt ? format(new Date(item.leaderValidatedAt), 'HH:mm') : "N/A",
+            item.teammateValidatedAt ? format(new Date(item.teammateValidatedAt), 'HH:mm') : "N/A"
         ]);
 
         const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
@@ -79,6 +83,50 @@ export function HistoryTable({ data }: HistoryTableProps) {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+    }
+
+    const handleExportExcel = () => {
+        const dataToExport = filteredData.map(item => ({
+            "Date": format(new Date(item.date), 'dd/MM/yyyy'),
+            "Véhicule": item.vehicle?.plateNumber || "",
+            "Catégorie": item.vehicle?.category || "",
+            "Responsable": `${item.leader?.lastName} ${item.leader?.firstName}`,
+            "Co-équipier": `${item.teammate?.lastName} ${item.teammate?.firstName}`,
+            "Début": item.startTime || "",
+            "Fin": item.endTime || "",
+            "Statut": item.status,
+            "Validation Chef": item.leaderValidatedAt ? format(new Date(item.leaderValidatedAt), 'HH:mm') : "Non validé",
+            "Validation Équipier": item.teammateValidatedAt ? format(new Date(item.teammateValidatedAt), 'HH:mm') : "Non validé"
+        }));
+
+        const ws = XLSX.utils.json_to_sheet(dataToExport);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Historique");
+        XLSX.writeFile(wb, `historique_regulation_${format(new Date(), 'yyyy-MM-dd')}.xlsx`);
+    }
+
+    const handleExportPDF = () => {
+        const doc = new jsPDF() as any;
+        const tableBody = filteredData.map(item => [
+            format(new Date(item.date), 'dd/MM/yyyy'),
+            item.vehicle?.plateNumber || "",
+            `${item.leader?.lastName} ${item.leader?.firstName}`,
+            `${item.teammate?.lastName} ${item.teammate?.firstName}`,
+            item.status,
+            item.leaderValidatedAt ? format(new Date(item.leaderValidatedAt), 'HH:mm') : "N/A",
+            item.teammateValidatedAt ? format(new Date(item.teammateValidatedAt), 'HH:mm') : "N/A"
+        ]);
+
+        doc.text("Historique de Regulation - VDF Ambulance", 14, 15);
+        doc.autoTable({
+            head: [["Date", "Vehicule", "Chef", "Equipier", "Statut", "Valide C.", "Valide E."]],
+            body: tableBody,
+            startY: 20,
+            theme: 'grid',
+            headStyles: { fillColor: [249, 115, 22] }
+        });
+
+        doc.save(`historique_regulation_${format(new Date(), 'yyyy-MM-dd')}.pdf`);
     }
 
     const totalPages = Math.ceil(filteredData.length / itemsPerPage);
@@ -159,15 +207,33 @@ export function HistoryTable({ data }: HistoryTableProps) {
                     )}
                 </div>
                 
-                <div className="flex items-center gap-3">
-                    <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={handleExportCSV}
-                        className="h-11 px-4 gap-2 font-bold border-2 rounded-xl bg-green-50 text-green-700 border-green-200 hover:bg-green-100 transition-all shadow-sm"
-                    >
-                        Exporter CSV
-                    </Button>
+                <div className="flex items-center gap-2">
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button 
+                                variant="outline" 
+                                size="sm" 
+                                className="h-11 px-4 gap-2 font-bold border-2 rounded-xl bg-green-50 text-green-700 border-green-200 hover:bg-green-100 transition-all shadow-sm"
+                            >
+                                <Download size={18} />
+                                Exporter
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="rounded-xl border-2 shadow-xl">
+                            <DropdownMenuItem onClick={handleExportCSV} className="gap-2 font-bold cursor-pointer">
+                                <FileText size={16} className="text-slate-500" />
+                                Format CSV
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={handleExportExcel} className="gap-2 font-bold cursor-pointer">
+                                <FileSpreadsheet size={16} className="text-green-600" />
+                                Format Excel
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={handleExportPDF} className="gap-2 font-bold cursor-pointer">
+                                <FileText size={16} className="text-red-500" />
+                                Format PDF
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                     <div className="text-sm text-slate-500 font-medium bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-lg whitespace-nowrap">
                         {filteredData.length} résultat(s)
                     </div>
@@ -252,9 +318,30 @@ export function HistoryTable({ data }: HistoryTableProps) {
                     >
                         Précédent
                     </Button>
-                    <span className="text-sm font-black">
-                        Page <span className="text-orange-600">{page}</span> sur {totalPages}
-                    </span>
+                    
+                    <div className="flex items-center gap-2">
+                        {Array.from({ length: totalPages }).map((_, i) => {
+                            const pageNum = i + 1;
+                            // Logique desktop: tout montrer si peu de pages, sinon subset? 
+                            // Pour l'instant on montre tout sur desktop ou on limite à 7
+                            if (totalPages > 7 && Math.abs(pageNum - page) > 2 && pageNum !== 1 && pageNum !== totalPages) {
+                                if (Math.abs(pageNum - page) === 3) return <span key={i}>...</span>;
+                                return null;
+                            }
+                            return (
+                                <Button
+                                    key={i}
+                                    variant={page === pageNum ? "secondary" : "outline"}
+                                    size="sm"
+                                    className={cn("h-10 w-10 font-bold rounded-xl", page === pageNum ? "bg-orange-500 text-white border-orange-500" : "")}
+                                    onClick={() => setPage(pageNum)}
+                                >
+                                    {pageNum}
+                                </Button>
+                            );
+                        })}
+                    </div>
+
                     <Button
                         variant="outline"
                         onClick={() => setPage(p => Math.min(totalPages, p + 1))}
@@ -321,29 +408,51 @@ export function HistoryTable({ data }: HistoryTableProps) {
                 )}
             </div>
 
-            {/* Pagination Mobile */}
+            {/* Pagination Mobile Optimizée */}
             {totalPages > 1 && (
-                <div className="flex md:hidden items-center justify-center gap-4 mt-2 bg-white dark:bg-slate-900 p-4 rounded-xl border-2 border-slate-200">
+                <div className="flex md:hidden items-center justify-center gap-2 mt-4 bg-white dark:bg-slate-900 p-2 rounded-2xl border-2 border-slate-100 shadow-sm">
                     <Button
                         variant="ghost"
-                        size="sm"
+                        size="icon"
                         onClick={() => setPage(p => Math.max(1, p - 1))}
                         disabled={page === 1}
-                        className="font-bold"
+                        className="h-10 w-10"
                     >
-                        Prc.
+                        <ChevronLeft size={18} />
                     </Button>
-                    <span className="text-xs font-black">
-                        {page} / {totalPages}
-                    </span>
+                    
+                    <div className="flex items-center gap-1.5">
+                        {(() => {
+                            const pages = [];
+                            const start = Math.max(1, page - 1);
+                            const end = Math.min(totalPages, start + 2);
+                            const finalStart = Math.max(1, end - 2);
+
+                            for (let i = finalStart; i <= end; i++) {
+                                pages.push(
+                                    <Button
+                                        key={i}
+                                        variant={page === i ? "secondary" : "ghost"}
+                                        size="sm"
+                                        className={cn("h-10 w-10 font-bold rounded-xl", page === i ? "bg-orange-500 text-white shadow-md scale-110" : "text-slate-400")}
+                                        onClick={() => setPage(i)}
+                                    >
+                                        {i}
+                                    </Button>
+                                );
+                            }
+                            return pages;
+                        })()}
+                    </div>
+
                     <Button
                         variant="ghost"
-                        size="sm"
+                        size="icon"
                         onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                         disabled={page === totalPages}
-                        className="font-bold"
+                        className="h-10 w-10"
                     >
-                        Suiv.
+                        <ChevronRight size={18} />
                     </Button>
                 </div>
             )}
