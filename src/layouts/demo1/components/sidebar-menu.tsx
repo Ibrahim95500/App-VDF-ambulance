@@ -321,9 +321,9 @@ export function SidebarMenu() {
       >
         <span data-slot="accordion-menu-title">{item.title}</span>
         {item.disabled && (
-          <Badge variant="secondary" size="sm" className="ms-auto me-[-10px]">
+          <span className="ms-auto me-[-10px] inline-flex items-center justify-center rounded-md bg-secondary px-1.5 h-5 text-[10px] font-medium text-secondary-foreground">
             Soon
-          </Badge>
+          </span>
         )}
       </AccordionMenuItem>
     );
