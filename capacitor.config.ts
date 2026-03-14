@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appName: 'VDF Ambulance',
   webDir: 'out',
   server: {
-    url: 'https://dev.vdf-ambulance.fr',
+    url: 'https://app.vdf-ambulance.fr',
     cleartext: true
   }
 };
