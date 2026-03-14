@@ -24,6 +24,8 @@ interface HistoryTableProps {
 }
 
 export function HistoryTable({ data }: HistoryTableProps) {
+    const [searchTerm, setSearchTerm] = useState("")
+    const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
     const [selectedAssignment, setSelectedAssignment] = useState<any>(null)
     const [isDialogOpen, setIsDialogOpen] = useState(false)
     const [page, setPage] = useState(1)
