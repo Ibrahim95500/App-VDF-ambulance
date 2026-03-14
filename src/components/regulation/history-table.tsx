@@ -22,6 +22,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { HistoryDetailsDialog } from "./history-details-dialog"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Calendar } from "@/components/ui/calendar"
+import { cn } from "@/lib/utils"
 
 interface HistoryTableProps {
     data: any[]
