@@ -24,6 +24,7 @@ import { HRStatsCharts } from "../components/hr-stats-charts"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { createConvocationAction } from "@/actions/appointment-request.actions"
+import { summonForThreeStrikes, pardonForThreeStrikes } from "@/actions/disciplinary.actions"
 import { EditCollaboratorForm } from "../components/edit-collaborator-form"
 
 interface User {
@@ -79,6 +80,12 @@ export function CollaboratorsTable({ initialData, services = [] }: { initialData
     const [convocDesc, setConvocDesc] = useState("")
     const [convocSubmitting, setConvocSubmitting] = useState(false)
 
+    // Disciplinary (3 strikes) state
+    const [isPardoning, setIsPardoning] = useState(false)
+    const [pardonMessage, setPardonMessage] = useState("")
+    const [isDisciplinaryStep, setIsDisciplinaryStep] = useState(false) // Toggle between initial choice and form
+    const [disciplinaryActionType, setDisciplinaryActionType] = useState<"SUMMON" | "PARDON" | null>(null)
+
     const reasonOptions = [
         "Point d'étape / Bilan",
         "Incident de transport",
@@ -97,13 +104,44 @@ export function CollaboratorsTable({ initialData, services = [] }: { initialData
         }
         try {
             setConvocSubmitting(true);
-            const result = await createConvocationAction(selectedUser.id, convocReason, new Date(convocDate), convocMode, convocDesc);
+            let result;
+            if (disciplinaryActionType === "SUMMON" && (selectedUser.oubliCount ?? 0) >= 3) {
+                result = await summonForThreeStrikes(selectedUser.id, new Date(convocDate), convocMode, convocDesc);
+            } else {
+                result = await createConvocationAction(selectedUser.id, convocReason, new Date(convocDate), convocMode, convocDesc);
+            }
+
             if (result.error) {
                 toast.error(result.error);
             } else {
                 toast.success("Convocation envoyée avec succès.");
                 setIsConvoking(false);
+                setIsDisciplinaryStep(false);
+                setDisciplinaryActionType(null);
                 setConvocReason(""); setConvocDate(""); setConvocMode("BUREAU"); setConvocDesc("");
+                if (selectedUser.oubliCount) setSelectedUser({ ...selectedUser, oubliCount: 0 });
+            }
+        } catch {
+            toast.error("Une erreur est survenue.");
+        } finally {
+            setConvocSubmitting(false);
+        }
+    }
+
+    const handlePardon = async () => {
+        if (!selectedUser) return;
+        setConvocSubmitting(true);
+        try {
+            const result = await pardonForThreeStrikes(selectedUser.id, pardonMessage);
+            if (result.error) {
+                toast.error(result.error);
+            } else {
+                toast.success("Clémence accordée et compteur réinitialisé.");
+                setIsPardoning(false);
+                setIsDisciplinaryStep(false);
+                setDisciplinaryActionType(null);
+                setPardonMessage("");
+                setSelectedUser({ ...selectedUser, oubliCount: 0 });
             }
         } catch {
             toast.error("Une erreur est survenue.");
@@ -773,27 +811,61 @@ export function CollaboratorsTable({ initialData, services = [] }: { initialData
                                 </div>
                             )}
 
-                            {!!(!isConvoking && selectedUser?.roles?.includes('SALARIE') && (selectedUser as any)?.isActive !== false) && (
+                            {!!(!isConvoking && !isPardoning && selectedUser?.roles?.includes('SALARIE') && (selectedUser as any)?.isActive !== false) && (
                                 <div className="pt-4 border-t border-border">
-                                    {(selectedUser.oubliCount ?? 0) >= 3 && (
-                                        <div className="mb-3 p-3 bg-red-50 border border-red-200 rounded-lg">
-                                            <p className="text-xs font-bold text-red-800 flex items-center gap-1.5 mb-1"><ShieldAlertIcon className="w-4 h-4"/> Action Requise Absolue</p>
-                                            <p className="text-[11px] text-red-600 leading-tight">Ce collaborateur a atteint 3 oublis de validation de planification à la régulation. Vous devez procéder à l'envoi d'une convocation RH ci-dessous.</p>
+                                    {(selectedUser.oubliCount ?? 0) >= 3 ? (
+                                        <div className="space-y-3">
+                                            <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                                                <p className="text-xs font-bold text-red-800 flex items-center gap-1.5 mb-1"><ShieldAlertIcon className="w-4 h-4"/> Action Requise Absolue</p>
+                                                <p className="text-[11px] text-red-600 leading-tight">Ce collaborateur a atteint 3 oublis. Choisissez une action pour réinitialiser son compteur.</p>
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <button
+                                                    onClick={() => {
+                                                        setIsConvoking(true);
+                                                        setDisciplinaryActionType("SUMMON");
+                                                        setConvocReason("Convocation Disciplinaire : 3 Oublis Atteints");
+                                                    }}
+                                                    className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg bg-red-600 text-white border border-red-700 text-sm font-bold transition-all shadow-md hover:bg-red-700"
+                                                >
+                                                    <Calendar className="w-4 h-4" /> CDD / Convocation
+                                                </button>
+                                                <button
+                                                    onClick={() => {
+                                                        setIsPardoning(true);
+                                                        setDisciplinaryActionType("PARDON");
+                                                        setPardonMessage("Je te laisse tranquille pour cette fois mais j'ai vu que tu as oublié 3 fois, fais attention pour la suite.");
+                                                    }}
+                                                    className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg bg-amber-50 text-amber-700 border border-amber-200 text-sm font-bold transition-all hover:bg-amber-100"
+                                                >
+                                                    <ShieldCheckIcon className="w-4 h-4" /> Clémence RH
+                                                </button>
+                                            </div>
                                         </div>
+                                    ) : (
+                                        <button
+                                            onClick={() => {
+                                                setIsConvoking(true);
+                                                setDisciplinaryActionType(null);
+                                            }}
+                                            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg border border-blue-200 bg-blue-50 text-blue-700 text-sm font-bold transition-all hover:bg-blue-100 shadow-sm"
+                                        >
+                                            <Calendar className="w-4 h-4" /> Convoquer ce salarié
+                                        </button>
                                     )}
-                                    <button
-                                        onClick={() => setIsConvoking(true)}
-                                        className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-lg border text-sm font-bold transition-all shadow-sm ${(selectedUser.oubliCount ?? 0) >= 3 ? 'bg-red-600 text-white border-red-700 hover:bg-red-700 hover:shadow-red-200 shadow-md' : 'border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100'}`}
-                                    >
-                                        <Calendar className="w-4 h-4" /> Convoquer ce salarié
-                                    </button>
                                 </div>
                             )}
 
                             {isConvoking && (
                                 <div className="pt-4 border-t border-border space-y-3 animate-in fade-in duration-200">
-                                    <p className="text-xs font-bold uppercase text-blue-700 tracking-wider">Nouvelle Convocation</p>
-                                    <Select value={convocReason} onValueChange={setConvocReason} disabled={convocSubmitting}>
+                                    <p className="text-xs font-bold uppercase text-blue-700 tracking-wider">
+                                        {disciplinaryActionType === "SUMMON" ? "Nouvelle Convocation Disciplinaire (Bloquant)" : "Nouvelle Convocation"}
+                                    </p>
+                                    <Select 
+                                        value={convocReason} 
+                                        onValueChange={setConvocReason} 
+                                        disabled={convocSubmitting || disciplinaryActionType === "SUMMON"}
+                                    >
                                         <SelectTrigger className="text-sm"><SelectValue placeholder="Motif *" /></SelectTrigger>
                                         <SelectContent>
                                             {reasonOptions.map((r, i) => <SelectItem key={i} value={r}>{r}</SelectItem>)}
@@ -816,10 +888,33 @@ export function CollaboratorsTable({ initialData, services = [] }: { initialData
                                     </Select>
                                     <Textarea placeholder="Message pour le salarié (Optionnel)" value={convocDesc} onChange={(e) => setConvocDesc(e.target.value)} className="min-h-[80px] resize-none text-sm" disabled={convocSubmitting} />
                                     <div className="flex gap-2 justify-end">
-                                        <Button variant="outline" size="sm" onClick={() => setIsConvoking(false)} disabled={convocSubmitting} className="border-slate-300 text-slate-700 font-medium">Annuler</Button>
-                                        <Button size="sm" onClick={handleConvocation} disabled={convocSubmitting} className="bg-blue-600 hover:bg-blue-700 text-white">
+                                        <Button variant="outline" size="sm" onClick={() => { setIsConvoking(false); setDisciplinaryActionType(null); }} disabled={convocSubmitting} className="border-slate-300 text-slate-700 font-medium">Annuler</Button>
+                                        <Button size="sm" onClick={handleConvocation} disabled={convocSubmitting} className={disciplinaryActionType === "SUMMON" ? "bg-red-600 hover:bg-red-700 text-white" : "bg-blue-600 hover:bg-blue-700 text-white"}>
                                             {convocSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Calendar className="w-4 h-4 mr-1" />}
-                                            Envoyer
+                                            {disciplinaryActionType === "SUMMON" ? "Confirmer la Convocation" : "Envoyer"}
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {isPardoning && (
+                                <div className="pt-4 border-t border-border space-y-3 animate-in fade-in duration-200">
+                                    <p className="text-xs font-bold uppercase text-amber-700 tracking-wider">Accorder une Clémence (Remise à zéro)</p>
+                                    <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-[11px] text-amber-800">
+                                        Le compteur d'oublis de <strong>{selectedUser?.firstName}</strong> sera remis à zéro et un mail de rappel lui sera envoyé.
+                                    </div>
+                                    <Textarea 
+                                        placeholder="Votre message de clémence..." 
+                                        value={pardonMessage} 
+                                        onChange={(e) => setPardonMessage(e.target.value)} 
+                                        className="min-h-[100px] resize-none text-sm border-amber-200 focus:border-amber-400 focus:ring-amber-400/20" 
+                                        disabled={convocSubmitting} 
+                                    />
+                                    <div className="flex gap-2 justify-end">
+                                        <Button variant="outline" size="sm" onClick={() => { setIsPardoning(false); setDisciplinaryActionType(null); }} disabled={convocSubmitting} className="border-slate-300 text-slate-700 font-medium">Annuler</Button>
+                                        <Button size="sm" onClick={handlePardon} disabled={convocSubmitting || !pardonMessage.trim()} className="bg-amber-600 hover:bg-amber-700 text-white shadow-md shadow-amber-200">
+                                            {convocSubmitting ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <ShieldCheckIcon className="w-4 h-4 mr-1" />}
+                                            Confirmer la Clémence
                                         </Button>
                                     </div>
                                 </div>

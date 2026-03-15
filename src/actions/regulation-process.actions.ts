@@ -364,7 +364,8 @@ async function penalizeUser(userId: string) {
 async function handleThreeStrikes(user: any) {
     const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.name || user.email;
 
-    // 1. Remise à Zéro
+    // 1. Remise à Zéro (DÉSACTIVÉ : Maintenant géré manuellement par les RH)
+    /*
     try {
         await prisma.user.update({
             where: { id: user.id },
@@ -373,6 +374,7 @@ async function handleThreeStrikes(user: any) {
     } catch (e) {
         console.error("Error resetting oubliCount:", e);
     }
+    */
 
     // 2. Email à l'employé
     if (user.email) {
