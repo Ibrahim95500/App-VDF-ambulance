@@ -17,18 +17,17 @@ export async function sendPlanningsToEmployees(dateStr: string) {
         const startOfDay = new Date(`${dateStr}T00:00:00.000Z`)
         const endOfDay = new Date(`${dateStr}T23:59:59.999Z`)
 
-        // 1. Vérifier si un job a déjà été exécuté avec succès pour ce type et cette date
-        const existingJob = await prisma.cronJob.findUnique({
-            where: {
-                type_date: {
+        // 1. Tenter de créer le job immédiatement (le @@unique type_date bloquera les doublons)
+        try {
+            await prisma.cronJob.create({
+                data: {
                     type: 'SEND_PLANNING',
-                    date: dateStr
+                    date: dateStr,
+                    status: 'SUCCESS' // On marque comme SUCCESS dès le début pour bloquer
                 }
-            }
-        });
-
-        if (existingJob) {
-            console.log(`[CRON 19H] Skip: Plannings déjà envoyés pour le ${dateStr}`);
+            });
+        } catch (e) {
+            console.log(`[CRON 19H] Skip: Plannings déjà envoyés ou en cours pour le ${dateStr}`);
             return { success: true, message: "Plannings déjà envoyés pour cette date." };
         }
 
@@ -154,14 +153,7 @@ export async function sendPlanningsToEmployees(dateStr: string) {
             }
         }
 
-        // 5. Enregistrer le succès du job pour éviter les doublons
-        await prisma.cronJob.create({
-            data: {
-                type: 'SEND_PLANNING',
-                date: dateStr,
-                status: 'SUCCESS'
-            }
-        });
+        // L'enregistrement a été créé au début pour verrouiller l'exécution
 
         return { success: true, message: `Equipages figés ! ${emailsSent} emails ont été envoyés.` }
     } catch (error: any) {
@@ -179,18 +171,17 @@ export async function checkConfirmationsAndPenalize(dateStr: string) {
         const startOfDay = new Date(`${dateStr}T00:00:00.000Z`)
         const endOfDay = new Date(`${dateStr}T23:59:59.999Z`)
 
-        // 1. Vérifier si un job a déjà été exécuté avec succès pour ce type et cette date
-        const existingJob = await prisma.cronJob.findUnique({
-            where: {
-                type_date: {
+        // 1. Tenter de créer le job immédiatement (le @@unique type_date bloquera les doublons)
+        try {
+            await prisma.cronJob.create({
+                data: {
                     type: 'CHECK_VALIDATION',
-                    date: dateStr
+                    date: dateStr,
+                    status: 'SUCCESS'
                 }
-            }
-        });
-
-        if (existingJob) {
-            console.log(`[CRON 21H] Skip: Vérifications déjà effectuées pour le ${dateStr}`);
+            });
+        } catch (e) {
+            console.log(`[CRON 21H] Skip: Vérifications déjà effectuées ou en cours pour le ${dateStr}`);
             return { success: true, message: "Vérifications déjà effectuées pour cette date." };
         }
 
@@ -321,14 +312,7 @@ export async function checkConfirmationsAndPenalize(dateStr: string) {
             }
         }
 
-        // 6. Enregistrer le succès du job
-        await prisma.cronJob.create({
-            data: {
-                type: 'CHECK_VALIDATION',
-                date: dateStr,
-                status: 'SUCCESS'
-            }
-        });
+        // L'enregistrement a été créé au début pour verrouiller l'exécution
 
         return { success: true, message: `Vérification terminée. ${penalitiesCount} pénalités. Rapport global envoyé aux admins.` }
     } catch (error: any) {
