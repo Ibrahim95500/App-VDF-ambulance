@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { sendBrandedEmail } from "@/lib/mail"
-import { createNotification } from "@/actions/notifications.actions"
+import { createNotification, createManyNotifications } from "@/actions/notifications.actions"
 import { format } from "date-fns"
 import { fr } from "date-fns/locale"
 
@@ -402,9 +402,24 @@ async function handleThreeStrikes(user: any) {
 
     // 3. Email d'Alerte aux Administrateurs
     const admins = await prisma.user.findMany({
-        where: { roles: { has: 'ADMIN' } },
-        select: { email: true }
+        where: { OR: [{ roles: { has: 'ADMIN' } }, { roles: { has: 'RH' } }] },
+        select: { id: true, email: true }
     });
+
+    // 4. Notification dans la cloche pour les Admins/RH
+    const notifications = admins.map(admin => ({
+        userId: admin.id,
+        title: "🚨 Alerte 3 Oublis",
+        message: `${fullName} a atteint 3 oublis. Action RH requise.`,
+        type: "SERVICE" as const,
+        link: "/dashboard/rh/collaborateurs"
+    }));
+
+    try {
+        await createManyNotifications(notifications);
+    } catch (e) {
+        console.error("Error creating admin notifications:", e);
+    }
 
     for (const admin of admins) {
         if (admin.email) {
@@ -416,8 +431,9 @@ async function handleThreeStrikes(user: any) {
                 preheader: `Collaborateur à convoquer pour 3 oublis.`,
                 content: `
                     <p>Le collaborateur <strong>${fullName}</strong> vient d'atteindre son 3ème oubli de validation.</p>
-                    <div style="background-color: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; margin-top: 15px;">
-                        <p><strong>Action requise :</strong> Créer une convocation officielle dans l'espace RH.</p>
+                    <div style="background-color: #fef2f2; padding: 15px; border-radius: 8px; border: 1px solid #fca5a5; margin-top: 15px;">
+                        <p style="color: #b91c1c; font-weight: bold;">Action requise :</p>
+                        <p>Le système a bloqué cet utilisateur à 3 oublis. Vous devez maintenant prendre une décision (Convocation ou Clémence) dans le dashboard RH pour débloquer sa situation.</p>
                     </div>
                 `,
                 actionUrl: `${process.env.NEXTAUTH_URL}/dashboard/rh/collaborateurs`,
