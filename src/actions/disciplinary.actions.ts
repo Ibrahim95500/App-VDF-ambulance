@@ -108,6 +108,7 @@ export async function summonForThreeStrikes(
 
         revalidatePath("/dashboard/rh/collaborateurs")
         revalidatePath("/dashboard/rh/rendez-vous")
+        revalidatePath("/dashboard/salarie/collaborateurs")
         return { success: true }
     } catch (error: any) {
         console.error("Summon for three strikes error:", error)
@@ -171,6 +172,7 @@ export async function pardonForThreeStrikes(userId: string, adminMessage: string
         }
 
         revalidatePath("/dashboard/rh/collaborateurs")
+        revalidatePath("/dashboard/salarie/collaborateurs")
         return { success: true }
     } catch (error: any) {
         console.error("Pardon for three strikes error:", error)
