@@ -65,14 +65,14 @@ export async function getNotificationStats(userId?: string) {
             }
         });
 
-        let validationPending = 0;
+        let validationDone = 0;
         const now = new Date();
         const isAfterCutoff = now.getHours() > 23 || (now.getHours() === 23 && now.getMinutes() >= 30);
 
         if (!isAfterCutoff) {
             assignmentsTomorrow.forEach((a: any) => {
-                if (a.leaderId && !a.leaderValidated) validationPending++;
-                if (a.teammateId && !a.teammateValidated) validationPending++;
+                if (a.leaderId && a.leaderValidated) validationDone++;
+                if (a.teammateId && a.teammateValidated) validationDone++;
             });
         }
 
@@ -82,8 +82,8 @@ export async function getNotificationStats(userId?: string) {
                 services: pendingServices,
                 appointments: pendingAppointments,
                 leaves: pendingLeaves,
-                regulation: validationPending, // Les validations manquantes
-                total: pendingAdvances + pendingServices + pendingAppointments + pendingLeaves + validationPending
+                regulation: validationDone, // Nombre de validations EFFECTUÉES
+                total: pendingAdvances + pendingServices + pendingAppointments + pendingLeaves + (validationDone === 0 ? 0 : 0) // On ne compte pas le 3ème oubli dans le TOTAL si on veut juste suivre la progression
             },
             personal: {
                 advances: myAdvances,

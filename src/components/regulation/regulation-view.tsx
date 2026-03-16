@@ -48,6 +48,21 @@ export function RegulationView() {
         return () => clearInterval(timer);
     }, []);
 
+    // Pooling 2s pour le temps réel (Uniquement en mode PLANNING et pour Aujourd'hui/Demain)
+    useEffect(() => {
+        if (viewMode !== 'PLANNING') return;
+        
+        // On n'active le pooling intensif que pour les dates proches (Aujourd'hui ou Demain)
+        const isNearDate = isToday || isTomorrow;
+        if (!isNearDate) return;
+
+        const interval = setInterval(() => {
+            loadData(true);
+        }, 2000);
+
+        return () => clearInterval(interval);
+    }, [viewMode, date, isToday, isTomorrow]);
+
     // History State
     const [viewMode, setViewMode] = useState<'PLANNING' | 'HISTORY'>('PLANNING')
     const [historyData, setHistoryData] = useState<any[]>([])
@@ -85,9 +100,9 @@ export function RegulationView() {
         }
     }
 
-    const loadData = async () => {
+    const loadData = async (isSilent = false) => {
         try {
-            setLoading(true)
+            if (!isSilent) setLoading(true)
             const dateStr = format(date, 'yyyy-MM-dd')
             const [vData, pData] = await Promise.all([
                 getVehiclesWithAssignments(dateStr),
@@ -98,7 +113,7 @@ export function RegulationView() {
         } catch (error) {
             console.error("Erreur chargement regulation:", error)
         } finally {
-            setLoading(false)
+            if (!isSilent) setLoading(false)
         }
     }
 
@@ -217,7 +232,7 @@ export function RegulationView() {
                     <Button 
                         variant="outline" 
                         size="icon" 
-                        onClick={loadData}
+                        onClick={() => loadData()}
                         disabled={loading}
                         className="h-12 w-12 rounded-xl border-2 hover:bg-slate-50 hover:text-orange-500 hover:border-orange-200 transition-all duration-300 shadow-sm group"
                     >
@@ -374,7 +389,7 @@ export function RegulationView() {
                     dateStr={format(date, 'yyyy-MM-dd')}
                     personnel={personnel}
                     vehicles={vehicles}
-                    onSuccess={loadData}
+                    onSuccess={() => loadData()}
                     initialData={selectedVehicle.assignments?.[0] ? {
                         leaderId: selectedVehicle.assignments[0].leaderId,
                         teammateId: selectedVehicle.assignments[0].teammateId,
