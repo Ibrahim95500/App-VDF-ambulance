@@ -43,6 +43,21 @@ export function RegulationView() {
     const [activeTab, setActiveTab] = useState<string>("ALL")
     const [currentTime, setCurrentTime] = useState(new Date())
 
+    // History State
+    const [viewMode, setViewMode] = useState<'PLANNING' | 'HISTORY'>('PLANNING')
+    const [historyData, setHistoryData] = useState<any[]>([])
+    const [loadingHistory, setLoadingHistory] = useState(false)
+
+    // Dialog State
+    const [selectedVehicle, setSelectedVehicle] = useState<any>(null)
+    const [isDialogOpen, setIsDialogOpen] = useState(false)
+    const [page, setPage] = useState(1)
+
+    // Date flags
+    const isTomorrow = new Date(date).setHours(0,0,0,0) === new Date(new Date().setDate(new Date().getDate() + 1)).setHours(0,0,0,0);
+    const isToday = new Date(date).setHours(0,0,0,0) === new Date().setHours(0,0,0,0);
+    const isPast = new Date(date).setHours(0,0,0,0) < new Date().setHours(0,0,0,0);
+
     useEffect(() => {
         const timer = setInterval(() => setCurrentTime(new Date()), 60000); // Met à jour chaque minute
         return () => clearInterval(timer);
@@ -63,15 +78,9 @@ export function RegulationView() {
         return () => clearInterval(interval);
     }, [viewMode, date, isToday, isTomorrow]);
 
-    // History State
-    const [viewMode, setViewMode] = useState<'PLANNING' | 'HISTORY'>('PLANNING')
-    const [historyData, setHistoryData] = useState<any[]>([])
-    const [loadingHistory, setLoadingHistory] = useState(false)
+    // History State (ALREADY MOVED UP)
 
-    // Dialog State
-    const [selectedVehicle, setSelectedVehicle] = useState<any>(null)
-    const [isDialogOpen, setIsDialogOpen] = useState(false)
-    const [page, setPage] = useState(1)
+    // Dialog State (ALREADY MOVED UP)
 
     useEffect(() => {
         setPage(1)
@@ -132,9 +141,7 @@ export function RegulationView() {
     }
 
     const currentHour = currentTime.getHours();
-    const isTomorrow = new Date(date).setHours(0,0,0,0) === new Date(new Date().setDate(new Date().getDate() + 1)).setHours(0,0,0,0);
-    const isToday = new Date(date).setHours(0,0,0,0) === new Date().setHours(0,0,0,0);
-    const isPast = new Date(date).setHours(0,0,0,0) < new Date().setHours(0,0,0,0);
+    // isTomorrow, isToday, isPast (ALREADY MOVED UP)
 
     let totalPersons = 0;
     let validated = 0;
