@@ -5,8 +5,9 @@ import Link from 'next/link';
 import { Calendar, Settings, Settings2, Shield, Users, Clock, CheckCircle, XCircle, Info, X, Siren } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getNotifications, markAllAsRead, markAsRead, dismissNotification } from '@/actions/notifications.actions';
-import { getVapidPublicKey, savePushSubscription, saveFcmToken } from '@/actions/web-push.actions';
+import { getVapidPublicKey, savePushSubscription, saveFcmToken, sendPushNotification } from '@/actions/web-push.actions';
 import { useEffect, useState } from 'react';
+import { useSession } from 'next-auth/react';
 import { cn } from '@/lib/utils';
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
@@ -206,7 +207,26 @@ export function NotificationsSheet({ trigger, onAllRead }: { trigger: ReactNode;
               }
             }}
           >
-            🔔 S'abonner aux alertes
+            S'abonner aux alertes 🔔
+          </Button>
+
+          <Button 
+            variant="outline" 
+            size="sm"
+            className="h-7 text-[10px] border-blue-200 text-blue-700 hover:bg-blue-100 font-bold px-2 rounded-full mt-2 dark:border-blue-500/30 dark:text-blue-400 dark:hover:bg-blue-900/30"
+            onClick={async () => {
+              const session: any = await getNotifications(); // Just to trigger a server call if needed, but we need session
+              // We'll use a hack to get the userId from notifications or just try to send to self
+              if (notifications.length > 0) {
+                const userId = notifications[0].userId; 
+                await sendPushNotification(userId, "Test VDF", "Ceci est une notification de test ! 🚀", "/dashboard/salarie");
+                alert("Test envoyé ! Regarde ton téléphone.");
+              } else {
+                alert("Impossible de tester sans notifications existantes pour identifier ton ID.");
+              }
+            }}
+          >
+            Tester l'envoi 🧪
           </Button>
         </SheetHeader>
         <SheetBody className="p-0">
