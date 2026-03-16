@@ -24,9 +24,8 @@ export function NotificationBell({ initialCount = 0 }: { initialCount?: number }
     };
 
     useEffect(() => {
-        // Only fetch if we're not using the initialCount from revalidation
-        // or for regular polling
-        const interval = setInterval(fetchCount, 60000);
+        // Rafraîchissement toutes les 2 secondes pour un effet instantané
+        const interval = setInterval(fetchCount, 2000);
 
         return () => clearInterval(interval);
     }, []);

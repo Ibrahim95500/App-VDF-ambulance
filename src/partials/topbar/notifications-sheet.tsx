@@ -5,9 +5,11 @@ import Link from 'next/link';
 import { Calendar, Settings, Settings2, Shield, Users, Clock, CheckCircle, XCircle, Info, X, Siren } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getNotifications, markAllAsRead, markAsRead, dismissNotification } from '@/actions/notifications.actions';
-import { getVapidPublicKey, savePushSubscription } from '@/actions/web-push.actions';
+import { getVapidPublicKey, savePushSubscription, saveFcmToken } from '@/actions/web-push.actions';
 import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
+import { Capacitor } from '@capacitor/core';
+import { PushNotifications } from '@capacitor/push-notifications';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -50,21 +52,32 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 export function NotificationsSheet({ trigger, onAllRead }: { trigger: ReactNode; onAllRead?: () => void }) {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
 
-  const fetchNotifications = async () => {
+  const fetchNotifications = async (isSilent = false) => {
     try {
+      if (!isSilent) setLoading(true);
       const data = await getNotifications();
       setNotifications(data);
     } catch (err) {
       console.error(err);
     } finally {
-      setLoading(false);
+      if (!isSilent) setLoading(false);
     }
   };
 
   useEffect(() => {
     fetchNotifications();
   }, []);
+
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isOpen) {
+      // Polling toutes les 2 secondes quand le panneau est ouvert
+      interval = setInterval(() => fetchNotifications(true), 2000);
+    }
+    return () => clearInterval(interval);
+  }, [isOpen]);
 
   const handleMarkAllAsRead = async () => {
     await markAllAsRead();
@@ -85,9 +98,9 @@ export function NotificationsSheet({ trigger, onAllRead }: { trigger: ReactNode;
     return <Calendar className="size-4 text-blue-500" />;
   };
   const handleOpenChange = (open: boolean) => {
+    setIsOpen(open);
     if (open) {
       fetchNotifications();
-      // On mark comme tout lu quand on ouvre pour décrémenter le compteur de la cloche
       handleMarkAllAsRead();
     }
   };
@@ -105,6 +118,30 @@ export function NotificationsSheet({ trigger, onAllRead }: { trigger: ReactNode;
             size="sm"
             className="h-7 text-[10px] border-orange-200 text-orange-700 hover:bg-orange-100 font-bold px-2 rounded-full mt-3 dark:border-orange-500/30 dark:text-orange-400 dark:hover:bg-orange-900/30"
             onClick={async () => {
+              if (Capacitor.isNativePlatform()) {
+                try {
+                  let permStatus = await PushNotifications.checkPermissions();
+                  if (permStatus.receive === 'prompt') {
+                    permStatus = await PushNotifications.requestPermissions();
+                  }
+
+                  if (permStatus.receive === 'granted') {
+                    await PushNotifications.register();
+                    await PushNotifications.addListener('registration', async (token) => {
+                      await saveFcmToken(token.value);
+                      alert("Notifications mobiles activées ! 🚀");
+                    });
+                  } else {
+                    alert("Autorisation refusée. Veuillez activer les notifications dans les paramètres de votre téléphone.");
+                  }
+                  return;
+                } catch (error) {
+                  console.error("Capacitor Push Error:", error);
+                  alert("Une erreur est survenue sur l'application native.");
+                  return;
+                }
+              }
+
               if (!("Notification" in window) || !("serviceWorker" in navigator)) {
                 alert("Ce navigateur ne supporte pas les notifications avancées.");
                 return;
