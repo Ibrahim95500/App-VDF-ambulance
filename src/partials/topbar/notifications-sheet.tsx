@@ -118,50 +118,57 @@ export function NotificationsSheet({ trigger, onAllRead }: { trigger: ReactNode;
             size="sm"
             className="h-7 text-[10px] border-orange-200 text-orange-700 hover:bg-orange-100 font-bold px-2 rounded-full mt-3 dark:border-orange-500/30 dark:text-orange-400 dark:hover:bg-orange-900/30"
             onClick={async () => {
-              console.log("Notification button clicked. Platform:", Capacitor.getPlatform());
+              const platform = Capacitor.getPlatform();
+              console.log(">>> CLICK NOTIFICATIONS - Platform:", platform);
               
               if (Capacitor.isNativePlatform()) {
-                alert("Mode Natif détecté ! Tentative d'enregistrement...");
+                console.log(">>> NATIVE DETECTED - Starting Push sequence");
                 try {
-                  // 1. Vérifier les permissions
+                  // 1. Permissions
+                  console.log(">>> Checking permissions...");
                   let permStatus = await PushNotifications.checkPermissions();
+                  console.log(">>> Initial permission status:", permStatus.receive);
+
                   if (permStatus.receive === 'prompt') {
+                    console.log(">>> Requesting permissions...");
                     permStatus = await PushNotifications.requestPermissions();
+                    console.log(">>> New permission status:", permStatus.receive);
                   }
 
                   if (permStatus.receive !== 'granted') {
-                    alert("Autorisation refusée (" + permStatus.receive + ").");
+                    console.warn(">>> Permission NOT granted:", permStatus.receive);
+                    alert("Autorisation nécessaire pour les alertes (" + permStatus.receive + ").");
                     return;
                   }
 
-                  // 2. Préparer les écouteurs AVANT register()
+                  // 2. Listeners
+                  console.log(">>> Setting up Push listeners...");
                   await PushNotifications.removeAllListeners();
                   
-                  PushNotifications.addListener('registration', async (token) => {
-                    console.log('Push registration success:', token.value);
+                  await PushNotifications.addListener('registration', async (token) => {
+                    console.log('>>> SUCCESS: FCM Token received:', token.value);
                     await saveFcmToken(token.value);
-                    alert("Notifications mobiles activées ! 🚀");
+                    alert("Notifications mobiles activées ! Appuyez sur OK pour finir. 🚀");
                   });
 
-                  PushNotifications.addListener('registrationError', (error: any) => {
-                    console.error('Push registration error:', error);
-                    alert("Erreur d'enregistrement Google/FCM : " + JSON.stringify(error));
+                  await PushNotifications.addListener('registrationError', (error: any) => {
+                    console.error('>>> ERROR: Push registration fails:', error);
+                    alert("Erreur Google/FCM : " + JSON.stringify(error));
                   });
 
-                  // 3. Lancer l'enregistrement
+                  // 3. Register
+                  console.log(">>> Calling PushNotifications.register()...");
                   await PushNotifications.register();
-                  
-                  // Petit message de patience car FCM peut mettre 2-3 secondes
-                  console.log("Push register() appelé, attente du token...");
+                  console.log(">>> Register called, waiting for 'registration' event...");
                   
                 } catch (error) {
-                  console.error("Capacitor Push Error:", error);
-                  alert("Erreur système : " + (error instanceof Error ? error.message : JSON.stringify(error)));
+                  console.error(">>> CRITICAL ERROR in Push sequence:", error);
+                  alert("Erreur système : " + (error instanceof Error ? error.message : "Inconnue"));
                 }
                 return;
               }
 
-              alert("Mode Web (PWA) détecté.");
+              console.log(">>> WEB/PWA DETECTED");
               if (!("Notification" in window) || !("serviceWorker" in navigator)) {
                 alert("Ce navigateur ne supporte pas les notifications avancées.");
                 return;
