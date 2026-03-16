@@ -118,7 +118,10 @@ export function NotificationsSheet({ trigger, onAllRead }: { trigger: ReactNode;
             size="sm"
             className="h-7 text-[10px] border-orange-200 text-orange-700 hover:bg-orange-100 font-bold px-2 rounded-full mt-3 dark:border-orange-500/30 dark:text-orange-400 dark:hover:bg-orange-900/30"
             onClick={async () => {
+              console.log("Notification button clicked. Platform:", Capacitor.getPlatform());
+              
               if (Capacitor.isNativePlatform()) {
+                alert("Mode Natif détecté ! Tentative d'enregistrement...");
                 try {
                   let permStatus = await PushNotifications.checkPermissions();
                   if (permStatus.receive === 'prompt') {
@@ -132,16 +135,17 @@ export function NotificationsSheet({ trigger, onAllRead }: { trigger: ReactNode;
                       alert("Notifications mobiles activées ! 🚀");
                     });
                   } else {
-                    alert("Autorisation refusée. Veuillez activer les notifications dans les paramètres de votre téléphone.");
+                    alert("Autorisation refusée (" + permStatus.receive + ").");
                   }
                   return;
                 } catch (error) {
                   console.error("Capacitor Push Error:", error);
-                  alert("Une erreur est survenue sur l'application native.");
+                  alert("Erreur native : " + (error instanceof Error ? error.message : JSON.stringify(error)));
                   return;
                 }
               }
 
+              alert("Mode Web (PWA) détecté.");
               if (!("Notification" in window) || !("serviceWorker" in navigator)) {
                 alert("Ce navigateur ne supporte pas les notifications avancées.");
                 return;
