@@ -69,19 +69,23 @@ export async function getVapidPublicKey() {
 }
 
 export async function sendPushNotification(userId: string, title: string, message: string, url: string = "/") {
+    console.log(`[PUSH_DEBUG] Start: userId=${userId}, title=${title}`);
     try {
         // 1. Web Push (PWA)
         const webSubscriptions = await db.pushSubscription.findMany({
             where: { userId }
-        })
+        });
 
         // 2. Native Push (Capacitor/FCM)
         const fcmTokens = await db.fcmToken.findMany({
             where: { userId }
-        })
+        });
+
+        console.log(`[PUSH_DEBUG] Target User ${userId}: Found ${webSubscriptions.length} Web subs and ${fcmTokens.length} FCM tokens`);
 
         if (webSubscriptions.length === 0 && fcmTokens.length === 0) {
-            return { success: false, message: "No subscriptions found" }
+            console.log(`[PUSH_DEBUG] No subscriptions for user ${userId}, aborting.`);
+            return { success: false, message: "No subscriptions found" };
         }
 
         const payload = JSON.stringify({
@@ -89,9 +93,9 @@ export async function sendPushNotification(userId: string, title: string, messag
             body: message,
             url,
             icon: "/media/app/logo.png"
-        })
+        });
 
-        const removePromises: Promise<any>[] = []
+        const removePromises: Promise<any>[] = [];
 
         // Send Web Push
         const webNotifications = webSubscriptions.map(sub => {
@@ -103,7 +107,7 @@ export async function sendPushNotification(userId: string, title: string, messag
                 }
             };
             const options = {
-                TTL: 24 * 60 * 60, // 24 hours
+                TTL: 24 * 60 * 60,
                 urgency: 'high' as const
             };
 
@@ -111,18 +115,21 @@ export async function sendPushNotification(userId: string, title: string, messag
                 if (error.statusCode === 404 || error.statusCode === 410) {
                     removePromises.push(
                         db.pushSubscription.delete({ where: { id: sub.id } })
-                    )
+                    );
                 } else {
-                    console.error("Error sending web push:", error)
+                    console.error("[PUSH_DEBUG] Web Push Error:", error);
                 }
-            })
-        })
+            });
+        });
 
         // Send FCM (Native)
         let fcmNotification = Promise.resolve();
         const fcm = getFcm();
+        
         if (fcm && fcmTokens.length > 0) {
             const tokens = fcmTokens.map((t: any) => t.token);
+            console.log(`[PUSH_DEBUG] Sending FCM to ${tokens.length} tokens...`);
+            
             fcmNotification = fcm.sendEachForMulticast({
                 tokens,
                 notification: {
@@ -131,6 +138,15 @@ export async function sendPushNotification(userId: string, title: string, messag
                 },
                 data: {
                     url,
+                },
+                android: {
+                    priority: 'high',
+                    notification: {
+                        sound: 'default',
+                        clickAction: 'FCM_PLUGIN_ACTIVITY',
+                        icon: 'stock_ticker_update',
+                        color: '#f97316'
+                    }
                 },
                 apns: {
                     payload: {
@@ -141,32 +157,36 @@ export async function sendPushNotification(userId: string, title: string, messag
                     },
                 },
             }).then((response) => {
+                console.log(`[PUSH_DEBUG] FCM Multicast Result: success=${response.successCount}, failure=${response.failureCount}`);
                 if (response.failureCount > 0) {
                     response.responses.forEach((resp, idx) => {
                         if (!resp.success) {
                             const error = resp.error;
+                            console.error(`[PUSH_DEBUG] FCM Token Error [${idx}]:`, error);
                             if (error?.code === 'messaging/invalid-registration-token' ||
                                 error?.code === 'messaging/registration-token-not-registered') {
                                 removePromises.push(
                                     db.fcmToken.delete({ where: { token: tokens[idx] } })
-                                )
+                                );
                             }
                         }
                     });
                 }
             }).catch(error => {
-                console.error("Error sending FCM notification:", error);
+                console.error("[PUSH_DEBUG] Critical FCM Error:", error);
             });
+        } else {
+            console.log(`[PUSH_DEBUG] FCM skipped: fcmExists=${!!fcm}, tokenCount=${fcmTokens.length}`);
         }
 
-        await Promise.allSettled([...webNotifications, fcmNotification])
+        await Promise.allSettled([...webNotifications, fcmNotification]);
         if (removePromises.length > 0) {
-            await Promise.allSettled(removePromises)
+            await Promise.allSettled(removePromises);
         }
 
-        return { success: true }
+        return { success: true };
     } catch (error) {
-        console.error("Failed to send push notification:", error)
-        return { error: "Erreur d'envoi de notification push" }
+        console.error("[PUSH_DEBUG] Global Error:", error);
+        return { error: "Erreur d'envoi de notification push" };
     }
 }
