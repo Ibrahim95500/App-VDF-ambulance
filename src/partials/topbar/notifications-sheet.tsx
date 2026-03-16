@@ -123,26 +123,42 @@ export function NotificationsSheet({ trigger, onAllRead }: { trigger: ReactNode;
               if (Capacitor.isNativePlatform()) {
                 alert("Mode Natif détecté ! Tentative d'enregistrement...");
                 try {
+                  // 1. Vérifier les permissions
                   let permStatus = await PushNotifications.checkPermissions();
                   if (permStatus.receive === 'prompt') {
                     permStatus = await PushNotifications.requestPermissions();
                   }
 
-                  if (permStatus.receive === 'granted') {
-                    await PushNotifications.register();
-                    await PushNotifications.addListener('registration', async (token) => {
-                      await saveFcmToken(token.value);
-                      alert("Notifications mobiles activées ! 🚀");
-                    });
-                  } else {
+                  if (permStatus.receive !== 'granted') {
                     alert("Autorisation refusée (" + permStatus.receive + ").");
+                    return;
                   }
-                  return;
+
+                  // 2. Préparer les écouteurs AVANT register()
+                  await PushNotifications.removeAllListeners();
+                  
+                  PushNotifications.addListener('registration', async (token) => {
+                    console.log('Push registration success:', token.value);
+                    await saveFcmToken(token.value);
+                    alert("Notifications mobiles activées ! 🚀");
+                  });
+
+                  PushNotifications.addListener('registrationError', (error: any) => {
+                    console.error('Push registration error:', error);
+                    alert("Erreur d'enregistrement Google/FCM : " + JSON.stringify(error));
+                  });
+
+                  // 3. Lancer l'enregistrement
+                  await PushNotifications.register();
+                  
+                  // Petit message de patience car FCM peut mettre 2-3 secondes
+                  console.log("Push register() appelé, attente du token...");
+                  
                 } catch (error) {
                   console.error("Capacitor Push Error:", error);
-                  alert("Erreur native : " + (error instanceof Error ? error.message : JSON.stringify(error)));
-                  return;
+                  alert("Erreur système : " + (error instanceof Error ? error.message : JSON.stringify(error)));
                 }
+                return;
               }
 
               alert("Mode Web (PWA) détecté.");
