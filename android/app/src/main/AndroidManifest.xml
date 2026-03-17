@@ -28,9 +28,18 @@
             <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/file_paths" />
         </provider>
 
-        <meta-data android:name="com.google.firebase.messaging.default_notification_channel_id" android:value="vdf-notifications" />
-        <meta-data android:name="com.google.firebase.messaging.default_notification_icon" android:resource="@mipmap/ic_launcher" />
-        <meta-data android:name="com.google.firebase.messaging.default_notification_color" android:resource="@android:color/holo_orange_dark" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="vdf-notifications"
+        />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@mipmap/ic_launcher"
+        />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_color"
+            android:resource="@android:color/holo_orange_dark"
+        />
     </application>
 
     <!-- Permissions -->
@@ -39,5 +48,5 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <!-- Requis pour Android 13+ -->
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 </manifest>

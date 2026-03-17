@@ -1,10 +1,12 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, ReactNode } from 'react';
 import { Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { NotificationsSheet } from './notifications-sheet';
 import { getUnreadNotificationsCount } from '@/actions/notifications.actions';
+import { Capacitor } from '@capacitor/core';
+import { Badge } from '@capacitor/badge';
 
 export function NotificationBell({ initialCount = 0 }: { initialCount?: number }) {
     const [count, setCount] = useState(initialCount);
@@ -18,6 +20,15 @@ export function NotificationBell({ initialCount = 0 }: { initialCount?: number }
         try {
             const c = await getUnreadNotificationsCount();
             setCount(c);
+            
+            // Mise à jour du badge sur l'icône de l'app (mobile uniquement)
+            if (Capacitor.isNativePlatform()) {
+                try {
+                    await Badge.set({ count: c });
+                } catch (badgeErr) {
+                    console.error("Failed to set badge:", badgeErr);
+                }
+            }
         } catch (err) {
             console.error("Error fetching notifications count:", err);
         }
