@@ -311,8 +311,15 @@ export function NotificationsSheet({ trigger, onAllRead }: { trigger: ReactNode;
                             className="size-6 opacity-30 group-hover:opacity-100 touch:opacity-100 transition-opacity text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950"
                             onClick={async (e) => {
                               e.stopPropagation();
-                              await dismissNotification(n.id);
-                              fetchNotifications();
+                              try {
+                                // Feedback visuel immédiat (optimistic update)
+                                setNotifications(prev => prev.filter(item => item.id !== n.id));
+                                await dismissNotification(n.id);
+                                // Pas besoin de fetchNotifications ici car on a déjà filtré localement
+                              } catch (err) {
+                                console.error("Erreur suppression:", err);
+                                fetchNotifications(true); // Re-synchroniser en cas d'erreur
+                              }
                             }}
                           >
                             <X size={14} />
