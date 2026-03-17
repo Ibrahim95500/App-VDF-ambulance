@@ -239,14 +239,16 @@ export function NotificationsSheet({ trigger, onAllRead }: { trigger: ReactNode;
             size="sm"
             className="h-7 text-[10px] border-blue-200 text-blue-700 hover:bg-blue-100 font-bold px-2 rounded-full mt-2 dark:border-blue-500/30 dark:text-blue-400 dark:hover:bg-blue-900/30"
             onClick={async () => {
-              const session: any = await getNotifications(); // Just to trigger a server call if needed, but we need session
-              // We'll use a hack to get the userId from notifications or just try to send to self
-              if (notifications.length > 0) {
-                const userId = notifications[0].userId; 
-                await sendPushNotification(userId, "Test VDF", "Ceci est une notification de test ! 🚀", "/dashboard/salarie");
-                alert("Test envoyé ! Regarde ton téléphone.");
+              if (session?.user?.id) {
+                await sendPushNotification(
+                  session.user.id, 
+                  "Test VDF - " + (session.user.name || "Utilisateur"), 
+                  "Ceci est une notification de test pour vérifier le son et l'arrière-plan ! 🚀", 
+                  "/dashboard/salarie"
+                );
+                alert("Test envoyé ! Regarde ton téléphone (ferme l'app pour tester le son).");
               } else {
-                alert("Impossible de tester sans notifications existantes pour identifier ton ID.");
+                alert("Erreur : Session non trouvée. Reconnecte-toi.");
               }
             }}
           >
