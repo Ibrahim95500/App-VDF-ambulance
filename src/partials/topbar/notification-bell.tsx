@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { NotificationsSheet } from './notifications-sheet';
 import { getUnreadNotificationsCount } from '@/actions/notifications.actions';
 import { Capacitor } from '@capacitor/core';
-import { Badge } from '@capacitor/badge';
 
 export function NotificationBell({ initialCount = 0 }: { initialCount?: number }) {
     const [count, setCount] = useState(initialCount);
@@ -24,6 +23,7 @@ export function NotificationBell({ initialCount = 0 }: { initialCount?: number }
             // Mise à jour du badge sur l'icône de l'app (mobile uniquement)
             if (Capacitor.isNativePlatform()) {
                 try {
+                    const { Badge } = await import('@capacitor/badge');
                     await Badge.set({ count: c });
                 } catch (badgeErr) {
                     console.error("Failed to set badge:", badgeErr);
