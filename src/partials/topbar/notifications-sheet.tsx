@@ -157,6 +157,11 @@ export function NotificationsSheet({ trigger, onAllRead }: { trigger: ReactNode;
                     alert("Erreur Google/FCM : " + JSON.stringify(error));
                   });
 
+                  await PushNotifications.addListener('pushNotificationReceived', (notification) => {
+                    console.log('>>> Push received in foreground:', notification);
+                    alert("Alerte reçue (App ouverte) : " + notification.title + "\n" + notification.body);
+                  });
+
                   // 3. Register
                   console.log(">>> Calling PushNotifications.register()...");
                   await PushNotifications.register();
