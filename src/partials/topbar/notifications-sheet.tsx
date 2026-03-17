@@ -51,6 +51,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 // Les imports Item1 à Item20 ont été retirés car ils étaient inutilisés et provoquaient des erreurs de build.
 
 export function NotificationsSheet({ trigger, onAllRead }: { trigger: ReactNode; onAllRead?: () => void }) {
+  const { data: session } = useSession();
   const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
