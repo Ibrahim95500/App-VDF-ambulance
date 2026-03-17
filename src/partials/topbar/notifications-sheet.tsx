@@ -318,7 +318,7 @@ export function NotificationsSheet({ trigger, onAllRead }: { trigger: ReactNode;
                                 // Feedback visuel immédiat (optimistic update)
                                 setNotifications(prev => prev.filter(item => item.id !== n.id));
                                 await dismissNotification(n.id);
-                                // Pas besoin de fetchNotifications ici car on a déjà filtré localement
+                                if (onAllRead) onAllRead(); // Rafraîchir le badge immédiatement
                               } catch (err) {
                                 console.error("Erreur suppression:", err);
                                 fetchNotifications(true); // Re-synchroniser en cas d'erreur

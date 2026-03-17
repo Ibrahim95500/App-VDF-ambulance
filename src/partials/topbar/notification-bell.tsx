@@ -5,6 +5,7 @@ import { Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { NotificationsSheet } from './notifications-sheet';
 import { getUnreadNotificationsCount } from '@/actions/notifications.actions';
+import { Capacitor } from '@capacitor/core';
 
 export function NotificationBell({ initialCount = 0 }: { initialCount?: number }) {
     const [count, setCount] = useState(initialCount);
@@ -18,6 +19,17 @@ export function NotificationBell({ initialCount = 0 }: { initialCount?: number }
         try {
             const c = await getUnreadNotificationsCount();
             setCount(c);
+            
+            // Mise à jour de la pastille (badge) sur l'icône (mobile uniquement)
+            if (Capacitor.isNativePlatform()) {
+                try {
+                    const { Badge } = await import('@capawesome/capacitor-badge');
+                    await Badge.set({ count: c });
+                } catch (badgeErr) {
+                    // On ne loggue pas d'erreur persistante car ShortcutBadger peut râler sur certains lanceurs Android
+                    console.log("Badge sync quiet skip (Normal sur certains Android)");
+                }
+            }
         } catch (err) {
             console.error("Error fetching notifications count:", err);
         }
