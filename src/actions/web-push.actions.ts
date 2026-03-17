@@ -147,8 +147,7 @@ export async function sendPushNotification(userId: string, title: string, messag
                         icon: 'stock_ticker_update',
                         color: '#f97316',
                         channelId: 'vdf-notifications',
-                        visibility: 'public',
-                        notificationPriority: 'priorityHigh',
+                        visibility: 'public'
                     }
                 },
                 apns: {
