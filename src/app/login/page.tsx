@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent } from "@/components/ui/card"
 import Link from 'next/link';
 import { VdfLogo } from '@/components/vdf-logo';
+import { Smartphone } from 'lucide-react';
 
 export default async function LoginPage({
     searchParams
@@ -156,6 +157,18 @@ export default async function LoginPage({
                                 Se connecter
                             </Button>
                         </form>
+
+                        <div className="mt-8 pt-6 border-t border-gray-100 flex flex-col items-center">
+                            <Link 
+                                href="/downloads/vdf-ambulance.apk" 
+                                className="flex items-center gap-2 text-xs font-bold text-gray-500 hover:text-blue-600 transition-colors group bg-gray-50 px-4 py-2 rounded-full border border-gray-100 hover:border-blue-100 shadow-sm"
+                                download
+                            >
+                                <Smartphone size={16} className="text-blue-600 group-hover:scale-110 transition-transform" />
+                                <span>Télécharger l'application Android (.apk)</span>
+                            </Link>
+                            <p className="text-[10px] text-gray-400 mt-2 italic">Version 1.0.3 - Dernière mise à jour</p>
+                        </div>
                     </div>
                 </CardContent>
             </Card>
