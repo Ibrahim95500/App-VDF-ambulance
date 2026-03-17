@@ -7,7 +7,12 @@ const config: CapacitorConfig = {
   server: {
     url: 'https://dev.vdf-ambulance.fr',
     cleartext: true
-  }
+  },
+  plugins: {
+    PushNotifications: {
+      presentationOptions: ["badge", "sound", "alert"],
+    },
+  },
 };
 
 export default config;

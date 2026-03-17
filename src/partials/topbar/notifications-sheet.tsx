@@ -139,10 +139,29 @@ export function NotificationsSheet({ trigger, onAllRead }: { trigger: ReactNode;
                   if (permStatus.receive !== 'granted') {
                     console.warn(">>> Permission NOT granted:", permStatus.receive);
                     alert("Autorisation nécessaire pour les alertes (" + permStatus.receive + ").");
-                    return;
+                     return;
                   }
 
-                  // 2. Listeners
+                  // 2. Create Notification Channel for Android (CRITICAL for background)
+                  if (platform === 'android') {
+                    console.log(">>> Creating notification channel...");
+                    try {
+                      await PushNotifications.createChannel({
+                        id: 'vdf-notifications',
+                        name: 'Alertes VDF',
+                        description: 'Notifications pour les demandes et rendez-vous',
+                        importance: 5,
+                        visibility: 1,
+                        vibration: true,
+                        sound: 'default'
+                      });
+                      console.log(">>> Channel created successfully");
+                    } catch (err) {
+                      console.error(">>> Failed to create channel:", err);
+                    }
+                  }
+
+                  // 3. Listeners
                   console.log(">>> Setting up Push listeners...");
                   await PushNotifications.removeAllListeners();
                   

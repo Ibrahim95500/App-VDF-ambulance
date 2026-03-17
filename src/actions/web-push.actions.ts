@@ -98,7 +98,7 @@ export async function sendPushNotification(userId: string, title: string, messag
         const removePromises: Promise<any>[] = [];
 
         // Send Web Push
-        const webNotifications = webSubscriptions.map(sub => {
+        const webNotifications = webSubscriptions.map((sub: any) => {
             const pushSubscription = {
                 endpoint: sub.endpoint,
                 keys: {
@@ -145,7 +145,8 @@ export async function sendPushNotification(userId: string, title: string, messag
                         sound: 'default',
                         clickAction: 'FCM_PLUGIN_ACTIVITY',
                         icon: 'stock_ticker_update',
-                        color: '#f97316'
+                        color: '#f97316',
+                        channelId: 'vdf-notifications'
                     }
                 },
                 apns: {
