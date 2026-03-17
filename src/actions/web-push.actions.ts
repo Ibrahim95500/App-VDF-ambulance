@@ -146,7 +146,9 @@ export async function sendPushNotification(userId: string, title: string, messag
                         clickAction: 'FCM_PLUGIN_ACTIVITY',
                         icon: 'stock_ticker_update',
                         color: '#f97316',
-                        channelId: 'vdf-notifications'
+                        channelId: 'vdf-notifications',
+                        visibility: 'public',
+                        notificationPriority: 'priorityHigh',
                     }
                 },
                 apns: {
