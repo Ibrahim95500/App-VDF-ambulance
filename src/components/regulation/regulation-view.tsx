@@ -314,7 +314,7 @@ export function RegulationView() {
             ) : viewMode === 'REGULATION' ? (
                 <RegulationTab data={regulationData} personnel={personnel} dateStr={format(date, 'yyyy-MM-dd')} onSuccess={loadData} />
             ) : viewMode === 'DISPO' ? (
-                <DispoTab data={dispoData} personnel={personnel} vehicles={vehicles} dateStr={format(date, 'yyyy-MM-dd')} onSuccess={loadData} />
+                <DispoTab data={dispoData} personnel={personnel} vehicles={[...vehiclesJour, ...vehiclesNuit]} dateStr={format(date, 'yyyy-MM-dd')} onSuccess={loadData} />
             ) : (
                 <>
                     {/* Filters Row (Planning Mode ONLY) */}
