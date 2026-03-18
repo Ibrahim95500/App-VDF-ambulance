@@ -186,7 +186,7 @@ export function RegulationView() {
     const statusObj = getStatusDisplay();
 
     return (
-        <div className="flex flex-col gap-6 p-6 pb-24">
+        <div className="flex flex-col gap-4 p-3 sm:p-6 pb-24 overflow-x-hidden">
             {/* Header / Toolbar */}
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 shadow-sm">
                 <div>

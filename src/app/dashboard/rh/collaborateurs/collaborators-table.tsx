@@ -54,11 +54,12 @@ export function CollaboratorsTable({ initialData, services = [] }: { initialData
     const [searchTerm, setSearchTerm] = useState("")
     const [roleFilter, setRoleFilter] = useState("ALL")
     const [statusFilter, setStatusFilter] = useState("ALL")
+    const [structureFilter, setStructureFilter] = useState("ALL")
     const [dateRange, setDateRange] = useState<DateRange | undefined>()
     const [currentPage, setCurrentPage] = useState(1)
     const PAGE_SIZE = 10
 
-    useEffect(() => { setCurrentPage(1) }, [searchTerm, roleFilter, statusFilter, dateRange])
+    useEffect(() => { setCurrentPage(1) }, [searchTerm, roleFilter, statusFilter, structureFilter, dateRange])
 
     // Deactivation state
     const [userToDeactivate, setUserToDeactivate] = useState<User | null>(null)
@@ -295,6 +296,13 @@ export function CollaboratorsTable({ initialData, services = [] }: { initialData
             // Role filter
             if (roleFilter !== "ALL" && !user.roles?.includes(roleFilter)) return false
 
+            // Structure filter (VDF / MARK)
+            if (structureFilter !== "ALL") {
+                const userStructure = (user.structure || "").toUpperCase()
+                if (structureFilter === "VDF" && !userStructure.includes("VDF")) return false
+                if (structureFilter === "MARK" && !userStructure.includes("MARK")) return false
+            }
+
             // Active/Inactive filter (only for non-deleted)
             if (statusFilter !== "ALL" && statusFilter !== "DELETED") {
                 const isActive = (user as any).isActive !== false
@@ -312,7 +320,7 @@ export function CollaboratorsTable({ initialData, services = [] }: { initialData
 
             return true
         })
-    }, [initialData, searchTerm, roleFilter, statusFilter, dateRange])
+    }, [initialData, searchTerm, roleFilter, statusFilter, structureFilter, dateRange])
 
     const paginatedData = useMemo(() => {
         const start = (currentPage - 1) * PAGE_SIZE
@@ -334,6 +342,26 @@ export function CollaboratorsTable({ initialData, services = [] }: { initialData
 
     return (
         <div className="flex flex-col gap-6">
+            {/* Filtres Structure VDF / MARK */}
+            <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider mr-1">Structure :</span>
+                {(["ALL", "VDF", "MARK"] as const).map((s) => (
+                    <button
+                        key={s}
+                        onClick={() => setStructureFilter(s)}
+                        className={`px-3 py-1.5 rounded-lg border text-xs font-bold transition-all ${
+                            structureFilter === s
+                                ? s === "VDF" ? "bg-blue-50 text-blue-700 border-blue-300 shadow-sm"
+                                    : s === "MARK" ? "bg-orange-50 text-orange-700 border-orange-300 shadow-sm"
+                                    : "bg-muted text-foreground border-border shadow-sm"
+                                : "bg-background text-muted-foreground border-border hover:bg-muted"
+                        }`}
+                    >
+                        {s === "ALL" ? "🏢 Toutes" : s === "VDF" ? "🔵 VDF" : "🟠 MARK"}
+                    </button>
+                ))}
+            </div>
+
             <div className="flex flex-wrap items-center gap-4">
                 <button 
                     onClick={() => setStatusFilter("ACTIVE")}

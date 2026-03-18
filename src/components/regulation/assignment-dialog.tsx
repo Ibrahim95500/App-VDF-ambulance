@@ -258,14 +258,14 @@ export function AssignmentDialog({
                     </div>
                 )}
 
-                <DialogFooter className="flex gap-2 sm:gap-0">
-                    <Button variant="outline" onClick={() => onOpenChange(false)} className="flex-1">
-                        Annuler
+                <DialogFooter className="flex gap-3 sm:gap-3 pt-2">
+                    <Button variant="outline" onClick={() => onOpenChange(false)} className="flex-1 h-12 text-base font-bold rounded-xl">
+                        ✕ Annuler
                     </Button>
                     <Button
                         onClick={handleSave}
                         disabled={loading || isSamePerson}
-                        className="flex-1 bg-[#FF4500] hover:bg-[#CC3700] text-white font-bold"
+                        className="flex-1 h-12 text-base bg-[#FF4500] hover:bg-[#CC3700] text-white font-bold rounded-xl"
                     >
                         {loading ? <Loader2 className="animate-spin mr-2" /> : <CheckCircle2 size={18} className="mr-2" />}
                         Enregistrer

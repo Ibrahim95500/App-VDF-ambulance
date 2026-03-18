@@ -16,7 +16,8 @@ export function InstallPWAPrompt() {
 
         // Check if app is already installed or running natively via Capacitor
         const isStandalone = window.matchMedia('(display-mode: standalone)').matches
-        const isNativeCapacitor = typeof window !== 'undefined' && (window as any).Capacitor?.isNative
+        const { Capacitor } = require('@capacitor/core')
+        const isNativeCapacitor = Capacitor.isNativePlatform()
 
         if (isStandalone || isNativeCapacitor) return
 
