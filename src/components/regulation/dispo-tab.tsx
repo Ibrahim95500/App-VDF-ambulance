@@ -188,36 +188,7 @@ export function DispoTab({ data, personnel, vehicles, dateStr, onSuccess }: Disp
                 )}
             </div>
 
-            {/* Formulaire d'ajout rapide */}
-            <div>
-                <Card className="shadow-sm border-2 sticky top-6">
-                    <CardHeader className="bg-slate-50/50 border-b p-4">
-                        <CardTitle className="text-lg font-black flex items-center gap-2">
-                            <Plus className="text-orange-500 bg-orange-100 p-1 rounded-full" size={24} /> Ajouter Dispo
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4 pt-6">
-                        <div className="space-y-1.5">
-                            <label className="text-sm font-bold opacity-70">Salarié</label>
-                            <Select value={selectedUser} onValueChange={setSelectedUser}>
-                                <SelectTrigger><SelectValue placeholder="Sélectionner" /></SelectTrigger>
-                                <SelectContent>
-                                    {personnel.map(p => (
-                                        <SelectItem key={p.id} value={p.id}>{p.lastName} {p.firstName}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="space-y-1.5">
-                            <label className="text-sm font-bold opacity-70">Heure de début (prévue)</label>
-                            <Input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className="font-bold" />
-                        </div>
-                        <Button className="w-full font-bold bg-orange-500 hover:bg-orange-600 text-white shadow-sm" onClick={handleAdd} disabled={loading}>
-                            Ajouter à la liste
-                        </Button>
-                    </CardContent>
-                </Card>
-            </div>
+
 
             {/* Modal de Relais */}
             <Dialog open={integrateModalOpen} onOpenChange={setIntegrateModalOpen}>
