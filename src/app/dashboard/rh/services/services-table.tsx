@@ -152,8 +152,16 @@ export function RHServiceRequestsTable({ initialData }: { initialData: GlobalSer
                     </div>
                 ) : paginatedData.map((req) => (
                     <div key={req.id} className="p-4 flex gap-3 items-start hover:bg-muted/5 transition-colors">
-                        <div className="size-9 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center shrink-0 border border-primary/20 text-xs">
-                            {(req.user.firstName?.[0] || 'U')}{(req.user.lastName?.[0] || '')}
+                        <div className="relative shrink-0">
+                            <div className="size-9 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center border border-primary/20 text-xs">
+                                {(req.user.firstName?.[0] || 'U')}{(req.user.lastName?.[0] || '')}
+                            </div>
+                            {req.status === 'PENDING' && (
+                                <span className="absolute -top-0.5 -right-0.5 flex size-3">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full size-3 bg-red-500 border border-background"></span>
+                                </span>
+                            )}
                         </div>
                         <div className="flex flex-col grow gap-1.5 min-w-0">
                             <div className="flex items-start justify-between gap-2">
@@ -248,8 +256,16 @@ export function RHServiceRequestsTable({ initialData }: { initialData: GlobalSer
                                 <tr key={req.id} className="hover:bg-muted/10 transition-colors">
                                     <td className="px-4 py-3">
                                         <div className="flex items-center gap-3">
-                                            <div className="size-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs border border-primary/20">
-                                                {(req.user.firstName?.[0] || 'U')}{(req.user.lastName?.[0] || '')}
+                                            <div className="relative shrink-0">
+                                                <div className="size-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs border border-primary/20">
+                                                    {(req.user.firstName?.[0] || 'U')}{(req.user.lastName?.[0] || '')}
+                                                </div>
+                                                {req.status === 'PENDING' && (
+                                                    <span className="absolute -top-0.5 -right-0.5 flex size-3">
+                                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
+                                                        <span className="relative inline-flex rounded-full size-3 bg-red-500 border border-background"></span>
+                                                    </span>
+                                                )}
                                             </div>
                                             <div className="flex flex-col">
                                                 <span className="font-semibold text-foreground leading-none">{req.user.firstName} {req.user.lastName}</span>

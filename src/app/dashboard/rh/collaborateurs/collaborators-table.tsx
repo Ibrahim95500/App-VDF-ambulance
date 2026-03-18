@@ -351,13 +351,13 @@ export function CollaboratorsTable({ initialData, services = [] }: { initialData
                         onClick={() => setStructureFilter(s)}
                         className={`px-3 py-1.5 rounded-lg border text-xs font-bold transition-all ${
                             structureFilter === s
-                                ? s === "VDF" ? "bg-blue-50 text-blue-700 border-blue-300 shadow-sm"
-                                    : s === "MARK" ? "bg-orange-50 text-orange-700 border-orange-300 shadow-sm"
+                                ? s === "VDF" ? "bg-orange-50 text-orange-700 border-orange-300 shadow-sm"
+                                    : s === "MARK" ? "bg-blue-50 text-blue-700 border-blue-300 shadow-sm"
                                     : "bg-muted text-foreground border-border shadow-sm"
                                 : "bg-background text-muted-foreground border-border hover:bg-muted"
                         }`}
                     >
-                        {s === "ALL" ? "🏢 Toutes" : s === "VDF" ? "🔵 VDF" : "🟠 MARK"}
+                        {s === "ALL" ? "🏢 Toutes" : s === "VDF" ? "🟠 VDF" : "🔵 MARK"}
                     </button>
                 ))}
             </div>
