@@ -1,10 +1,12 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { getVehiclesWithAssignments, getAvailablePersonnel, getRegulationHistory } from "@/actions/regulation.actions"
+import { getVehiclesWithAssignments, getAvailablePersonnel, getRegulationHistory, getRegulationAssignments, getDisponibilities } from "@/actions/regulation.actions"
 
 import { AmbulanceCard } from "@/components/regulation/ambulance-card"
 import { AssignmentDialog } from "@/components/regulation/assignment-dialog"
+import { RegulationTab } from "@/components/regulation/regulation-tab"
+import { DispoTab } from "@/components/regulation/dispo-tab"
 import { HistoryTable } from "@/components/regulation/history-table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -43,9 +45,11 @@ export function RegulationView() {
     const [activeTab, setActiveTab] = useState<string>("ALL")
     const [currentTime, setCurrentTime] = useState(new Date())
 
-    // History State
-    const [viewMode, setViewMode] = useState<'PLANNING' | 'HISTORY'>('PLANNING')
+    // History & New Tabs State
+    const [viewMode, setViewMode] = useState<'PLANNING_JOUR' | 'PLANNING_NUIT' | 'REGULATION' | 'DISPO' | 'HISTORY'>('PLANNING_JOUR')
     const [historyData, setHistoryData] = useState<any[]>([])
+    const [regulationData, setRegulationData] = useState<any[]>([])
+    const [dispoData, setDispoData] = useState<any[]>([])
     const [loadingHistory, setLoadingHistory] = useState(false)
 
     // Dialog State
@@ -63,11 +67,10 @@ export function RegulationView() {
         return () => clearInterval(timer);
     }, []);
 
-    // Pooling 2s pour le temps réel (Uniquement en mode PLANNING et pour Aujourd'hui/Demain)
+    // Pooling 2s pour le temps réel
     useEffect(() => {
-        if (viewMode !== 'PLANNING') return;
+        if (!viewMode.startsWith('PLANNING')) return;
         
-        // On n'active le pooling intensif que pour les dates proches (Aujourd'hui ou Demain)
         const isNearDate = isToday || isTomorrow;
         if (!isNearDate) return;
 
@@ -113,12 +116,16 @@ export function RegulationView() {
         try {
             if (!isSilent) setLoading(true)
             const dateStr = format(date, 'yyyy-MM-dd')
-            const [vData, pData] = await Promise.all([
+            const [vData, pData, rData, dData] = await Promise.all([
                 getVehiclesWithAssignments(dateStr),
-                getAvailablePersonnel(dateStr)
+                getAvailablePersonnel(dateStr),
+                getRegulationAssignments(dateStr),
+                getDisponibilities(dateStr)
             ])
             setVehicles(vData)
             setPersonnel(pData)
+            setRegulationData(rData)
+            setDispoData(dData)
         } catch (error) {
             console.error("Erreur chargement regulation:", error)
         } finally {
@@ -158,26 +165,12 @@ export function RegulationView() {
         if (isToday) return { label: "En service (Jour J)", className: "bg-purple-100 text-purple-800 border-purple-300" };
         
         if (isTomorrow) {
-            if (currentHour < 19) {
-                const targetTime = new Date(currentTime);
-                targetTime.setHours(19, 0, 0, 0);
-                const diffMs = targetTime.getTime() - currentTime.getTime();
-                const diffHrs = Math.floor(diffMs / (1000 * 60 * 60));
-                const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-                const timeStr = `${diffHrs}h ${diffMins}m`;
-
-                return { label: `Planification en cours (${timeStr} restants)`, className: "bg-blue-100 text-blue-800 border-blue-300 animate-pulse" };
-            } else if (currentHour >= 19 && currentHour < 21) {
-                const totalVehicles = vehicles.filter(v => v.assignments?.length > 0).length;
-                const validatedVehicles = vehicles.filter(v => v.assignments?.[0]?.status === 'VALIDATED').length;
-                
-                return { 
-                    label: `En cours : Véhicules (${validatedVehicles}/${totalVehicles}) • Personnes (${validated} / ${totalPersons})`, 
-                    className: "bg-orange-100 text-orange-800 border-orange-300 font-bold shadow-sm" 
-                };
-            } else {
-                return { label: "Terminé : Préparez le planning du jour suivant", className: "bg-green-100 text-green-800 border-green-300 font-bold" };
-            }
+            const totalVehicles = vehicles.filter(v => v.assignments?.length > 0).length;
+            const validatedVehicles = vehicles.filter(v => v.assignments?.[0]?.status === 'VALIDATED').length;
+            return { 
+                label: `Planification : Véhicules (${validatedVehicles}/${totalVehicles}) • Personnes (${validated} / ${totalPersons})`, 
+                className: "bg-orange-100 text-orange-800 border-orange-300 font-bold shadow-sm" 
+            };
         }
 
         return { label: "Planification en avance", className: "bg-blue-50 text-blue-600 border-blue-200" };
@@ -252,26 +245,56 @@ export function RegulationView() {
             </div>
 
             {/* Main Navigation Tabs */}
-            <div className="flex w-full md:w-auto bg-slate-100 dark:bg-slate-800 p-1.5 rounded-xl border-2 border-slate-200 dark:border-slate-800">
+            <div className="flex flex-wrap w-full bg-slate-100 dark:bg-slate-800 p-1.5 rounded-xl border-2 border-slate-200 dark:border-slate-800">
                 <button
-                    onClick={() => setViewMode('PLANNING')}
-                    className={`flex-1 md:flex-none px-6 py-3 rounded-lg font-bold text-sm transition-all ${
-                        viewMode === 'PLANNING' 
-                            ? 'bg-white dark:bg-slate-900 shadow-sm text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700' 
-                            : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
+                    onClick={() => setViewMode('PLANNING_JOUR')}
+                    className={`flex-1 px-4 py-3 rounded-lg font-bold text-sm transition-all sm:text-xs lg:text-sm ${
+                        viewMode === 'PLANNING_JOUR' 
+                            ? 'bg-white shadow-sm text-slate-900 border border-slate-200' 
+                            : 'text-slate-500 hover:text-slate-700'
                     }`}
                 >
-                    Planification du Jour
+                    Plan. Jour (5H30)
+                </button>
+                <button
+                    onClick={() => setViewMode('PLANNING_NUIT')}
+                    className={`flex-1 px-4 py-3 rounded-lg font-bold text-sm transition-all sm:text-xs lg:text-sm ${
+                        viewMode === 'PLANNING_NUIT' 
+                            ? 'bg-slate-900 shadow-sm text-white border border-slate-800' 
+                            : 'text-slate-500 hover:text-slate-700'
+                    }`}
+                >
+                    Plan. Nuit (19H30)
+                </button>
+                <button
+                    onClick={() => setViewMode('REGULATION')}
+                    className={`flex-1 px-4 py-3 rounded-lg font-bold text-sm transition-all sm:text-xs lg:text-sm ${
+                        viewMode === 'REGULATION' 
+                            ? 'bg-orange-500 shadow-sm text-white border border-orange-600' 
+                            : 'text-slate-500 hover:text-slate-700'
+                    }`}
+                >
+                    Régulation
+                </button>
+                <button
+                    onClick={() => setViewMode('DISPO')}
+                    className={`flex-1 px-4 py-3 rounded-lg font-bold text-sm transition-all sm:text-xs lg:text-sm ${
+                        viewMode === 'DISPO' 
+                            ? 'bg-blue-600 shadow-sm text-white border border-blue-700' 
+                            : 'text-slate-500 hover:text-slate-700'
+                    }`}
+                >
+                    Dispo
                 </button>
                 <button
                     onClick={() => setViewMode('HISTORY')}
-                    className={`flex-1 md:flex-none px-6 py-3 rounded-lg font-bold text-sm transition-all ${
+                    className={`flex-1 px-4 py-3 rounded-lg font-bold text-sm transition-all sm:text-xs lg:text-sm ${
                         viewMode === 'HISTORY' 
-                            ? 'bg-white dark:bg-slate-900 shadow-sm text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700' 
+                            ? 'bg-white dark:bg-slate-900 shadow-sm text-slate-900 dark:text-white border' 
                             : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
                     }`}
                 >
-                    Historique Passé
+                    Historique
                 </button>
             </div>
 
@@ -284,6 +307,10 @@ export function RegulationView() {
                 ) : (
                     <HistoryTable data={historyData} />
                 )
+            ) : viewMode === 'REGULATION' ? (
+                <RegulationTab data={regulationData} personnel={personnel} dateStr={format(date, 'yyyy-MM-dd')} onSuccess={loadData} />
+            ) : viewMode === 'DISPO' ? (
+                <DispoTab data={dispoData} personnel={personnel} vehicles={vehicles} dateStr={format(date, 'yyyy-MM-dd')} onSuccess={loadData} />
             ) : (
                 <>
                     {/* Filters Row (Planning Mode ONLY) */}
@@ -394,9 +421,10 @@ export function RegulationView() {
                     category={selectedVehicle.category}
                     date={date}
                     dateStr={format(date, 'yyyy-MM-dd')}
-                    personnel={personnel}
+                    personnel={viewMode === 'PLANNING_NUIT' ? personnel.filter(p => p.shift === 'NUIT' || p.shift === 'JOUR_NUIT') : personnel}
                     vehicles={vehicles}
                     onSuccess={() => loadData()}
+                    defaultTime={viewMode === 'PLANNING_NUIT' ? '19:30' : '05:30'}
                     initialData={selectedVehicle.assignments?.[0] ? {
                         leaderId: selectedVehicle.assignments[0].leaderId,
                         teammateId: selectedVehicle.assignments[0].teammateId,

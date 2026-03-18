@@ -1,6 +1,7 @@
 import { auth } from "@/auth"
-import { getMyAssignment, getMyRegulationHistory } from "@/actions/regulation.actions"
+import { getMyAssignment, getMyRegulationHistory, getMyRegulation, getMyDisponibility } from "@/actions/regulation.actions"
 import { MyAssignment } from "@/components/regulation/my-assignment"
+import { MySpecialAssignment } from "@/components/regulation/my-special-assignment"
 import { SalarieHistoryTable } from "@/components/regulation/salarie-history-table"
 import { redirect } from "next/navigation"
 import { format, addDays } from "date-fns"
@@ -21,7 +22,13 @@ export default async function SalarieRegulationPage() {
     const now = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Paris" }));
     const tomorrowDate = addDays(now, 1)
     const dateStrTomorrow = format(tomorrowDate, 'yyyy-MM-dd')
-    const myAssignment = await getMyAssignment(session.user.id, dateStrTomorrow)
+    
+    // Paralléliser l'extraction des plannings (Ambulance, Régulation, Dispo)
+    const [myAssignment, myRegulation, myDispo] = await Promise.all([
+        getMyAssignment(session.user.id, dateStrTomorrow),
+        getMyRegulation(session.user.id, dateStrTomorrow),
+        getMyDisponibility(session.user.id, dateStrTomorrow)
+    ])
     const showingDate = tomorrowDate
 
     // 3. Récupérer l'historique personnel
@@ -56,7 +63,10 @@ export default async function SalarieRegulationPage() {
                     </TabsList>
 
                     <TabsContent value="mission" className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                        {myAssignment ? (
+                        {myRegulation && <MySpecialAssignment assignment={myRegulation} type="REGULATION" />}
+                        {myDispo && <MySpecialAssignment assignment={myDispo} type="DISPO" />}
+                        
+                        {(myAssignment || myRegulation || myDispo) ? (
                             <div className="space-y-4">
                                 <div className="flex items-center justify-between px-2">
                                     <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Mission prévue pour</span>
@@ -64,7 +74,7 @@ export default async function SalarieRegulationPage() {
                                         {dateDisplay}
                                     </span>
                                 </div>
-                                <MyAssignment assignment={myAssignment} />
+                                {myAssignment && <MyAssignment assignment={myAssignment} />}
                             </div>
                         ) : (
                             <div className="flex flex-col items-center justify-center py-24 bg-slate-50 dark:bg-slate-900/50 rounded-3xl border-2 border-dashed border-slate-200 text-center px-6">

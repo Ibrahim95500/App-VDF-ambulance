@@ -60,6 +60,8 @@ model User {
   fcmTokens      FcmToken[]
   isDeleted      Boolean   @default(false)
   deletedAt      DateTime?
+  regulationAssignments RegulationAssignment[]
+  disponibilities       Disponibility[]
 
   // Champs Régulation
   structure      Structure?
@@ -293,4 +295,43 @@ model CronJob {
   createdAt DateTime @default(now())
 
   @@unique([type, date])
+}
+
+enum RegulationType {
+  MATIN
+  SOIR
+  DIALYSE
+}
+
+enum DisponibilityStatus {
+  AVAILABLE
+  INTEGRATED
+}
+
+model RegulationAssignment {
+  id          String         @id @default(cuid())
+  userId      String
+  date        DateTime
+  type        RegulationType
+  startTime   String
+  validated   Boolean        @default(false)
+  validatedAt DateTime?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Disponibility {
+  id          String              @id @default(cuid())
+  userId      String
+  date        DateTime
+  startTime   String
+  validated   Boolean             @default(false)
+  validatedAt DateTime?
+  status      DisponibilityStatus @default(AVAILABLE)
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

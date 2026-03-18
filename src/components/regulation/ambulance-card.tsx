@@ -2,7 +2,7 @@
 
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { User, Ambulance, ShieldCheck, Clock, CheckCircle2, Clock3, XCircle } from "lucide-react"
+import { User, Ambulance, ShieldCheck, Clock, CheckCircle2, Clock3, XCircle, Trash2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 export type AssignmentStatus = 'PENDING' | 'VALIDATED' | 'REJECTED'
@@ -21,6 +21,8 @@ interface AmbulanceCardProps {
     status?: AssignmentStatus
     startTime?: string
     endTime?: string
+    assignmentId?: string
+    onDelete?: (id: string, e: React.MouseEvent) => void
     onClick?: () => void
     isCompact?: boolean
 }
@@ -38,6 +40,8 @@ export function AmbulanceCard({
     teammateValidated = false,
     status = 'PENDING',
     startTime,
+    assignmentId,
+    onDelete,
     onClick,
     isCompact = false
 }: AmbulanceCardProps) {
@@ -143,12 +147,23 @@ export function AmbulanceCard({
                         </h3>
                     </div>
 
-                    {startTime && (
-                        <Badge variant="outline" className="flex items-center gap-1.5 font-bold bg-white/50 backdrop-blur-sm border-slate-200">
-                            <Clock size={12} className="text-primary" />
-                            {startTime}
-                        </Badge>
-                    )}
+                    <div className="flex flex-col items-end gap-2">
+                        {startTime && (
+                            <Badge variant="outline" className="flex items-center gap-1.5 font-bold bg-white/50 backdrop-blur-sm border-slate-200">
+                                <Clock size={12} className="text-primary" />
+                                {startTime}
+                            </Badge>
+                        )}
+                        {assignmentId && onDelete && (
+                            <button 
+                                onClick={(e) => { e.stopPropagation(); onDelete(assignmentId, e); }}
+                                className="p-1 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors"
+                                title="Effacer l'équipage"
+                            >
+                                <Trash2 size={16} />
+                            </button>
+                        )}
+                    </div>
                 </div>
 
                 {/* Équipage */}

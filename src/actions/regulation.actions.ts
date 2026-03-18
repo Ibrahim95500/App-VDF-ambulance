@@ -21,6 +21,9 @@ export async function getVehiclesWithAssignments(dateStr: string) {
                     include: {
                         leader: true,
                         teammate: true
+                    },
+                    orderBy: {
+                        startTime: 'asc'
                     }
                 }
             },
@@ -246,4 +249,177 @@ export async function getMyRegulationHistory(userId: string) {
         console.error("Erreur getMyRegulationHistory:", error);
         return [];
     }
+}
+
+// ----- NOUVELLES ACTIONS RÉGULATION & DISPO ----- //
+
+export async function deletePlanningAssignment(id: string) {
+    try {
+        await prisma.planningAssignment.delete({ where: { id } })
+        revalidatePath('/dashboard/rh/regulation')
+        return { success: true }
+    } catch (error: any) {
+        return { error: error.message }
+    }
+}
+
+export async function getRegulationAssignments(dateStr: string) {
+    const startOfDay = new Date(`${dateStr}T00:00:00.000Z`)
+    const endOfDay = new Date(`${dateStr}T23:59:59.999Z`)
+    return prisma.regulationAssignment.findMany({
+        where: { date: { gte: startOfDay, lte: endOfDay } },
+        include: { user: true },
+        orderBy: { startTime: 'asc' }
+    })
+}
+
+export async function saveRegulationAssignment(data: { userId: string, dateStr: string, type: string, startTime: string }) {
+    try {
+        const startOfDay = new Date(`${data.dateStr}T00:00:00.000Z`)
+        await prisma.regulationAssignment.create({
+            data: {
+                userId: data.userId,
+                date: startOfDay,
+                type: data.type as any,
+                startTime: data.startTime
+            }
+        })
+        revalidatePath('/dashboard/rh/regulation')
+        return { success: true }
+    } catch (error: any) {
+        return { error: error.message }
+    }
+}
+
+export async function deleteRegulationAssignment(id: string) {
+    try {
+        await prisma.regulationAssignment.delete({ where: { id } })
+        revalidatePath('/dashboard/rh/regulation')
+        return { success: true }
+    } catch (error: any) { return { error: error.message } }
+}
+
+export async function getDisponibilities(dateStr: string) {
+    const startOfDay = new Date(`${dateStr}T00:00:00.000Z`)
+    const endOfDay = new Date(`${dateStr}T23:59:59.999Z`)
+    return prisma.disponibility.findMany({
+        where: { date: { gte: startOfDay, lte: endOfDay } },
+        include: { user: true },
+        orderBy: { startTime: 'asc' }
+    })
+}
+
+export async function saveDisponibility(data: { userId: string, dateStr: string, startTime: string }) {
+    try {
+        const startOfDay = new Date(`${data.dateStr}T00:00:00.000Z`)
+        await prisma.disponibility.create({
+            data: {
+                userId: data.userId,
+                date: startOfDay,
+                startTime: data.startTime
+            }
+        })
+        revalidatePath('/dashboard/rh/regulation')
+        return { success: true }
+    } catch (error: any) { return { error: error.message } }
+}
+
+export async function deleteDisponibility(id: string) {
+    try {
+        await prisma.disponibility.delete({ where: { id } })
+        revalidatePath('/dashboard/rh/regulation')
+        return { success: true }
+    } catch (error: any) { return { error: error.message } }
+}
+
+export async function integrateDispoToCrew(
+    dispoId: string, 
+    assignmentId: string, 
+    newUserId: string, 
+    replacedUserId: string, 
+    integrationTime: string
+) {
+    try {
+        const existingAssignment = await prisma.planningAssignment.findUnique({
+            where: { id: assignmentId }
+        })
+        if (!existingAssignment) throw new Error("Équipage introuvable")
+
+        // 1. Clôturer l'ancien relais (le gars qui finit à 15h)
+        await prisma.planningAssignment.update({
+            where: { id: assignmentId },
+            data: { endTime: integrationTime }
+        })
+
+        // 2. Créer la nouvelle ligne d'affectation pour prendre le relais
+        const isReplacingLeader = existingAssignment.leaderId === replacedUserId;
+        await prisma.planningAssignment.create({
+            data: {
+                vehicleId: existingAssignment.vehicleId,
+                date: existingAssignment.date,
+                startTime: integrationTime,
+                endTime: existingAssignment.endTime, // Optionnel, s'aligne sur la fin initiale prévue du véhicule
+                leaderId: isReplacingLeader ? newUserId : existingAssignment.leaderId,
+                teammateId: !isReplacingLeader ? newUserId : existingAssignment.teammateId,
+                status: 'PENDING',
+                leaderValidated: false,
+                teammateValidated: false
+            }
+        })
+
+        // 3. Mettre à jour le statut "Intégré" pour la dispo
+        await prisma.disponibility.update({
+            where: { id: dispoId },
+            data: { status: 'INTEGRATED' }
+        })
+
+        revalidatePath('/dashboard/rh/regulation')
+        return { success: true }
+    } catch (error: any) {
+        return { error: error.message }
+    }
+}
+
+export async function getMyRegulation(userId: string, dateStr: string) {
+    const startOfDay = new Date(`${dateStr}T00:00:00.000Z`)
+    const endOfDay = new Date(`${dateStr}T23:59:59.999Z`)
+    return prisma.regulationAssignment.findFirst({
+        where: { userId, date: { gte: startOfDay, lte: endOfDay } }
+    })
+}
+
+export async function getMyDisponibility(userId: string, dateStr: string) {
+    const startOfDay = new Date(`${dateStr}T00:00:00.000Z`)
+    const endOfDay = new Date(`${dateStr}T23:59:59.999Z`)
+    return prisma.disponibility.findFirst({
+        where: { userId, date: { gte: startOfDay, lte: endOfDay } }
+    })
+}
+
+export async function validateMyRegulation(userId: string, id: string) {
+    try {
+        const reg = await prisma.regulationAssignment.findUnique({ where: { id } })
+        if (!reg || reg.userId !== userId) throw new Error("Accès refusé")
+        await prisma.regulationAssignment.update({
+            where: { id },
+            data: { validated: true, validatedAt: new Date() }
+        })
+        revalidatePath('/dashboard/rh/regulation')
+        revalidatePath('/dashboard/salarie')
+        return { success: true }
+    } catch (e: any) { return { error: e.message } }
+}
+
+export async function validateMyDispo(userId: string, id: string) {
+    try {
+        const dispo = await prisma.disponibility.findUnique({ where: { id } })
+        if (!dispo || dispo.userId !== userId) throw new Error("Accès refusé")
+        await prisma.disponibility.update({
+            where: { id },
+            data: { validated: true, validatedAt: new Date() }
+        })
+        revalidatePath('/dashboard/rh/regulation')
+        revalidatePath('/dashboard/salarie')
+        return { success: true }
+    } catch (e: any) { return { error: e.message } }
 }

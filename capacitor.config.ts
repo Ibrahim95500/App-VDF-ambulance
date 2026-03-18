@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'fr.vdf_ambulance.app',
+  appId: 'fr.vdfambulance.app',
   appName: 'VDF Ambulance',
   webDir: 'out',
   server: {
