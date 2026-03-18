@@ -103,9 +103,40 @@ export function DispoTab({ data, personnel, vehicles, dateStr, onSuccess }: Disp
     }
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 animate-in fade-in">
+        <div className="flex flex-col gap-6 animate-in fade-in">
+            {/* Formulaire d'ajout rapide */}
+            <Card className="shadow-sm border-2">
+                <CardHeader className="bg-slate-50/50 border-b p-4">
+                    <CardTitle className="text-lg font-black flex items-center gap-2">
+                        <Plus className="text-orange-500 bg-orange-100 p-1 rounded-full" size={24} /> Ajouter une Disponibilité
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-6">
+                    <div className="flex flex-col md:flex-row gap-4 items-end">
+                        <div className="space-y-1.5 flex-1 w-full">
+                            <label className="text-sm font-bold opacity-70">Salarié</label>
+                            <Select value={selectedUser} onValueChange={setSelectedUser}>
+                                <SelectTrigger><SelectValue placeholder="Sélectionner" /></SelectTrigger>
+                                <SelectContent>
+                                    {personnel.map(p => (
+                                        <SelectItem key={p.id} value={p.id}>{p.lastName} {p.firstName}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-1.5 w-full md:w-48">
+                            <label className="text-sm font-bold opacity-70">Prise de poste</label>
+                            <Input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className="font-bold" />
+                        </div>
+                        <Button className="w-full md:w-auto font-bold bg-orange-500 hover:bg-orange-600 text-white shadow-sm" onClick={handleAdd} disabled={loading}>
+                            Ajouter à la liste
+                        </Button>
+                    </div>
+                </CardContent>
+            </Card>
+
             {/* Listes */}
-            <div className="lg:col-span-3 space-y-6">
+            <div className="space-y-6">
                 <div className="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl border">
                     <h3 className="font-black text-xl mb-4 text-slate-800 dark:text-slate-200">En attente de placement (Disponibles)</h3>
                     {availableDispos.length === 0 ? (
@@ -129,12 +160,12 @@ export function DispoTab({ data, personnel, vehicles, dateStr, onSuccess }: Disp
                                             <span className="flex items-center gap-1 bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md"><Clock size={12}/> {item.startTime}</span>
                                         </div>
                                     </div>
-                                    <div className="flex flex-col items-end gap-2">
-                                        <Button variant="outline" size="sm" className="font-bold border-orange-200 text-orange-600 hover:bg-orange-50 bg-white" onClick={() => openIntegrateModal(item)}>
+                                    <div className="flex flex-wrap md:flex-nowrap items-center gap-2 shrink-0">
+                                        <Button variant="outline" size="sm" className="font-bold border-orange-200 text-orange-600 hover:bg-orange-50 bg-white min-w-[140px]" onClick={() => openIntegrateModal(item)}>
                                             <UserPlus size={14} className="mr-1.5" /> Prendre le relais
                                         </Button>
-                                        <Button variant="ghost" size="sm" onClick={() => handleDelete(item.id)} className="h-6 text-xs text-red-400 hover:text-red-500 hover:bg-red-50 px-2">
-                                            Supprimer
+                                        <Button variant="ghost" size="sm" onClick={() => handleDelete(item.id)} className="text-xs text-red-500 hover:text-red-600 hover:bg-red-50">
+                                            <Trash2 size={16} />
                                         </Button>
                                     </div>
                                 </div>

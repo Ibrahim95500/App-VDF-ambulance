@@ -3,6 +3,10 @@
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 import type { AssignmentStatus } from "@prisma/client"
+import { sendBrandedEmail } from "@/lib/mail"
+import { createNotification } from "@/actions/notifications.actions"
+import { format } from "date-fns"
+import { fr } from "date-fns/locale"
 
 export async function getVehiclesWithAssignments(dateStr: string, shift: 'JOUR' | 'NUIT' = 'JOUR') {
     try {
@@ -289,6 +293,33 @@ export async function saveRegulationAssignment(data: { userId: string, dateStr: 
                 startTime: data.startTime
             }
         })
+        
+        // Notification & Email to User
+        const user = await prisma.user.findUnique({ where: { id: data.userId }, select: { email: true, firstName: true, lastName: true } })
+        if (user) {
+            const formattedDate = format(startOfDay, 'EEEE d MMMM yyyy', { locale: fr })
+            if (user.email) {
+                await sendBrandedEmail({
+                    to: user.email,
+                    from: '"Direction RH VDF" <vdf95rh@gmail.com>',
+                    subject: `📞 Vous êtes assigné au Poste de Régulation`,
+                    title: "Poste de Régulation",
+                    preheader: `Assignation pour le ${formattedDate}`,
+                    content: `
+                        <h2>Bonjour ${user.firstName || ''},</h2>
+                        <p>Vous avez été désigné comme Régulateur (${data.type}) pour le <strong>${formattedDate}</strong> à partir de <strong>${data.startTime}</strong>.</p>
+                        <p>Veuillez vous connecter à l'application pour valider votre présence d'ici 23h59 la veille au soir.</p>
+                    `
+                }).catch(console.error)
+            }
+            await createNotification({
+                userId: data.userId,
+                title: "Poste de Régulation",
+                message: `Vous êtes affecté à la régulation le ${formattedDate} à ${data.startTime}. N'oubliez pas de valider.`,
+                type: "MISSION"
+            }).catch(console.error)
+        }
+
         revalidatePath('/dashboard/rh/regulation')
         return { success: true }
     } catch (error: any) {
@@ -324,6 +355,33 @@ export async function saveDisponibility(data: { userId: string, dateStr: string,
                 startTime: data.startTime
             }
         })
+
+        // Notification & Email to User
+        const user = await prisma.user.findUnique({ where: { id: data.userId }, select: { email: true, firstName: true, lastName: true } })
+        if (user) {
+            const formattedDate = format(startOfDay, 'EEEE d MMMM yyyy', { locale: fr })
+            if (user.email) {
+                await sendBrandedEmail({
+                    to: user.email,
+                    from: '"Direction RH VDF" <vdf95rh@gmail.com>',
+                    subject: `⏱ Vous êtes placé en Employé Disponible`,
+                    title: `Employé Disponible`,
+                    preheader: `Astreinte pour le ${formattedDate}`,
+                    content: `
+                        <h2>Bonjour ${user.firstName || ''},</h2>
+                        <p>Vous avez été positionné comme "Employé Disponible" pour le <strong>${formattedDate}</strong> à partir de <strong>${data.startTime}</strong>.</p>
+                        <p>Veuillez vous connecter à l'application pour valider votre présence d'ici 23h59 la veille au soir. Un régulateur vous affectera à un véhicule en cours de journée.</p>
+                    `
+                }).catch(console.error)
+            }
+            await createNotification({
+                userId: data.userId,
+                title: "Employé Disponible",
+                message: `Vous êtes d'astreinte/disponible le ${formattedDate} à ${data.startTime}. N'oubliez pas de valider.`,
+                type: "MISSION"
+            }).catch(console.error)
+        }
+
         revalidatePath('/dashboard/rh/regulation')
         return { success: true }
     } catch (error: any) { return { error: error.message } }
@@ -403,12 +461,35 @@ export async function getMyDisponibility(userId: string, dateStr: string) {
 
 export async function validateMyRegulation(userId: string, id: string) {
     try {
-        const reg = await prisma.regulationAssignment.findUnique({ where: { id } })
+        const reg = await prisma.regulationAssignment.findUnique({ where: { id }, include: { user: true } })
         if (!reg || reg.userId !== userId) throw new Error("Accès refusé")
         await prisma.regulationAssignment.update({
             where: { id },
             data: { validated: true, validatedAt: new Date() }
         })
+
+        // Notification & Email to ADMIN
+        const admins = await prisma.user.findMany({ where: { roles: { has: 'ADMIN' } }, select: { id: true, email: true } })
+        const formattedDate = format(reg.date, 'dd/MM/yyyy')
+        for (const admin of admins) {
+            if (admin.email) {
+                await sendBrandedEmail({
+                    to: admin.email,
+                    from: '"App VDF" <vdf95rh@gmail.com>',
+                    subject: `✅ Régulation Validée - ${reg.user?.lastName} ${reg.user?.firstName}`,
+                    title: `Régulation Validée`,
+                    preheader: `${reg.user?.lastName} a validé ${formattedDate}`,
+                    content: `<p>Le collaborateur <strong>${reg.user?.lastName} ${reg.user?.firstName}</strong> a validé son poste de régulateur pour le <strong>${formattedDate}</strong> (${reg.startTime}).</p>`
+                }).catch(console.error)
+            }
+            await createNotification({
+                userId: admin.id,
+                title: "Régulation Validée",
+                message: `${reg.user?.lastName} a validé son poste de régulateur pour le ${formattedDate}.`,
+                type: "MISSION"
+            }).catch(console.error)
+        }
+
         revalidatePath('/dashboard/rh/regulation')
         revalidatePath('/dashboard/salarie')
         return { success: true }
@@ -417,12 +498,35 @@ export async function validateMyRegulation(userId: string, id: string) {
 
 export async function validateMyDispo(userId: string, id: string) {
     try {
-        const dispo = await prisma.disponibility.findUnique({ where: { id } })
+        const dispo = await prisma.disponibility.findUnique({ where: { id }, include: { user: true } })
         if (!dispo || dispo.userId !== userId) throw new Error("Accès refusé")
         await prisma.disponibility.update({
             where: { id },
             data: { validated: true, validatedAt: new Date() }
         })
+
+        // Notification & Email to ADMIN
+        const admins = await prisma.user.findMany({ where: { OR: [{ roles: { has: 'ADMIN' } }, { isRegulateur: true }] }, select: { id: true, email: true } })
+        const formattedDate = format(dispo.date, 'dd/MM/yyyy')
+        for (const admin of admins) {
+            if (admin.email) {
+                await sendBrandedEmail({
+                    to: admin.email,
+                    from: '"App VDF" <vdf95rh@gmail.com>',
+                    subject: `✅ Dispo Validée - ${dispo.user?.lastName} ${dispo.user?.firstName}`,
+                    title: `Dispo Validée`,
+                    preheader: `${dispo.user?.lastName} a validé ${formattedDate}`,
+                    content: `<p>Le collaborateur <strong>${dispo.user?.lastName} ${dispo.user?.firstName}</strong> a validé sa disponibilité (attente de placement) pour le <strong>${formattedDate}</strong> à partir de ${dispo.startTime}.</p>`
+                }).catch(console.error)
+            }
+            await createNotification({
+                userId: admin.id,
+                title: "Dispo Validée",
+                message: `${dispo.user?.lastName} a validé sa présence en tant que Dispo pour le ${formattedDate}.`,
+                type: "MISSION"
+            }).catch(console.error)
+        }
+
         revalidatePath('/dashboard/rh/regulation')
         revalidatePath('/dashboard/salarie')
         return { success: true }

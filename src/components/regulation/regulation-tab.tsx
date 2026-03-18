@@ -96,61 +96,63 @@ export function RegulationTab({ data, personnel, dateStr, onSuccess }: Regulatio
     }
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in fade-in">
+        <div className="flex flex-col gap-6 animate-in fade-in">
+            {/* Formulaire */}
+            <Card className="shadow-sm border-2">
+                <CardHeader className="bg-slate-50/50 border-b p-4">
+                    <CardTitle className="text-lg font-black flex items-center gap-2">
+                        <Plus className="text-orange-500 bg-orange-100 p-1 rounded-full" size={24} /> Ajouter un régulateur
+                    </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-6">
+                    <div className="flex flex-col md:flex-row gap-4 items-end">
+                        <div className="space-y-1.5 w-full md:w-1/4">
+                            <label className="text-sm font-bold opacity-70">Type de poste</label>
+                            <Select value={selectedType} onValueChange={(val) => {
+                                setSelectedType(val)
+                                setStartTime(val === "MATIN" ? "05:30" : val === "SOIR" ? "09:30" : "06:00")
+                            }}>
+                                <SelectTrigger className="font-bold"><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="MATIN">Matin</SelectItem>
+                                    <SelectItem value="SOIR">Soir</SelectItem>
+                                    <SelectItem value="DIALYSE">Dialyse</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div className="space-y-1.5 flex-1 w-full">
+                            <label className="text-sm font-bold opacity-70">Personne</label>
+                            <Select value={selectedUser} onValueChange={setSelectedUser}>
+                                <SelectTrigger><SelectValue placeholder="Sélectionner un collaborateur" /></SelectTrigger>
+                                <SelectContent>
+                                    {personnel.filter(p => p.isRegulateur).map(p => (
+                                        <SelectItem key={p.id} value={p.id}>
+                                            {p.lastName} {p.firstName}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div className="space-y-1.5 w-full md:w-32">
+                            <label className="text-sm font-bold opacity-70">Début</label>
+                            <Input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className="font-bold" />
+                        </div>
+
+                        <Button className="w-full md:w-auto font-bold bg-orange-500 hover:bg-orange-600 text-white shadow-sm" onClick={handleAdd} disabled={loading}>
+                            Ajouter
+                        </Button>
+                    </div>
+                </CardContent>
+            </Card>
+
             {/* Listes */}
-            <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-6 bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl border">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl border">
                 {renderCategory("PLANNING MATIN", "MATIN")}
                 {renderCategory("PLANNING SOIR", "SOIR")}
                 {renderCategory("DIALYSE", "DIALYSE")}
             </div>
-
-            {/* Formulaire */}
-            <Card className="shadow-sm border-2">
-                <CardHeader className="bg-slate-50/50 border-b">
-                    <CardTitle className="text-lg font-black flex items-center gap-2">
-                        <Plus className="text-orange-500" /> Ajouter un régulateur
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4 pt-6">
-                    <div className="space-y-1.5">
-                        <label className="text-sm font-bold opacity-70">Type de poste</label>
-                        <Select value={selectedType} onValueChange={(val) => {
-                            setSelectedType(val)
-                            setStartTime(val === "MATIN" ? "05:30" : val === "SOIR" ? "09:30" : "06:00")
-                        }}>
-                            <SelectTrigger className="font-bold"><SelectValue /></SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="MATIN">Matin</SelectItem>
-                                <SelectItem value="SOIR">Soir</SelectItem>
-                                <SelectItem value="DIALYSE">Dialyse</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-
-                    <div className="space-y-1.5">
-                        <label className="text-sm font-bold opacity-70">Personne</label>
-                        <Select value={selectedUser} onValueChange={setSelectedUser}>
-                            <SelectTrigger><SelectValue placeholder="Sélectionner un collaborateur" /></SelectTrigger>
-                            <SelectContent>
-                                {personnel.filter(p => p.isRegulateur).map(p => (
-                                    <SelectItem key={p.id} value={p.id}>
-                                        {p.lastName} {p.firstName}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-
-                    <div className="space-y-1.5">
-                        <label className="text-sm font-bold opacity-70">Heure de début</label>
-                        <Input type="time" value={startTime} onChange={e => setStartTime(e.target.value)} className="font-bold" />
-                    </div>
-
-                    <Button className="w-full font-bold bg-orange-500 hover:bg-orange-600 text-white mt-2" onClick={handleAdd} disabled={loading}>
-                        Enregistrer
-                    </Button>
-                </CardContent>
-            </Card>
         </div>
     )
 }

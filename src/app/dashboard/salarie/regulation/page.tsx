@@ -63,17 +63,16 @@ export default async function SalarieRegulationPage() {
                     </TabsList>
 
                     <TabsContent value="mission" className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                        {myRegulation && <MySpecialAssignment assignment={myRegulation} type="REGULATION" />}
-                        {myDispo && <MySpecialAssignment assignment={myDispo} type="DISPO" />}
-                        
                         {(myAssignment || myRegulation || myDispo) ? (
                             <div className="space-y-4">
-                                <div className="flex items-center justify-between px-2">
+                                <div className="flex items-center justify-between px-2 mb-2">
                                     <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Mission prévue pour</span>
                                     <span className="text-sm font-black text-primary bg-primary/10 px-3 py-1 rounded-full border border-primary/20">
                                         {dateDisplay}
                                     </span>
                                 </div>
+                                {myRegulation && <MySpecialAssignment assignment={myRegulation} type="REGULATION" />}
+                                {myDispo && <MySpecialAssignment assignment={myDispo} type="DISPO" />}
                                 {myAssignment && <MyAssignment assignment={myAssignment} />}
                             </div>
                         ) : (
