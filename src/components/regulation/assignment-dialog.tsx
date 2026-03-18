@@ -45,6 +45,7 @@ interface AssignmentDialogProps {
     personnel: Personnel[]
     vehicles?: any[]
     onSuccess: () => void
+    defaultTime?: string
     initialData?: {
         leaderId?: string
         teammateId?: string
@@ -64,19 +65,20 @@ export function AssignmentDialog({
     personnel,
     vehicles = [],
     onSuccess,
+    defaultTime,
     initialData
 }: AssignmentDialogProps) {
     const [loading, setLoading] = useState(false)
     const [leaderId, setLeaderId] = useState(initialData?.leaderId || "")
     const [teammateId, setTeammateId] = useState(initialData?.teammateId || "")
-    const [startTime, setStartTime] = useState(initialData?.startTime || "07:00")
+    const [startTime, setStartTime] = useState(initialData?.startTime || defaultTime || "07:00")
     const [endTime, setEndTime] = useState(initialData?.endTime || "19:00")
 
     useEffect(() => {
         if (isOpen) {
             setLeaderId(initialData?.leaderId || "")
             setTeammateId(initialData?.teammateId || "")
-            setStartTime(initialData?.startTime || "07:00")
+            setStartTime(initialData?.startTime || defaultTime || "07:00")
             setEndTime(initialData?.endTime || "19:00")
         }
     }, [isOpen, initialData])
