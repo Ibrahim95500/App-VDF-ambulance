@@ -27,7 +27,7 @@ export function DispoTab({ data, personnel, vehicles, dateStr, onSuccess }: Disp
     // State pour le modal d'intégration
     const [integrateModalOpen, setIntegrateModalOpen] = useState(false)
     const [selectedDispo, setSelectedDispo] = useState<any>(null)
-    const [selectedVehicleId, setSelectedVehicleId] = useState("")
+    const [selectedAssignmentId, setSelectedAssignmentId] = useState("")
     const [replacedUserId, setReplacedUserId] = useState("")
     const [integrationTime, setIntegrationTime] = useState("")
 
@@ -64,29 +64,21 @@ export function DispoTab({ data, personnel, vehicles, dateStr, onSuccess }: Disp
     const openIntegrateModal = (dispo: any) => {
         setSelectedDispo(dispo)
         setIntegrationTime(dispo.startTime) // Par défaut, on propose l'heure de sa dispo
-        setSelectedVehicleId("")
+        setSelectedAssignmentId("")
         setReplacedUserId("")
         setIntegrateModalOpen(true)
     }
 
     const handleIntegrate = async () => {
-        if (!selectedVehicleId || !replacedUserId || !integrationTime || !selectedDispo) {
-            toast.error("Veuillez sélectionner un véhicule, une personne à remplacer et une heure de relève.")
-            return
-        }
-
-        // Retrouver l'assignation de ce véhicule
-        const vehicle = vehicles.find(v => v.id === selectedVehicleId)
-        const assignment = vehicle?.assignments?.[0] // on suppose la dernière en cours
-        if (!assignment) {
-            toast.error("Ce véhicule n'a pas d'équipage actif.")
+        if (!selectedAssignmentId || !replacedUserId || !integrationTime || !selectedDispo) {
+            toast.error("Veuillez sélectionner un équipage, une personne à remplacer et une heure de relève.")
             return
         }
 
         setLoading(true)
         const res = await integrateDispoToCrew(
             selectedDispo.id,
-            assignment.id,
+            selectedAssignmentId,
             selectedDispo.userId,
             replacedUserId,
             integrationTime
@@ -205,25 +197,29 @@ export function DispoTab({ data, personnel, vehicles, dateStr, onSuccess }: Disp
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-sm font-bold">1. Sélectionnez le véhicule cible</label>
-                                <Select value={selectedVehicleId} onValueChange={(val) => {
-                                    setSelectedVehicleId(val)
+                                <label className="text-sm font-bold">1. Sélectionnez l'équipage cible</label>
+                                <Select value={selectedAssignmentId} onValueChange={(val) => {
+                                    setSelectedAssignmentId(val)
                                     setReplacedUserId("") // reset
                                 }}>
                                     <SelectTrigger className="font-bold border-2 h-12">
                                         <SelectValue placeholder="Choisir un véhicule avec équipage en cours..." />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {vehicles.filter(v => v.assignments && v.assignments.length > 0).map(v => (
-                                            <SelectItem key={v.id} value={v.id}>
-                                                AMB: {v.plateNumber} ({v.category})
-                                            </SelectItem>
-                                        ))}
+                                        {vehicles.filter(v => v.assignments && v.assignments.length > 0).map(v => {
+                                            const a = v.assignments[0];
+                                            const isNight = a.startTime >= "12:00";
+                                            return (
+                                                <SelectItem key={a.id} value={a.id}>
+                                                    AMB: {v.plateNumber} ({v.category}) - {isNight ? "Nuit" : "Jour"}
+                                                </SelectItem>
+                                            );
+                                        })}
                                     </SelectContent>
                                 </Select>
                             </div>
 
-                            {selectedVehicleId && (
+                            {selectedAssignmentId && (
                                 <div className="space-y-2 animate-in slide-in-from-top-2">
                                     <label className="text-sm font-bold">2. Qui est remplacé ?</label>
                                     <Select value={replacedUserId} onValueChange={setReplacedUserId}>
@@ -232,7 +228,7 @@ export function DispoTab({ data, personnel, vehicles, dateStr, onSuccess }: Disp
                                         </SelectTrigger>
                                         <SelectContent>
                                             {(() => {
-                                                const v = vehicles.find(v => v.id === selectedVehicleId)
+                                                const v = vehicles.find(v => v.assignments?.[0]?.id === selectedAssignmentId)
                                                 const a = v?.assignments?.[0]
                                                 if (!a) return null
                                                 return (
