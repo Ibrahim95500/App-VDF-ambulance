@@ -155,7 +155,7 @@ export function RegulationView() {
 
     let totalPersons = 0;
     let validated = 0;
-    vehicles.forEach(v => {
+    activeVehicles.forEach(v => {
         if (v.assignments && v.assignments.length > 0) {
             const a = v.assignments[0];
             if (a.leaderId) { totalPersons++; if (a.leaderValidated) validated++; }
