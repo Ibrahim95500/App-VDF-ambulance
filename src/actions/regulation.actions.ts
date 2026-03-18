@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 import type { AssignmentStatus } from "@prisma/client"
 
-export async function getVehiclesWithAssignments(dateStr: string) {
+export async function getVehiclesWithAssignments(dateStr: string, shift: 'JOUR' | 'NUIT' = 'JOUR') {
     try {
         const startOfTargetDate = new Date(`${dateStr}T00:00:00.000Z`)
         const endOfTargetDate = new Date(`${dateStr}T23:59:59.999Z`)
@@ -16,7 +16,8 @@ export async function getVehiclesWithAssignments(dateStr: string) {
                         date: {
                             gte: startOfTargetDate,
                             lte: endOfTargetDate
-                        }
+                        },
+                        startTime: shift === 'JOUR' ? { lt: "12:00" } : { gte: "12:00" }
                     },
                     include: {
                         leader: true,
@@ -57,6 +58,7 @@ export async function getAvailablePersonnel(dateStr: string) {
             structure: true,
             oubliCount: true,
             isRegulateur: true,
+            shift: true,
         },
         orderBy: {
             lastName: 'asc'
@@ -76,14 +78,17 @@ export async function saveAssignment(data: {
         const startOfDay = new Date(`${data.dateStr}T00:00:00.000Z`)
         const endOfDay = new Date(`${data.dateStr}T23:59:59.999Z`)
 
-        // On cherche s'il existe déjà une assignation pour ce véhicule à cette date
+        const isNight = !!data.startTime && data.startTime >= "12:00"
+        
+        // On cherche s'il existe déjà une assignation pour ce véhicule à cette date (et sur le BON créneau)
         const existing = await prisma.planningAssignment.findFirst({
             where: {
                 vehicleId: data.vehicleId,
                 date: {
                     gte: startOfDay,
                     lte: endOfDay
-                }
+                },
+                startTime: isNight ? { gte: "12:00" } : { lt: "12:00" }
             }
         })
 

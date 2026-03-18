@@ -132,7 +132,7 @@ export function RegulationTab({ data, personnel, dateStr, onSuccess }: Regulatio
                         <Select value={selectedUser} onValueChange={setSelectedUser}>
                             <SelectTrigger><SelectValue placeholder="Sélectionner un collaborateur" /></SelectTrigger>
                             <SelectContent>
-                                {personnel.map(p => (
+                                {personnel.filter(p => p.isRegulateur).map(p => (
                                     <SelectItem key={p.id} value={p.id}>
                                         {p.lastName} {p.firstName}
                                     </SelectItem>

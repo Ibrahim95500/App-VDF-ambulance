@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { getVehiclesWithAssignments, getAvailablePersonnel, getRegulationHistory, getRegulationAssignments, getDisponibilities } from "@/actions/regulation.actions"
+import { getVehiclesWithAssignments, getAvailablePersonnel, getRegulationHistory, getRegulationAssignments, getDisponibilities, deletePlanningAssignment } from "@/actions/regulation.actions"
 
 import { AmbulanceCard } from "@/components/regulation/ambulance-card"
 import { AssignmentDialog } from "@/components/regulation/assignment-dialog"
@@ -37,8 +37,9 @@ export function RegulationView() {
         return d
     })
 
-    const [vehicles, setVehicles] = useState<any[]>([])
     const [personnel, setPersonnel] = useState<any[]>([])
+    const [vehiclesJour, setVehiclesJour] = useState<any[]>([])
+    const [vehiclesNuit, setVehiclesNuit] = useState<any[]>([])
     const [loading, setLoading] = useState(true)
 
     const [searchTerm, setSearchTerm] = useState("")
@@ -116,13 +117,15 @@ export function RegulationView() {
         try {
             if (!isSilent) setLoading(true)
             const dateStr = format(date, 'yyyy-MM-dd')
-            const [vData, pData, rData, dData] = await Promise.all([
-                getVehiclesWithAssignments(dateStr),
+            const [vDataJour, vDataNuit, pData, rData, dData] = await Promise.all([
+                getVehiclesWithAssignments(dateStr, 'JOUR'),
+                getVehiclesWithAssignments(dateStr, 'NUIT'),
                 getAvailablePersonnel(dateStr),
                 getRegulationAssignments(dateStr),
                 getDisponibilities(dateStr)
             ])
-            setVehicles(vData)
+            setVehiclesJour(vDataJour)
+            setVehiclesNuit(vDataNuit)
             setPersonnel(pData)
             setRegulationData(rData)
             setDispoData(dData)
@@ -133,18 +136,18 @@ export function RegulationView() {
         }
     }
 
+    const activeVehicles = viewMode === 'PLANNING_NUIT' ? vehiclesNuit : vehiclesJour;
 
-
-    const filteredVehicles = vehicles.filter(v => {
-        const matchesSearch = v.plateNumber.toLowerCase().includes(searchTerm.toLowerCase())
-        const matchesTab = activeTab === "ALL" || v.category === activeTab
-        return matchesSearch && matchesTab
+    const filteredVehicles = activeVehicles.filter(v => {
+        if (activeTab !== "ALL" && v.category !== activeTab) return false
+        if (searchTerm && !v.plateNumber.toLowerCase().includes(searchTerm.toLowerCase())) return false
+        return true
     })
 
     const counts = {
-        ALL: vehicles.length,
-        MARK: vehicles.filter(v => v.category === 'MARK').length,
-        VDF: vehicles.filter(v => v.category === 'VDF').length,
+        ALL: activeVehicles.length,
+        MARK: activeVehicles.filter(v => v.category === 'MARK').length,
+        VDF: activeVehicles.filter(v => v.category === 'VDF').length,
     }
 
     const currentHour = currentTime.getHours();
@@ -165,8 +168,9 @@ export function RegulationView() {
         if (isToday) return { label: "En service (Jour J)", className: "bg-purple-100 text-purple-800 border-purple-300" };
         
         if (isTomorrow) {
-            const totalVehicles = vehicles.filter(v => v.assignments?.length > 0).length;
-            const validatedVehicles = vehicles.filter(v => v.assignments?.[0]?.status === 'VALIDATED').length;
+            const activeV = viewMode === 'PLANNING_NUIT' ? vehiclesNuit : vehiclesJour;
+            const totalVehicles = activeV.filter(v => v.assignments?.length > 0).length;
+            const validatedVehicles = activeV.filter(v => v.assignments?.[0]?.status === 'VALIDATED').length;
             return { 
                 label: `Planification : Véhicules (${validatedVehicles}/${totalVehicles}) • Personnes (${validated} / ${totalPersons})`, 
                 className: "bg-orange-100 text-orange-800 border-orange-300 font-bold shadow-sm" 
@@ -373,6 +377,14 @@ export function RegulationView() {
                                     teammateValidated={assignment?.teammateValidated || false}
                                     status={assignment?.status}
                                     startTime={assignment?.startTime}
+                                    assignmentId={assignment?.id}
+                                    onDelete={async (id, e) => {
+                                        e.preventDefault()
+                                        if (confirm("Voulez-vous vraiment effacer cet équipage ?")) {
+                                            await deletePlanningAssignment(id)
+                                            loadData()
+                                        }
+                                    }}
                                     onClick={() => {
                                         setSelectedVehicle(vehicle)
                                         setIsDialogOpen(true)
@@ -422,7 +434,7 @@ export function RegulationView() {
                     date={date}
                     dateStr={format(date, 'yyyy-MM-dd')}
                     personnel={viewMode === 'PLANNING_NUIT' ? personnel.filter(p => p.shift === 'NUIT' || p.shift === 'JOUR_NUIT') : personnel}
-                    vehicles={vehicles}
+                    vehicles={viewMode === 'PLANNING_NUIT' ? vehiclesNuit : vehiclesJour}
                     onSuccess={() => loadData()}
                     defaultTime={viewMode === 'PLANNING_NUIT' ? '19:30' : '05:30'}
                     initialData={selectedVehicle.assignments?.[0] ? {
