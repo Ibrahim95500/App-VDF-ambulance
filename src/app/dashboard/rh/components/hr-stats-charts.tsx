@@ -9,6 +9,7 @@ import {
 } from 'recharts';
 import { Button } from '@/components/ui/button';
 import { BarChart3, PieChartIcon, TrendingUp } from 'lucide-react';
+import { useEffect } from 'react';
 
 interface StatProps {
     requestsByCategory: { name: string, value: number }[];
@@ -43,6 +44,11 @@ export function HRStatsCharts({
     colors = DEFAULT_COLORS
 }: StatProps) {
     const [activeTab, setActiveTab] = useState<'category' | 'user' | 'month'>('category');
+    const [isMounted, setIsMounted] = useState(false);
+
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
 
     // Group Top 5 categories + "Autres" if there are > 6 items
     const pieData = requestsByCategory.length <= 6
@@ -101,7 +107,7 @@ export function HRStatsCharts({
                     <div className="h-[300px] w-full flex flex-col items-center">
                         {requestsByCategory.length === 0 ? (
                             <div className="flex h-full items-center justify-center text-muted-foreground italic text-sm">Aucune donnée disponible.</div>
-                        ) : (
+                        ) : isMounted && (
                             <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                                 <PieChart>
                                     <Pie
@@ -140,7 +146,7 @@ export function HRStatsCharts({
                     <div className="h-[300px] w-full">
                         {requestsByUser.length === 0 ? (
                             <div className="flex h-full items-center justify-center text-muted-foreground italic text-sm">Aucune donnée disponible.</div>
-                        ) : (
+                        ) : isMounted && (
                             <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                                 <BarChart data={requestsByUser.slice(0, 10)} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                     <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />
@@ -196,7 +202,7 @@ export function HRStatsCharts({
                     <div className="h-[300px] w-full">
                         {requestsByMonth.length === 0 ? (
                             <div className="flex h-full items-center justify-center text-muted-foreground italic text-sm">Aucune donnée disponible.</div>
-                        ) : (
+                        ) : isMounted && (
                             <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
                                 <LineChart data={requestsByMonth} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                     <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.3} />

@@ -9,11 +9,18 @@ import { Header } from './components/header';
 import { Sidebar } from './components/sidebar';
 import { BottomTabBar } from './components/bottom-tab-bar';
 import { SessionSync } from '@/components/auth/session-sync';
+import { ErrorBoundary } from '@/components/common/error-boundary';
+import { useState } from 'react';
 
 export function Demo1Layout({ children, notificationsCount = 0 }: { children: ReactNode, notificationsCount?: number }) {
   const isMobile = useIsMobile();
   const { settings, setOption } = useSettings();
   const { data: session } = useSession();
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   useEffect(() => {
     const bodyClass = document.body.classList;
@@ -74,23 +81,33 @@ export function Demo1Layout({ children, notificationsCount = 0 }: { children: Re
     <>
       <SessionSync />
       {/* Sidebar uniquement sur Desktop */}
-      {!isMobile && <Sidebar />}
+      {isMounted && !isMobile && (
+        <ErrorBoundary fallback={<div className="w-64 bg-muted animate-pulse" />}>
+          <Sidebar />
+        </ErrorBoundary>
+      )}
 
       <div className="wrapper flex grow flex-col lg:pb-0">
-        <Header notificationsCount={notificationsCount} />
+        <ErrorBoundary fallback={<div className="h-16 bg-background border-b animate-pulse" />}>
+          <Header notificationsCount={notificationsCount} />
+        </ErrorBoundary>
 
         <main
           className="grow pt-5"
           role="content"
           style={{ paddingBottom: isMobile ? '7rem' : undefined }}
         >
-          {children}
+          <ErrorBoundary>
+            {children}
+          </ErrorBoundary>
         </main>
 
         <Footer />
       </div>
 
-      <BottomTabBar />
+      <ErrorBoundary fallback={null}>
+        <BottomTabBar />
+      </ErrorBoundary>
     </>
   );
 }

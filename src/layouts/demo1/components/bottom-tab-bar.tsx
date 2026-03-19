@@ -14,6 +14,12 @@ export function BottomTabBar() {
     const pathname = usePathname();
     const { data: session, status } = useSession();
     const isMobile = useIsMobile();
+    const [isMounted, setIsMounted] = useState(false);
+
+    useEffect(() => {
+        setIsMounted(true);
+    }, []);
+
     const hasPrivilege = (session?.user as any)?.roles?.some((r: string) => ['RH', 'ADMIN', 'REGULATEUR'].includes(r));
     const isRegulateur = (session?.user as any)?.roles?.includes('REGULATEUR') || (session?.user as any)?.isRegulateur;
 
@@ -39,8 +45,8 @@ export function BottomTabBar() {
         }
     }, [status, session?.user]);
 
-    // Desktop: hidden.
-    if (!isMobile) return null;
+    // Desktop: hidden or not mounted yet.
+    if (!isMounted || !isMobile) return null;
 
     // If loading or roles not yet synchronized, assume basic privileges to prevent empty bar
     const isLoadingOrEmpty = status === 'loading' || !session?.user || (session.user as any)?.roles?.length === 0;
