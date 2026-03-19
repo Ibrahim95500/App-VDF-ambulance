@@ -98,7 +98,7 @@ export function Demo1Layout({ children, notificationsCount = 0 }: { children: Re
             </ErrorBoundary>
 
             <main
-              className="grow pt-16 lg:pt-20"
+              className="grow pt-5"
               role="content"
               style={{ paddingBottom: isMobile ? '7rem' : undefined }}
             >

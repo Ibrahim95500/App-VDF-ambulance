@@ -2,8 +2,6 @@ import { auth } from "@/auth"
 import { redirect } from "next/navigation"
 import { RegulationView } from "@/components/regulation/regulation-view"
 
-import { Container } from "@/components/common/container"
-
 export default async function RegulationDashboardPage() {
     const session = await auth()
 
@@ -18,9 +16,5 @@ export default async function RegulationDashboardPage() {
         redirect("/dashboard/salarie")
     }
 
-    return (
-        <Container className="pt-4 pb-10">
-            <RegulationView />
-        </Container>
-    )
+    return <RegulationView />
 }
