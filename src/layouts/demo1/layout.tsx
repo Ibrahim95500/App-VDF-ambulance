@@ -90,10 +90,7 @@ export function Demo1Layout({ children, notificationsCount = 0 }: { children: Re
           <div className="flex flex-1 overflow-hidden">
             <ErrorBoundary fallback={null}>
               {!isMobile && (
-                <Sidebar 
-                  className="flex-shrink-0" 
-                  notificationsCount={notificationsCount} 
-                />
+                <Sidebar />
               )}
             </ErrorBoundary>
 
