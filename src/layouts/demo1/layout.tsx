@@ -80,34 +80,47 @@ export function Demo1Layout({ children, notificationsCount = 0 }: { children: Re
   return (
     <>
       <SessionSync />
-      {/* Sidebar uniquement sur Desktop */}
-      {isMounted && !isMobile && (
-        <ErrorBoundary fallback={<div className="w-64 bg-muted animate-pulse" />}>
-          <Sidebar />
-        </ErrorBoundary>
-      )}
+      {/* Rendu asymétrique uniquement après montage pour éviter Erreur #310 */}
+      {isMounted ? (
+        <>
+          {/* Sidebar uniquement sur Desktop */}
+          {!isMobile && (
+            <ErrorBoundary fallback={<div className="w-64 bg-muted animate-pulse" />}>
+              <Sidebar />
+            </ErrorBoundary>
+          )}
 
-      <div className="wrapper flex grow flex-col lg:pb-0">
-        <ErrorBoundary fallback={<div className="h-16 bg-background border-b animate-pulse" />}>
-          <Header notificationsCount={notificationsCount} />
-        </ErrorBoundary>
+          <div className="wrapper flex grow flex-col lg:pb-0">
+            <ErrorBoundary fallback={<div className="h-16 bg-background border-b animate-pulse" />}>
+              <Header notificationsCount={notificationsCount} />
+            </ErrorBoundary>
 
-        <main
-          className="grow pt-5"
-          role="content"
-          style={{ paddingBottom: isMobile ? '7rem' : undefined }}
-        >
-          <ErrorBoundary>
-            {children}
+            <main
+              className="grow pt-5"
+              role="content"
+              style={{ paddingBottom: isMobile ? '7rem' : undefined }}
+            >
+              <ErrorBoundary>
+                {children}
+              </ErrorBoundary>
+            </main>
+
+            <Footer />
+          </div>
+
+          <ErrorBoundary fallback={null}>
+            <BottomTabBar />
           </ErrorBoundary>
-        </main>
-
-        <Footer />
-      </div>
-
-      <ErrorBoundary fallback={null}>
-        <BottomTabBar />
-      </ErrorBoundary>
+        </>
+      ) : (
+        /* Skeleton minimaliste pour l'hydratation serveur/client identique */
+        <div className="flex flex-col h-screen w-screen items-center justify-center bg-background">
+          <div className="animate-pulse flex flex-col items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-primary/10" />
+            <div className="h-2 w-32 bg-muted rounded" />
+          </div>
+        </div>
+      )}
     </>
   );
 }

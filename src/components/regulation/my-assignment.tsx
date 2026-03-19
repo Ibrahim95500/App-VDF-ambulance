@@ -1,10 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { AmbulanceCard } from "./ambulance-card"
 import { validateMyPlanning } from "@/actions/regulation.actions"
 import { Button } from "@/components/ui/button"
-import { CheckCircle2, XCircle, Loader2, Info } from "lucide-react"
+import { CheckCircle2, XCircle, Loader2, Info, Clock3 } from "lucide-react"
 import { toast } from "sonner"
 import { useSession } from "next-auth/react"
 import { cn } from "@/lib/utils"
@@ -19,6 +19,9 @@ export function MyAssignment({ assignment }: MyAssignmentProps) {
     const [teammateValidated, setTeammateValidated] = useState(assignment.teammateValidated)
     const [status, setStatus] = useState(assignment.status)
     const [loading, setLoading] = useState(false)
+    const [isMounted, setIsMounted] = useState(false)
+
+    useEffect(() => { setIsMounted(true) }, [])
 
     const userId = session?.user?.id
     const isLeader = assignment.leaderId === userId
@@ -27,10 +30,10 @@ export function MyAssignment({ assignment }: MyAssignmentProps) {
 
     if (!assignment) return null
 
-    // Fenêtre de validation : 19h - 21h
+    // Fenêtre de validation : 19h - 21h (uniquement après montage pour éviter mismatch hydratation)
     const now = new Date()
     const currentHour = now.getHours()
-    const isWindowOpen = currentHour >= 19 && currentHour < 21
+    const isWindowOpen = isMounted && currentHour >= 19 && currentHour < 21
 
     const handleAction = async () => {
         if (!isWindowOpen) {
