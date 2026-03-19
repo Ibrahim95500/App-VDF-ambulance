@@ -494,7 +494,7 @@ export function CollaboratorsClient({ initialUsers, session }: CollaboratorsClie
 
             {/* Profile Detail Dialog */}
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogContent className="sm:max-w-md w-full h-full sm:h-auto sm:w-[95vw] bg-slate-950 border-slate-900 text-white sm:rounded-[3.5rem] p-0 overflow-y-auto shadow-[0_50px_100px_-20px_rgba(0,0,0,0.6)] border-none sm:border-2 [&>button]:hidden top-0 translate-y-0 sm:top-1/2 sm:-translate-y-1/2">
+                <DialogContent className="w-[92vw] max-w-md max-h-[92vh] sm:h-auto bg-slate-950 border-slate-900 text-white rounded-[2.5rem] sm:rounded-[3.5rem] p-0 overflow-y-auto shadow-[0_50px_100px_-20px_rgba(0,0,0,0.6)] border-none sm:border-2 [&>button]:hidden fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[100]">
                     {/* Header Image/Pattern */}
                     <div className={cn(
                         "h-48 w-full relative",
@@ -512,28 +512,27 @@ export function CollaboratorsClient({ initialUsers, session }: CollaboratorsClie
                         </Button>
                     </div>
 
-                    <div className="px-12 pb-16 -mt-20 relative">
+                    <div className="px-6 md:px-12 pb-10 md:pb-16 -mt-20 relative">
                         <div className="flex flex-col items-center text-center">
                             <div className="relative group/avatar cursor-pointer">
                                 {selectedUser?.image ? (
-                                    <img src={selectedUser.image} className="size-40 rounded-[2.5rem] object-cover ring-[8px] ring-slate-950 shadow-[0_30px_60px_-10px_rgba(0,0,0,0.5)] mb-8 scale-110 group-hover/avatar:scale-115 transition-transform duration-500" />
+                                    <img src={selectedUser.image} className="size-32 md:size-40 rounded-[2rem] md:rounded-[2.5rem] object-cover ring-[6px] md:ring-[8px] ring-slate-950 shadow-2xl mb-6 md:mb-8 scale-110 group-hover/avatar:scale-115 transition-transform duration-500" />
                                 ) : (
-                                    <div className="size-40 rounded-[2.5rem] bg-slate-900 border-[3px] border-white/10 flex items-center justify-center text-6xl font-black text-slate-700 ring-[8px] ring-slate-950 shadow-2xl mb-8 scale-110 group-hover/avatar:scale-115 transition-transform duration-500">
+                                    <div className="size-32 md:size-40 rounded-[2rem] md:rounded-[2.5rem] bg-slate-900 border-[2px] md:border-[3px] border-white/10 flex items-center justify-center text-4xl md:text-6xl font-black text-slate-700 ring-[6px] md:ring-[8px] ring-slate-950 shadow-2xl mb-6 md:mb-8 scale-110 group-hover/avatar:scale-115 transition-transform duration-500">
                                         {selectedUser?.firstName?.[0] || selectedUser?.lastName?.[0] || '?'}
                                     </div>
                                 )}
                                 <div className="absolute inset-0 rounded-[2.5rem] bg-secondary/20 opacity-0 group-hover/avatar:opacity-100 transition-opacity flex items-center justify-center scale-110">
-                                    <Zap className="text-white size-10 animate-pulse" />
+                                    <Zap className="text-white size-8 md:size-10 animate-pulse" />
                                 </div>
                             </div>
-
-                            <h2 className="text-4xl font-black mb-3 tracking-tighter">{selectedUser?.firstName} <span className="text-secondary italic">{selectedUser?.lastName}</span></h2>
+                            <h2 className="text-2xl md:text-4xl font-black mb-3 tracking-tighter">{selectedUser?.firstName} <span className="text-secondary italic">{selectedUser?.lastName}</span></h2>
                             <div className="flex gap-3 mb-12">
-                                <Badge variant="outline" className="border-slate-800 text-slate-600 bg-slate-900/50 uppercase text-[11px] tracking-[0.3em] font-black px-5 py-1.5 rounded-full">
+                                <Badge variant="outline" className="border-slate-800 text-slate-600 bg-slate-900/50 uppercase text-[9px] md:text-[11px] tracking-[0.2em] md:tracking-[0.3em] font-black px-4 md:px-5 py-1 md:py-1.5 rounded-full">
                                     {selectedUser?.isRegulateur ? "Régulateur" : "Équipier VDF"}
                                 </Badge>
                                 <Badge className={cn(
-                                    "border-none text-[11px] tracking-[0.3em] font-black uppercase px-5 py-1.5 rounded-full shadow-lg",
+                                    "border-none text-[9px] md:text-[11px] tracking-[0.2em] md:tracking-[0.3em] font-black uppercase px-4 md:px-5 py-1 md:py-1.5 rounded-full shadow-lg",
                                     selectedUser?.structure === 'MARK' ? "bg-gradient-to-r from-blue-600 to-indigo-600 text-white" : selectedUser?.structure === 'VDF' ? "bg-gradient-to-r from-orange-600 to-amber-600 text-white" : "bg-secondary text-white"
                                 )}>
                                     {selectedUser?.structure || "VDF"}
@@ -559,15 +558,15 @@ export function CollaboratorsClient({ initialUsers, session }: CollaboratorsClie
                                 {isAdminOrRegul && (
                                     <a 
                                         href={`tel:${selectedUser?.phone}`}
-                                        className="flex items-center gap-6 w-full p-7 rounded-[2.2rem] bg-slate-900/80 hover:bg-slate-800 border-2 border-white/5 hover:border-secondary/50 transition-all group/link shadow-2xl relative overflow-hidden"
+                                        className="flex items-center gap-4 md:gap-6 w-full p-5 md:p-7 rounded-[1.5rem] md:rounded-[2.2rem] bg-slate-900/80 hover:bg-slate-800 border-2 border-white/5 hover:border-secondary/50 transition-all group/link shadow-2xl relative overflow-hidden"
                                     >
                                         <div className="absolute inset-0 bg-gradient-to-r from-secondary/5 to-transparent opacity-0 group-hover/link:opacity-100 transition-opacity" />
-                                        <div className="size-16 rounded-[1.2rem] bg-secondary/10 flex items-center justify-center text-secondary group-hover/link:bg-secondary group-hover/link:text-white transition-all shadow-inner group-hover/link:scale-110 duration-500">
-                                            <PhoneCall size={32} />
+                                        <div className="size-12 md:size-16 rounded-[1rem] md:rounded-[1.2rem] bg-secondary/10 flex items-center justify-center text-secondary group-hover/link:bg-secondary group-hover/link:text-white transition-all shadow-inner group-hover/link:scale-110 duration-500">
+                                            <PhoneCall size={24} className="md:size-8" />
                                         </div>
                                         <div className="text-left flex-1 min-w-0 relative z-10">
                                             <p className="text-[10px] text-slate-600 uppercase font-black tracking-[0.4em] mb-1">Ligne Directe</p>
-                                            <p className="text-2xl font-black text-slate-50 tabular-nums">{selectedUser?.phone || "Private"}</p>
+                                            <p className="text-lg md:text-2xl font-black text-slate-50 tabular-nums">{selectedUser?.phone || "Private"}</p>
                                         </div>
                                         <div className="size-12 rounded-full border border-white/5 flex items-center justify-center text-slate-700 group-hover/link:text-white group-hover/link:border-white/20 transition-all relative z-10">
                                             <ChevronRight size={24} />
@@ -577,15 +576,15 @@ export function CollaboratorsClient({ initialUsers, session }: CollaboratorsClie
 
                                 <a 
                                     href={`mailto:${selectedUser?.email}`}
-                                    className="flex items-center gap-6 w-full p-7 rounded-[2.2rem] bg-slate-900/80 hover:bg-slate-800 border-2 border-white/5 hover:border-secondary/50 transition-all group/link shadow-2xl relative overflow-hidden"
+                                    className="flex items-center gap-4 md:gap-6 w-full p-5 md:p-7 rounded-[1.5rem] md:rounded-[2.2rem] bg-slate-900/80 hover:bg-slate-800 border-2 border-white/5 hover:border-secondary/50 transition-all group/link shadow-2xl relative overflow-hidden"
                                 >
                                     <div className="absolute inset-0 bg-gradient-to-r from-blue-600/5 to-transparent opacity-0 group-hover/link:opacity-100 transition-opacity" />
-                                    <div className="size-16 rounded-[1.2rem] bg-blue-600/10 flex items-center justify-center text-blue-400 group-hover/link:bg-blue-600 group-hover/link:text-white transition-all shadow-inner group-hover/link:scale-110 duration-500">
-                                        <Mail size={32} />
+                                    <div className="size-12 md:size-16 rounded-[1rem] md:rounded-[1.2rem] bg-blue-600/10 flex items-center justify-center text-blue-400 group-hover/link:bg-blue-600 group-hover/link:text-white transition-all shadow-inner group-hover/link:scale-110 duration-500">
+                                        <Mail size={24} className="md:size-8" />
                                     </div>
                                     <div className="text-left flex-1 min-w-0 relative z-10">
                                         <p className="text-[10px] text-slate-600 uppercase font-black tracking-[0.4em] mb-1">Email Pro</p>
-                                        <p className="text-xl font-black text-slate-50 truncate">{selectedUser?.email}</p>
+                                        <p className="text-lg md:text-xl font-black text-slate-50 truncate">{selectedUser?.email}</p>
                                     </div>
                                     <div className="size-12 rounded-full border border-white/5 flex items-center justify-center text-slate-700 group-hover/link:text-white group-hover/link:border-white/20 transition-all relative z-10">
                                         <ChevronRight size={24} />
