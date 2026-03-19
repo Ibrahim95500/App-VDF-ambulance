@@ -44,11 +44,14 @@ export function SessionSync() {
                     }
                 });
 
-                // Astuce de pirate (F5 automatique) demandée par l'utilisateur
-                // On laisse 500ms à NextAuth pour écrire le nouveau cookie JWT avant de rafraîchir
-                setTimeout(() => {
-                    window.location.reload();
-                }, 500);
+                // Astuce de pirate (F5 automatique) protégée contre les boucles infinies
+                const syncReloadKey = "vdf_sync_reload_done";
+                if (!sessionStorage.getItem(syncReloadKey)) {
+                    sessionStorage.setItem(syncReloadKey, "true");
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 500);
+                }
             }
         } catch (err) {
             console.error("IAM Sync Error:", err);

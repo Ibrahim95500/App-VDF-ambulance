@@ -9,6 +9,7 @@ import { I18nProvider } from '@/providers/i18n-provider';
 import { ModulesProvider } from '@/providers/modules-provider';
 import { ThemeProvider } from '@/providers/theme-provider';
 import { AuthProvider } from '@/providers/auth-provider';
+import { ErrorBoundary } from '@/components/common/error-boundary';
 
 
 const inter = Inter({ subsets: ['latin'] });
@@ -64,25 +65,27 @@ export default function RootLayout({
           inter.className,
         )}
       >
-        <AuthProvider>
-          <PWARegistration />
-          <InstallPWAPrompt />
-          <ModulesProvider>
-            <SettingsProvider>
-              <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-                <I18nProvider>
-                  <PushNotificationsManager />
-                  <TooltipsProvider>
-                    <Suspense>
-                      {children}
-                    </Suspense>
-                    <Toaster />
-                  </TooltipsProvider>
-                </I18nProvider>
-              </ThemeProvider>
-            </SettingsProvider>
-          </ModulesProvider>
-        </AuthProvider>
+        <ErrorBoundary fallback={<div className="flex h-screen w-screen items-center justify-center p-10 text-center"><h1>Une erreur critique est survenue. Veuillez rafraîchir la page.</h1></div>}>
+          <AuthProvider>
+            <PWARegistration />
+            <InstallPWAPrompt />
+            <ModulesProvider>
+              <SettingsProvider>
+                <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+                  <I18nProvider>
+                    <PushNotificationsManager />
+                    <TooltipsProvider>
+                      <Suspense>
+                        {children}
+                      </Suspense>
+                      <Toaster />
+                    </TooltipsProvider>
+                  </I18nProvider>
+                </ThemeProvider>
+              </SettingsProvider>
+            </ModulesProvider>
+          </AuthProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );
