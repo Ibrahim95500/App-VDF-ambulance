@@ -136,7 +136,7 @@ export function SidebarMenu() {
           <AccordionMenuSubContent
             type="single"
             collapsible
-            parentValue={item.path || `root-${index}`}
+            parentValue={item.path || key}
             className="ps-6"
           >
             <AccordionMenuGroup>
@@ -254,7 +254,7 @@ export function SidebarMenu() {
           <AccordionMenuSubContent
             type="single"
             collapsible
-            parentValue={item.path || `child-${level}-${index}`}
+            parentValue={item.path || key}
             className={cn(
               'ps-4',
               !item.collapse && 'relative',
