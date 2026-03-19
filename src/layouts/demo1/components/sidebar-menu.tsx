@@ -113,8 +113,8 @@ export function SidebarMenu() {
   };
 
   const buildMenu = (items: MenuConfig): JSX.Element[] => {
-    return items.map((item: MenuItem) => {
-      const uniqueKey = item.path || item.heading || `menu-key-${Math.random()}`;
+    return items.map((item: MenuItem, index: number) => {
+      const uniqueKey = item.path || item.heading || `menu-key-${index}`;
       if (item.heading) {
         return buildMenuHeading(item, uniqueKey);
       } else if (item.disabled) {
@@ -216,8 +216,8 @@ export function SidebarMenu() {
     items: MenuConfig,
     level: number = 0,
   ): JSX.Element[] => {
-    return items.map((item: MenuItem) => {
-      const childKey = item.path || item.title || `child-${level}-${Math.random()}`;
+    return items.map((item: MenuItem, index: number) => {
+      const childKey = item.path || item.title || `child-${level}-${index}`;
       if (item.disabled) {
         return buildMenuItemChildDisabled(item, childKey, level);
       } else {

@@ -85,38 +85,34 @@ export function Demo1Layout({ children, notificationsCount = 0 }: { children: Re
       <SessionSync />
       {/* Rendu asymétrique uniquement après montage pour éviter Erreur #310 */}
       {isMounted ? (
-        <>
-          {/* Sidebar uniquement sur Desktop */}
-          {!isMobile && (
-            <ErrorBoundary fallback={<div className="w-64 bg-muted animate-pulse" />}>
-              <Sidebar />
+        <div className="flex flex-col h-screen overflow-hidden" key={isRHSection ? 'root-rh' : 'root-salarie'}>
+          
+          <div className="flex flex-1 overflow-hidden">
+            <ErrorBoundary fallback={null}>
+              {!isMobile && (
+                <Sidebar 
+                  className="flex-shrink-0" 
+                  notificationsCount={notificationsCount} 
+                />
+              )}
             </ErrorBoundary>
-          )}
 
-          <div className="wrapper flex grow flex-col lg:pb-0">
-            <ErrorBoundary fallback={<div className="h-16 bg-background border-b animate-pulse" />}>
+            <div className="flex flex-col flex-1 overflow-hidden relative">
               <Header notificationsCount={notificationsCount} />
-            </ErrorBoundary>
-
-            <main
-              className="grow pt-5"
-              role="content"
-              style={{ paddingBottom: isMobile ? '7rem' : undefined }}
-            >
-              <ErrorBoundary>
-                {children}
-              </ErrorBoundary>
-            </main>
-
-            <Footer />
+              <main className="flex-1 overflow-y-auto w-full">
+                <div className="p-4 pb-24 md:pb-8">
+                  <ErrorBoundary fallback={<div className="p-4 text-red-500">Une erreur est survenue dans ce module. Veuillez rafraîchir la page.</div>}>
+                    {children}
+                  </ErrorBoundary>
+                </div>
+              </main>
+            </div>
           </div>
 
           <ErrorBoundary fallback={null}>
-            <div key={isRHSection ? 'bottom-bar-rh' : 'bottom-bar-salarie'}>
-              <BottomTabBar />
-            </div>
+            <BottomTabBar />
           </ErrorBoundary>
-        </>
+        </div>
       ) : (
         /* Skeleton minimaliste pour l'hydratation serveur/client identique */
         <div className="flex flex-col h-screen w-screen items-center justify-center bg-background">
