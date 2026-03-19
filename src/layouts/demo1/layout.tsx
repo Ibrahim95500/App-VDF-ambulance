@@ -10,9 +10,12 @@ import { Sidebar } from './components/sidebar';
 import { BottomTabBar } from './components/bottom-tab-bar';
 import { SessionSync } from '@/components/auth/session-sync';
 import { ErrorBoundary } from '@/components/common/error-boundary';
+import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 
 export function Demo1Layout({ children, notificationsCount = 0 }: { children: ReactNode, notificationsCount?: number }) {
+  const pathname = usePathname();
+  const isRHSection = pathname?.startsWith('/dashboard/rh');
   const isMobile = useIsMobile();
   const { settings, setOption } = useSettings();
   const { data: session } = useSession();
@@ -109,7 +112,9 @@ export function Demo1Layout({ children, notificationsCount = 0 }: { children: Re
           </div>
 
           <ErrorBoundary fallback={null}>
-            <BottomTabBar />
+            <div key={isRHSection ? 'bottom-bar-rh' : 'bottom-bar-salarie'}>
+              <BottomTabBar />
+            </div>
           </ErrorBoundary>
         </>
       ) : (

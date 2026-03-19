@@ -52,7 +52,12 @@ export function CollaboratorsClient({ initialUsers, session }: CollaboratorsClie
     const [activeTab, setActiveTab] = useState("dashboard")
     const [stats, setStats] = useState<any>(null)
     const [currentPage, setCurrentPage] = useState(1)
+    const [isMounted, setIsMounted] = useState(false)
     const itemsPerPage = 9
+
+    useEffect(() => {
+        setIsMounted(true)
+    }, [])
 
     const myOublis = session?.user?.oubliCount ?? 0
     const isAdminOrRegul = session?.user?.roles?.some((r: string) => ['ADMIN', 'REGULATEUR'].includes(r)) || session?.user?.isRegulateur
@@ -432,6 +437,7 @@ export function CollaboratorsClient({ initialUsers, session }: CollaboratorsClie
                                 
                                 <div className="flex items-center gap-1.5 md:gap-3">
                                     {(() => {
+                                        if (!isMounted) return null;
                                         const pages = []
                                         const maxVisible = typeof window !== 'undefined' && window.innerWidth < 640 ? 3 : 5
                                         let start = Math.max(1, currentPage - Math.floor(maxVisible / 2))

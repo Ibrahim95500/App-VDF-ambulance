@@ -113,21 +113,22 @@ export function SidebarMenu() {
   };
 
   const buildMenu = (items: MenuConfig): JSX.Element[] => {
-    return items.map((item: MenuItem, index: number) => {
+    return items.map((item: MenuItem) => {
+      const uniqueKey = item.path || item.heading || `menu-key-${Math.random()}`;
       if (item.heading) {
-        return buildMenuHeading(item, index);
+        return buildMenuHeading(item, uniqueKey);
       } else if (item.disabled) {
-        return buildMenuItemRootDisabled(item, index);
+        return buildMenuItemRootDisabled(item, uniqueKey);
       } else {
-        return buildMenuItemRoot(item, index);
+        return buildMenuItemRoot(item, uniqueKey);
       }
     });
   };
 
-  const buildMenuItemRoot = (item: MenuItem, index: number): JSX.Element => {
+  const buildMenuItemRoot = (item: MenuItem, key: string): JSX.Element => {
     if (item.children) {
       return (
-        <AccordionMenuSub key={index} value={item.path || `root-${index}`}>
+        <AccordionMenuSub key={key} value={item.path || key}>
           <AccordionMenuSubTrigger className="text-sm font-medium">
             {item.icon && <item.icon data-slot="accordion-menu-icon" />}
             <span data-slot="accordion-menu-title">{item.title}</span>
@@ -147,7 +148,7 @@ export function SidebarMenu() {
     } else {
       return (
         <AccordionMenuItem
-          key={index}
+          key={key}
           value={item.path || ''}
           className="text-sm font-medium"
         >
@@ -192,12 +193,12 @@ export function SidebarMenu() {
 
   const buildMenuItemRootDisabled = (
     item: MenuItem,
-    index: number,
+    key: string,
   ): JSX.Element => {
     return (
       <AccordionMenuItem
-        key={index}
-        value={`disabled-${index}`}
+        key={key}
+        value={key}
         className="text-sm font-medium"
       >
         {item.icon && <item.icon data-slot="accordion-menu-icon" />}
@@ -215,25 +216,26 @@ export function SidebarMenu() {
     items: MenuConfig,
     level: number = 0,
   ): JSX.Element[] => {
-    return items.map((item: MenuItem, index: number) => {
+    return items.map((item: MenuItem) => {
+      const childKey = item.path || item.title || `child-${level}-${Math.random()}`;
       if (item.disabled) {
-        return buildMenuItemChildDisabled(item, index, level);
+        return buildMenuItemChildDisabled(item, childKey, level);
       } else {
-        return buildMenuItemChild(item, index, level);
+        return buildMenuItemChild(item, childKey, level);
       }
     });
   };
 
   const buildMenuItemChild = (
     item: MenuItem,
-    index: number,
+    key: string,
     level: number = 0,
   ): JSX.Element => {
     if (item.children) {
       return (
         <AccordionMenuSub
-          key={index}
-          value={item.path || `child-${level}-${index}`}
+          key={key}
+          value={item.path || key}
         >
           <AccordionMenuSubTrigger className="text-[13px]">
             {item.collapse ? (
@@ -271,7 +273,7 @@ export function SidebarMenu() {
     } else {
       return (
         <AccordionMenuItem
-          key={index}
+          key={key}
           value={item.path || ''}
           className="text-[13px]"
         >
@@ -310,13 +312,13 @@ export function SidebarMenu() {
 
   const buildMenuItemChildDisabled = (
     item: MenuItem,
-    index: number,
+    key: string,
     level: number = 0,
   ): JSX.Element => {
     return (
       <AccordionMenuItem
-        key={index}
-        value={`disabled-child-${level}-${index}`}
+        key={key}
+        value={key}
         className="text-[13px]"
       >
         <span data-slot="accordion-menu-title">{item.title}</span>
@@ -329,8 +331,8 @@ export function SidebarMenu() {
     );
   };
 
-  const buildMenuHeading = (item: MenuItem, index: number): JSX.Element => {
-    return <AccordionMenuLabel key={index}>{item.heading}</AccordionMenuLabel>;
+  const buildMenuHeading = (item: MenuItem, key: string): JSX.Element => {
+    return <AccordionMenuLabel key={key}>{item.heading}</AccordionMenuLabel>;
   };
 
   if (status === 'loading' || (status === 'authenticated' && roles.length === 0)) {
