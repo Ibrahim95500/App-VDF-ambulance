@@ -10,6 +10,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { AlertCircle } from "lucide-react"
 
+import { Container } from "@/components/common/container"
+
 export default async function SalarieRegulationPage() {
     const session = await auth()
 
@@ -37,8 +39,8 @@ export default async function SalarieRegulationPage() {
     const dateDisplay = format(showingDate, "EEEE d MMMM", { locale: fr })
 
     return (
-        <div className="flex flex-col gap-8">
-            <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 shadow-sm">
+        <Container className="flex flex-col gap-8 pb-10">
+            <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 shadow-sm mt-4">
                 <h1 className="text-2xl font-black tracking-tighter uppercase">Ma Régulation Plateau</h1>
                 <div className="flex items-center justify-between mt-1">
                     <p className="text-muted-foreground text-sm font-medium">Consultez votre mission et votre historique de validation.</p>
@@ -91,6 +93,6 @@ export default async function SalarieRegulationPage() {
                     </TabsContent>
                 </Tabs>
             </div>
-        </div>
+        </Container>
     )
 }
