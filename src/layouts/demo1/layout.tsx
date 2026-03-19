@@ -85,8 +85,7 @@ export function Demo1Layout({ children, notificationsCount = 0 }: { children: Re
       <SessionSync />
       {/* Rendu asymétrique uniquement après montage pour éviter Erreur #310 */}
       {isMounted ? (
-        <div className="flex flex-col h-screen overflow-hidden" key={isRHSection ? 'root-rh' : 'root-salarie'}>
-          
+        <div className="flex flex-col h-screen overflow-hidden">
           <div className="flex flex-1 overflow-hidden">
             <ErrorBoundary fallback={null}>
               {!isMobile && (

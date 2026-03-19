@@ -80,10 +80,18 @@ export function BottomTabBar() {
                     const isActive = pathname === item.href || (pathname.startsWith(item.href) && item.href !== '/dashboard/rh' && item.href !== '/dashboard/salarie');
                     const Icon = item.icon;
 
+                    const handleNavigation = (e: React.MouseEvent) => {
+                        if (item.isSwitch) {
+                            e.preventDefault();
+                            window.location.href = item.href;
+                        }
+                    };
+
                     return (
                         <Link
                             key={item.href}
                             href={item.href}
+                            onClick={handleNavigation}
                             className={cn(
                                 "flex flex-col items-center justify-center flex-1 h-full gap-1 transition-colors",
                                 isActive ? "text-primary dark:text-blue-400" : "text-muted-foreground hover:text-foreground"
