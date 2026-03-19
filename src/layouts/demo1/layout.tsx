@@ -95,7 +95,7 @@ export function Demo1Layout({ children, notificationsCount = 0 }: { children: Re
 
             <div className="flex flex-col flex-1 overflow-hidden relative">
               <Header notificationsCount={notificationsCount} />
-              <main className="flex-1 overflow-y-auto w-full">
+              <main className="flex-1 overflow-y-auto w-full pt-[70px] lg:pt-[80px]">
                 <div className="p-4 pb-24 md:pb-8">
                   <ErrorBoundary fallback={<div className="p-4 text-red-500">Une erreur est survenue dans ce module. Veuillez rafraîchir la page.</div>}>
                     {children}
