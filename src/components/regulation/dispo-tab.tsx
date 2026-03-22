@@ -54,7 +54,7 @@ export function DispoTab({ data, personnel, vehicles, dateStr, onSuccess }: Disp
     }
 
     const handleDelete = async (id: string) => {
-        if (!confirm("Voulez-vous supprimer cette visibilité ?")) return
+        if (!confirm("❓ SUPPRESSION : Voulez-vous retirer ce salarié de la liste des disponibilités pour cette date ?")) return
         setLoading(true)
         const res = await deleteDisponibility(id)
         setLoading(false)
@@ -184,22 +184,36 @@ export function DispoTab({ data, personnel, vehicles, dateStr, onSuccess }: Disp
                                          <div className="bg-slate-200 p-2 rounded-lg">
                                              <Ambulance size={16} className="text-slate-500" />
                                          </div>
-                                         <div className="flex flex-col">
-                                             <span className="text-sm font-bold text-slate-700">{d.user?.lastName} {d.user?.firstName}</span>
-                                             <span className="text-[10px] text-slate-500 uppercase font-medium">Déjà intégré dans un équipage</span>
-                                         </div>
+                                          <div className="flex flex-col">
+                                              <div className="flex items-center gap-2">
+                                                  <span className="text-sm font-bold text-slate-700">{d.user?.lastName} {d.user?.firstName}</span>
+                                                  {d.validated ? (
+                                                      <Badge variant="outline" className="text-[9px] bg-green-600 text-white border-green-700 font-black px-2 h-4 shrink-0">VALIDÉ ✅</Badge>
+                                                  ) : (
+                                                      <Badge variant="outline" className="text-[9px] bg-orange-500 text-white border-orange-600 font-black px-2 h-4 shrink-0 animate-pulse">À VALIDER ⏳</Badge>
+                                                  )}
+                                              </div>
+                                              <span className="text-[10px] text-slate-500 uppercase font-medium">Déjà intégré dans un équipage</span>
+                                          </div>
                                      </div>
                                      <Button 
                                          variant="ghost" 
                                          size="sm" 
                                          className="h-8 text-xs font-bold text-orange-600 hover:bg-orange-50"
-                                         onClick={async () => {
-                                             if (confirm("Détacher ce salarié de l'équipage ? Il redeviendra disponible pour une nouvelle affectation.")) {
-                                                 const res = await detachDispoFromCrew(d.id)
-                                                 if (res.success) toast.success("Salarié détaché avec succès")
-                                                 else toast.error(res.error)
-                                             }
-                                         }}
+                                          onClick={async () => {
+                                              if (confirm("⚠️ ATTENTION : Voulez-vous vraiment DÉTACHER ce salarié de son équipage actuel ?\n\nIl sera retiré de son véhicule et redeviendra disponible pour un autre placement.")) {
+                                                  setLoading(true)
+                                                  const res = await detachDispoFromCrew(d.id)
+                                                  setLoading(false)
+                                                  if (res.success) {
+                                                      toast.success("Salarié détaché avec succès. Il est à nouveau disponible.")
+                                                      onSuccess()
+                                                  } else {
+                                                      toast.error(res.error)
+                                                  }
+                                              }
+                                          }}
+                                          disabled={loading}
                                      >
                                          Détacher
                                      </Button>

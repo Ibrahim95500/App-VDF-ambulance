@@ -74,6 +74,7 @@ export function AssignmentDialog({
     const [teammateId, setTeammateId] = useState(initialData?.teammateId || "")
     const [startTime, setStartTime] = useState(initialData?.startTime || defaultTime || "07:00")
     const [endTime, setEndTime] = useState(initialData?.endTime || "19:00")
+    const [serverError, setServerError] = useState<string | null>(null)
 
     useEffect(() => {
         if (isOpen) {
@@ -81,6 +82,7 @@ export function AssignmentDialog({
             setTeammateId(initialData?.teammateId || "")
             setStartTime(initialData?.startTime || defaultTime || "07:00")
             setEndTime(initialData?.endTime || "19:00")
+            setServerError(null)
         }
     }, [isOpen, initialData])
 
@@ -139,12 +141,13 @@ export function AssignmentDialog({
                 leaderId,
                 teammateId,
                 dateStr,
-                startTime,
                 endTime
             })
+            setServerError(null)
 
             if (result.error) {
-                toast.error(result.error)
+                setServerError(result.error)
+                toast.error("Veuillez corriger l'erreur affichée ci-dessous.")
             } else {
                 toast.success("Assignation enregistrée !")
                 onSuccess()
@@ -227,8 +230,18 @@ export function AssignmentDialog({
                         />
                     </div>
                 </div>
-
-                {isSamePerson && (
+ 
+                 {serverError && (
+                     <div className="bg-red-50 text-red-600 p-4 rounded-xl text-sm font-bold flex flex-col gap-2 border-2 border-red-200 animate-in zoom-in slide-in-from-top-4 mb-4">
+                         <div className="flex items-center gap-2">
+                             <AlertCircle size={20} className="shake" />
+                             <span className="text-base">ERREUR DE PLANIFICATION</span>
+                         </div>
+                         <p className="font-medium bg-white/50 p-2 rounded-lg border border-red-100">{serverError}</p>
+                     </div>
+                 )}
+ 
+                 {isSamePerson && (
                     <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm font-bold flex items-center gap-2 border border-red-200 animate-in fade-in slide-in-from-top-2">
                         <AlertCircle size={18} />
                         Action impossible : Responsable et Co-équipier identiques.

@@ -380,7 +380,7 @@ export function RegulationView() {
                                     assignmentId={assignment?.id}
                                     onDelete={async (id, e) => {
                                         e.preventDefault()
-                                        if (confirm("Voulez-vous vraiment effacer cet équipage ?")) {
+                                        if (confirm("⚠️ SUPPRESSION ÉQUIPAGE : Voulez-vous vraiment effacer cet équipage du planning ?\n\nCette action libérera les deux salariés pour une autre affectation.")) {
                                             await deletePlanningAssignment(id)
                                             loadData()
                                         }
