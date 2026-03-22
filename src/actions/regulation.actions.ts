@@ -587,7 +587,7 @@ export async function detachDispoFromCrew(dispoId: string) {
     try {
         await prisma.disponibility.update({
             where: { id: dispoId },
-            data: { status: 'PENDING' }
+            data: { status: 'AVAILABLE' }
         })
         revalidatePath('/dashboard/rh/regulation')
         return { success: true }
