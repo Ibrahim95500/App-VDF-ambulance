@@ -83,6 +83,30 @@ export async function saveAssignment(data: {
         const endOfDay = new Date(`${data.dateStr}T23:59:59.999Z`)
 
         const isNight = !!data.startTime && data.startTime >= "12:00"
+
+        // --- VALIDATION JOUR / NUIT ---
+        // On vérifie si l'un des deux est déjà assigné sur l'autre shift (ou celui-ci d'ailleurs) ce jour là
+        const personIds = [data.leaderId, data.teammateId].filter(id => id !== "")
+        
+        for (const pid of personIds) {
+            const otherAssignment = await prisma.planningAssignment.findFirst({
+                where: {
+                    date: { gte: startOfDay, lte: endOfDay },
+                    OR: [{ leaderId: pid }, { teammateId: pid }],
+                    // On cherche spécifiquement un conflit (si on est Night, on cherche s'il est déjà en Day et vice versa)
+                    // Mais en réalité, le client demande "ne peut pas être de nuit s'il est de jour", donc n'importe quel autre assignment le même jour est suspect
+                    // Sauf si c'est pour le MÊME véhicule (modification d'équipage en cours)
+                    vehicleId: { not: data.vehicleId }, 
+                    startTime: isNight ? { lt: "12:00" } : { gte: "12:00" }
+                },
+                include: { vehicle: true }
+            })
+
+            if (otherAssignment) {
+                const user = await prisma.user.findUnique({ where: { id: pid }, select: { firstName: true, lastName: true } })
+                throw new Error(`${user?.lastName} ${user?.firstName} est déjà assigné sur le véhicule ${otherAssignment.vehicle.plateNumber} en vacation ${isNight ? 'MATIN' : 'SOIR'}.`)
+            }
+        }
         
         // On cherche s'il existe déjà une assignation pour ce véhicule à cette date (et sur le BON créneau)
         const existing = await prisma.planningAssignment.findFirst({
@@ -95,6 +119,8 @@ export async function saveAssignment(data: {
                 startTime: isNight ? { gte: "12:00" } : { lt: "12:00" }
             }
         })
+
+        let assignmentId = ""
 
         if (existing) {
             await prisma.planningAssignment.update({
@@ -111,8 +137,9 @@ export async function saveAssignment(data: {
                     teammateValidatedAt: null
                 }
             })
+            assignmentId = existing.id
         } else {
-            await prisma.planningAssignment.create({
+            const created = await prisma.planningAssignment.create({
                 data: {
                     vehicleId: data.vehicleId,
                     leaderId: data.leaderId,
@@ -127,6 +154,19 @@ export async function saveAssignment(data: {
                     teammateValidatedAt: null
                 }
             })
+            assignmentId = created.id
+        }
+
+        // --- NOTIFICATIONS ---
+        const formattedDate = format(startOfDay, 'EEEE d MMMM', { locale: fr })
+        for (const pid of personIds) {
+            await createNotification({
+                userId: pid,
+                title: "Nouvelle Mission Disponible",
+                message: `Vous avez été affecté au véhicule ${data.vehicleId} pour le ${formattedDate} (${isNight ? 'Nuit' : 'Jour'}). Merci de valider.`,
+                type: "MISSION",
+                link: "/dashboard/salarie/regulation"
+            }).catch(console.error)
         }
 
         revalidatePath('/dashboard/rh/regulation')
@@ -435,6 +475,16 @@ export async function integrateDispoToCrew(
             where: { id: dispoId },
             data: { status: 'INTEGRATED' }
         })
+
+        // 4. Notification
+        const formattedDate = format(existingAssignment.date, 'EEEE d MMMM', { locale: fr })
+        await createNotification({
+            userId: newUserId,
+            title: "Relève Planning",
+            message: `Vous avez été intégré au véhicule ${existingAssignment.vehicleId} pour une relève à ${integrationTime} le ${formattedDate}.`,
+            type: "MISSION",
+            link: "/dashboard/salarie/regulation"
+        }).catch(console.error)
 
         revalidatePath('/dashboard/rh/regulation')
         return { success: true }

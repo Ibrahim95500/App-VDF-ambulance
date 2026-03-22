@@ -4,6 +4,7 @@ import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Combobox } from "@/components/ui/combobox"
 import { Input } from "@/components/ui/input"
 import { saveRegulationAssignment, deleteRegulationAssignment } from "@/actions/regulation.actions"
 import { toast } from "sonner"
@@ -123,16 +124,17 @@ export function RegulationTab({ data, personnel, dateStr, onSuccess }: Regulatio
 
                         <div className="space-y-1.5 flex-1 w-full">
                             <label className="text-sm font-bold opacity-70">Personne</label>
-                            <Select value={selectedUser} onValueChange={setSelectedUser}>
-                                <SelectTrigger><SelectValue placeholder="Sélectionner un collaborateur" /></SelectTrigger>
-                                <SelectContent>
-                                    {personnel.filter(p => p.isRegulateur).map(p => (
-                                        <SelectItem key={p.id} value={p.id}>
-                                            {p.lastName} {p.firstName}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <Combobox
+                                options={personnel.filter(p => p.isRegulateur).map(p => ({
+                                    value: p.id,
+                                    label: `${p.lastName} ${p.firstName}`
+                                }))}
+                                value={selectedUser}
+                                onValueChange={setSelectedUser}
+                                placeholder="Sélectionner un régulateur"
+                                searchPlaceholder="Rechercher..."
+                                className="w-full"
+                            />
                         </div>
 
                         <div className="space-y-1.5 w-full md:w-32">

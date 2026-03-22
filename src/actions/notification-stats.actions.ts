@@ -37,21 +37,21 @@ export async function getNotificationStats(userId?: string) {
             myAppointments = appt;
             myLeaves = leave;
 
-            // Mission pour demain
+            // Mission pour demain (non validée)
             const tomorrow = addDays(new Date(), 1);
-            const missionCount = await prisma.planningAssignment.count({
+            const pendingMission = await prisma.planningAssignment.count({
                 where: {
                     date: {
                         gte: startOfDay(tomorrow),
                         lte: endOfDay(tomorrow)
                     },
                     OR: [
-                        { leaderId: userId },
-                        { teammateId: userId }
+                        { leaderId: userId, leaderValidated: false },
+                        { teammateId: userId, teammateValidated: false }
                     ]
                 }
             });
-            myMission = missionCount > 0 ? 1 : 0;
+            myMission = pendingMission > 0 ? 1 : 0;
         }
 
         // Stats Régulation (RH) : Validations manquantes pour demain
@@ -65,16 +65,11 @@ export async function getNotificationStats(userId?: string) {
             }
         });
 
-        let validationDone = 0;
-        const now = new Date();
-        const isAfterCutoff = now.getHours() > 23 || (now.getHours() === 23 && now.getMinutes() >= 30);
-
-        if (!isAfterCutoff) {
-            assignmentsTomorrow.forEach((a: any) => {
-                if (a.leaderId && a.leaderValidated) validationDone++;
-                if (a.teammateId && a.teammateValidated) validationDone++;
-            });
-        }
+        let validationPending = 0;
+        assignmentsTomorrow.forEach((a: any) => {
+            if (a.leaderId && !a.leaderValidated) validationPending++;
+            if (a.teammateId && !a.teammateValidated) validationPending++;
+        });
 
         return {
             global: {
@@ -82,8 +77,8 @@ export async function getNotificationStats(userId?: string) {
                 services: pendingServices,
                 appointments: pendingAppointments,
                 leaves: pendingLeaves,
-                regulation: validationDone, // Nombre de validations EFFECTUÉES
-                total: pendingAdvances + pendingServices + pendingAppointments + pendingLeaves + (validationDone === 0 ? 0 : 0) // On ne compte pas le 3ème oubli dans le TOTAL si on veut juste suivre la progression
+                regulation: validationPending, 
+                total: pendingAdvances + pendingServices + pendingAppointments + pendingLeaves + validationPending
             },
             personal: {
                 advances: myAdvances,

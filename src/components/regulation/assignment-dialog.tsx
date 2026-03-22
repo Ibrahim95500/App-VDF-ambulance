@@ -19,6 +19,7 @@ import {
     SelectTrigger,
     SelectValue
 } from "@/components/ui/select"
+import { Combobox } from "@/components/ui/combobox"
 import { User, ShieldCheck, Clock, CheckCircle2, Loader2, AlertCircle } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { saveAssignment } from "@/actions/regulation.actions"
@@ -193,32 +194,18 @@ export function AssignmentDialog({
                         <Label className="text-xs font-bold uppercase opacity-60 flex items-center gap-2">
                             <ShieldCheck size={14} className="text-orange-500" /> Responsable (DEA/Titulaire)
                         </Label>
-                        <Select value={leaderId} onValueChange={setLeaderId}>
-                            <SelectTrigger className="font-medium h-12">
-                                <SelectValue placeholder="Choisir un responsable" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {availableLeaders
-                                    .map(p => (
-                                        <SelectItem key={p.id} value={p.id} className="py-3">
-                                            <div className="flex flex-col">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="font-bold">{p.lastName} {p.firstName}</span>
-                                                    {p.diploma === 'REGULATEUR' && (
-                                                        <Badge variant="outline" className="text-[9px] bg-purple-50 text-purple-600 border-purple-200 uppercase px-1 h-4">Regul</Badge>
-                                                    )}
-                                                    {p.oubliCount > 0 && (
-                                                        <Badge variant="destructive" className="text-[8px] h-3.5 px-1 font-black leading-none flex items-center gap-0.5">
-                                                            <AlertCircle size={8} /> {p.oubliCount}/3
-                                                        </Badge>
-                                                    )}
-                                                </div>
-                                                <span className="text-[10px] opacity-60 uppercase">{p.diploma || "DEA"} {p.isTeamLeader && "⭐ Chef"}</span>
-                                            </div>
-                                        </SelectItem>
-                                    ))}
-                            </SelectContent>
-                        </Select>
+                        <Combobox
+                            options={availableLeaders.map(p => ({
+                                value: p.id,
+                                label: `${p.lastName} ${p.firstName}`,
+                                description: `${p.diploma || "DEA"} ${p.isTeamLeader ? "⭐ Chef" : ""}`
+                            }))}
+                            value={leaderId}
+                            onValueChange={setLeaderId}
+                            placeholder="Choisir un responsable"
+                            searchPlaceholder="Rechercher par nom..."
+                            className="h-12 border-2"
+                        />
                     </div>
 
                     {/* Co-équipier */}
@@ -226,30 +213,18 @@ export function AssignmentDialog({
                         <Label className="text-xs font-bold uppercase opacity-60 flex items-center gap-2">
                             <User size={14} className="text-blue-500" /> Co-équipier (Auxiliaire/Stagiaire)
                         </Label>
-                        <Select value={teammateId} onValueChange={setTeammateId}>
-                            <SelectTrigger className="font-medium h-12">
-                                <SelectValue placeholder="Choisir un co-équipier" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {availableTeammates
-                                    .filter(p => p.id !== leaderId) // Dynamique : On retire celui choisi en responsable
-                                    .map(p => (
-                                        <SelectItem key={p.id} value={p.id} className="py-3">
-                                            <div className="flex flex-col">
-                                                <div className="flex items-center gap-2">
-                                                    <span className="font-bold">{p.lastName} {p.firstName}</span>
-                                                    {p.oubliCount > 0 && (
-                                                        <Badge variant="destructive" className="text-[8px] h-3.5 px-1 font-black leading-none flex items-center gap-0.5">
-                                                            <AlertCircle size={8} /> {p.oubliCount}/3
-                                                        </Badge>
-                                                    )}
-                                                </div>
-                                                <span className="text-[10px] opacity-60 uppercase">{p.diploma || "Auxiliaire"}</span>
-                                            </div>
-                                        </SelectItem>
-                                    ))}
-                            </SelectContent>
-                        </Select>
+                        <Combobox
+                            options={availableTeammates.filter(p => p.id !== leaderId).map(p => ({
+                                value: p.id,
+                                label: `${p.lastName} ${p.firstName}`,
+                                description: p.diploma || "Auxiliaire"
+                            }))}
+                            value={teammateId}
+                            onValueChange={setTeammateId}
+                            placeholder="Choisir un co-équipier"
+                            searchPlaceholder="Rechercher par nom..."
+                            className="h-12 border-2"
+                        />
                     </div>
                 </div>
 

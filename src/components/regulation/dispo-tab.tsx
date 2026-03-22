@@ -4,9 +4,10 @@ import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Combobox } from "@/components/ui/combobox"
 import { Input } from "@/components/ui/input"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { saveDisponibility, deleteDisponibility, integrateDispoToCrew } from "@/actions/regulation.actions"
+import { saveDisponibility, deleteDisponibility, integrateDispoToCrew, detachDispoFromCrew } from "@/actions/regulation.actions"
 import { toast } from "sonner"
 import { Clock, Trash2, Plus, UserPlus, Ambulance, ArrowRight } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
@@ -107,14 +108,18 @@ export function DispoTab({ data, personnel, vehicles, dateStr, onSuccess }: Disp
                     <div className="flex flex-col md:flex-row gap-4 items-end">
                         <div className="space-y-1.5 flex-1 w-full">
                             <label className="text-sm font-bold opacity-70">Salarié</label>
-                            <Select value={selectedUser} onValueChange={setSelectedUser}>
-                                <SelectTrigger><SelectValue placeholder="Sélectionner" /></SelectTrigger>
-                                <SelectContent>
-                                    {personnel.map(p => (
-                                        <SelectItem key={p.id} value={p.id}>{p.lastName} {p.firstName}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <Combobox
+                                options={personnel.map(p => ({
+                                    value: p.id,
+                                    label: `${p.lastName} ${p.firstName}`,
+                                    description: p.diploma || "DEA"
+                                }))}
+                                value={selectedUser}
+                                onValueChange={setSelectedUser}
+                                placeholder="Sélectionner un salarié"
+                                searchPlaceholder="Rechercher..."
+                                className="w-full"
+                            />
                         </div>
                         <div className="space-y-1.5 w-full md:w-48">
                             <label className="text-sm font-bold opacity-70">Prise de poste</label>
@@ -170,11 +175,35 @@ export function DispoTab({ data, personnel, vehicles, dateStr, onSuccess }: Disp
                     <div className="p-4 border-t border-slate-200 pt-6 opacity-75">
                          <h3 className="font-bold text-slate-500 mb-4 text-sm uppercase">Déjà intégrés dans un équipage aujourd'hui</h3>
                          <div className="flex flex-wrap gap-3">
+                         <div className="space-y-3">
                              {integratedDispos.map(d => (
-                                 <Badge key={d.id} variant="secondary" className="px-3 py-1 font-medium bg-slate-200 text-slate-600">
-                                     {d.user?.lastName} {d.user?.firstName} (intégré)
-                                 </Badge>
+                                 <div key={d.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-dashed border-slate-300">
+                                     <div className="flex items-center gap-3">
+                                         <div className="bg-slate-200 p-2 rounded-lg">
+                                             <Ambulance size={16} className="text-slate-500" />
+                                         </div>
+                                         <div className="flex flex-col">
+                                             <span className="text-sm font-bold text-slate-700">{d.user?.lastName} {d.user?.firstName}</span>
+                                             <span className="text-[10px] text-slate-500 uppercase font-medium">Déjà intégré dans un équipage</span>
+                                         </div>
+                                     </div>
+                                     <Button 
+                                         variant="ghost" 
+                                         size="sm" 
+                                         className="h-8 text-xs font-bold text-orange-600 hover:bg-orange-50"
+                                         onClick={async () => {
+                                             if (confirm("Détacher ce salarié de l'équipage ? Il redeviendra disponible pour une nouvelle affectation.")) {
+                                                 const res = await detachDispoFromCrew(d.id)
+                                                 if (res.success) toast.success("Salarié détaché avec succès")
+                                                 else toast.error(res.error)
+                                             }
+                                         }}
+                                     >
+                                         Détacher
+                                     </Button>
+                                 </div>
                              ))}
+                         </div>
                          </div>
                     </div>
                 )}
