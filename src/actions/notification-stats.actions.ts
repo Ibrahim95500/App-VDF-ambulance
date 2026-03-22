@@ -75,14 +75,14 @@ export async function getNotificationStats(userId?: string) {
             }
         });
 
-        let validatedCount = 0;
+        let validationPending = 0;
         assignmentsTomorrow.forEach((a: any) => {
-            if (a.leaderId && a.leaderValidated) validatedCount++;
-            if (a.teammateId && a.teammateValidated) validatedCount++;
+            if (a.leaderId && !a.leaderValidated) validationPending++;
+            if (a.teammateId && !a.teammateValidated) validationPending++;
         });
 
         regulationAssignments.forEach((ra: any) => {
-            if (ra.validated) validatedCount++;
+            if (!ra.validated) validationPending++;
         });
 
         return {
@@ -91,8 +91,8 @@ export async function getNotificationStats(userId?: string) {
                 services: pendingServices,
                 appointments: pendingAppointments,
                 leaves: pendingLeaves,
-                regulation: validatedCount, 
-                total: pendingAdvances + pendingServices + pendingAppointments + pendingLeaves + validatedCount
+                regulation: validationPending, 
+                total: pendingAdvances + pendingServices + pendingAppointments + pendingLeaves + validationPending
             },
             personal: {
                 advances: myAdvances,
