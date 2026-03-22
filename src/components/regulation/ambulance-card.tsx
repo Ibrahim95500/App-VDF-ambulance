@@ -97,14 +97,14 @@ export function AmbulanceCard({
             {/* Badge validation individuelle */}
             {name && (
                 validated ? (
-                    <div className="flex items-center gap-1 text-[10px] font-bold text-green-600 bg-green-50 border border-green-200 rounded-full px-2 py-0.5 shrink-0">
-                        <CheckCircle2 size={11} />
-                        <span>Validé</span>
+                    <div className="flex items-center gap-1 text-[10px] font-black text-white bg-green-600 border border-green-700 shadow-sm rounded-full px-2.5 py-1 shrink-0">
+                        <CheckCircle2 size={12} className="stroke-[3px]" />
+                        <span>VALIDÉ</span>
                     </div>
                 ) : (
-                    <div className="flex items-center gap-1 text-[10px] font-bold text-amber-600 bg-amber-50 border border-amber-200 rounded-full px-2 py-0.5 shrink-0">
-                        <Clock3 size={11} />
-                        <span>En attente</span>
+                    <div className="flex items-center gap-1 text-[10px] font-black text-white bg-orange-500 border border-orange-600 shadow-sm rounded-full px-2.5 py-1 shrink-0 animate-pulse">
+                        <Clock3 size={12} className="stroke-[3px]" />
+                        <span>À VALIDER</span>
                     </div>
                 )
             )}

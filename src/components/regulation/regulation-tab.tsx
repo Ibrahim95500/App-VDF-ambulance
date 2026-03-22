@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Combobox } from "@/components/ui/combobox"
 import { Input } from "@/components/ui/input"
+import { Badge } from "@/components/ui/badge"
 import { saveRegulationAssignment, deleteRegulationAssignment } from "@/actions/regulation.actions"
 import { toast } from "sonner"
 import { Clock, User, Trash2, Plus, PhoneCall } from "lucide-react"
@@ -81,8 +82,10 @@ export function RegulationTab({ data, personnel, dateStr, onSuccess }: Regulatio
                                 </div>
                                 <div className="font-bold flex items-center gap-2">
                                     {item.user?.firstName} {item.user?.lastName}
-                                    {item.validated && (
-                                        <span className="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full uppercase">Validé</span>
+                                    {item.validated ? (
+                                        <Badge variant="outline" className="text-[9px] bg-green-600 text-white border-green-700 font-black px-2 h-5">VALIDÉ ✅</Badge>
+                                    ) : (
+                                        <Badge variant="outline" className="text-[9px] bg-orange-500 text-white border-orange-600 font-black px-2 h-5 animate-pulse">À VALIDER ⏳</Badge>
                                     )}
                                 </div>
                             </div>

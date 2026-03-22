@@ -104,7 +104,7 @@ export async function saveAssignment(data: {
 
             if (otherAssignment) {
                 const user = await prisma.user.findUnique({ where: { id: pid }, select: { firstName: true, lastName: true } })
-                throw new Error(`${user?.lastName} ${user?.firstName} est déjà assigné sur le véhicule ${otherAssignment.vehicle.plateNumber} en vacation ${isNight ? 'MATIN' : 'SOIR'}.`)
+                throw new Error(`🚫 CONFLIT JOUR/NUIT : ${user?.lastName} ${user?.firstName} est déjà assigné sur le véhicule ${otherAssignment.vehicleId} (${otherAssignment.vehicle.plateNumber}) en vacation ${isNight ? 'du MATIN' : 'du SOIR'}. Un salarié ne peut pas faire les deux vacations le même jour.`)
             }
         }
         

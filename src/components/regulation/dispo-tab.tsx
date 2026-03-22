@@ -147,8 +147,10 @@ export function DispoTab({ data, personnel, vehicles, dateStr, onSuccess }: Disp
                                     <div className="flex flex-col gap-1">
                                         <div className="font-black text-lg text-orange-600 flex items-center gap-2">
                                             DISPO {i + 1}
-                                            {item.validated && (
-                                                <Badge variant="outline" className="text-[10px] uppercase bg-green-50 text-green-600 border-green-200 h-5">Validé</Badge>
+                                            {item.validated ? (
+                                                <Badge variant="outline" className="text-[10px] uppercase bg-green-50 text-green-600 border-green-200 h-5">Validé ✅</Badge>
+                                            ) : (
+                                                <Badge variant="outline" className="text-[10px] uppercase bg-orange-50 text-orange-600 border-orange-200 h-5 animate-pulse">En attente ⏳</Badge>
                                             )}
                                         </div>
                                         <div className="flex items-center gap-2 text-sm font-medium">
