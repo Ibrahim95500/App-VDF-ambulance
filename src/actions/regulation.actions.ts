@@ -582,3 +582,16 @@ export async function validateMyDispo(userId: string, id: string) {
         return { success: true }
     } catch (e: any) { return { error: e.message } }
 }
+
+export async function detachDispoFromCrew(dispoId: string) {
+    try {
+        await prisma.disponibility.update({
+            where: { id: dispoId },
+            data: { status: 'PENDING' }
+        })
+        revalidatePath('/dashboard/rh/regulation')
+        return { success: true }
+    } catch (error: any) {
+        return { error: error.message }
+    }
+}
