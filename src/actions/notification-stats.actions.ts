@@ -54,7 +54,6 @@ export async function getNotificationStats(userId?: string) {
             myMission = pendingMission > 0 ? 1 : 0;
         }
 
-        // Stats Régulation (RH) : Validations manquantes pour demain
         const tomorrow = addDays(new Date(), 1);
         const assignmentsTomorrow = await prisma.planningAssignment.findMany({
             where: {
@@ -65,10 +64,25 @@ export async function getNotificationStats(userId?: string) {
             }
         });
 
-        let validationPending = 0;
+        const regulationAssignments = await prisma.regulationAssignment.findMany({
+            where: {
+                planning: {
+                    date: {
+                        gte: startOfDay(tomorrow),
+                        lte: endOfDay(tomorrow)
+                    }
+                }
+            }
+        });
+
+        let validatedCount = 0;
         assignmentsTomorrow.forEach((a: any) => {
-            if (a.leaderId && !a.leaderValidated) validationPending++;
-            if (a.teammateId && !a.teammateValidated) validationPending++;
+            if (a.leaderId && a.leaderValidated) validatedCount++;
+            if (a.teammateId && a.teammateValidated) validatedCount++;
+        });
+
+        regulationAssignments.forEach((ra: any) => {
+            if (ra.validated) validatedCount++;
         });
 
         return {
@@ -77,8 +91,8 @@ export async function getNotificationStats(userId?: string) {
                 services: pendingServices,
                 appointments: pendingAppointments,
                 leaves: pendingLeaves,
-                regulation: validationPending, 
-                total: pendingAdvances + pendingServices + pendingAppointments + pendingLeaves + validationPending
+                regulation: validatedCount, 
+                total: pendingAdvances + pendingServices + pendingAppointments + pendingLeaves + validatedCount
             },
             personal: {
                 advances: myAdvances,
