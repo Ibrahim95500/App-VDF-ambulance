@@ -103,7 +103,6 @@ export function NotificationsSheet({ trigger, onAllRead }: { trigger: ReactNode;
     setIsOpen(open);
     if (open) {
       fetchNotifications();
-      handleMarkAllAsRead();
     }
   };
 
