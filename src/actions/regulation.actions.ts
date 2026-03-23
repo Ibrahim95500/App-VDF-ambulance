@@ -260,9 +260,10 @@ export async function getMyAssignment(userId: string, dateStr: string) {
 export async function getRegulationHistory() {
     try {
         const history = await prisma.planningAssignment.findMany({
-            orderBy: {
-                date: 'desc'
-            },
+            orderBy: [
+                { date: 'desc' },
+                { createdAt: 'desc' }
+            ],
             include: {
                 vehicle: true,
                 leader: true,
@@ -289,9 +290,10 @@ export async function getMyRegulationHistory(userId: string) {
                 leader: true,
                 teammate: true
             },
-            orderBy: {
-                date: 'desc'
-            },
+            orderBy: [
+                { date: 'desc' },
+                { createdAt: 'desc' }
+            ],
             take: 10 // On limite aux 10 dernières missions pour la lisibilité
         })
     } catch (error) {

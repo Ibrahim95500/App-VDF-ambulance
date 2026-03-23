@@ -90,7 +90,7 @@ export function RegulationView() {
     }, [date])
 
     useEffect(() => {
-        if (viewMode === 'HISTORY' && historyData.length === 0) {
+        if (viewMode === 'HISTORY') {
             loadHistory()
         }
     }, [viewMode])
