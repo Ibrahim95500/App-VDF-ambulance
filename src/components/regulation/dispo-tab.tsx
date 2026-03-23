@@ -174,12 +174,22 @@ export function DispoTab({ data, personnel, vehicles, dateStr, onSuccess, global
                                 const isIntegrated = item.status === "INTEGRATED";
                                 let vehicleInfo = null;
                                 let isLeader = false;
+                                let replacedUserObj = null;
                                 
                                 if (isIntegrated) {
-                                    const userAssignment = vehicles.flatMap(v => v.assignments).find(a => a?.leaderId === item.userId || a?.teammateId === item.userId);
-                                    const vehicle = vehicles.find(v => v.assignments?.some((a: any) => a?.id === userAssignment?.id));
-                                    isLeader = userAssignment?.leaderId === item.userId;
-                                    vehicleInfo = vehicle;
+                                    const allUserAssignments = vehicles.flatMap(v => v.assignments).filter(a => a?.leaderId === item.userId || a?.teammateId === item.userId);
+                                    const userAssignment = allUserAssignments.sort((a,b) => (b.startTime || '').localeCompare(a.startTime || ''))[0];
+                                    
+                                    if (userAssignment) {
+                                        const vehicle = vehicles.find(v => v.assignments?.some((a: any) => a?.id === userAssignment.id));
+                                        isLeader = userAssignment.leaderId === item.userId;
+                                        vehicleInfo = vehicle;
+
+                                        const previousAssignment = vehicle?.assignments?.find((a: any) => a.endTime === userAssignment.startTime && a.id !== userAssignment.id);
+                                        if (previousAssignment) {
+                                            replacedUserObj = isLeader ? previousAssignment.leader : previousAssignment.teammate;
+                                        }
+                                    }
                                 }
 
                                 return (
@@ -212,6 +222,11 @@ export function DispoTab({ data, personnel, vehicles, dateStr, onSuccess, global
                                                     <span className={`text-[10px] uppercase font-black px-2 py-0.5 rounded ${isLeader ? "bg-orange-100 text-orange-700" : "bg-blue-100 text-blue-700"}`}>
                                                         {isLeader ? "Responsable" : "Co-équipier"}
                                                     </span>
+                                                    {replacedUserObj && (
+                                                        <span className="text-[9px] text-slate-500 font-bold max-w-[100px] truncate" title={`Remplace: ${replacedUserObj.lastName} ${replacedUserObj.firstName}`}>
+                                                            Rempl. {replacedUserObj.lastName}
+                                                        </span>
+                                                    )}
                                                 </div>
                                             )}
                                         </div>

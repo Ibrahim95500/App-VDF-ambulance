@@ -143,7 +143,7 @@ export function AmbulanceCard({
                             </span>
                         </div>
                         <h3 className="text-xl font-black tracking-tighter text-foreground group-hover:text-primary transition-colors">
-                            {plateNumber}
+                            {plateNumber.replace('VSL-GENERIC', 'VSL')}
                         </h3>
                     </div>
 

@@ -136,7 +136,19 @@ export function RegulationView() {
         if (activeTab !== "ALL" && v.category !== activeTab) return false
         if (searchTerm && !v.plateNumber.toLowerCase().includes(searchTerm.toLowerCase())) return false
         return true
-    })
+    }).sort((a, b) => {
+        const getRank = (plate: string) => {
+            const p = plate.toUpperCase();
+            if (p.includes('MARK')) return 1;
+            if (p.includes('VDF')) return 2;
+            if (p.includes('VSL')) return 3;
+            return 4;
+        };
+        const rankA = getRank(a.plateNumber);
+        const rankB = getRank(b.plateNumber);
+        if (rankA !== rankB) return rankA - rankB;
+        return a.plateNumber.localeCompare(b.plateNumber);
+    });
 
     const globalAssignedIds = new Set<string>();
     [...vehiclesJour, ...vehiclesNuit].forEach(v => {
