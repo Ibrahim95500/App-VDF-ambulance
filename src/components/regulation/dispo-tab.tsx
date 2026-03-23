@@ -6,10 +6,10 @@ import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Combobox } from "@/components/ui/combobox"
 import { Input } from "@/components/ui/input"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { saveDisponibility, deleteDisponibility, integrateDispoToCrew, detachDispoFromCrew } from "@/actions/regulation.actions"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
+import { saveDisponibility, deleteDisponibility, integrateDispoToCrew, detachDispoFromCrew, updateDisponibility } from "@/actions/regulation.actions"
 import { toast } from "sonner"
-import { Clock, Trash2, Plus, UserPlus, Ambulance, ArrowRight } from "lucide-react"
+import { Clock, Trash2, Plus, UserPlus, Ambulance, ArrowRight, Edit } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 
 interface DispoTabProps {
@@ -33,8 +33,10 @@ export function DispoTab({ data, personnel, vehicles, dateStr, onSuccess, global
     const [replacedUserId, setReplacedUserId] = useState("")
     const [integrationTime, setIntegrationTime] = useState("")
 
-    const availableDispos = data.filter(d => d.status === "AVAILABLE")
-    const integratedDispos = data.filter(d => d.status === "INTEGRATED")
+    // State pour le modal d'édition
+    const [editModalOpen, setEditModalOpen] = useState(false)
+    const [editStartTime, setEditStartTime] = useState("")
+    const [editingDispoId, setEditingDispoId] = useState("")
 
     const handleAdd = async () => {
         if (!selectedUser || !startTime) {
@@ -69,6 +71,31 @@ export function DispoTab({ data, personnel, vehicles, dateStr, onSuccess, global
         setSelectedAssignmentId("")
         setReplacedUserId("")
         setIntegrateModalOpen(true)
+    }
+
+    const openEditModal = (dispo: any) => {
+        setEditingDispoId(dispo.id)
+        setEditStartTime(dispo.startTime)
+        setEditModalOpen(true)
+    }
+
+    const handleEdit = async () => {
+        if (!editStartTime) {
+            toast.error("L'heure de début est requise")
+            return
+        }
+
+        setLoading(true)
+        const res = await updateDisponibility(editingDispoId, { startTime: editStartTime })
+        setLoading(false)
+
+        if (res.error) {
+            toast.error(res.error)
+        } else {
+            toast.success("Horaires mis à jour avec succès")
+            setEditModalOpen(false)
+            onSuccess()
+        }
     }
 
     const handleIntegrate = async () => {
@@ -133,114 +160,132 @@ export function DispoTab({ data, personnel, vehicles, dateStr, onSuccess, global
                 </CardContent>
             </Card>
 
-            {/* Listes */}
+            {/* Listes Fusionnées */}
             <div className="space-y-6">
                 <div className="bg-slate-50 dark:bg-slate-800/50 p-6 rounded-2xl border">
                     <h3 className="font-black text-xl mb-4 text-slate-800 dark:text-slate-200">En attente de placement (Disponibles)</h3>
-                    {availableDispos.length === 0 ? (
+                    {data.length === 0 ? (
                         <div className="text-sm text-slate-400 italic bg-white dark:bg-slate-900 rounded-xl p-6 border border-dashed text-center">
-                            Aucune personne disponible en attente
+                            Aucune personne disponible
                         </div>
                     ) : (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            {availableDispos.map((item, i) => (
-                                <div key={item.id} className="flex justify-between items-center bg-white dark:bg-slate-900 border border-slate-200 shadow-sm rounded-xl p-4">
-                                    <div className="flex flex-col gap-1">
-                                        <div className="font-black text-lg text-orange-600 flex items-center gap-2">
-                                            DISPO {i + 1}
-                                            {item.validated ? (
-                                                <Badge variant="outline" className="text-[10px] uppercase bg-green-50 text-green-600 border-green-200 h-5">Validé ✅</Badge>
-                                            ) : (
-                                                <Badge variant="outline" className="text-[10px] uppercase bg-orange-50 text-orange-600 border-orange-200 h-5 animate-pulse">En attente ⏳</Badge>
+                            {data.map((item, i) => {
+                                const isIntegrated = item.status === "INTEGRATED";
+                                let vehicleInfo = null;
+                                let isLeader = false;
+                                
+                                if (isIntegrated) {
+                                    const userAssignment = vehicles.flatMap(v => v.assignments).find(a => a?.leaderId === item.userId || a?.teammateId === item.userId);
+                                    const vehicle = vehicles.find(v => v.assignments?.some((a: any) => a?.id === userAssignment?.id));
+                                    isLeader = userAssignment?.leaderId === item.userId;
+                                    vehicleInfo = vehicle;
+                                }
+
+                                return (
+                                    <div key={item.id} className={\`flex flex-col gap-4 justify-between bg-white dark:bg-slate-900 border \${isIntegrated ? 'border-orange-200 shadow-md' : 'border-slate-200 shadow-sm'} rounded-xl p-4 transition-all\`}>
+                                        
+                                        <div className="flex justify-between items-start">
+                                            <div className="flex flex-col gap-1">
+                                                <div className="font-black text-lg text-orange-600 flex items-center gap-2">
+                                                    DISPO {i + 1}
+                                                    {item.validated ? (
+                                                        <Badge variant="outline" className="text-[10px] uppercase bg-green-50 text-green-600 border-green-200 h-5">Validé ✅</Badge>
+                                                    ) : (
+                                                        <Badge variant="outline" className="text-[10px] uppercase bg-orange-50 text-orange-600 border-orange-200 h-5 animate-pulse">En attente ⏳</Badge>
+                                                    )}
+                                                </div>
+                                                <div className="flex items-center gap-2 text-sm font-medium mt-1">
+                                                    <span className="font-bold text-base max-w-[200px] truncate" title={\`\${item.user?.lastName} \${item.user?.firstName}\`}>{item.user?.lastName} {item.user?.firstName}</span>
+                                                </div>
+                                                <div className="flex items-center gap-1 bg-slate-100 text-slate-600 px-2 py-1 rounded-md mt-1 w-fit">
+                                                    <Clock size={12}/> <span className="text-xs font-bold">{item.startTime}</span>
+                                                </div>
+                                            </div>
+                                            
+                                            {isIntegrated && vehicleInfo && (
+                                                <div className="flex flex-col items-end gap-1.5 shrink-0 bg-orange-50/50 p-2 rounded-lg border border-orange-100">
+                                                    <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500">
+                                                        <Ambulance size={14} className="text-orange-500"/>
+                                                        <Badge variant="secondary" className="bg-slate-100 text-slate-800 hover:bg-slate-200 rounded text-[10px]">{vehicleInfo.plateNumber}</Badge>
+                                                    </div>
+                                                    <span className={\`text-[10px] uppercase font-black px-2 py-0.5 rounded \${isLeader ? "bg-orange-100 text-orange-700" : "bg-blue-100 text-blue-700"}\`}>
+                                                        {isLeader ? "Responsable" : "Co-équipier"}
+                                                    </span>
+                                                </div>
                                             )}
                                         </div>
-                                        <div className="flex items-center gap-2 text-sm font-medium">
-                                            <span className="font-bold">{item.user?.lastName} {item.user?.firstName}</span>
-                                            <span className="text-slate-400">•</span>
-                                            <span className="flex items-center gap-1 bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md"><Clock size={12}/> {item.startTime}</span>
+
+                                        <div className="flex flex-wrap md:flex-nowrap items-center gap-2 mt-auto pt-2 border-t border-slate-100">
+                                            {isIntegrated ? (
+                                                <Button 
+                                                    variant="ghost" 
+                                                    size="sm" 
+                                                    className="w-full text-xs font-bold text-red-600 hover:bg-red-50 hover:text-red-700 border border-transparent hover:border-red-200 transition-all rounded-lg"
+                                                    onClick={async () => {
+                                                        if (confirm("⚠️ ATTENTION : Voulez-vous vraiment DÉTACHER ce salarié de son équipage actuel ?\\n\\nIl sera retiré de son véhicule et redeviendra disponible pour un autre placement.")) {
+                                                            setLoading(true)
+                                                            const res = await detachDispoFromCrew(item.id)
+                                                            setLoading(false)
+                                                            if (res.success) {
+                                                                toast.success("Salarié détaché avec succès. Il est à nouveau disponible.")
+                                                                onSuccess()
+                                                            } else toast.error(res.error)
+                                                        }
+                                                    }}
+                                                    disabled={loading}
+                                                >
+                                                    Détacher de l'équipage
+                                                </Button>
+                                            ) : (
+                                                <>
+                                                    <Button variant="outline" size="sm" className="font-bold border-orange-200 text-orange-600 hover:bg-orange-50 bg-white grow" onClick={() => openIntegrateModal(item)}>
+                                                        <UserPlus size={14} className="mr-1.5" /> Prendre le relais
+                                                    </Button>
+                                                    <Button variant="outline" size="sm" onClick={() => openEditModal(item)} className="text-xs text-slate-600 hover:bg-slate-50 font-bold px-3">
+                                                        <Edit size={14} />
+                                                    </Button>
+                                                    <Button variant="ghost" size="sm" onClick={() => handleDelete(item.id)} className="text-xs text-red-500 hover:text-red-600 hover:bg-red-50 px-3">
+                                                        <Trash2 size={16} />
+                                                    </Button>
+                                                </>
+                                            )}
                                         </div>
                                     </div>
-                                    <div className="flex flex-wrap md:flex-nowrap items-center gap-2 shrink-0">
-                                        <Button variant="outline" size="sm" className="font-bold border-orange-200 text-orange-600 hover:bg-orange-50 bg-white min-w-[140px]" onClick={() => openIntegrateModal(item)}>
-                                            <UserPlus size={14} className="mr-1.5" /> Prendre le relais
-                                        </Button>
-                                        <Button variant="ghost" size="sm" onClick={() => handleDelete(item.id)} className="text-xs text-red-500 hover:text-red-600 hover:bg-red-50">
-                                            <Trash2 size={16} />
-                                        </Button>
-                                    </div>
-                                </div>
-                            ))}
+                                )
+                            })}
                         </div>
                     )}
                 </div>
-
-                {integratedDispos.length > 0 && (
-                    <div className="p-4 border-t border-slate-200 pt-6 opacity-75">
-                         <h3 className="font-bold text-slate-500 mb-4 text-sm uppercase">Déjà intégrés dans un équipage aujourd'hui</h3>
-                         <div className="flex flex-wrap gap-3">
-                         <div className="space-y-3">
-                             {integratedDispos.map(d => {
-                                 const userAssignment = vehicles.flatMap(v => v.assignments).find(a => a?.leaderId === d.userId || a?.teammateId === d.userId);
-                                 const vehicle = vehicles.find(v => v.assignments?.some((a: any) => a?.id === userAssignment?.id));
-                                 const isLeader = userAssignment?.leaderId === d.userId;
-                                 
-                                 return (
-                                 <div key={d.id} className="flex items-center justify-between p-4 bg-white dark:bg-slate-900 rounded-xl border-2 border-slate-200 shadow-sm transition-all hover:border-orange-200">
-                                     <div className="flex items-center gap-4">
-                                         <div className="bg-orange-100/50 p-2.5 rounded-xl border border-orange-200">
-                                             <Ambulance size={20} className="text-orange-600" />
-                                         </div>
-                                          <div className="flex flex-col gap-1">
-                                              <div className="flex items-center gap-2">
-                                                  <span className="text-base font-black text-slate-800 dark:text-slate-100">{d.user?.lastName} {d.user?.firstName}</span>
-                                                  {d.validated ? (
-                                                      <Badge variant="outline" className="text-[10px] bg-green-50 text-green-700 border-green-200 font-black px-2 py-0.5 uppercase h-5">Validé ✅</Badge>
-                                                  ) : (
-                                                      <Badge variant="outline" className="text-[10px] bg-orange-50 text-orange-600 border-orange-200 font-black px-2 py-0.5 uppercase h-5 animate-pulse">En attente ⏳</Badge>
-                                                  )}
-                                              </div>
-                                              <div className="flex flex-wrap items-center gap-1.5 text-xs font-bold text-slate-500">
-                                                  <span>Intégré dans</span>
-                                                  <Badge variant="secondary" className="bg-slate-100 text-slate-700 hover:bg-slate-200 rounded text-[10px]">{vehicle ? vehicle.plateNumber : "Véhicule inconnu"}</Badge>
-                                                  <span>en tant que</span>
-                                                  <span className={isLeader ? "text-orange-600" : "text-blue-600"}>{isLeader ? "Responsable" : "Co-équipier"}</span>
-                                              </div>
-                                          </div>
-                                     </div>
-                                     <div className="flex items-center gap-2">
-                                        <Button 
-                                            variant="ghost" 
-                                            size="sm" 
-                                            className="h-9 px-4 text-xs font-bold text-red-600 hover:bg-red-50 hover:text-red-700 border border-transparent hover:border-red-200 transition-all rounded-lg"
-                                          onClick={async () => {
-                                              if (confirm("⚠️ ATTENTION : Voulez-vous vraiment DÉTACHER ce salarié de son équipage actuel ?\n\nIl sera retiré de son véhicule et redeviendra disponible pour un autre placement.")) {
-                                                  setLoading(true)
-                                                  const res = await detachDispoFromCrew(d.id)
-                                                  setLoading(false)
-                                                  if (res.success) {
-                                                      toast.success("Salarié détaché avec succès. Il est à nouveau disponible.")
-                                                      onSuccess()
-                                                  } else {
-                                                      toast.error(res.error)
-                                                  }
-                                              }
-                                          }}
-                                          disabled={loading}
-                                     >
-                                         Détacher
-                                     </Button>
-                                     </div>
-                                 </div>
-                             )
-                             })
-                         }
-                         </div>
-                         </div>
-                    </div>
-                )}
             </div>
 
-
+            {/* Modal d'édition des horaires */}
+            <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
+                <DialogContent className="max-w-sm">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2 text-xl font-black">
+                            <Edit className="text-orange-500" /> Modifier l'horaire
+                        </DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                            <label className="text-sm font-bold">Heure de début</label>
+                            <Input 
+                                type="time" 
+                                value={editStartTime} 
+                                onChange={e => setEditStartTime(e.target.value)} 
+                                className="font-bold border-2 focus-visible:ring-orange-500 h-10" 
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setEditModalOpen(false)}>Annuler</Button>
+                        <Button className="bg-orange-500 hover:bg-orange-600 text-white font-bold" onClick={handleEdit} disabled={loading}>
+                            Enregistrer
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
             {/* Modal de Relais */}
             <Dialog open={integrateModalOpen} onOpenChange={setIntegrateModalOpen}>

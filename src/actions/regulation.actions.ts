@@ -435,6 +435,19 @@ export async function deleteDisponibility(id: string) {
     } catch (error: any) { return { error: error.message } }
 }
 
+export async function updateDisponibility(id: string, data: { startTime: string }) {
+    try {
+        await prisma.disponibility.update({
+            where: { id },
+            data: { startTime: data.startTime }
+        })
+        revalidatePath('/dashboard/rh/regulation')
+        return { success: true }
+    } catch (error: any) { 
+        return { error: error.message } 
+    }
+}
+
 export async function integrateDispoToCrew(
     dispoId: string, 
     assignmentId: string, 
