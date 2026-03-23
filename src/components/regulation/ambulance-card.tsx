@@ -139,7 +139,7 @@ export function AmbulanceCard({
                                 <Ambulance size={isCompact ? 16 : 20} />
                             </div>
                             <span className="text-[10px] font-bold uppercase tracking-wider opacity-60">
-                                {category} Unit
+                                {category}
                             </span>
                         </div>
                         <h3 className="text-xl font-black tracking-tighter text-foreground group-hover:text-primary transition-colors">

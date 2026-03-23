@@ -44,7 +44,7 @@ interface AssignmentDialogProps {
     date: Date
     dateStr: string
     personnel: Personnel[]
-    vehicles?: any[]
+    globalAssignedIds: Set<string>
     onSuccess: () => void
     defaultTime?: string
     initialData?: {
@@ -63,8 +63,9 @@ export function AssignmentDialog({
     category,
     date,
     dateStr,
+    dateStr,
     personnel,
-    vehicles = [],
+    globalAssignedIds,
     onSuccess,
     defaultTime,
     initialData
@@ -86,16 +87,12 @@ export function AssignmentDialog({
         }
     }, [isOpen, initialData])
 
-    // On récupère tous les IDs des personnes déjà assignées sur d'AUTRES véhicules À CETTE DATE uniquement.
-    // Chaque date est indépendante : être assigné le 11/03 ne bloque pas le 12/03.
-    const assignedIds = new Set<string>();
-    vehicles.forEach(v => {
-        if (v.id !== vehicleId && v.assignments && v.assignments.length > 0) {
-            const assignment = v.assignments[0];
-            if (assignment.leaderId) assignedIds.add(assignment.leaderId);
-            if (assignment.teammateId) assignedIds.add(assignment.teammateId);
-        }
-    });
+    // On utilise les IDs globaux (Jour + Nuit + Dispo + Regulateur)
+    const assignedIds = new Set(globalAssignedIds);
+    // On retire les personnes déjà assignées sur ce véhicule spécifique pour pouvoir les modifier
+    if (initialData?.leaderId) assignedIds.delete(initialData.leaderId);
+    if (initialData?.teammateId) assignedIds.delete(initialData.teammateId);
+
 
     /**
      * Compatibilité structure ↔ type de véhicule :

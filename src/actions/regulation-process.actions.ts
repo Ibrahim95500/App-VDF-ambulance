@@ -205,7 +205,6 @@ export async function checkConfirmationsAndPenalize(dateStr: string) {
         }
 
         const pendingAssignments = assignments.filter(a => a.status === 'PENDING');
-        const validatedAssignments = assignments.filter(a => a.status === 'VALIDATED');
         const rejectedAssignments = assignments.filter(a => a.status === 'REJECTED');
 
         let penalitiesCount = 0;
@@ -222,6 +221,28 @@ export async function checkConfirmationsAndPenalize(dateStr: string) {
             }
         }
 
+        const oublisList: any[] = [];
+        const validList: any[] = [];
+        const refusList: any[] = [];
+
+        assignments.forEach(a => {
+            const time = a.startTime || 'Non défini';
+            const vPlate = a.vehicle.plateNumber;
+            
+            if (a.leader) {
+                const data = { time, vehicle: vPlate, name: `${a.leader.lastName} ${a.leader.firstName}`, role: 'Responsable' };
+                if (a.status === 'REJECTED') refusList.push(data);
+                else if (!a.leaderValidated) oublisList.push(data);
+                else validList.push(data);
+            }
+            if (a.teammate) {
+                const data = { time, vehicle: vPlate, name: `${a.teammate.lastName} ${a.teammate.firstName}`, role: 'Co-équipier' };
+                if (a.status === 'REJECTED') refusList.push(data);
+                else if (!a.teammateValidated) oublisList.push(data);
+                else validList.push(data);
+            }
+        });
+
         // --- ENVOI DU RAPPORT ADMIN CENTRALISÉ ---
         const dateFormatted = format(startOfDay, "EEEE d MMMM yyyy", { locale: fr })
         const dateDisplay = dateFormatted.charAt(0).toUpperCase() + dateFormatted.slice(1)
@@ -229,31 +250,31 @@ export async function checkConfirmationsAndPenalize(dateStr: string) {
         let htmlReport = `
             <h2>Rapport de Validation des Équipages</h2>
             <p><strong>Date de la mission :</strong> ${dateDisplay}</p>
-            <p><strong>Bilan à 21h00 :</strong> ${validatedAssignments.length} validé(s), ${pendingAssignments.length} oubli(s), ${rejectedAssignments.length} refusé(s).</p>
+            <p><strong>Bilan à 21h00 :</strong> ${validList.length} validé(s), ${oublisList.length} oubli(s), ${refusList.length} refusé(s).</p>
         `;
 
         // 1. Les Oublis (en rouge)
-        if (pendingAssignments.length > 0) {
+        if (oublisList.length > 0) {
             htmlReport += `
                 <h3 style="color: #b91c1c; margin-top: 20px;">🚨 Oublis (Pénalités et Alertes envoyées)</h3>
                 <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
                     <thead>
                         <tr style="background-color: #fef2f2; border-bottom: 2px solid #fca5a5;">
+                            <th style="padding: 10px; text-align: left;">Heure</th>
                             <th style="padding: 10px; text-align: left;">Véhicule</th>
-                            <th style="padding: 10px; text-align: left;">Responsable</th>
-                            <th style="padding: 10px; text-align: left;">Co-équipier</th>
+                            <th style="padding: 10px; text-align: left;">Salarié</th>
+                            <th style="padding: 10px; text-align: left;">Rôle</th>
                         </tr>
                     </thead>
                     <tbody>
             `;
-            pendingAssignments.forEach(a => {
-                const leaderName = `${a.leader?.lastName || ''} ${a.leader?.firstName || ''}`;
-                const teammateName = `${a.teammate?.lastName || ''} ${a.teammate?.firstName || ''}`;
+            oublisList.forEach(p => {
                 htmlReport += `
                     <tr style="border-bottom: 1px solid #fee2e2;">
-                        <td style="padding: 10px; font-weight: bold;">${a.vehicle.plateNumber}</td>
-                        <td style="padding: 10px;">${leaderName}</td>
-                        <td style="padding: 10px;">${teammateName}</td>
+                        <td style="padding: 10px; font-weight: bold;">${p.time}</td>
+                        <td style="padding: 10px; font-weight: bold;">${p.vehicle}</td>
+                        <td style="padding: 10px;">${p.name}</td>
+                        <td style="padding: 10px;">${p.role}</td>
                     </tr>
                 `;
             });
@@ -263,27 +284,27 @@ export async function checkConfirmationsAndPenalize(dateStr: string) {
         }
 
         // 2. Les Validés (en vert)
-        if (validatedAssignments.length > 0) {
+        if (validList.length > 0) {
             htmlReport += `
-                <h3 style="color: #15803d; margin-top: 30px;">✅ Équipages Validés</h3>
+                <h3 style="color: #15803d; margin-top: 30px;">✅ Validations Correctes</h3>
                 <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
                     <thead>
                         <tr style="background-color: #f0fdf4; border-bottom: 2px solid #86efac;">
+                            <th style="padding: 10px; text-align: left;">Heure</th>
                             <th style="padding: 10px; text-align: left;">Véhicule</th>
-                            <th style="padding: 10px; text-align: left;">Responsable</th>
-                            <th style="padding: 10px; text-align: left;">Co-équipier</th>
+                            <th style="padding: 10px; text-align: left;">Salarié</th>
+                            <th style="padding: 10px; text-align: left;">Rôle</th>
                         </tr>
                     </thead>
                     <tbody>
             `;
-            validatedAssignments.forEach(a => {
-                const leaderName = `${a.leader?.lastName || ''} ${a.leader?.firstName || ''}`;
-                const teammateName = `${a.teammate?.lastName || ''} ${a.teammate?.firstName || ''}`;
+            validList.forEach(p => {
                 htmlReport += `
                     <tr style="border-bottom: 1px solid #dcfce7;">
-                        <td style="padding: 10px; font-weight: bold;">${a.vehicle.plateNumber}</td>
-                        <td style="padding: 10px;">${leaderName}</td>
-                        <td style="padding: 10px;">${teammateName}</td>
+                        <td style="padding: 10px; font-weight: bold;">${p.time}</td>
+                        <td style="padding: 10px; font-weight: bold;">${p.vehicle}</td>
+                        <td style="padding: 10px;">${p.name}</td>
+                        <td style="padding: 10px;">${p.role}</td>
                     </tr>
                 `;
             });

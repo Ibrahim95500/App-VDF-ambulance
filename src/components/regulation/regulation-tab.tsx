@@ -16,9 +16,10 @@ interface RegulationTabProps {
     personnel: any[]
     dateStr: string
     onSuccess: () => void
+    globalAssignedIds: Set<string>
 }
 
-export function RegulationTab({ data, personnel, dateStr, onSuccess }: RegulationTabProps) {
+export function RegulationTab({ data, personnel, dateStr, onSuccess, globalAssignedIds }: RegulationTabProps) {
     const [loading, setLoading] = useState(false)
     const [selectedUser, setSelectedUser] = useState("")
     const [selectedType, setSelectedType] = useState("MATIN")
@@ -128,7 +129,7 @@ export function RegulationTab({ data, personnel, dateStr, onSuccess }: Regulatio
                         <div className="space-y-1.5 flex-1 w-full">
                             <label className="text-sm font-bold opacity-70">Personne</label>
                             <Combobox
-                                options={personnel.filter(p => p.isRegulateur).map(p => ({
+                                options={personnel.filter(p => p.isRegulateur && !globalAssignedIds.has(p.id)).map(p => ({
                                     value: p.id,
                                     label: `${p.lastName} ${p.firstName}`
                                 }))}

@@ -18,9 +18,10 @@ interface DispoTabProps {
     vehicles: any[]
     dateStr: string
     onSuccess: () => void
+    globalAssignedIds: Set<string>
 }
 
-export function DispoTab({ data, personnel, vehicles, dateStr, onSuccess }: DispoTabProps) {
+export function DispoTab({ data, personnel, vehicles, dateStr, onSuccess, globalAssignedIds }: DispoTabProps) {
     const [loading, setLoading] = useState(false)
     const [selectedUser, setSelectedUser] = useState("")
     const [startTime, setStartTime] = useState("08:00")
@@ -109,7 +110,7 @@ export function DispoTab({ data, personnel, vehicles, dateStr, onSuccess }: Disp
                         <div className="space-y-1.5 flex-1 w-full">
                             <label className="text-sm font-bold opacity-70">Salarié</label>
                             <Combobox
-                                options={personnel.map(p => ({
+                                options={personnel.filter(p => !globalAssignedIds.has(p.id)).map(p => ({
                                     value: p.id,
                                     label: `${p.lastName} ${p.firstName}`,
                                     description: p.diploma || "DEA"
@@ -178,28 +179,39 @@ export function DispoTab({ data, personnel, vehicles, dateStr, onSuccess }: Disp
                          <h3 className="font-bold text-slate-500 mb-4 text-sm uppercase">Déjà intégrés dans un équipage aujourd'hui</h3>
                          <div className="flex flex-wrap gap-3">
                          <div className="space-y-3">
-                             {integratedDispos.map(d => (
-                                 <div key={d.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-dashed border-slate-300">
-                                     <div className="flex items-center gap-3">
-                                         <div className="bg-slate-200 p-2 rounded-lg">
-                                             <Ambulance size={16} className="text-slate-500" />
+                             {integratedDispos.map(d => {
+                                 const userAssignment = vehicles.flatMap(v => v.assignments).find(a => a?.leaderId === d.userId || a?.teammateId === d.userId);
+                                 const vehicle = vehicles.find(v => v.assignments?.some((a: any) => a?.id === userAssignment?.id));
+                                 const isLeader = userAssignment?.leaderId === d.userId;
+                                 
+                                 return (
+                                 <div key={d.id} className="flex items-center justify-between p-4 bg-white dark:bg-slate-900 rounded-xl border-2 border-slate-200 shadow-sm transition-all hover:border-orange-200">
+                                     <div className="flex items-center gap-4">
+                                         <div className="bg-orange-100/50 p-2.5 rounded-xl border border-orange-200">
+                                             <Ambulance size={20} className="text-orange-600" />
                                          </div>
-                                          <div className="flex flex-col">
+                                          <div className="flex flex-col gap-1">
                                               <div className="flex items-center gap-2">
-                                                  <span className="text-sm font-bold text-slate-700">{d.user?.lastName} {d.user?.firstName}</span>
+                                                  <span className="text-base font-black text-slate-800 dark:text-slate-100">{d.user?.lastName} {d.user?.firstName}</span>
                                                   {d.validated ? (
-                                                      <Badge variant="outline" className="text-[9px] bg-green-600 text-white border-green-700 font-black px-2 h-4 shrink-0">VALIDÉ ✅</Badge>
+                                                      <Badge variant="outline" className="text-[10px] bg-green-50 text-green-700 border-green-200 font-black px-2 py-0.5 uppercase h-5">Validé ✅</Badge>
                                                   ) : (
-                                                      <Badge variant="outline" className="text-[9px] bg-orange-500 text-white border-orange-600 font-black px-2 h-4 shrink-0 animate-pulse">À VALIDER ⏳</Badge>
+                                                      <Badge variant="outline" className="text-[10px] bg-orange-50 text-orange-600 border-orange-200 font-black px-2 py-0.5 uppercase h-5 animate-pulse">En attente ⏳</Badge>
                                                   )}
                                               </div>
-                                              <span className="text-[10px] text-slate-500 uppercase font-medium">Déjà intégré dans un équipage</span>
+                                              <div className="flex flex-wrap items-center gap-1.5 text-xs font-bold text-slate-500">
+                                                  <span>Intégré dans</span>
+                                                  <Badge variant="secondary" className="bg-slate-100 text-slate-700 hover:bg-slate-200 rounded text-[10px]">{vehicle ? vehicle.plateNumber : "Véhicule inconnu"}</Badge>
+                                                  <span>en tant que</span>
+                                                  <span className={isLeader ? "text-orange-600" : "text-blue-600"}>{isLeader ? "Responsable" : "Co-équipier"}</span>
+                                              </div>
                                           </div>
                                      </div>
-                                     <Button 
-                                         variant="ghost" 
-                                         size="sm" 
-                                         className="h-8 text-xs font-bold text-orange-600 hover:bg-orange-50"
+                                     <div className="flex items-center gap-2">
+                                        <Button 
+                                            variant="ghost" 
+                                            size="sm" 
+                                            className="h-9 px-4 text-xs font-bold text-red-600 hover:bg-red-50 hover:text-red-700 border border-transparent hover:border-red-200 transition-all rounded-lg"
                                           onClick={async () => {
                                               if (confirm("⚠️ ATTENTION : Voulez-vous vraiment DÉTACHER ce salarié de son équipage actuel ?\n\nIl sera retiré de son véhicule et redeviendra disponible pour un autre placement.")) {
                                                   setLoading(true)
@@ -217,8 +229,10 @@ export function DispoTab({ data, personnel, vehicles, dateStr, onSuccess }: Disp
                                      >
                                          Détacher
                                      </Button>
+                                     </div>
                                  </div>
-                             ))}
+                             )
+                             )}
                          </div>
                          </div>
                     </div>

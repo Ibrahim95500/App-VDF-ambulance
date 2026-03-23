@@ -56,7 +56,6 @@ export function RegulationView() {
     // Dialog State
     const [selectedVehicle, setSelectedVehicle] = useState<any>(null)
     const [isDialogOpen, setIsDialogOpen] = useState(false)
-    const [page, setPage] = useState(1)
 
     // Date flags
     const isTomorrow = new Date(date).setHours(0,0,0,0) === new Date(new Date().setDate(new Date().getDate() + 1)).setHours(0,0,0,0);
@@ -87,13 +86,8 @@ export function RegulationView() {
     // Dialog State (ALREADY MOVED UP)
 
     useEffect(() => {
-        setPage(1)
         loadData()
     }, [date])
-
-    useEffect(() => {
-        setPage(1)
-    }, [searchTerm, activeTab])
 
     useEffect(() => {
         if (viewMode === 'HISTORY' && historyData.length === 0) {
@@ -143,6 +137,18 @@ export function RegulationView() {
         if (searchTerm && !v.plateNumber.toLowerCase().includes(searchTerm.toLowerCase())) return false
         return true
     })
+
+    const globalAssignedIds = new Set<string>();
+    [...vehiclesJour, ...vehiclesNuit].forEach(v => {
+        if (v.assignments && v.assignments.length > 0) {
+            v.assignments.forEach((a: any) => {
+                if (a.leaderId) globalAssignedIds.add(a.leaderId);
+                if (a.teammateId) globalAssignedIds.add(a.teammateId);
+            });
+        }
+    });
+    regulationData.forEach(r => globalAssignedIds.add(r.userId));
+    dispoData.filter(d => d.status !== 'INTEGRATED').forEach(d => globalAssignedIds.add(d.userId));
 
     const counts = {
         ALL: activeVehicles.length,
@@ -312,9 +318,9 @@ export function RegulationView() {
                     <HistoryTable data={historyData} />
                 )
             ) : viewMode === 'REGULATION' ? (
-                <RegulationTab data={regulationData} personnel={personnel} dateStr={format(date, 'yyyy-MM-dd')} onSuccess={loadData} />
+                <RegulationTab data={regulationData} personnel={personnel} dateStr={format(date, 'yyyy-MM-dd')} onSuccess={loadData} globalAssignedIds={globalAssignedIds} />
             ) : viewMode === 'DISPO' ? (
-                <DispoTab data={dispoData} personnel={personnel} vehicles={[...vehiclesJour, ...vehiclesNuit]} dateStr={format(date, 'yyyy-MM-dd')} onSuccess={loadData} />
+                <DispoTab data={dispoData} personnel={personnel} vehicles={[...vehiclesJour, ...vehiclesNuit]} dateStr={format(date, 'yyyy-MM-dd')} onSuccess={loadData} globalAssignedIds={globalAssignedIds} />
             ) : (
                 <>
                     {/* Filters Row (Planning Mode ONLY) */}
@@ -360,7 +366,7 @@ export function RegulationView() {
             ) : (
                 <>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 animate-in fade-in transition-all">
-                        {filteredVehicles.slice((page - 1) * 10, page * 10).map(vehicle => {
+                        {filteredVehicles.map(vehicle => {
                             const assignment = vehicle.assignments?.[0]
                             return (
                                 <AmbulanceCard
@@ -393,31 +399,6 @@ export function RegulationView() {
                             )
                         })}
                     </div>
-
-                    {/* Pagination UI */}
-                    {filteredVehicles.length > 10 && (
-                        <div className="flex items-center justify-center gap-4 mt-8 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 shadow-sm">
-                            <Button
-                                variant="outline"
-                                onClick={() => setPage(p => Math.max(1, p - 1))}
-                                disabled={page === 1}
-                                className="h-10 px-4 font-bold rounded-xl"
-                            >
-                                Précédent
-                            </Button>
-                            <span className="text-sm font-black">
-                                Page <span className="text-orange-600">{page}</span> sur {Math.ceil(filteredVehicles.length / 10)}
-                            </span>
-                            <Button
-                                variant="outline"
-                                onClick={() => setPage(p => Math.min(Math.ceil(filteredVehicles.length / 10), p + 1))}
-                                disabled={page === Math.ceil(filteredVehicles.length / 10)}
-                                className="h-10 px-4 font-bold rounded-xl"
-                            >
-                                Suivant
-                            </Button>
-                        </div>
-                    )}
                 </>
             )}
             </>
@@ -434,7 +415,7 @@ export function RegulationView() {
                     date={date}
                     dateStr={format(date, 'yyyy-MM-dd')}
                     personnel={viewMode === 'PLANNING_NUIT' ? personnel.filter(p => p.shift === 'NUIT' || p.shift === 'JOUR_NUIT') : personnel}
-                    vehicles={viewMode === 'PLANNING_NUIT' ? vehiclesNuit : vehiclesJour}
+                    globalAssignedIds={globalAssignedIds}
                     onSuccess={() => loadData()}
                     defaultTime={viewMode === 'PLANNING_NUIT' ? '19:30' : '05:30'}
                     initialData={selectedVehicle.assignments?.[0] ? {
