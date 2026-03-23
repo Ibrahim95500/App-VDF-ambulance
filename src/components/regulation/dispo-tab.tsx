@@ -232,7 +232,8 @@ export function DispoTab({ data, personnel, vehicles, dateStr, onSuccess, global
                                      </div>
                                  </div>
                              )
-                             )}
+                             })
+                         }
                          </div>
                          </div>
                     </div>

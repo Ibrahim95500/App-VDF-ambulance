@@ -63,7 +63,6 @@ export function AssignmentDialog({
     category,
     date,
     dateStr,
-    dateStr,
     personnel,
     globalAssignedIds,
     onSuccess,
