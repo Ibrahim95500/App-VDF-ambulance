@@ -66,11 +66,9 @@ export async function getNotificationStats(userId?: string) {
 
         const regulationAssignments = await prisma.regulationAssignment.findMany({
             where: {
-                planning: {
-                    date: {
-                        gte: startOfDay(tomorrow),
-                        lte: endOfDay(tomorrow)
-                    }
+                date: {
+                    gte: startOfDay(tomorrow),
+                    lte: endOfDay(tomorrow)
                 }
             }
         });
