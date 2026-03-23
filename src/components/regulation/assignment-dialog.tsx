@@ -141,6 +141,7 @@ export function AssignmentDialog({
                 leaderId,
                 teammateId,
                 dateStr,
+                startTime,
                 endTime
             })
             setServerError(null)
