@@ -6,7 +6,7 @@ import { useSession } from 'next-auth/react';
 import { Home, CalendarClock, Euro, Users, User, LayoutList, LifeBuoy, CalendarRange, Siren, Banknote, CalendarDays, ArrowLeftRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { useState, useEffect } from 'react';
 import { getNotificationStats } from '@/actions/notification-stats.actions';
 
@@ -15,6 +15,7 @@ export function BottomTabBar() {
     const { data: session, status } = useSession();
     const isMobile = useIsMobile();
     const [isMounted, setIsMounted] = useState(false);
+    const [isSwitching, setIsSwitching] = useState(false);
 
     useEffect(() => {
         setIsMounted(true);
@@ -74,7 +75,26 @@ export function BottomTabBar() {
         ].filter(Boolean) as any[];
 
     return (
-        <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-t border-border shadow-[0_-4px_12px_rgba(0,0,0,0.08)] pb-[max(env(safe-area-inset-bottom),0.75rem)]">
+        <>
+            <AnimatePresence>
+                {isSwitching && (
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="fixed inset-0 z-[99999] bg-background/95 backdrop-blur-md flex flex-col items-center justify-center p-6"
+                    >
+                        <div className="w-16 h-16 rounded-full border-4 border-blue-500/30 border-t-blue-500 animate-spin mb-6" />
+                        <h2 className="text-2xl font-black text-foreground animate-pulse text-center">
+                            Changement d'environnement...
+                        </h2>
+                        <p className="text-muted-foreground text-sm mt-2 font-medium">
+                            Veuillez patienter
+                        </p>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-t border-border shadow-[0_-4px_12px_rgba(0,0,0,0.08)] pb-[max(env(safe-area-inset-bottom),0.75rem)]">
             <div className="flex items-center justify-around h-14">
                 {navItems.map((item) => {
                     const isActive = pathname === item.href || (pathname.startsWith(item.href) && item.href !== '/dashboard/rh' && item.href !== '/dashboard/salarie');
@@ -83,7 +103,10 @@ export function BottomTabBar() {
                     const handleNavigation = (e: React.MouseEvent) => {
                         if (item.isSwitch) {
                             e.preventDefault();
-                            window.location.href = item.href;
+                            setIsSwitching(true);
+                            setTimeout(() => {
+                                window.location.href = item.href;
+                            }, 400); // Laisse l'animation recouvrir l'écran
                         }
                     };
 
@@ -125,5 +148,6 @@ export function BottomTabBar() {
                 })}
             </div>
         </nav>
+        </>
     );
 }
