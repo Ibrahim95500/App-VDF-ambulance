@@ -137,15 +137,15 @@ export function RegulationView() {
         if (searchTerm && !v.plateNumber.toLowerCase().includes(searchTerm.toLowerCase())) return false
         return true
     }).sort((a, b) => {
-        const getRank = (plate: string) => {
+        const getRank = (category: string, plate: string) => {
             const p = plate.toUpperCase();
-            if (p.includes('MARK')) return 1;
-            if (p.includes('VDF')) return 2;
             if (p.includes('VSL')) return 3;
+            if (category === 'MARK') return 1;
+            if (category === 'VDF') return 2;
             return 4;
         };
-        const rankA = getRank(a.plateNumber);
-        const rankB = getRank(b.plateNumber);
+        const rankA = getRank(a.category, a.plateNumber);
+        const rankB = getRank(b.category, b.plateNumber);
         if (rankA !== rankB) return rankA - rankB;
         return a.plateNumber.localeCompare(b.plateNumber);
     });
@@ -209,7 +209,7 @@ export function RegulationView() {
                         <div className="p-2.5 bg-orange-500 rounded-xl text-white shadow-lg shadow-orange-500/20">
                             <CalendarIcon size={24} />
                         </div>
-                        Régulation du Plateau
+                        Régulation
                     </h1>
                     <p className="text-muted-foreground text-sm mt-1 font-medium">
                         Planifiez les équipages pour le <span className="text-orange-600 font-bold">{format(date, 'EEEE d MMMM yyyy', { locale: fr })}</span>
