@@ -183,7 +183,7 @@ export function DispoTab({ data, personnel, vehicles, dateStr, onSuccess, global
                                 }
 
                                 return (
-                                    <div key={item.id} className={\`flex flex-col gap-4 justify-between bg-white dark:bg-slate-900 border \${isIntegrated ? 'border-orange-200 shadow-md' : 'border-slate-200 shadow-sm'} rounded-xl p-4 transition-all\`}>
+                                    <div key={item.id} className={`flex flex-col gap-4 justify-between bg-white dark:bg-slate-900 border ${isIntegrated ? 'border-orange-200 shadow-md' : 'border-slate-200 shadow-sm'} rounded-xl p-4 transition-all`}>
                                         
                                         <div className="flex justify-between items-start">
                                             <div className="flex flex-col gap-1">
@@ -196,7 +196,7 @@ export function DispoTab({ data, personnel, vehicles, dateStr, onSuccess, global
                                                     )}
                                                 </div>
                                                 <div className="flex items-center gap-2 text-sm font-medium mt-1">
-                                                    <span className="font-bold text-base max-w-[200px] truncate" title={\`\${item.user?.lastName} \${item.user?.firstName}\`}>{item.user?.lastName} {item.user?.firstName}</span>
+                                                    <span className="font-bold text-base max-w-[200px] truncate" title={`${item.user?.lastName} ${item.user?.firstName}`}>{item.user?.lastName} {item.user?.firstName}</span>
                                                 </div>
                                                 <div className="flex items-center gap-1 bg-slate-100 text-slate-600 px-2 py-1 rounded-md mt-1 w-fit">
                                                     <Clock size={12}/> <span className="text-xs font-bold">{item.startTime}</span>
@@ -209,7 +209,7 @@ export function DispoTab({ data, personnel, vehicles, dateStr, onSuccess, global
                                                         <Ambulance size={14} className="text-orange-500"/>
                                                         <Badge variant="secondary" className="bg-slate-100 text-slate-800 hover:bg-slate-200 rounded text-[10px]">{vehicleInfo.plateNumber}</Badge>
                                                     </div>
-                                                    <span className={\`text-[10px] uppercase font-black px-2 py-0.5 rounded \${isLeader ? "bg-orange-100 text-orange-700" : "bg-blue-100 text-blue-700"}\`}>
+                                                    <span className={`text-[10px] uppercase font-black px-2 py-0.5 rounded ${isLeader ? "bg-orange-100 text-orange-700" : "bg-blue-100 text-blue-700"}`}>
                                                         {isLeader ? "Responsable" : "Co-équipier"}
                                                     </span>
                                                 </div>
