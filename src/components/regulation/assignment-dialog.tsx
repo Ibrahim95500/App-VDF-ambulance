@@ -112,9 +112,9 @@ export function AssignmentDialog({
         p.isTeamLeader === true && isCompatible(p.structure, category)
     );
 
-    // Co-équipiers : structure compatible (aucune contrainte sur isTeamLeader)
+    // Co-équipiers : isTeamLeader = false ET structure compatible avec le véhicule
     const availableTeammates = freePersonnel.filter(p =>
-        isCompatible(p.structure, category)
+        p.isTeamLeader === false && isCompatible(p.structure, category)
     );
 
     const isSamePerson = leaderId !== "" && teammateId !== "" && leaderId === teammateId;

@@ -351,10 +351,11 @@ export function DispoTab({ data, personnel, vehicles, dateStr, onSuccess, global
                                                 const v = vehicles.find(v => v.assignments?.[0]?.id === selectedAssignmentId)
                                                 const a = v?.assignments?.[0]
                                                 if (!a) return null
+                                                const isDispoLeader = selectedDispo?.user?.isTeamLeader === true
                                                 return (
                                                     <>
-                                                        {a.leader && <SelectItem value={a.leaderId}>Sortant: {a.leader.lastName} {a.leader.firstName} (Responsable)</SelectItem>}
-                                                        {a.teammate && <SelectItem value={a.teammateId}>Sortant: {a.teammate.lastName} {a.teammate.firstName} (Co-équipier)</SelectItem>}
+                                                        {a.leader && <SelectItem value={a.leaderId} disabled={!isDispoLeader}>Sortant: {a.leader.lastName} {a.leader.firstName} (Responsable)</SelectItem>}
+                                                        {a.teammate && <SelectItem value={a.teammateId} disabled={isDispoLeader}>Sortant: {a.teammate.lastName} {a.teammate.firstName} (Co-équipier)</SelectItem>}
                                                     </>
                                                 )
                                             })()}
