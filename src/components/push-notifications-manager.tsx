@@ -29,19 +29,18 @@ export function PushNotificationsManager() {
                     return;
                 }
 
-                // Register with Apple/Google to get the token
-                await PushNotifications.register();
-
-                // On success, we should be able to receive notifications
+                // Add listeners BEFORE registering to avoid race conditions
                 await PushNotifications.addListener('registration', async (token) => {
                     console.log('Push registration success, token: ' + token.value);
                     await saveFcmToken(token.value);
                 });
 
-                // Some error occurred
                 await PushNotifications.addListener('registrationError', (error) => {
                     console.error('Error on registration: ' + JSON.stringify(error));
                 });
+
+                // Register with Apple/Google to get the token
+                await PushNotifications.register();
 
                 // Show us the notification payload if the app is open on our device
                 await PushNotifications.addListener('pushNotificationReceived', (notification) => {
