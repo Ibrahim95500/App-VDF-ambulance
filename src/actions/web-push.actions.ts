@@ -154,12 +154,7 @@ export async function sendPushNotification(userId: string, title: string, messag
                     payload: {
                         aps: {
                             sound: 'default',
-                            badge: 1,
-                            alert: {
-                                title: title,
-                                body: message,
-                            },
-                            contentAvailable: true,
+                            badge: 1
                         },
                     },
                 },
