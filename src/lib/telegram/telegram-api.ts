@@ -59,7 +59,7 @@ export async function removeReplyKeyboard(chatId: string | number, message: stri
 export async function sendMainMenu(chatId: string | number, message: string, roles: string[] = []) {
     const isAdminOrRH = roles.includes('ADMIN') || roles.includes('RH');
 
-    const keyboardLayout = [
+    const keyboardLayout: any[] = [
         [{ text: "🚑 Ma Régulation" }, { text: "📅 Mes RDV" }],
         [{ text: "💶 Mes Acomptes" }, { text: "🛠 Mes Services" }],
         [{ text: "👤 Mon Profil" }]
