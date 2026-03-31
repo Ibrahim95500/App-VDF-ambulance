@@ -39,39 +39,38 @@ export async function getNotificationStats(userId?: string) {
 
             // Mission pour demain (non validée)
             const tomorrow = addDays(new Date(), 1);
-            const pendingMission = await prisma.planningAssignment.count({
-                where: {
-                    date: {
-                        gte: startOfDay(tomorrow),
-                        lte: endOfDay(tomorrow)
-                    },
-                    OR: [
-                        { leaderId: userId, leaderValidated: false },
-                        { teammateId: userId, teammateValidated: false }
-                    ]
-                }
-            });
-            myMission = pendingMission > 0 ? 1 : 0;
+            const [pendingMissionCount, pendingRegulCount, pendingDispoCount] = await Promise.all([
+                prisma.planningAssignment.count({
+                    where: {
+                        date: { gte: startOfDay(tomorrow), lte: endOfDay(tomorrow) },
+                        OR: [
+                            { leaderId: userId, leaderValidated: false },
+                            { teammateId: userId, teammateValidated: false }
+                        ]
+                    }
+                }),
+                prisma.regulationAssignment.count({
+                    where: { userId, date: { gte: startOfDay(tomorrow), lte: endOfDay(tomorrow) }, validated: false }
+                }),
+                prisma.disponibility.count({
+                    where: { userId, date: { gte: startOfDay(tomorrow), lte: endOfDay(tomorrow) }, validated: false }
+                })
+            ]);
+            myMission = (pendingMissionCount + pendingRegulCount + pendingDispoCount) > 0 ? 1 : 0;
         }
 
         const tomorrow = addDays(new Date(), 1);
-        const assignmentsTomorrow = await prisma.planningAssignment.findMany({
-            where: {
-                date: {
-                    gte: startOfDay(tomorrow),
-                    lte: endOfDay(tomorrow)
-                }
-            }
-        });
-
-        const regulationAssignments = await prisma.regulationAssignment.findMany({
-            where: {
-                date: {
-                    gte: startOfDay(tomorrow),
-                    lte: endOfDay(tomorrow)
-                }
-            }
-        });
+        const [assignmentsTomorrow, regulationAssignments, disponibilities] = await Promise.all([
+            prisma.planningAssignment.findMany({
+                where: { date: { gte: startOfDay(tomorrow), lte: endOfDay(tomorrow) } }
+            }),
+            prisma.regulationAssignment.findMany({
+                where: { date: { gte: startOfDay(tomorrow), lte: endOfDay(tomorrow) } }
+            }),
+            prisma.disponibility.findMany({
+                where: { date: { gte: startOfDay(tomorrow), lte: endOfDay(tomorrow) } }
+            })
+        ]);
 
         let validationPending = 0;
         assignmentsTomorrow.forEach((a: any) => {
@@ -81,6 +80,10 @@ export async function getNotificationStats(userId?: string) {
 
         regulationAssignments.forEach((ra: any) => {
             if (!ra.validated) validationPending++;
+        });
+        
+        disponibilities.forEach((d: any) => {
+            if (!d.validated) validationPending++;
         });
 
         return {
