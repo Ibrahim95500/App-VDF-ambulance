@@ -26,6 +26,7 @@ services:
       # Change 3000 mapping based on your reverse proxy needs. Example: 3000:3000
       - "3000:3000"
     environment:
+      TZ: Europe/Paris
       DATABASE_URL: postgresql://${DB_USER_PROD}:${DB_PASSWORD_PROD}@db-prod:5432/ambulance_db_prod
       AUTH_SECRET: ${AUTH_SECRET_PROD}
       NEXTAUTH_URL: https://app.vdf-ambulance.fr

@@ -26,6 +26,7 @@ services:
     ports:
       - "8080:3000"
     environment:
+      TZ: Europe/Paris
       DATABASE_URL: postgresql://${DB_USER_DEV}:${DB_PASSWORD_DEV}@db-dev:5432/ambulance_app_db
       AUTH_SECRET: ${AUTH_SECRET_DEV}
       NEXTAUTH_URL: https://dev.vdf-ambulance.fr
