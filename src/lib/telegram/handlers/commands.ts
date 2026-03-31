@@ -215,6 +215,49 @@ export async function handleUserCommand(chatId: string | number, text: string, u
             return;
         }
 
+        if (cmd === '/plan' || cmd === '👁 plan du jour') {
+            const isAdminOrRH = user.roles?.includes('ADMIN') || user.roles?.includes('RH');
+            if (!isAdminOrRH) {
+                await sendTelegramMessage(chatId, "⛔️ Accès réservé aux Administrateurs et RH.");
+                return;
+            }
+
+            const today = new Date();
+            const assignments = await prisma.planningAssignment.findMany({
+                where: {
+                    date: { gte: startOfDay(today), lte: endOfDay(today) }
+                },
+                include: {
+                    vehicle: true,
+                    leader: true,
+                    teammate: true
+                },
+                orderBy: { startTime: 'asc' }
+            });
+
+            if (assignments.length === 0) {
+                await sendTelegramMessage(chatId, `📭 <b>Plan du Jour (${format(today, 'dd/MM/yyyy')})</b>\nAucun équipage n'a été assigné pour le moment.`);
+                return;
+            }
+
+            let responseText = `👁 <b>PLAN DU JOUR (${format(today, 'dd/MM/yyyy')})</b>\n\n`;
+            
+            assignments.forEach(a => {
+                const shift = a.startTime === '05:30' ? '☀️ (Jour)' : (a.startTime === '19:30' ? '🌙 (Nuit)' : `⏰ (${a.startTime || 'Non défini'})`);
+                responseText += `🚐 <b>${a.vehicle?.plateNumber}</b> ${shift}\n`;
+                responseText += `  L: ${a.leader?.lastName || a.leader?.name || 'Inconnu'}\n`;
+                responseText += `  C: ${a.teammate?.lastName || a.teammate?.name || 'Inconnu'}\n`;
+                responseText += `  <i>Statut: ${a.status}</i>\n\n`;
+            });
+
+            const keyboard = {
+                inline_keyboard: [[{ text: "📅 Plan de Demain", callback_data: "VIEW_PLAN_TOMORROW" }]]
+            };
+
+            await sendTelegramMessage(chatId, responseText, keyboard);
+            return;
+        }
+
         // Si la commande n'est pas reconnue mais commence par /
         if (cmd.startsWith('/')) {
             await sendTelegramMessage(chatId, "❌ Commande introuvable. Tapez /menu pour voir les options disponibles.");

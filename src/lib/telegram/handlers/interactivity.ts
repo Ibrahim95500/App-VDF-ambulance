@@ -118,6 +118,52 @@ export async function handleBotCallback(chatId: string | number, dataAction: str
             return;
         }
 
+        if (dataAction === 'VIEW_PLAN_TOMORROW') {
+            const isAdminOrRH = user.roles?.includes('ADMIN') || user.roles?.includes('RH');
+            if (!isAdminOrRH) {
+                await sendTelegramMessage(chatId, "⛔️ Accès réservé aux Administrateurs et RH.");
+                return;
+            }
+
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            
+            // @ts-ignore : On n'a pas accès direct à startOfDay ici donc on fake les dates
+            const startOfTomorrow = new Date(tomorrow.setHours(0,0,0,0));
+            const endOfTomorrow = new Date(tomorrow.setHours(23,59,59,999));
+
+            const assignments = await prisma.planningAssignment.findMany({
+                where: {
+                    date: { gte: startOfTomorrow, lte: endOfTomorrow }
+                },
+                include: {
+                    vehicle: true,
+                    leader: true,
+                    teammate: true
+                },
+                orderBy: { startTime: 'asc' }
+            });
+
+            const formatter = new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            if (assignments.length === 0) {
+                await sendTelegramMessage(chatId, `📭 <b>Plan de Demain (${formatter.format(startOfTomorrow)})</b>\nAucun équipage n'a été assigné pour le moment.`);
+                return;
+            }
+
+            let responseText = `📅 <b>PLAN DE DEMAIN (${formatter.format(startOfTomorrow)})</b>\n\n`;
+            
+            assignments.forEach(a => {
+                const shift = a.startTime === '05:30' ? '☀️ (Jour)' : (a.startTime === '19:30' ? '🌙 (Nuit)' : `⏰ (${a.startTime || 'Non défini'})`);
+                responseText += `🚐 <b>${a.vehicle?.plateNumber}</b> ${shift}\n`;
+                responseText += `  L: ${a.leader?.lastName || a.leader?.name || 'Inconnu'}\n`;
+                responseText += `  C: ${a.teammate?.lastName || a.teammate?.name || 'Inconnu'}\n`;
+                responseText += `  <i>Statut: ${a.status}</i>\n\n`;
+            });
+
+            await sendTelegramMessage(chatId, responseText);
+            return;
+        }
+
         // Action générique d'annulation
         if (dataAction === 'CANCEL_ACTION') {
             await prisma.user.update({

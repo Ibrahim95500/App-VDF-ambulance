@@ -66,8 +66,14 @@ export async function sendMainMenu(chatId: string | number, message: string, rol
     ];
 
     if (isAdminOrRH) {
-        // Ajoute un bouton à part entière pour les administrateurs
-        keyboardLayout.push([{ text: "👥 Collaborateurs" }]);
+        // Menus dédiés aux Administrateurs et RH
+        keyboardLayout.push([
+            { text: "👥 Collaborateurs" }, 
+            { text: "👁 Plan du Jour" }
+        ]);
+        keyboardLayout.push([
+            { text: "⚙️ Gérer Régulation", web_app: { url: "https://dev.vdf-ambulance.fr/dashboard/rh/regulation" } }
+        ]);
     }
 
     const replyMarkup = {
