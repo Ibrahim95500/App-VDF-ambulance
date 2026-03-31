@@ -136,9 +136,6 @@ export async function sendPushNotification(userId: string, title: string, messag
                     title,
                     body: message,
                 },
-                /* data: {
-                    url,
-                }, */
                 android: {
                     priority: 'high',
                     notification: {
@@ -148,6 +145,9 @@ export async function sendPushNotification(userId: string, title: string, messag
                         color: '#f97316',
                         channelId: 'vdf-notifications',
                         visibility: 'public'
+                    },
+                    data: {
+                        url
                     }
                 },
                 apns: {
@@ -166,6 +166,7 @@ export async function sendPushNotification(userId: string, title: string, messag
                             "mutable-content": 1,
                             "content-available": 1
                         },
+                        url
                     },
                 },
             }).then((response) => {
