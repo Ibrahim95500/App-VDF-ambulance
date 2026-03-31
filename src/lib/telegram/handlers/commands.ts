@@ -227,31 +227,29 @@ export async function handleUserCommand(chatId: string | number, text: string, u
             const startOfToday = new Date(`${dateStr}T00:00:00.000Z`);
             const endOfToday = new Date(`${dateStr}T23:59:59.999Z`);
 
+            // DEBUG: Faisons une recherche TOTALE sans aucun filtre de Date pour comprendre ce qui bloque
             const assignments = await prisma.planningAssignment.findMany({
-                where: {
-                    date: { gte: startOfToday, lte: endOfToday }
-                },
                 include: {
                     vehicle: true,
                     leader: true,
                     teammate: true
                 },
-                orderBy: { startTime: 'asc' }
+                take: 10,
+                orderBy: { date: 'desc' }
             });
 
             if (assignments.length === 0) {
-                await sendTelegramMessage(chatId, `📭 <b>Plan du Jour (${format(today, 'dd/MM/yyyy')})</b>\nAucun équipage n'a été assigné pour le moment.`);
+                await sendTelegramMessage(chatId, `📭 <b>MODE DEBUG - BDD</b>\nAucun équipage n'existe DANS TOUTE LA BASE SQL pour PlanningAssignment.`);
                 return;
             }
 
-            let responseText = `👁 <b>PLAN DU JOUR (${format(today, 'dd/MM/yyyy')})</b>\n\n`;
+            let responseText = `👁 <b>DEBUG TOTAL (${assignments.length} récents)</b>\n\n`;
             
             assignments.forEach(a => {
-                const shift = a.startTime === '05:30' ? '☀️ (Jour)' : (a.startTime === '19:30' ? '🌙 (Nuit)' : `⏰ (${a.startTime || 'Non défini'})`);
-                responseText += `🚐 <b>${a.vehicle?.plateNumber}</b> ${shift}\n`;
-                responseText += `  L: ${a.leader?.lastName || a.leader?.name || 'Inconnu'}\n`;
-                responseText += `  C: ${a.teammate?.lastName || a.teammate?.name || 'Inconnu'}\n`;
-                responseText += `  <i>Statut: ${a.status}</i>\n\n`;
+                const shift = a.startTime === '05:30' ? '☀️' : (a.startTime === '19:30' ? '🌙' : `⏰`);
+                responseText += `🚐 <b>${a.vehicle?.plateNumber}</b> (Date SQL: ${a.date.toISOString()}) ${shift}\n`;
+                responseText += `  L: ${a.leader?.lastName || '?'}\n`;
+                responseText += `  C: ${a.teammate?.lastName || '?'}\n\n`;
             });
 
             const keyboard = {
