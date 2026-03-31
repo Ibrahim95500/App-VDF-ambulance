@@ -223,9 +223,13 @@ export async function handleUserCommand(chatId: string | number, text: string, u
             }
 
             const today = new Date();
+            const dateStr = format(today, 'yyyy-MM-dd');
+            const startOfToday = new Date(`${dateStr}T00:00:00.000Z`);
+            const endOfToday = new Date(`${dateStr}T23:59:59.999Z`);
+
             const assignments = await prisma.planningAssignment.findMany({
                 where: {
-                    date: { gte: startOfDay(today), lte: endOfDay(today) }
+                    date: { gte: startOfToday, lte: endOfToday }
                 },
                 include: {
                     vehicle: true,
@@ -255,6 +259,34 @@ export async function handleUserCommand(chatId: string | number, text: string, u
             };
 
             await sendTelegramMessage(chatId, responseText, keyboard);
+            return;
+        }
+
+        if (cmd === '/regul_bot' || cmd === '🤖 régulation (bot)') {
+            const isAdminOrRH = user.roles?.includes('ADMIN') || user.roles?.includes('RH');
+            if (!isAdminOrRH) {
+                await sendTelegramMessage(chatId, "⛔️ Accès réservé aux Administrateurs et RH.");
+                return;
+            }
+
+            // Démarrage du Wizard : Etape 1 -> Le Date du Planning
+            await prisma.user.update({
+                where: { id: user.id },
+                data: {
+                    telegramState: 'REGUL_DATE',
+                    telegramStateData: JSON.stringify({}) // On initialise le conteneur vide
+                }
+            });
+
+            const keyboard = {
+                inline_keyboard: [
+                    [{ text: "📅 Aujourd'hui", callback_data: "REGUL_DATE_TODAY" }],
+                    [{ text: "📅 Demain", callback_data: "REGUL_DATE_TOMORROW" }],
+                    [{ text: "❌ Annuler", callback_data: "CANCEL_ACTION" }]
+                ]
+            };
+
+            await sendTelegramMessage(chatId, `🤖 <b>Mode Bot (Régulation)</b>\n\n<i>Étape 1/5</i> : Pour quelle date souhaitez-vous planifier un équipage ?`, keyboard);
             return;
         }
 

@@ -118,6 +118,42 @@ export async function handleBotCallback(chatId: string | number, dataAction: str
             return;
         }
 
+        if (dataAction === 'VIEW_PLAN_TODAY') {
+            const isAdminOrRH = user.roles?.includes('ADMIN') || user.roles?.includes('RH');
+            if (!isAdminOrRH) {
+                await sendTelegramMessage(chatId, "⛔️ Accès réservé aux Administrateurs.");
+                return;
+            }
+
+            const today = new Date();
+            const todayStr = today.toISOString().split('T')[0];
+            const startOfToday = new Date(`${todayStr}T00:00:00.000Z`);
+            const endOfToday = new Date(`${todayStr}T23:59:59.999Z`);
+
+            const assignments = await prisma.planningAssignment.findMany({
+                where: { date: { gte: startOfToday, lte: endOfToday } },
+                include: { vehicle: true, leader: true, teammate: true },
+                orderBy: { startTime: 'asc' }
+            });
+
+            const formatter = new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            if (assignments.length === 0) {
+                await sendTelegramMessage(chatId, `📭 <b>Plan d'Aujourd'hui (${formatter.format(startOfToday)})</b>\nAucun équipage n'a été assigné.`);
+                return;
+            }
+
+            let responseText = `📅 <b>PLAN D'AUJOURD'HUI (${formatter.format(startOfToday)})</b>\n\n`;
+            assignments.forEach(a => {
+                const shift = a.startTime === '05:30' ? '☀️ (Jour)' : (a.startTime === '19:30' ? '🌙 (Nuit)' : `⏰ (${a.startTime || 'Non défini'})`);
+                responseText += `🚐 <b>${a.vehicle?.plateNumber}</b> ${shift}\n`;
+                responseText += `  L: ${a.leader?.lastName || a.leader?.name || 'Inconnu'}\n`;
+                responseText += `  C: ${a.teammate?.lastName || a.teammate?.name || 'Inconnu'}\n`;
+                responseText += `  <i>Statut: ${a.status}</i>\n\n`;
+            });
+            await sendTelegramMessage(chatId, responseText);
+            return;
+        }
+
         if (dataAction === 'VIEW_PLAN_TOMORROW') {
             const isAdminOrRH = user.roles?.includes('ADMIN') || user.roles?.includes('RH');
             if (!isAdminOrRH) {
@@ -128,9 +164,9 @@ export async function handleBotCallback(chatId: string | number, dataAction: str
             const tomorrow = new Date();
             tomorrow.setDate(tomorrow.getDate() + 1);
             
-            // @ts-ignore : On n'a pas accès direct à startOfDay ici donc on fake les dates
-            const startOfTomorrow = new Date(tomorrow.setHours(0,0,0,0));
-            const endOfTomorrow = new Date(tomorrow.setHours(23,59,59,999));
+            const tomorrowStr = tomorrow.toISOString().split('T')[0];
+            const startOfTomorrow = new Date(`${tomorrowStr}T00:00:00.000Z`);
+            const endOfTomorrow = new Date(`${tomorrowStr}T23:59:59.999Z`);
 
             const assignments = await prisma.planningAssignment.findMany({
                 where: {
@@ -162,6 +198,167 @@ export async function handleBotCallback(chatId: string | number, dataAction: str
 
             await sendTelegramMessage(chatId, responseText);
             return;
+        }
+
+        // --- WIZARD RÉGULATION BOT (ADMIN) ---
+        if (dataAction.startsWith('REGUL_')) {
+            const isAdminOrRH = user.roles?.includes('ADMIN') || user.roles?.includes('RH');
+            if (!isAdminOrRH) {
+                await sendTelegramMessage(chatId, "⛔️ Accès réservé aux Administrateurs.");
+                return;
+            }
+
+            const stateData = user.telegramStateData ? JSON.parse(user.telegramStateData) : {};
+
+            // Étape 1 à 2 : Date -> Shift
+            if (dataAction === 'REGUL_DATE_TODAY' || dataAction === 'REGUL_DATE_TOMORROW') {
+                const isToday = dataAction === 'REGUL_DATE_TODAY';
+                const targetDate = new Date();
+                if (!isToday) targetDate.setDate(targetDate.getDate() + 1);
+                stateData.dateStr = targetDate.toISOString().split('T')[0];
+
+                await prisma.user.update({
+                    where: { id: user.id },
+                    data: { telegramState: 'REGUL_SHIFT', telegramStateData: JSON.stringify(stateData) }
+                });
+
+                const keyboard = {
+                    inline_keyboard: [
+                        [{ text: "☀️ JOUR (05:30)", callback_data: "REGUL_SHIFT_JOUR" }],
+                        [{ text: "🌙 NUIT (19:30)", callback_data: "REGUL_SHIFT_NUIT" }],
+                        [{ text: "❌ Annuler", callback_data: "CANCEL_ACTION" }]
+                    ]
+                };
+                await sendTelegramMessage(chatId, `🤖 <i>Étape 2/5</i> : Quel Shift pour cette mission ?`, keyboard);
+                return;
+            }
+
+            // Étape 2 à 3 : Shift -> Véhicules
+            if (dataAction === 'REGUL_SHIFT_JOUR' || dataAction === 'REGUL_SHIFT_NUIT') {
+                stateData.startTime = dataAction === 'REGUL_SHIFT_JOUR' ? '05:30' : '19:30';
+                
+                await prisma.user.update({
+                    where: { id: user.id },
+                    data: { telegramState: 'REGUL_VEHICLE', telegramStateData: JSON.stringify(stateData) }
+                });
+
+                const vehicles = await prisma.vehicle.findMany({ orderBy: { plateNumber: 'asc' } });
+                const inline_keyboard = [];
+                for (let i = 0; i < vehicles.length; i += 2) {
+                    const row = [];
+                    row.push({ text: `🚐 ${vehicles[i].plateNumber}`, callback_data: `REGUL_VEHI_${vehicles[i].id}` });
+                    if (vehicles[i+1]) {
+                        row.push({ text: `🚐 ${vehicles[i+1].plateNumber}`, callback_data: `REGUL_VEHI_${vehicles[i+1].id}` });
+                    }
+                    inline_keyboard.push(row);
+                }
+                inline_keyboard.push([{ text: "❌ Annuler", callback_data: "CANCEL_ACTION" }]);
+
+                await sendTelegramMessage(chatId, `🤖 <i>Étape 3/5</i> : Assignez un véhicule pour ce shift :`, { inline_keyboard });
+                return;
+            }
+
+            // Étape 3 à 4 : Véhicule -> Leader
+            if (dataAction.startsWith('REGUL_VEHI_')) {
+                stateData.vehicleId = dataAction.replace('REGUL_VEHI_', '');
+
+                await prisma.user.update({
+                    where: { id: user.id },
+                    data: { telegramState: 'REGUL_LEADER', telegramStateData: JSON.stringify(stateData) }
+                });
+
+                const users = await prisma.user.findMany({
+                    where: { isActive: true, roles: { hasSome: ['SALARIE', 'ADMIN', 'RH', 'REGULATEUR'] } },
+                    orderBy: { lastName: 'asc' }
+                });
+
+                const inline_keyboard = [];
+                for (let i = 0; i < users.length; i += 2) {
+                    const row = [];
+                    const n1 = `${users[i].lastName || ''} ${users[i].firstName || ''}`.trim();
+                    row.push({ text: `🎯 ${n1}`, callback_data: `REGUL_LEAD_${users[i].id}` });
+                    if (users[i+1]) {
+                        const n2 = `${users[i+1].lastName || ''} ${users[i+1].firstName || ''}`.trim();
+                        row.push({ text: `🎯 ${n2}`, callback_data: `REGUL_LEAD_${users[i+1].id}` });
+                    }
+                    inline_keyboard.push(row);
+                }
+                inline_keyboard.push([{ text: "❌ Annuler", callback_data: "CANCEL_ACTION" }]);
+
+                await sendTelegramMessage(chatId, `🤖 <i>Étape 4/5</i> : Choisissez le RESPONSABLE (Leader) :`, { inline_keyboard });
+                return;
+            }
+
+            // Étape 4 à 5 : Leader -> Co-équipier
+            if (dataAction.startsWith('REGUL_LEAD_')) {
+                stateData.leaderId = dataAction.replace('REGUL_LEAD_', '');
+
+                await prisma.user.update({
+                    where: { id: user.id },
+                    data: { telegramState: 'REGUL_TEAM', telegramStateData: JSON.stringify(stateData) }
+                });
+
+                const users = await prisma.user.findMany({
+                    where: { isActive: true, roles: { hasSome: ['SALARIE', 'ADMIN', 'RH', 'REGULATEUR'] }, id: { not: stateData.leaderId } },
+                    orderBy: { lastName: 'asc' }
+                });
+
+                const inline_keyboard = [];
+                for (let i = 0; i < users.length; i += 2) {
+                    const row = [];
+                    const n1 = `${users[i].lastName || ''} ${users[i].firstName || ''}`.trim();
+                    row.push({ text: `🤝 ${n1}`, callback_data: `REGUL_TEAM_${users[i].id}` });
+                    if (users[i+1]) {
+                        const n2 = `${users[i+1].lastName || ''} ${users[i+1].firstName || ''}`.trim();
+                        row.push({ text: `🤝 ${n2}`, callback_data: `REGUL_TEAM_${users[i+1].id}` });
+                    }
+                    inline_keyboard.push(row);
+                }
+                inline_keyboard.push([{ text: "Aucun co-équipier (Seul)", callback_data: "REGUL_TEAM_NONE" }]);
+                inline_keyboard.push([{ text: "❌ Annuler", callback_data: "CANCEL_ACTION" }]);
+
+                await sendTelegramMessage(chatId, `🤖 <i>Étape 5/5</i> : Choisissez le CO-ÉQUIPIER (ou Seul) :`, { inline_keyboard });
+                return;
+            }
+
+            // Étape Finale : Co-équipier -> Sauvegarde
+            if (dataAction.startsWith('REGUL_TEAM_')) {
+                const teammateId = dataAction.replace('REGUL_TEAM_', '');
+                const finalTeammateId = teammateId === 'NONE' ? stateData.leaderId : teammateId; // Si seul, teammateId = leaderId pour ne pas casser la base non-nullable (si elle l'est)
+                
+                try {
+                    // Les dates en base (Planner) sont toujours UTC 00h
+                    const startOfTargetDate = new Date(`${stateData.dateStr}T00:00:00.000Z`);
+
+                    await prisma.planningAssignment.create({
+                        data: {
+                            date: startOfTargetDate,
+                            vehicleId: stateData.vehicleId,
+                            startTime: stateData.startTime,
+                            endTime: stateData.startTime === '05:30' ? '18:00' : '05:00', // par défaut pour affichage
+                            leaderId: stateData.leaderId,
+                            teammateId: finalTeammateId,
+                            status: 'PENDING'
+                        }
+                    });
+
+                    await sendTelegramMessage(chatId, `✅ <b>Équipage créé avec succès !</b>\nIl est enregistré pour le ${stateData.dateStr}.`, {
+                        inline_keyboard: [
+                            [{ text: "👁 Voir Plan", callback_data: stateData.dateStr === new Date().toISOString().split('T')[0] ? "VIEW_PLAN_TODAY" : "VIEW_PLAN_TOMORROW" }],
+                            [{ text: "📝 Autre équipage", callback_data: "REGUL_DATE_TOMORROW" }]
+                        ]
+                    });
+                } catch (e) {
+                    console.error("Erreur de création Régul Telegram", e);
+                    await sendTelegramMessage(chatId, "❌ Erreur base de données lors de la sauvegarde.");
+                } finally {
+                    await prisma.user.update({
+                        where: { id: user.id },
+                        data: { telegramState: null, telegramStateData: null }
+                    });
+                }
+                return;
+            }
         }
 
         // Action générique d'annulation

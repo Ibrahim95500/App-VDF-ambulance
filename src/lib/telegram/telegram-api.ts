@@ -72,7 +72,8 @@ export async function sendMainMenu(chatId: string | number, message: string, rol
             { text: "👁 Plan du Jour" }
         ]);
         keyboardLayout.push([
-            { text: "⚙️ Gérer Régulation", web_app: { url: "https://dev.vdf-ambulance.fr/dashboard/rh/regulation" } }
+            { text: "⚙️ Régulation (WebApp)", web_app: { url: "https://dev.vdf-ambulance.fr/dashboard/rh/regulation" } },
+            { text: "🤖 Régulation (Bot)" }
         ]);
     }
 
