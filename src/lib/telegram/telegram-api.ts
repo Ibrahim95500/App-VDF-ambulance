@@ -1,0 +1,56 @@
+// src/lib/telegram/telegram-api.ts
+
+const TELEGRAM_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+const URL_BASE = `https://api.telegram.org/bot${TELEGRAM_TOKEN}`;
+
+export async function sendTelegramMessage(chatId: string | number, text: string, replyMarkup?: any) {
+    if (!TELEGRAM_TOKEN) {
+        console.error("TELEGRAM_BOT_TOKEN is missing in environment variables.");
+        return;
+    }
+
+    try {
+        const body: any = {
+            chat_id: chatId,
+            text,
+            parse_mode: 'HTML',
+        };
+
+        if (replyMarkup) {
+            body.reply_markup = replyMarkup;
+        }
+
+        const response = await fetch(`${URL_BASE}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+        });
+
+        if (!response.ok) {
+            console.error("Failed to send telegram message", await response.text());
+        }
+        
+        return await response.json();
+    } catch (e) {
+        console.error("Telegram API Error:", e);
+    }
+}
+
+// Fonction utilitaire pour envoyer le clavier qui demande le contact téléphonique
+export async function sendRequestContactKeyboard(chatId: string | number, message: string) {
+    const keyboard = {
+        keyboard: [
+            [{ text: "📞 Partager mon numéro pour m'identifier", request_contact: true }]
+        ],
+        one_time_keyboard: true,
+        resize_keyboard: true
+    };
+    
+    return sendTelegramMessage(chatId, message, keyboard);
+}
+
+// Nettoyer les claviers custom pour revenir aux boutons normaux inline
+export async function removeReplyKeyboard(chatId: string | number, message: string) {
+    const removeKeyboard = { remove_keyboard: true };
+    return sendTelegramMessage(chatId, message, removeKeyboard);
+}

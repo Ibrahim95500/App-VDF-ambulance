@@ -58,6 +58,7 @@ model User {
   deletionReason String?   @db.Text
   pushSubscriptions PushSubscription[]
   fcmTokens      FcmToken[]
+  telegramChatId String?   @unique
   isDeleted      Boolean   @default(false)
   deletedAt      DateTime?
   regulationAssignments RegulationAssignment[]
