@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendTelegramMessage, sendRequestContactKeyboard, removeReplyKeyboard } from '@/lib/telegram/telegram-api';
+import { handleUserCommand } from '@/lib/telegram/handlers/commands';
 
 export async function POST(req: Request) {
     try {
@@ -55,30 +56,23 @@ export async function POST(req: Request) {
             return NextResponse.json({ ok: true });
         }
 
-        // --- SCÉNARIO 2 : L'UTILISATEUR TAPE /START ---
-        if (text === '/start') {
-            await sendRequestContactKeyboard(chatId, "👋 Bonjour et bienvenue sur le Bot Officiel de <b>VDF Ambulance</b>.\n\n🔒 <i>Accès Restreint :</i>\nPour vous identifier comme un de nos collaborateurs officiels en un clin d'œil, veuillez utiliser le bouton ci-dessous pour partager votre numéro de téléphone (celui enregistré auprès des RH) avec notre serveur sécurisé.");
-            return NextResponse.json({ ok: true });
-        }
-
-        // --- SCÉNARIO 3 : VÉRIFICATION INITIALE AVANT AUTRES COMMANDES ---
-        // Avant d'accepter toute autre commande, on vérifie s'il est loggé
+        // --- SCÉNARIO 2 : VÉRIFICATION INITIALE AVANT AUTRES COMMANDES ---
         const existingUser = await prisma.user.findFirst({
             where: { telegramChatId: String(chatId) }
         });
+
+        if (text === '/start' && !existingUser) {
+            await sendRequestContactKeyboard(chatId, "👋 Bonjour et bienvenue sur le Bot Officiel de <b>VDF Ambulance</b>.\n\n🔒 <i>Accès Restreint :</i>\nPour vous identifier comme un de nos collaborateurs officiels en un clin d'œil, veuillez utiliser le bouton ci-dessous pour partager votre numéro de téléphone (celui enregistré auprès des RH) avec notre serveur sécurisé.");
+            return NextResponse.json({ ok: true });
+        }
 
         if (!existingUser) {
             await sendTelegramMessage(chatId, "⚠️ <b>Accès Refusé.</b>\nVous devez d'abord lier votre compte en tapant /start.");
             return NextResponse.json({ ok: true });
         }
 
-        // (Les autres commandes viendront à l'Étape 2)
-        if (text === '/demandes' || text === '/regul') {
-            await sendTelegramMessage(chatId, "⏳ Outil en développement (Step 2). Les demandes s'afficheront ici très bientôt !");
-        } else {
-            // Message générique
-            await sendTelegramMessage(chatId, "Je suis à votre écoute. Tapez /start pour réinitialiser ou patientez pour la mise à jour des commandes.");
-        }
+        // --- SCÉNARIO 3 : HANDLER DE COMMANDES TEXTUELLES NORMALES ---
+        await handleUserCommand(chatId, text, existingUser);
 
         return NextResponse.json({ ok: true });
 
