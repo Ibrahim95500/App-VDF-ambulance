@@ -165,8 +165,7 @@ export async function sendPushNotification(userId: string, title: string, messag
                             badge: 1,
                             "mutable-content": 1,
                             "content-available": 1
-                        },
-                        url
+                        }
                     },
                 },
             }).then((response) => {
