@@ -135,19 +135,18 @@ export async function handleConversationState(chatId: string | number, text: str
         }
 
         if (currentState === 'SERVICE_DESC') {
-            const result = await createServiceRequest('Telegram', stateData.subject, text, user.id);
+            try {
+                await createServiceRequest('Telegram', stateData.subject, text, user.id);
 
-            await prisma.user.update({
-                where: { id: user.id },
-                data: { telegramState: null, telegramStateData: null }
-            });
+                await prisma.user.update({
+                    where: { id: user.id },
+                    data: { telegramState: null, telegramStateData: null }
+                });
 
-            if (result && !result.success) {
-                await sendTelegramMessage(chatId, `❌ <b>Erreur :</b>\n${result.error || "Impossible de créer la demande."}`);
-                return;
+                await sendTelegramMessage(chatId, `✅ <b>Demande de service envoyée !</b>\nElle a été transmise à la supervision RH.`);
+            } catch (err: any) {
+                await sendTelegramMessage(chatId, `❌ <b>Erreur :</b>\n${err.message || "Impossible de créer la demande."}`);
             }
-
-            await sendTelegramMessage(chatId, `✅ <b>Demande de service envoyée !</b>\nElle a été transmise à la supervision RH.`);
             return;
         }
 
