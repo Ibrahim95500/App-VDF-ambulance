@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import { sendTelegramMessage } from '@/lib/telegram/telegram-api';
-
+import { createAdvanceRequest } from '@/actions/advance-request.actions';
+import { createServiceRequest } from '@/actions/service-request.actions';
 // --- GESTION DES CLICS SUR LES BOUTONS ---
 export async function handleBotCallback(chatId: string | number, dataAction: string, user: any, messageId: number) {
     try {
@@ -93,31 +94,26 @@ export async function handleConversationState(chatId: string | number, text: str
             stateData.amount = amount;
             await prisma.user.update({
                 where: { id: user.id },
-                data: { telegramState: 'ACOMPTE_MOIS', telegramStateData: JSON.stringify(stateData) }
+                data: { telegramState: 'ACOMPTE_REASON', telegramStateData: JSON.stringify(stateData) }
             });
-            await sendTelegramMessage(chatId, `Vous avez demandé <b>${amount} €</b>.\n\nPour quel mois ? (ex: Avril, Mai...)`);
+            await sendTelegramMessage(chatId, `Vous avez demandé <b>${amount} €</b>.\n\nQuel est le motif de cette demande ? (ex: Frais de véhicule)`);
             return;
         }
 
-        if (currentState === 'ACOMPTE_MOIS') {
-            const date = new Date();
-            const yearMonth = `${text} ${date.getFullYear()}`; 
-            
-            // Finalisation de la création dans la base
-            await prisma.advanceRequest.create({
-                data: {
-                    userId: user.id,
-                    amount: stateData.amount,
-                    targetMonth: yearMonth,
-                    status: 'PENDING'
-                }
-            });
+        if (currentState === 'ACOMPTE_REASON') {
+            // Appel à l'action native pour appliquer toutes les règles (ex: limite au 15 du mois)
+            const result = await createAdvanceRequest(stateData.amount, text, user.id);
 
             // Vider l'état
             await prisma.user.update({
                 where: { id: user.id },
                 data: { telegramState: null, telegramStateData: null }
             });
+
+            if (!result.success) {
+                await sendTelegramMessage(chatId, `❌ <b>Demande refusée par le système :</b>\n${result.error}`);
+                return;
+            }
 
             await sendTelegramMessage(chatId, `✅ <b>Félicitations !</b>\nVotre demande d'acompte de ${stateData.amount} € a été envoyée avec succès aux Ressources Humaines.`);
             return;
@@ -139,25 +135,21 @@ export async function handleConversationState(chatId: string | number, text: str
         }
 
         if (currentState === 'SERVICE_DESC') {
-            await prisma.serviceRequest.create({
-                data: {
-                    userId: user.id,
-                    subject: stateData.subject,
-                    description: text,
-                    category: 'Telegram',
-                    source: 'APP', // Même source pour le moment
-                    status: 'PENDING'
-                }
-            });
+            const result = await createServiceRequest('Telegram', stateData.subject, text, user.id);
 
             await prisma.user.update({
                 where: { id: user.id },
                 data: { telegramState: null, telegramStateData: null }
             });
-            await sendTelegramMessage(chatId, `✅ <b>Demande de service envoyée !</b>\nElle a été transmise aux administrateurs.`);
+
+            if (result && !result.success) {
+                await sendTelegramMessage(chatId, `❌ <b>Erreur :</b>\n${result.error || "Impossible de créer la demande."}`);
+                return;
+            }
+
+            await sendTelegramMessage(chatId, `✅ <b>Demande de service envoyée !</b>\nElle a été transmise à la supervision RH.`);
             return;
         }
-
 
     } catch (e) {
         console.error("Erreur Telegram Conversation:", e);

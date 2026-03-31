@@ -100,11 +100,15 @@ export async function updateRequestStatus(requestId: string, status: "APPROVED" 
     revalidatePath('/dashboard/salarie')
 }
 
-export async function createAdvanceRequest(amount: number, reason: string) {
+export async function createAdvanceRequest(amount: number, reason: string, overrideUserId?: string) {
     try {
-        const session = await auth()
+        let currentUserId = overrideUserId;
+        if (!currentUserId) {
+            const session = await auth();
+            currentUserId = session?.user?.id;
+        }
 
-        if (!session?.user?.id) {
+        if (!currentUserId) {
             return { success: false, error: "Non autorisé" }
         }
 
@@ -122,7 +126,7 @@ export async function createAdvanceRequest(amount: number, reason: string) {
         // Frequency Rule: Only 1 request per target month
         const existingRequest = await prisma.advanceRequest.findFirst({
             where: {
-                userId: session.user.id,
+                userId: currentUserId,
                 targetMonth: targetMonthString
             }
         })
@@ -144,7 +148,7 @@ export async function createAdvanceRequest(amount: number, reason: string) {
                 amount,
                 reason,
                 targetMonth: targetMonthString,
-                userId: session.user.id
+                userId: currentUserId
             },
             include: { user: true }
         })
@@ -164,7 +168,7 @@ export async function createAdvanceRequest(amount: number, reason: string) {
 
         // Add notification for the employee themselves
         notifications.push({
-            userId: session.user.id,
+            userId: currentUserId,
             title: "Demande d'acompte soumise",
             message: `Votre demande de ${amount}€ a été envoyée aux RH.`,
             type: "ADVANCE",

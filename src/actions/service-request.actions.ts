@@ -18,11 +18,24 @@ const ServiceRequestSchema = z.object({
 /**
  * Create a new service request
  */
-export async function createServiceRequest(category: string, subject: string, description: string) {
+export async function createServiceRequest(category: string, subject: string, description: string, overrideUserId?: string) {
     console.log("--- DEBUG: createServiceRequest started ---");
-    const session = await auth()
-    console.log("Session User ID:", session?.user?.id);
-    if (!session?.user?.id) throw new Error("Unauthorized")
+    let currentUserId = overrideUserId;
+    let userName = "Utilisateur";
+
+    if (!currentUserId) {
+        const session = await auth();
+        currentUserId = session?.user?.id;
+        userName = session?.user?.name || "Utilisateur";
+    } else {
+        const actingUser = await prisma.user.findUnique({ where: { id: currentUserId }, select: { name: true, firstName: true, lastName: true } });
+        if (actingUser) {
+            userName = actingUser.name || [actingUser.firstName, actingUser.lastName].filter(Boolean).join(' ') || "Utilisateur";
+        }
+    }
+
+    console.log("Session User ID:", currentUserId);
+    if (!currentUserId) throw new Error("Unauthorized")
 
     const validatedFields = ServiceRequestSchema.safeParse({ category, subject, description })
     if (!validatedFields.success) {
@@ -35,7 +48,7 @@ export async function createServiceRequest(category: string, subject: string, de
             category,
             subject,
             description,
-            userId: session.user.id,
+            userId: currentUserId,
             source: 'APP'
         },
         include: { user: true }
@@ -44,7 +57,6 @@ export async function createServiceRequest(category: string, subject: string, de
 
     // 1. In-app notifications for RH & Admin & Employee
     const rhUsers = await prisma.user.findMany({ where: { OR: [{ roles: { has: 'RH' } }, { roles: { has: 'ADMIN' } }] } })
-    const userName = session.user.name || "Utilisateur";
 
     const notifications: any[] = rhUsers.map(rh => ({
         userId: rh.id,
@@ -57,7 +69,7 @@ export async function createServiceRequest(category: string, subject: string, de
 
     // Add self-notification for the employee
     notifications.push({
-        userId: session.user.id,
+        userId: currentUserId,
         title: "Demande de service soumise",
         message: `Votre demande (${category}) a été envoyée aux RH.`,
         type: "SERVICE",
@@ -79,8 +91,8 @@ export async function createServiceRequest(category: string, subject: string, de
     // 2. Email notification to Admin/RH
     console.log("Sending email notification to admin...");
     try {
-        const senderUser = await prisma.user.findUnique({ where: { id: session.user.id }, select: { firstName: true, lastName: true, email: true } })
-        const senderFullName = [senderUser?.firstName, senderUser?.lastName].filter(Boolean).join(' ') || session.user.name || senderUser?.email || "Utilisateur"
+        const senderUser = await prisma.user.findUnique({ where: { id: currentUserId }, select: { firstName: true, lastName: true, email: true } })
+        const senderFullName = [senderUser?.firstName, senderUser?.lastName].filter(Boolean).join(' ') || userName || senderUser?.email || "Utilisateur"
         await sendBrandedEmail({
             to: "vdf95rh@gmail.com",
             cc: `rezan.selva@gmail.com, ibrahim.nifa01@gmail.com, ${senderUser?.email || ''}`,
