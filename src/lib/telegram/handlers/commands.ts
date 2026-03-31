@@ -121,11 +121,20 @@ export async function handleUserCommand(chatId: string | number, text: string, u
                 if(mission.startTime && mission.endTime) responseText += `⏰ <b>Horaires :</b> ${mission.startTime} - ${mission.endTime}\n`;
                 responseText += `\nStatut: ${validatedStr}\n`;
                 
+                const now = new Date();
+                const formatter = new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', hour: '2-digit', hour12: false });
+                const currentHour = parseInt(formatter.format(now));
+                const isValidTime = currentHour >= 19 && currentHour < 21; // Seulement 19:xx et 20:xx
+
                 let keyboard = undefined;
                 if ((mission.leaderId === user.id && !mission.leaderValidated) || (mission.teammateId === user.id && !mission.teammateValidated)) {
-                    keyboard = {
-                        inline_keyboard: [[{ text: "✅ Confirmer ma mission", callback_data: `VALIDATE_MISSION_${mission.id}` }]]
-                    };
+                    if (isValidTime) {
+                        keyboard = {
+                            inline_keyboard: [[{ text: "✅ Confirmer ma mission", callback_data: `VALIDATE_MISSION_${mission.id}` }]]
+                        };
+                    } else {
+                        responseText += `\n<i>⚠️ La validation de votre mission ne sera possible qu'entre 19h00 et 21h00. Revenez ici à ce moment-là.</i>\n`;
+                    }
                 }
                 
                 await sendTelegramMessage(chatId, responseText, keyboard);

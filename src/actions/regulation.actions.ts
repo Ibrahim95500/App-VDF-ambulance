@@ -180,6 +180,14 @@ export async function saveAssignment(data: {
 
 export async function validateMyPlanning(userId: string, assignmentId: string) {
     try {
+        const now = new Date();
+        const formatter = new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', hour: '2-digit', hour12: false });
+        const currentHour = parseInt(formatter.format(now));
+        
+        if (currentHour < 19 || currentHour >= 21) {
+            return { error: "La validation n'est autorisée qu'entre 19h00 et 21h00." }
+        }
+
         const assignment = await prisma.planningAssignment.findUnique({
             where: { id: assignmentId }
         })
@@ -527,6 +535,14 @@ export async function getMyDisponibility(userId: string, dateStr: string) {
 
 export async function validateMyRegulation(userId: string, id: string) {
     try {
+        const now = new Date();
+        const formatter = new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', hour: '2-digit', hour12: false });
+        const currentHour = parseInt(formatter.format(now));
+        
+        if (currentHour < 19 || currentHour >= 21) {
+            return { error: "La validation n'est autorisée qu'entre 19h00 et 21h00." }
+        }
+
         const reg = await prisma.regulationAssignment.findUnique({ where: { id }, include: { user: true } })
         if (!reg || reg.userId !== userId) throw new Error("Accès refusé")
         await prisma.regulationAssignment.update({
@@ -564,6 +580,14 @@ export async function validateMyRegulation(userId: string, id: string) {
 
 export async function validateMyDispo(userId: string, id: string) {
     try {
+        const now = new Date();
+        const formatter = new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', hour: '2-digit', hour12: false });
+        const currentHour = parseInt(formatter.format(now));
+        
+        if (currentHour < 19 || currentHour >= 21) {
+            return { error: "La validation n'est autorisée qu'entre 19h00 et 21h00." }
+        }
+
         const dispo = await prisma.disponibility.findUnique({ where: { id }, include: { user: true } })
         if (!dispo || dispo.userId !== userId) throw new Error("Accès refusé")
         await prisma.disponibility.update({

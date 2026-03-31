@@ -24,6 +24,15 @@ export async function handleBotCallback(chatId: string | number, dataAction: str
         }
 
         if (dataAction.startsWith('VALIDATE_MISSION_')) {
+            const now = new Date();
+            const formatter = new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', hour: '2-digit', hour12: false });
+            const currentHour = parseInt(formatter.format(now));
+            
+            if (currentHour < 19 || currentHour >= 21) {
+                await sendTelegramMessage(chatId, "⚠️ <b>Action refusée :</b> La validation de mission n'est autorisée qu'entre 19h00 et 21h00.");
+                return;
+            }
+
             const missionId = dataAction.split('_')[2];
             
             // Trouver la mission pour confirmer
