@@ -184,10 +184,9 @@ export async function handleUserCommand(chatId: string | number, text: string, u
                 return;
             }
 
-            // Récupérer les 10 premiers collaborateurs (tri alphabétique)
+            // Récupérer les 15 premiers collaborateurs (tri alphabétique)
             // Dans un cas réel parfait on ferait une vraie pagination inline, là on fait les 15 premiers pour l'exemple
             const usersList = await prisma.user.findMany({
-                where: { roles: { hasSome: ['USER', 'ADMIN', 'RH', 'BANNED'] } },
                 take: 15,
                 orderBy: { lastName: 'asc' }
             });
