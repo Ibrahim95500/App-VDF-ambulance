@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma"
 import { sendBrandedEmail } from "@/lib/mail"
 import { createNotification, createManyNotifications } from "@/actions/notifications.actions"
+import { sendTelegramMessage } from "@/lib/telegram/telegram-api"
 import { format } from "date-fns"
 import { fr } from "date-fns/locale"
 
@@ -55,7 +56,7 @@ export async function sendPlanningsToEmployees(dateStr: string) {
         
         let emailsSent = 0;
 
-        // 1. Envoyer les emails individuels
+        // 1. Envoyer les emails individuels et Telegram
         for (const assignment of assignments) {
             const { vehicle, leader, teammate, startTime, endTime } = assignment
 
@@ -63,14 +64,18 @@ export async function sendPlanningsToEmployees(dateStr: string) {
             const teammateName = `${teammate.firstName || ''} ${teammate.lastName || ''}`.trim() || teammate.name || teammate.email
 
             const timeRange = `${startTime || '07:00'} - ${endTime || '19:00'}`
+            const tgBaseMessage = `🚑 <b>NOUVELLE MISSION (${dateDisplay})</b>\n\n🚐 <b>Véhicule :</b> ${vehicle.plateNumber}\n⏱ <b>Horaires :</b> ${timeRange}\n\n`;
+            const tgValidationMsg = `\n\n🚨 <b>ACTION REQUISE AVANT 21H :</b> Vous devez obligatoirement valider votre prise de poste sur l'application Web.`;
+            const tgKeyboard = {
+                inline_keyboard: [[{ text: "📲 Valider sur l'App", url: `${process.env.NEXTAUTH_URL}/dashboard/salarie/regulation` }]]
+            };
 
-            // ------------- Email au Responsable -------------
+            // ------------- Envoi au Responsable -------------
             if (leader?.email) {
                 await sendBrandedEmail({
                     to: leader.email,
                     from: '"VDF Régulation" <vdf95rh@gmail.com>',
                     subject: `[VDF] Votre Planning du ${dateDisplay}`,
-                    // Suppression du BCC Rezan pour éviter le spam, remplacement par rapport global
                     title: `Mission du ${dateDisplay}`,
                     preheader: `Votre assignation sur le véhicule ${vehicle.plateNumber}`,
                     content: `
@@ -96,7 +101,9 @@ export async function sendPlanningsToEmployees(dateStr: string) {
                         <div>VDF Ambulance</div>
                     `
                 }).catch(console.error)
+            }
                 
+            if (leader) {
                 await createNotification({
                     userId: leader.id,
                     title: "Nouvelle Mission 🚑",
@@ -105,16 +112,20 @@ export async function sendPlanningsToEmployees(dateStr: string) {
                     link: "/dashboard/salarie/regulation"
                 }).catch(console.error)
 
+                if (leader.telegramChatId) {
+                    const tgLeaderMsg = tgBaseMessage + `👥 <b>Rôle :</b> Responsable\n🤝 <b>Co-équipier :</b> ${teammateName}` + tgValidationMsg;
+                    await sendTelegramMessage(leader.telegramChatId, tgLeaderMsg, tgKeyboard).catch(console.error);
+                }
+                
                 emailsSent++;
             }
 
-            // ------------- Email au Co-équipier -------------
+            // ------------- Envoi au Co-équipier -------------
             if (teammate?.email) {
                 await sendBrandedEmail({
                     to: teammate.email,
                     from: '"VDF Régulation" <vdf95rh@gmail.com>',
                     subject: `[VDF] Votre Planning du ${dateDisplay}`,
-                    // Suppression du BCC Rezan
                     title: `Mission du ${dateDisplay}`,
                     preheader: `Votre assignation sur le véhicule ${vehicle.plateNumber}`,
                     content: `
@@ -140,7 +151,9 @@ export async function sendPlanningsToEmployees(dateStr: string) {
                         <div>VDF Ambulance</div>
                     `
                 }).catch(console.error)
+            }
 
+            if (teammate) {
                 await createNotification({
                     userId: teammate.id,
                     title: "Nouvelle Mission 🚑",
@@ -149,13 +162,16 @@ export async function sendPlanningsToEmployees(dateStr: string) {
                     link: "/dashboard/salarie/regulation"
                 }).catch(console.error)
 
+                if (teammate.telegramChatId) {
+                    const tgTeammateMsg = tgBaseMessage + `👥 <b>Rôle :</b> Co-équipier\n🤝 <b>Responsable :</b> ${leaderName}` + tgValidationMsg;
+                    await sendTelegramMessage(teammate.telegramChatId, tgTeammateMsg, tgKeyboard).catch(console.error);
+                }
+
                 emailsSent++;
             }
         }
 
-        // L'enregistrement a été créé au début pour verrouiller l'exécution
-
-        return { success: true, message: `Equipages figés ! ${emailsSent} emails ont été envoyés.` }
+        return { success: true, message: `Equipages figés ! Notifications (Emails + Telegram) envoyées.` }
     } catch (error: any) {
         console.error("Error sendPlanningsToEmployees:", error)
         return { success: false, error: "Erreur lors de l'envoi des plannings." }
@@ -252,6 +268,10 @@ export async function checkConfirmationsAndPenalize(dateStr: string) {
             <p><strong>Date de la mission :</strong> ${dateDisplay}</p>
             <p><strong>Bilan à 21h00 :</strong> ${validList.length} validé(s), ${oublisList.length} oubli(s), ${refusList.length} refusé(s).</p>
         `;
+        
+        // Version texte simple pour Telegram
+        let tgReport = `📊 <b>RAPPORT DE RÉGULATION 21H00</b>\n📅 <b>Date :</b> ${dateDisplay}\n\n`;
+        tgReport += `📈 <b>Bilan :</b> ${validList.length} valide(s) | ${oublisList.length} oubli(s) | ${refusList.length} refusé(s)\n\n`;
 
         // 1. Les Oublis (en rouge)
         if (oublisList.length > 0) {
@@ -268,6 +288,7 @@ export async function checkConfirmationsAndPenalize(dateStr: string) {
                     </thead>
                     <tbody>
             `;
+            tgReport += `🚨 <b>OUBLIS :</b>\n`;
             oublisList.forEach(p => {
                 htmlReport += `
                     <tr style="border-bottom: 1px solid #fee2e2;">
@@ -277,10 +298,13 @@ export async function checkConfirmationsAndPenalize(dateStr: string) {
                         <td style="padding: 10px;">${p.role}</td>
                     </tr>
                 `;
+                tgReport += `▪️ ${p.time} | 🚐 <b>${p.vehicle}</b> | ${p.name}\n`;
             });
             htmlReport += `</tbody></table>`;
+            tgReport += `\n`;
         } else {
              htmlReport += `<p style="color: #15803d; font-weight: bold;">Parfait, aucun oubli ce soir !</p>`;
+             tgReport += `✅ Aucun oubli enregistré ce soir. Parfait !\n\n`;
         }
 
         // 2. Les Validés (en vert)
@@ -298,6 +322,8 @@ export async function checkConfirmationsAndPenalize(dateStr: string) {
                     </thead>
                     <tbody>
             `;
+            // Dans Telegram on peut compresser ou omettre la longue liste des valides pour éviter le spam, mais on va juste les résumer
+            tgReport += `✅ <b>VALIDÉS :</b> (${validList.length} équipiers parés)\n`;
             validList.forEach(p => {
                 htmlReport += `
                     <tr style="border-bottom: 1px solid #dcfce7;">
@@ -307,14 +333,15 @@ export async function checkConfirmationsAndPenalize(dateStr: string) {
                         <td style="padding: 10px;">${p.role}</td>
                     </tr>
                 `;
+                tgReport += `▪️ 🚐 <b>${p.vehicle}</b> | ${p.name}\n`;
             });
             htmlReport += `</tbody></table>`;
         }
 
-        // Récupérer les admins pour envoyer le mail
+        // Récupérer les admins pour envoyer le mail et telegram
         const admins = await prisma.user.findMany({
             where: { roles: { has: 'ADMIN' } },
-            select: { email: true }
+            select: { email: true, telegramChatId: true }
         });
 
         for (const admin of admins) {
@@ -331,9 +358,10 @@ export async function checkConfirmationsAndPenalize(dateStr: string) {
                     signatureHtml: `<div class="signature-name">Le Système de Régulation Automatique</div>`
                 }).catch(console.error);
             }
+            if (admin.telegramChatId) {
+                await sendTelegramMessage(admin.telegramChatId, tgReport).catch(console.error);
+            }
         }
-
-        // L'enregistrement a été créé au début pour verrouiller l'exécution
 
         return { success: true, message: `Vérification terminée. ${penalitiesCount} pénalités. Rapport global envoyé aux admins.` }
     } catch (error: any) {
@@ -379,25 +407,21 @@ async function penalizeUser(userId: string) {
                 `
             }).catch(console.error);
         }
+        
+        if (user.telegramChatId) {
+            let num = user.oubliCount === 1 ? '1er' : '2ème';
+            let tgAlerte = `⚠️ <b>RAPPEL À L'ORDRE (${num} Oubli)</b>\n\n`;
+            tgAlerte += `Bonjour ${fullName},\n\nVous n'avez pas validé votre mission dans les temps (avant 21h). Un oubli a été enregistré sur votre dossier.\n\n`;
+            tgAlerte += `🚨 <b>ATTENTION :</b> Au bout de 3 oublis, une convocation disciplinaire sera automatiquement déclenchée par la direction.`;
+            await sendTelegramMessage(user.telegramChatId, tgAlerte).catch(console.error);
+        }
     }
 }
 
 async function handleThreeStrikes(user: any) {
     const fullName = `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.name || user.email;
 
-    // 1. Remise à Zéro (DÉSACTIVÉ : Maintenant géré manuellement par les RH)
-    /*
-    try {
-        await prisma.user.update({
-            where: { id: user.id },
-            data: { oubliCount: 0 }
-        });
-    } catch (e) {
-        console.error("Error resetting oubliCount:", e);
-    }
-    */
-
-    // 2. Email à l'employé
+    // Email à l'employé
     if (user.email) {
         await sendBrandedEmail({
             to: user.email,
@@ -421,13 +445,19 @@ async function handleThreeStrikes(user: any) {
         }).catch(console.error);
     }
 
-    // 3. Email d'Alerte aux Administrateurs
+    if (user.telegramChatId) {
+        let tgConvocation = `🛑 <b>CONVOCATION DISCIPLINAIRE</b>\n\n`;
+        tgConvocation += `Bonjour ${fullName},\n\nSuite à votre 3ème oubli de validation consécutif, la Direction vous informe que vous êtes convoqué à un entretien disciplinaire.\n\n`;
+        tgConvocation += `Un administrateur vous contactera prochainement afin de régler cette situation.`;
+        await sendTelegramMessage(user.telegramChatId, tgConvocation).catch(console.error);
+    }
+
+    // Email et notification d'Alerte aux Administrateurs
     const admins = await prisma.user.findMany({
         where: { OR: [{ roles: { has: 'ADMIN' } }, { roles: { has: 'RH' } }] },
-        select: { id: true, email: true }
+        select: { id: true, email: true, telegramChatId: true }
     });
 
-    // 4. Notification dans la cloche pour les Admins/RH
     const notifications = admins.map(admin => ({
         userId: admin.id,
         title: "🚨 Alerte 3 Oublis",
@@ -461,6 +491,13 @@ async function handleThreeStrikes(user: any) {
                 actionText: "Gérer le collaborateur",
                 signatureHtml: `<div class="signature-name">Système de Surveillance VDF</div>`
             }).catch(console.error);
+        }
+        
+        if (admin.telegramChatId) {
+            let tgAdminAlert = `🚨 <b>ALERTE RH (3 OUBLIS)</b>\n\n`;
+            tgAdminAlert += `Le collaborateur <b>${fullName}</b> a ignoré les recommandations et vient d'atteindre 3 oublis de validation de prise de poste.\n\n`;
+            tgAdminAlert += `👉 Vous devez prendre une décision disciplinaire sur la console RH.`;
+            await sendTelegramMessage(admin.telegramChatId, tgAdminAlert).catch(console.error);
         }
     }
 }
