@@ -151,6 +151,10 @@ export async function sendPushNotification(userId: string, title: string, messag
                     }
                 },
                 apns: {
+                    headers: {
+                        "apns-priority": "10",
+                        "apns-push-type": "alert"
+                    },
                     payload: {
                         aps: {
                             alert: {
