@@ -65,9 +65,12 @@ export async function sendPlanningsToEmployees(dateStr: string) {
 
             const timeRange = `${startTime || '07:00'} - ${endTime || '19:00'}`
             const tgBaseMessage = `🚑 <b>NOUVELLE MISSION (${dateDisplay})</b>\n\n🚐 <b>Véhicule :</b> ${vehicle.plateNumber}\n⏱ <b>Horaires :</b> ${timeRange}\n\n`;
-            const tgValidationMsg = `\n\n🚨 <b>ACTION REQUISE AVANT 21H :</b> Vous devez obligatoirement valider votre prise de poste sur l'application Web.`;
+            const tgValidationMsg = `\n\n🚨 <b>ACTION REQUISE AVANT 21H :</b> Vous devez obligatoirement valider votre prise de poste en cliquant sur le bouton ci-dessous.`;
             const tgKeyboard = {
-                inline_keyboard: [[{ text: "📲 Valider sur l'App", url: `${process.env.NEXTAUTH_URL}/dashboard/salarie/regulation` }]]
+                inline_keyboard: [
+                    [{ text: "✅ Confirmer ma mission", callback_data: `VALIDATE_MISSION_${assignment.id}` }],
+                    [{ text: "📲 Voir sur l'App Web", url: `${process.env.NEXTAUTH_URL}/dashboard/salarie/regulation` }]
+                ]
             };
 
             // ------------- Envoi au Responsable -------------
