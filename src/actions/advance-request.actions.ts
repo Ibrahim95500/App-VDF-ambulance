@@ -80,6 +80,22 @@ export async function updateRequestStatus(requestId: string, status: "APPROVED" 
         }
     }
 
+    // Bot Telegram Push Notification
+    if (request.user.telegramChatId) {
+        try {
+            const { sendTelegramMessage } = await import("@/lib/telegram/telegram-api");
+            const decisionStr = status === 'APPROVED' ? "✅ <b>APPROUVÉE</b>" : "❌ <b>REFUSÉE</b>";
+            let msg = `💶 <b>Mise à jour d'Acompte</b>\n\n`;
+            msg += `Montant : <b>${request.amount} €</b>\n`;
+            msg += `Décision : ${decisionStr}\n`;
+            if (comment) msg += `Motif : <i>${comment}</i>\n`;
+            
+            await sendTelegramMessage(request.user.telegramChatId, msg);
+        } catch (botErr) {
+            console.error("Erreur Telegram Notify:", botErr);
+        }
+    }
+
     revalidatePath('/dashboard/rh/acomptes')
     revalidatePath('/dashboard/salarie')
 }

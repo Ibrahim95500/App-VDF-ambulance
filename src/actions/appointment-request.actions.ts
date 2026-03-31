@@ -212,6 +212,29 @@ export async function updateAppointmentStatus(
             }
         }
 
+        // Bot Telegram Push Notification
+        if (updatedRequest.user.telegramChatId) {
+            try {
+                const { sendTelegramMessage } = await import("@/lib/telegram/telegram-api");
+                const decisionStr = status === 'APPROVED' ? "✅ <b>APPROUVÉE</b>" : "❌ <b>REFUSÉE</b>";
+                
+                let msg = `📅 <b>Mise à jour relative à votre RDV Direction</b>\n\n`;
+                msg += `Motif : <b>${updatedRequest.reason}</b>\n`;
+                msg += `Décision : ${decisionStr}\n`;
+                
+                if (status === 'APPROVED' && appointmentDate) {
+                    msg += `Date : <b>${formatParis(new Date(appointmentDate))}</b>\n`;
+                    msg += `Mode : ${appointmentMode === 'TELEPHONE' ? 'Par Téléphone' : 'Au Bureau'}\n`;
+                }
+                
+                if (adminComment) msg += `Message de la RH : <i>${adminComment}</i>\n`;
+                
+                await sendTelegramMessage(updatedRequest.user.telegramChatId, msg);
+            } catch (botErr) {
+                console.error("Erreur Telegram Notify Appointment:", botErr);
+            }
+        }
+
         revalidatePath("/dashboard/rh/rendez-vous")
         revalidatePath("/dashboard/salarie/rendez-vous")
         return { success: true }

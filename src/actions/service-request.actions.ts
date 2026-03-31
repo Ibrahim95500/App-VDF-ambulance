@@ -180,6 +180,22 @@ export async function updateServiceRequestStatus(requestId: string, status: "APP
         }
     }
 
+    // Bot Telegram Push Notification
+    if (request.user.telegramChatId) {
+        try {
+            const { sendTelegramMessage } = await import("@/lib/telegram/telegram-api");
+            const decisionStr = status === 'APPROVED' ? "✅ <b>APPROUVÉE</b>" : "❌ <b>REFUSÉE</b>";
+            let msg = `🛠 <b>Mise à jour relative à votre demande de Service</b>\n\n`;
+            msg += `Demande : <b>${request.subject}</b>\n`;
+            msg += `Décision : ${decisionStr}\n`;
+            if (comment) msg += `Motif : <i>${comment}</i>\n`;
+            
+            await sendTelegramMessage(request.user.telegramChatId, msg);
+        } catch (botErr) {
+            console.error("Erreur Telegram Notify Service:", botErr);
+        }
+    }
+
     revalidatePath('/dashboard/rh/services')
     revalidatePath('/dashboard/salarie/services')
     return { success: true }
