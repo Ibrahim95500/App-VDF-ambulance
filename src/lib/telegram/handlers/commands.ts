@@ -23,8 +23,12 @@ export async function handleUserCommand(chatId: string | number, text: string, u
                 orderBy: { createdAt: 'desc' }
             });
 
+            const keyboard = {
+                inline_keyboard: [[{ text: "📝 Nouvelle demande d'Acompte", callback_data: "CREATE_ACOMPTE" }]]
+            };
+
             if (acomptes.length === 0) {
-                await sendTelegramMessage(chatId, "💶 Vous n'avez aucune demande d'acompte <b>en cours</b>.");
+                await sendTelegramMessage(chatId, "💶 Vous n'avez aucune demande d'acompte <b>en cours</b>.", keyboard);
                 return;
             }
 
@@ -32,7 +36,7 @@ export async function handleUserCommand(chatId: string | number, text: string, u
             acomptes.forEach((a: any, i: number) => {
                 responseText += `${i+1}. <b>${a.amount} €</b> pour ${a.targetMonth}\n`;
             });
-            await sendTelegramMessage(chatId, responseText);
+            await sendTelegramMessage(chatId, responseText, keyboard);
             return;
         }
 
@@ -42,8 +46,12 @@ export async function handleUserCommand(chatId: string | number, text: string, u
                 orderBy: { createdAt: 'desc' }
             });
 
+            const keyboard = {
+                inline_keyboard: [[{ text: "🛠 Faire une demande", callback_data: "CREATE_SERVICE" }]]
+            };
+
             if (services.length === 0) {
-                await sendTelegramMessage(chatId, "🛠 Vous n'avez aucune demande de service <b>en cours</b>.");
+                await sendTelegramMessage(chatId, "🛠 Vous n'avez aucune demande de service <b>en cours</b>.", keyboard);
                 return;
             }
 
@@ -51,7 +59,7 @@ export async function handleUserCommand(chatId: string | number, text: string, u
             services.forEach((s: any, i: number) => {
                 responseText += `${i+1}. <b>${s.subject}</b> (${s.category || 'Autre'})\n`;
             });
-            await sendTelegramMessage(chatId, responseText);
+            await sendTelegramMessage(chatId, responseText, keyboard);
             return;
         }
 
@@ -113,7 +121,14 @@ export async function handleUserCommand(chatId: string | number, text: string, u
                 if(mission.startTime && mission.endTime) responseText += `⏰ <b>Horaires :</b> ${mission.startTime} - ${mission.endTime}\n`;
                 responseText += `\nStatut: ${validatedStr}\n`;
                 
-                await sendTelegramMessage(chatId, responseText);
+                let keyboard = undefined;
+                if ((mission.leaderId === user.id && !mission.leaderValidated) || (mission.teammateId === user.id && !mission.teammateValidated)) {
+                    keyboard = {
+                        inline_keyboard: [[{ text: "✅ Confirmer ma mission", callback_data: `VALIDATE_MISSION_${mission.id}` }]]
+                    };
+                }
+                
+                await sendTelegramMessage(chatId, responseText, keyboard);
                 return;
             } else if (regulation) {
                 const validatedStr = regulation.validated ? "✅ <b>VALIDÉE</b>" : "⏳ <b>EN ATTENTE DE VALIDATION</b>";

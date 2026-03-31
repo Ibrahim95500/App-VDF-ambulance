@@ -59,6 +59,8 @@ model User {
   pushSubscriptions PushSubscription[]
   fcmTokens      FcmToken[]
   telegramChatId String?   @unique
+  telegramState  String?   // AWAITING_ACOMPTE_AMOUNT, AWAITING_ACOMPTE_MONTH...
+  telegramStateData String? @db.Text // Stockage temporaire des réponses
   isDeleted      Boolean   @default(false)
   deletedAt      DateTime?
   regulationAssignments RegulationAssignment[]

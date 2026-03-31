@@ -2,12 +2,33 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { sendTelegramMessage, sendRequestContactKeyboard, removeReplyKeyboard } from '@/lib/telegram/telegram-api';
 import { handleUserCommand } from '@/lib/telegram/handlers/commands';
+import { handleBotCallback, handleConversationState } from '@/lib/telegram/handlers/interactivity';
 
 export async function POST(req: Request) {
     try {
         const body = await req.json();
 
-        // Sécurité de base, si c'est pas un message, on l'ignore (Telegram envoie d'autres events parfois)
+        // --- INTERCEPTION DES CLICS BOUTONS (CALLBACKS) ---
+        if (body.callback_query) {
+            const callback = body.callback_query;
+            const chatId = callback.message.chat.id;
+            const dataAction = callback.data; // Le texte secret lié au bouton (ex: "ACOMPTE_CREATE")
+            
+            const existingUser = await prisma.user.findFirst({
+                where: { telegramChatId: String(chatId) }
+            });
+
+            if (!existingUser) {
+                await sendTelegramMessage(chatId, "⚠️ Session Expirée.");
+                return NextResponse.json({ ok: true });
+            }
+
+            // On délègue à notre handler d'actions interactives (Étape 3)
+            await handleBotCallback(chatId, dataAction, existingUser, callback.message.message_id);
+            return NextResponse.json({ ok: true });
+        }
+
+        // Sécurité de base, si c'est pas un message texte/contact, on l'ignore 
         if (!body.message) {
             return NextResponse.json({ ok: true });
         }
@@ -15,7 +36,7 @@ export async function POST(req: Request) {
         const msg = body.message;
         const chatId = msg.chat.id;
         const text = msg.text || '';
-        const contact = msg.contact; // C'est ici que Firebase va envoyer l'objet Contact contenant le numero de telephone
+        const contact = msg.contact; 
 
         // --- SCÉNARIO 1 : L'UTILISATEUR VIENT D'ENVOYER SON NUMÉRO VIA LE BOUTON ---
         if (contact && contact.phone_number) {
@@ -71,8 +92,12 @@ export async function POST(req: Request) {
             return NextResponse.json({ ok: true });
         }
 
-        // --- SCÉNARIO 3 : HANDLER DE COMMANDES TEXTUELLES NORMALES ---
-        await handleUserCommand(chatId, text, existingUser);
+        // --- SCÉNARIO 3 : HANDLER DE COMMANDES TEXTUELLES NORMALES OU CONVERSATION ---
+        if (existingUser.telegramState) {
+            await handleConversationState(chatId, text, existingUser);
+        } else {
+            await handleUserCommand(chatId, text, existingUser);
+        }
 
         return NextResponse.json({ ok: true });
 
