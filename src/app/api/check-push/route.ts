@@ -16,7 +16,7 @@ export async function GET() {
             timestamp: new Date().toISOString(),
             fcmTokens: tokens.map((t: any) => ({
                 email: t.user?.email,
-                tokenPreview: t.token ? `${t.token.substring(0, 15)}...${t.token.slice(-5)}` : 'null',
+                tokenPreview: t.token,
                 createdAt: t.createdAt
             })),
             webPushSubs: webSubs.map((s: any) => ({

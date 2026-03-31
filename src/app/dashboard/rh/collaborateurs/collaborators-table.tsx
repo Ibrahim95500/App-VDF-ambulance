@@ -299,8 +299,9 @@ export function CollaboratorsTable({ initialData, services = [] }: { initialData
             // Structure filter (VDF / MARK)
             if (structureFilter !== "ALL") {
                 const userStructure = (user.structure || "").toUpperCase()
-                if (structureFilter === "VDF" && !userStructure.includes("VDF")) return false
-                if (structureFilter === "MARK" && !userStructure.includes("MARK")) return false
+                const isBoth = userStructure === "LES_2" || userStructure.includes("DEUX")
+                if (structureFilter === "VDF" && !userStructure.includes("VDF") && !isBoth) return false
+                if (structureFilter === "MARK" && !userStructure.includes("MARK") && !isBoth) return false
             }
 
             // Active/Inactive filter (only for non-deleted)

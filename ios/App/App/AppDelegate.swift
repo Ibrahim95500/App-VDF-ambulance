@@ -17,10 +17,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate, MessagingDelegate {
 
     func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
         Messaging.messaging().apnsToken = deviceToken
-        ApplicationDelegateProxy.shared.application(application, didRegisterForRemoteNotificationsWithDeviceToken: deviceToken)
+        
+        // IMPORTANT: Fetch explicitly the FCM token to avoid the caching issue
+        // where didReceiveRegistrationToken doesn't fire on subsequent app cold starts.
+        Messaging.messaging().token { token, error in
+            if let token = token {
+                NotificationCenter.default.post(name: .capacitorDidRegisterForRemoteNotifications, object: token)
+            }
+        }
     }
 
     func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
+        // Fallback for when the token actually gets refreshed by Firebase natively
         if let token = fcmToken {
             NotificationCenter.default.post(name: .capacitorDidRegisterForRemoteNotifications, object: token)
         }

@@ -49,7 +49,8 @@ export async function getAvailablePersonnel(dateStr: string) {
         where: {
             OR: [
                 { roles: { has: 'SALARIE' } },
-                { roles: { has: 'REGULATEUR' } }
+                { roles: { has: 'REGULATEUR' } },
+                { roles: { has: 'ADMIN' } }
             ],
             isActive: true
         } as any,
