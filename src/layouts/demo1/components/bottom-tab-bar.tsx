@@ -74,6 +74,8 @@ export function BottomTabBar() {
             safeHasPrivilege ? { label: 'Côté RH', href: safeIsRealRH ? '/dashboard/rh' : '/dashboard/rh/regulation', icon: ArrowLeftRight, isSwitch: true } : null
         ].filter(Boolean) as any[];
 
+    const router = require('next/navigation').useRouter();
+
     return (
         <>
             <AnimatePresence>
@@ -81,6 +83,7 @@ export function BottomTabBar() {
                     <motion.div
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 1.05 }}
                         className="fixed inset-0 z-[99999] bg-background/95 backdrop-blur-md flex flex-col items-center justify-center p-6"
                     >
                         <div className="w-16 h-16 rounded-full border-4 border-blue-500/30 border-t-blue-500 animate-spin mb-6" />
@@ -104,9 +107,12 @@ export function BottomTabBar() {
                         if (item.isSwitch) {
                             e.preventDefault();
                             setIsSwitching(true);
+                            router.prefetch(item.href); // Précharge la page secrètement
                             setTimeout(() => {
-                                window.location.href = item.href;
-                            }, 400); // Laisse l'animation recouvrir l'écran
+                                router.push(item.href);
+                                // On enlève l'écran de chargement avec un léger délai post-chargement
+                                setTimeout(() => setIsSwitching(false), 800);
+                            }, 400); // Laisse l'animation d'apparition se faire
                         }
                     };
 
