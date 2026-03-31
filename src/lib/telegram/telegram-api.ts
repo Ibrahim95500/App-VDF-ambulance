@@ -54,3 +54,27 @@ export async function removeReplyKeyboard(chatId: string | number, message: stri
     const removeKeyboard = { remove_keyboard: true };
     return sendTelegramMessage(chatId, message, removeKeyboard);
 }
+
+// Envoyer le clavier permanent "Main Menu"
+export async function sendMainMenu(chatId: string | number, message: string, roles: string[] = []) {
+    const isAdminOrRH = roles.includes('ADMIN') || roles.includes('RH');
+
+    const keyboardLayout = [
+        [{ text: "🚑 Ma Régulation" }, { text: "📅 Mes RDV" }],
+        [{ text: "💶 Mes Acomptes" }, { text: "🛠 Mes Services" }],
+        [{ text: "👤 Mon Profil" }]
+    ];
+
+    if (isAdminOrRH) {
+        // Ajoute un bouton à part entière pour les administrateurs
+        keyboardLayout.push([{ text: "👥 Collaborateurs" }]);
+    }
+
+    const replyMarkup = {
+        keyboard: keyboardLayout,
+        resize_keyboard: true,
+        is_persistent: true
+    };
+    
+    return sendTelegramMessage(chatId, message, replyMarkup);
+}

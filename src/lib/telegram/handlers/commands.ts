@@ -7,17 +7,20 @@ export async function handleUserCommand(chatId: string | number, text: string, u
 
     try {
         if (cmd === '/menu' || cmd === '/start') {
-            const menuText = `🚑 <b>Menu Principal VDF Ambulance</b>\n\nQue souhaitez-vous consulter ?\n\n`
-                + `💶 /acompte - Voir mes demandes d'acompte (En cours)\n`
-                + `🛠 /service - Voir mes demandes de service\n`
-                + `📅 /rdv - Voir mes rendez-vous direction\n`
-                + `🚑 /regul - Afficher ma régulation pour DEMAIN`;
-            
-            await sendTelegramMessage(chatId, menuText);
+            const menuText = `🚑 <b>Menu Principal VDF Ambulance</b>\n\nUtilisez le <b>clavier persistant</b> en bas de l'écran pour naviguer :\n\n`
+                + `👉 <b>Ma Régulation</b> : Voir ma mission de demain.\n`
+                + `👉 <b>Mes Acomptes</b> : Voir ou faire des demandes d'acompte.\n`
+                + `👉 <b>Mes Services</b> : Déclarer un incident ou besoin matériel.\n`
+                + `👉 <b>Mes RDV</b> : Consulter vos rendez-vous direction.\n`
+                + `👉 <b>Mon Profil</b> : Afficher vos statistiques et informations.`
+
+            // On renvoie le MainMenu au cas où il aurait été perdu
+            const { sendMainMenu } = require('@/lib/telegram/telegram-api');
+            await sendMainMenu(chatId, menuText, user.roles);
             return;
         }
 
-        if (cmd === '/acompte') {
+        if (cmd === '/acompte' || cmd === '💶 mes acomptes') {
             const acomptes = await prisma.advanceRequest.findMany({
                 where: { userId: user.id, status: 'PENDING' },
                 orderBy: { createdAt: 'desc' }
@@ -40,7 +43,7 @@ export async function handleUserCommand(chatId: string | number, text: string, u
             return;
         }
 
-        if (cmd === '/service') {
+        if (cmd === '/service' || cmd === '🛠 mes services') {
             const services = await prisma.serviceRequest.findMany({
                 where: { userId: user.id, status: 'PENDING' },
                 orderBy: { createdAt: 'desc' }
@@ -63,7 +66,7 @@ export async function handleUserCommand(chatId: string | number, text: string, u
             return;
         }
 
-        if (cmd === '/rdv') {
+        if (cmd === '/rdv' || cmd === '📅 mes rdv') {
             const rdvs = await prisma.appointmentRequest.findMany({
                 where: { userId: user.id, status: 'PENDING' },
                 orderBy: { createdAt: 'desc' }
@@ -82,7 +85,7 @@ export async function handleUserCommand(chatId: string | number, text: string, u
             return;
         }
 
-        if (cmd === '/regul') {
+        if (cmd === '/regul' || cmd === '🚑 ma régulation') {
             const tomorrow = addDays(new Date(), 1);
             const mission = await prisma.planningAssignment.findFirst({
                 where: {
@@ -158,6 +161,59 @@ export async function handleUserCommand(chatId: string | number, text: string, u
                 await sendTelegramMessage(chatId, `📭 Vous n'avez actuellement <b>aucune mission ou affectation</b> programmée pour le ${format(tomorrow, 'dd/MM/yyyy')}.`);
                 return;
             }
+        }
+
+        // --- NOUVEAUX MENUS ---
+
+        if (cmd === '/profil' || cmd === '👤 mon profil') {
+            const roleLabels = user.roles.join(', ') || 'SALARIÉ';
+            const profileText = `👤 <b>MON PROFIL COMPLET</b>\n\n`
+                + `<b>Nom :</b> ${user.firstName || ''} ${user.lastName || user.name || ''}\n`
+                + `<b>Rôle(s) :</b> ${roleLabels}\n`
+                + `<b>Email :</b> ${user.email || 'Non renseigné'}\n`
+                + `<b>Téléphone :</b> ${user.phone || 'Non renseigné'}\n\n`
+                + `<i>Si une de ces informations est incorrecte, merci de contacter la Direction.</i>`;
+            await sendTelegramMessage(chatId, profileText);
+            return;
+        }
+
+        if (cmd === '/collaborateurs' || cmd === '👥 collaborateurs') {
+            const isAdminOrRH = user.roles?.includes('ADMIN') || user.roles?.includes('RH');
+            if (!isAdminOrRH) {
+                await sendTelegramMessage(chatId, "⛔️ Accès réservé aux Administrateurs et RH.");
+                return;
+            }
+
+            // Récupérer les 10 premiers collaborateurs (tri alphabétique)
+            // Dans un cas réel parfait on ferait une vraie pagination inline, là on fait les 15 premiers pour l'exemple
+            const usersList = await prisma.user.findMany({
+                where: { OR: [{ role: 'USER' }, { role: 'ADMIN' }, { role: 'BANNED' }] },
+                take: 15,
+                orderBy: { lastName: 'asc' }
+            });
+
+            if (usersList.length === 0) {
+                await sendTelegramMessage(chatId, "Aucun collaborateur trouvé.");
+                return;
+            }
+
+            // Construction du Clavier Inline avec le nom des collaborateurs
+            const inline_keyboard = [];
+            for (let i = 0; i < usersList.length; i += 2) {
+                const row = [];
+                const u1 = usersList[i];
+                row.push({ text: `${u1.firstName || ''} ${u1.lastName || u1.name || ''}`.trim(), callback_data: `VIEW_PROFILE_${u1.id}` });
+                
+                if (i + 1 < usersList.length) {
+                    const u2 = usersList[i+1];
+                    row.push({ text: `${u2.firstName || ''} ${u2.lastName || u2.name || ''}`.trim(), callback_data: `VIEW_PROFILE_${u2.id}` });
+                }
+                inline_keyboard.push(row);
+            }
+
+            const keyboard = { inline_keyboard };
+            await sendTelegramMessage(chatId, `👥 <b>Annuaire des Collaborateurs</b>\nSélectionnez un membre de l'équipe pour voir sa fiche :`, keyboard);
+            return;
         }
 
         // Si la commande n'est pas reconnue mais commence par /

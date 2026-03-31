@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { sendTelegramMessage, sendRequestContactKeyboard, removeReplyKeyboard } from '@/lib/telegram/telegram-api';
+import { sendTelegramMessage, sendRequestContactKeyboard, sendMainMenu } from '@/lib/telegram/telegram-api';
 import { handleUserCommand } from '@/lib/telegram/handlers/commands';
 import { handleBotCallback, handleConversationState } from '@/lib/telegram/handlers/interactivity';
 
@@ -65,13 +65,13 @@ export async function POST(req: Request) {
                     data: { telegramChatId: String(chatId) }
                 });
 
-                await removeReplyKeyboard(chatId, `✅ Bienvenue sur le réseau sécurisé VDF Ambulance, <b>${user.firstName || user.name}</b> ! Votre compte télégraphique est désormais lié avec succès à votre profil RH.`);
-                // Petit délai pour simuler "Loading..."
+                await sendMainMenu(chatId, `✅ Bienvenue sur le réseau sécurisé VDF Ambulance, <b>${user.firstName || user.name}</b> ! Votre compte télégraphique est désormais lié avec succès à votre profil RH.`, user.roles);
+                // Petit délai explicatif
                 setTimeout(() => {
-                    sendTelegramMessage(chatId, "Voulez-vous tester les commandes disponibles ?\nTapez <b>/demandes</b> pour voir si vous avez des missions.");
+                    sendTelegramMessage(chatId, "👇 Utilisez le <b>Menu Interactif</b> ci-dessous pour naviguer. Vous pouvez fermer ou ouvrir ce clavier à volonté !");
                 }, 1000);
             } else {
-                await removeReplyKeyboard(chatId, `❌ Échec. Je n'ai trouvé aucun compte collaborateur VDF Ambulance associé au numéro de téléphone finissant par ${cleanSuffix}.\nVeuillez mettre à jour votre profil sur le site web RH ou contacter votre administrateur avant de réessayer avec /start.`);
+                await sendTelegramMessage(chatId, `❌ Échec. Je n'ai trouvé aucun compte collaborateur VDF Ambulance associé au numéro de téléphone finissant par ${cleanSuffix}.\nVeuillez mettre à jour votre profil sur le site web RH ou contacter votre administrateur avant de réessayer avec /start.`);
             }
 
             return NextResponse.json({ ok: true });

@@ -60,6 +60,64 @@ export async function handleBotCallback(chatId: string | number, dataAction: str
             return;
         }
 
+        // --- ETAPES DE CONFIRMATION (REDO/UNDO) ---
+        if (dataAction === 'CONFIRM_ACOMPTE') {
+            if (user.telegramState !== 'ACOMPTE_CONFIRM') {
+                await sendTelegramMessage(chatId, "⚠️ Session expirée ou action non valide.");
+                return;
+            }
+            const stateData = user.telegramStateData ? JSON.parse(user.telegramStateData) : {};
+            const result = await createAdvanceRequest(stateData.amount, stateData.reason, user.id);
+            
+            await prisma.user.update({ where: { id: user.id }, data: { telegramState: null, telegramStateData: null } });
+            
+            if (!result.success) {
+                await sendTelegramMessage(chatId, `❌ <b>Demande refusée :</b>\n${result.error}`);
+            } else {
+                await sendTelegramMessage(chatId, `✅ <b>Félicitations !</b>\nVotre demande d'acompte de ${stateData.amount} € a été envoyée avec succès aux Ressources Humaines.`);
+            }
+            return;
+        }
+
+        if (dataAction === 'CONFIRM_SERVICE') {
+            if (user.telegramState !== 'SERVICE_CONFIRM') {
+                await sendTelegramMessage(chatId, "⚠️ Session expirée ou action non valide.");
+                return;
+            }
+            const stateData = user.telegramStateData ? JSON.parse(user.telegramStateData) : {};
+            try {
+                await createServiceRequest('Telegram', stateData.subject, stateData.desc, user.id);
+                await sendTelegramMessage(chatId, `✅ <b>Demande de service envoyée !</b>\nElle a été transmise à la supervision RH.`);
+            } catch (err: any) {
+                await sendTelegramMessage(chatId, `❌ <b>Erreur :</b>\n${err.message || "Impossible de créer la demande."}`);
+            } finally {
+                await prisma.user.update({ where: { id: user.id }, data: { telegramState: null, telegramStateData: null } });
+            }
+            return;
+        }
+
+        if (dataAction.startsWith('VIEW_PROFILE_')) {
+            const profileId = dataAction.split('_')[2];
+            const profile = await prisma.user.findUnique({ where: { id: profileId } });
+            
+            if (!profile) {
+                await sendTelegramMessage(chatId, "❌ Profil introuvable.");
+                return;
+            }
+
+            const roleLabels = profile.roles.join(', ') || 'SALARIÉ';
+            const profileText = `👤 <b>PROFIL : ${profile.firstName || ''} ${profile.lastName || profile.name || ''}</b>\n\n`
+                + `<b>UUID :</b> ${profile.id}\n`
+                + `<b>Rôle(s) :</b> ${roleLabels}\n`
+                + `<b>Email :</b> ${profile.email || 'Non renseigné'}\n`
+                + `<b>Téléphone :</b> ${profile.phone || 'Non renseigné'}\n`
+                + `<b>Lié Telegram :</b> ${profile.telegramChatId ? '✅ Oui' : '❌ Non'}\n`;
+
+            // On pourrait rajouter un inline keyboard "Retour Liste" si nécessaire
+            await sendTelegramMessage(chatId, profileText);
+            return;
+        }
+
         // Action générique d'annulation
         if (dataAction === 'CANCEL_ACTION') {
             await prisma.user.update({
@@ -110,21 +168,30 @@ export async function handleConversationState(chatId: string | number, text: str
         }
 
         if (currentState === 'ACOMPTE_REASON') {
-            // Appel à l'action native pour appliquer toutes les règles (ex: limite au 15 du mois)
-            const result = await createAdvanceRequest(stateData.amount, text, user.id);
-
-            // Vider l'état
+            stateData.reason = text;
             await prisma.user.update({
                 where: { id: user.id },
-                data: { telegramState: null, telegramStateData: null }
+                data: { telegramState: 'ACOMPTE_CONFIRM', telegramStateData: JSON.stringify(stateData) }
             });
 
-            if (!result.success) {
-                await sendTelegramMessage(chatId, `❌ <b>Demande refusée par le système :</b>\n${result.error}`);
-                return;
-            }
+            const keyboard = {
+                inline_keyboard: [
+                    [{ text: "✅ Confirmer et Envoyer", callback_data: "CONFIRM_ACOMPTE" }],
+                    [{ text: "❌ Annuler", callback_data: "CANCEL_ACTION" }]
+                ]
+            };
 
-            await sendTelegramMessage(chatId, `✅ <b>Félicitations !</b>\nVotre demande d'acompte de ${stateData.amount} € a été envoyée avec succès aux Ressources Humaines.`);
+            const summary = `📄 <b>RÉCAPITULATIF DE VOTRE DEMANDE D'ACOMPTE</b>\n\n`
+                + `<b>Montant :</b> ${stateData.amount} €\n`
+                + `<b>Motif :</b> ${text}\n\n`
+                + `<i>Souhaitez-vous confirmer l'envoi de cette demande aux RH ?</i>`;
+
+            await sendTelegramMessage(chatId, summary, keyboard);
+            return;
+        }
+
+        if (currentState === 'ACOMPTE_CONFIRM') {
+            await sendTelegramMessage(chatId, "⚠️ Veuillez utiliser les boutons 'Confirmer' ou 'Annuler' ci-dessus. Ou tapez /annuler pour fermer.");
             return;
         }
 
@@ -144,18 +211,30 @@ export async function handleConversationState(chatId: string | number, text: str
         }
 
         if (currentState === 'SERVICE_DESC') {
-            try {
-                await createServiceRequest('Telegram', stateData.subject, text, user.id);
+            stateData.desc = text;
+            await prisma.user.update({
+                where: { id: user.id },
+                data: { telegramState: 'SERVICE_CONFIRM', telegramStateData: JSON.stringify(stateData) }
+            });
 
-                await prisma.user.update({
-                    where: { id: user.id },
-                    data: { telegramState: null, telegramStateData: null }
-                });
+            const keyboard = {
+                inline_keyboard: [
+                    [{ text: "✅ Confirmer et Envoyer", callback_data: "CONFIRM_SERVICE" }],
+                    [{ text: "❌ Annuler", callback_data: "CANCEL_ACTION" }]
+                ]
+            };
 
-                await sendTelegramMessage(chatId, `✅ <b>Demande de service envoyée !</b>\nElle a été transmise à la supervision RH.`);
-            } catch (err: any) {
-                await sendTelegramMessage(chatId, `❌ <b>Erreur :</b>\n${err.message || "Impossible de créer la demande."}`);
-            }
+            const summary = `📄 <b>RÉCAPITULATIF DE VOTRE DEMANDE DE SERVICE</b>\n\n`
+                + `<b>Sujet :</b> ${stateData.subject}\n`
+                + `<b>Description :</b> ${text}\n\n`
+                + `<i>Souhaitez-vous confirmer l'envoi de cette demande à la régulation/direction ?</i>`;
+
+            await sendTelegramMessage(chatId, summary, keyboard);
+            return;
+        }
+
+        if (currentState === 'SERVICE_CONFIRM') {
+            await sendTelegramMessage(chatId, "⚠️ Veuillez utiliser les boutons 'Confirmer' ou 'Annuler' ci-dessus. Ou tapez /annuler pour fermer.");
             return;
         }
 
