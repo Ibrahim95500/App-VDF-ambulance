@@ -136,9 +136,9 @@ export async function sendPushNotification(userId: string, title: string, messag
                     title,
                     body: message,
                 },
-                data: {
+                /* data: {
                     url,
-                },
+                }, */
                 android: {
                     priority: 'high',
                     notification: {
