@@ -329,6 +329,31 @@ export async function handleBotCallback(chatId: string | number, dataAction: str
                 try {
                     // Les dates en base (Planner) sont toujours UTC 00h
                     const startOfTargetDate = new Date(`${stateData.dateStr}T00:00:00.000Z`);
+                    
+                    // Vérification Anti-Doublon
+                    const isNight = stateData.startTime === '19:30';
+                    const existing = await prisma.planningAssignment.findFirst({
+                        where: {
+                            vehicleId: stateData.vehicleId,
+                            date: startOfTargetDate,
+                            startTime: isNight ? { gte: "12:00" } : { lt: "12:00" }
+                        },
+                        include: { leader: true, vehicle: true }
+                    });
+
+                    if (existing) {
+                        await sendTelegramMessage(chatId, `🚫 <b>ERREUR :</b> L'ambulance <b>${existing.vehicle?.plateNumber}</b> a DÉJÀ un équipage assigné à cette date sur cette vacation (Leader: ${existing.leader?.lastName || '?'}).\n<i>Veuillez modifier ou supprimer via la WebApp.</i>`, {
+                            inline_keyboard: [
+                                [{ text: "❌ Quitter", callback_data: "CANCEL_ACTION" }]
+                            ]
+                        });
+                        // On nettoie le state pour ne pas rester bloqué
+                        await prisma.user.update({
+                            where: { id: user.id },
+                            data: { telegramState: null, telegramStateData: null }
+                        });
+                        return;
+                    }
 
                     await prisma.planningAssignment.create({
                         data: {
