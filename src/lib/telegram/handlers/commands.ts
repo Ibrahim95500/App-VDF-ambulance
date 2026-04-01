@@ -116,6 +116,8 @@ export async function handleUserCommand(chatId: string | number, text: string, u
             collab.slice(0, 95).forEach(c => {
                 inline_keyboard.push([{ text: `👤 ${c.firstName || ''} ${c.lastName || ''}`, callback_data: `CONVU_${c.id}` }]);
             });
+            
+            inline_keyboard.push([{ text: "❌ Annuler l'opération", callback_data: "CANCEL_ACTION" }]);
 
             await sendTelegramMessage(chatId, "🎯 <b>Convoquer un salarié (1/5)</b>\n\nSélectionnez le collaborateur à convoquer :", { inline_keyboard });
             return;

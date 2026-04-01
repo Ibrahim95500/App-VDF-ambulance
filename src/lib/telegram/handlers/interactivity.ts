@@ -664,7 +664,8 @@ export async function handleBotCallback(chatId: string | number, dataAction: str
                 }
             });
 
-            await sendTelegramMessage(chatId, `📝 <b>Convocation (2/5) : Le Motif</b>\n\nPourquoi convoquez-vous <b>${targetUser.firstName || ''} ${targetUser.lastName || ''}</b> ?\n\n(Ce motif apparaîtra précisément sur sa notification officielle)`);
+            const keyboard = { inline_keyboard: [[{ text: "❌ Annuler l'opération", callback_data: "CANCEL_ACTION" }]] };
+            await sendTelegramMessage(chatId, `📝 <b>Convocation (2/5) : Le Motif</b>\n\nPourquoi convoquez-vous <b>${targetUser.firstName || ''} ${targetUser.lastName || ''}</b> ?\n\n(Ce motif apparaîtra précisément sur sa notification officielle)`, keyboard);
             return;
         }
 
@@ -681,7 +682,8 @@ export async function handleBotCallback(chatId: string | number, dataAction: str
                 data: { telegramState: 'CONV_COMMENT', telegramStateData: JSON.stringify(stateData) }
             });
 
-            await sendTelegramMessage(chatId, "💬 <b>Convocation (5/5) : Commentaire RH</b>\n\nSouhaitez-vous ajouter une instruction pour le salarié (ex: <i>'Remenez votre badge'</i>, <i>'Pensez à votre justificatif'</i>) ?\n\nSi vous n'avez rien à ajouter, tapez simplement <code>/passer</code> dans le chat.");
+            const keyboard = { inline_keyboard: [[{ text: "❌ Annuler l'opération", callback_data: "CANCEL_ACTION" }]] };
+            await sendTelegramMessage(chatId, "💬 <b>Convocation (5/5) : Commentaire RH</b>\n\nSouhaitez-vous ajouter une instruction pour le salarié (ex: <i>'Remenez votre badge'</i>, <i>'Pensez à votre justificatif'</i>) ?\n\nSi vous n'avez rien à ajouter, tapez simplement <code>/passer</code> dans le chat.", keyboard);
             return;
         }
 
@@ -865,7 +867,8 @@ export async function handleConversationState(chatId: string | number, text: str
                 data: { telegramState: 'CONV_DATE', telegramStateData: JSON.stringify(stateData) }
             });
 
-            await sendTelegramMessage(chatId, "📅 <b>Convocation (3/5) : Date et heure</b>\n\nTapez la date et l'heure exactes pour la convocation en respectant ce format :\n<code>JJ/MM/AAAA HH:MM</code>\n\n📌 <i>Exemple : 15/04/2026 14:30</i>\n(Astuce: copiez-collez l'exemple !)");
+            const keyboard = { inline_keyboard: [[{ text: "❌ Annuler l'opération", callback_data: "CANCEL_ACTION" }]] };
+            await sendTelegramMessage(chatId, "📅 <b>Convocation (3/5) : Date et heure</b>\n\nTapez la date et l'heure exactes pour la convocation en respectant ce format :\n<code>JJ/MM/AAAA HH:MM</code>\n\n📌 <i>Exemple : 15/04/2026 14:30</i>\n(Astuce: copiez-collez l'exemple !)", keyboard);
             return;
         }
 
@@ -895,7 +898,8 @@ export async function handleConversationState(chatId: string | number, text: str
             const keyboard = {
                 inline_keyboard: [
                     [{ text: "🏢 Au Bureau", callback_data: "CONVMODE_BUREAU" }],
-                    [{ text: "📞 Par téléphone", callback_data: "CONVMODE_TEL" }]
+                    [{ text: "📞 Par téléphone", callback_data: "CONVMODE_TEL" }],
+                    [{ text: "❌ Annuler l'opération", callback_data: "CANCEL_ACTION" }]
                 ]
             };
             await sendTelegramMessage(chatId, "📞 <b>Convocation (4/5) : Modalité</b>\n\nComment se déroulera la réunion ?", keyboard);
