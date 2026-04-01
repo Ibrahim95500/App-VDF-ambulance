@@ -162,9 +162,9 @@ async function snipeCourse(page: any): Promise<{ buffer: Buffer | null, status: 
             }
         };
 
-        // Règles métiers demandées par le chef
-        setSelect(chauffeurSel, 'VDF1');
-        setSelect(equipierSel, 'VDF2');
+        // Règles métiers demandées par le chef (Termes exacts)
+        setSelect(chauffeurSel, 'AMBU VDF1');
+        setSelect(equipierSel, 'AMBU VDF2');
         
         // --- D. Cliquer sur le Bouton Vert Valider ---
         let buttons = Array.from(document.querySelectorAll('input[type="submit"], button, a, input[type="button"]'));
@@ -318,12 +318,8 @@ async function startAgent() {
              await new Promise(r => setTimeout(r, 8000));
          } 
          else if (snipeResult.status === "failed_already_taken") {
-             console.log("❌ ZUT ! Une autre société a pris la course une milliseconde avant nous.");
-             // Il y a la fameuse erreur jaune "déjà acceptée"
-             if (snipeResult.buffer) {
-                 await sendTelegramAlert("😭 **COURSE RATÉE DE JUSTESSE !**\nUne société concurrente a été plus rapide et a pris la course juste sous notre nez ! (Voir erreur Serveur en jaune) 💥", snipeResult.buffer)
-             }
-             // On doit retourner a la page principale sinon on est bloqué sur l'erreur
+             console.log("❌ ZUT ! Course déjà acceptée par un concurrent. On se retire discrètement sans rien dire sur Telegram.");
+             // On a touché l'erreur jaune, on fait profil bas et on retourne chasser
              await page.goto(AMC_URL, { waitUntil: "networkidle2" });
              await new Promise(r => setTimeout(r, 15000));
          }
