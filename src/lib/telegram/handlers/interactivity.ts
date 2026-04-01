@@ -215,7 +215,13 @@ export async function handleBotCallback(chatId: string | number, dataAction: str
                 + `<b>Mois ciblé :</b> ${acompte.targetMonth}\n`
                 + `<b>Statut :</b> ${icon} ${acompte.status}\n`
                 + (acompte.adminComment ? `\n💬 <b>Commentaire RH :</b> ${acompte.adminComment}` : "");
-            await sendTelegramMessage(chatId, txt);
+            
+            if (acompte.status === 'PENDING') {
+                const keyboard = { inline_keyboard: [[{ text: '🗑️ Annuler la demande', callback_data: `DELACOM_${id}` }]] };
+                await sendTelegramMessage(chatId, txt, keyboard);
+            } else {
+                await sendTelegramMessage(chatId, txt);
+            }
             return;
         }
 
@@ -235,7 +241,13 @@ export async function handleBotCallback(chatId: string | number, dataAction: str
                 + `<b>Message :</b> ${service.description}\n`
                 + `<b>Statut :</b> ${icon} ${service.status}\n`
                 + (service.adminComment ? `\n💬 <b>Commentaire RH :</b> ${service.adminComment}` : "");
-            await sendTelegramMessage(chatId, txt);
+            
+            if (service.status === 'PENDING') {
+                const keyboard = { inline_keyboard: [[{ text: '🗑️ Annuler la demande', callback_data: `DELSERV_${id}` }]] };
+                await sendTelegramMessage(chatId, txt, keyboard);
+            } else {
+                await sendTelegramMessage(chatId, txt);
+            }
             return;
         }
 
@@ -256,8 +268,37 @@ export async function handleBotCallback(chatId: string | number, dataAction: str
                 + `<b>Statut :</b> ${icon} ${rdv.status}\n`
                 + `<b>Date fixée :</b> ${dateFixe}\n`
                 + (rdv.adminComment ? `\n💬 <b>Commentaire RH :</b> ${rdv.adminComment}` : "");
-            await sendTelegramMessage(chatId, txt);
+            
+            if (rdv.status === 'PENDING') {
+                const keyboard = { inline_keyboard: [[{ text: '🗑️ Annuler la demande', callback_data: `DELRDV_${id}` }]] };
+                await sendTelegramMessage(chatId, txt, keyboard);
+            } else {
+                await sendTelegramMessage(chatId, txt);
+            }
             return;
+        }
+
+        // --- Logique d'annulation par le salarié ---
+        if (dataAction.startsWith('DELACOM_')) {
+            const id = dataAction.split('_')[1];
+            const item = await prisma.advanceRequest.findUnique({ where: { id } });
+            if (!item || item.userId !== user.id || item.status !== 'PENDING') return sendTelegramMessage(chatId, "❌ Annulation impossible (demande introuvable ou déjà traitée).");
+            await prisma.advanceRequest.delete({ where: { id } });
+            return sendTelegramMessage(chatId, "🗑 <b>Votre demande d'acompte a bien été annulée.</b>");
+        }
+        if (dataAction.startsWith('DELSERV_')) {
+            const id = dataAction.split('_')[1];
+            const item = await prisma.serviceRequest.findUnique({ where: { id } });
+            if (!item || item.userId !== user.id || item.status !== 'PENDING') return sendTelegramMessage(chatId, "❌ Annulation impossible (demande introuvable ou déjà traitée).");
+            await prisma.serviceRequest.delete({ where: { id } });
+            return sendTelegramMessage(chatId, "🗑 <b>Votre demande de service a bien été annulée.</b>");
+        }
+        if (dataAction.startsWith('DELRDV_')) {
+            const id = dataAction.split('_')[1];
+            const item = await prisma.appointmentRequest.findUnique({ where: { id } });
+            if (!item || item.userId !== user.id || item.status !== 'PENDING') return sendTelegramMessage(chatId, "❌ Annulation impossible (demande introuvable ou déjà traitée).");
+            await prisma.appointmentRequest.delete({ where: { id } });
+            return sendTelegramMessage(chatId, "🗑 <b>Votre demande de RDV a bien été annulée.</b>");
         }
         if (dataAction.startsWith('C_FILTER_')) {
             const isAdminOrRH = user.roles?.includes('ADMIN') || user.roles?.includes('RH');
