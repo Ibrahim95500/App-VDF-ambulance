@@ -95,7 +95,7 @@ export async function handleUserCommand(chatId: string | number, text: string, u
             return;
         }
 
-        if (cmd === '/convocation') {
+        if (cmd === '/convocation' || cmd === '📝 convoquer (bot)') {
             if (!user.roles.includes('ADMIN') && !user.roles.includes('RH')) {
                 await sendTelegramMessage(chatId, "⚠️ Vous n'avez pas les droits pour convoquer un collaborateur.");
                 return;
