@@ -6,13 +6,20 @@ export async function handleUserCommand(chatId: string | number, text: string, u
     const cmd = text.toLowerCase().trim();
 
     try {
-        if (cmd === '/menu' || cmd === '/start') {
-            const menuText = `🚑 <b>Menu Principal VDF Ambulance</b>\n\nUtilisez le <b>clavier persistant</b> en bas de l'écran pour naviguer :\n\n`
+        if (cmd === '/menu' || cmd === '/start' || cmd === '🧹 recommencer (/start)') {
+            // Nettoyage de l'état si l'utilisateur était bloqué dans un tunnel
+            await prisma.user.update({
+                where: { id: user.id },
+                data: { telegramState: null, telegramStateData: null }
+            });
+
+            const menuText = `👋 <b>Conversation réinitialisée.</b>\n\n🚑 <b>Menu Principal VDF Ambulance</b>\n\nUtilisez le <b>clavier persistant</b> en bas de l'écran pour naviguer :\n\n`
                 + `👉 <b>Ma Régulation</b> : Voir ma mission de demain.\n`
                 + `👉 <b>Mes Acomptes</b> : Voir ou faire des demandes d'acompte.\n`
                 + `👉 <b>Mes Services</b> : Déclarer un incident ou besoin matériel.\n`
                 + `👉 <b>Mes RDV</b> : Consulter vos rendez-vous direction.\n`
-                + `👉 <b>Mon Profil</b> : Afficher vos statistiques et informations.`
+                + `👉 <b>Mon Profil</b> : Afficher vos statistiques et informations.\n\n`
+                + `<i>Astuce: Telegram ne permet pas à un bot d'effacer les messages de votre écran. Pour faire place nette, vous devez faire "Vider l'historique" depuis les options Telegram.</i>`;
 
             // On renvoie le MainMenu au cas où il aurait été perdu
             const { sendMainMenu } = require('@/lib/telegram/telegram-api');

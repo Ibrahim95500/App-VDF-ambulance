@@ -77,6 +77,9 @@ export async function sendMainMenu(chatId: string | number, message: string, rol
         ]);
     }
 
+    // Bouton commun pour réinitialiser la session
+    keyboardLayout.push([{ text: "🧹 Recommencer (/start)" }]);
+
     const replyMarkup = {
         keyboard: keyboardLayout,
         resize_keyboard: true,
