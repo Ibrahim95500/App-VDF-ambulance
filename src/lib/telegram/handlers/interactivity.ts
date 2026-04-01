@@ -648,6 +648,70 @@ export async function handleBotCallback(chatId: string | number, dataAction: str
             return;
         }
 
+        // --- FLUX CONVOCATION (ADMIN ONLY) ---
+        if (dataAction.startsWith('CONVU_')) {
+            if (!user.roles?.includes('ADMIN') && !user.roles?.includes('RH')) return;
+            const targetUserId = dataAction.replace('CONVU_', '');
+            
+            const targetUser = await prisma.user.findUnique({ where: { id: targetUserId } });
+            if (!targetUser) return sendTelegramMessage(chatId, "❌ Collaborateur introuvable.");
+
+            await prisma.user.update({
+                where: { id: user.id },
+                data: { 
+                    telegramState: 'CONV_REASON', 
+                    telegramStateData: JSON.stringify({ targetUserId, name: `${targetUser.firstName || ''} ${targetUser.lastName || ''}`.trim() })
+                }
+            });
+
+            await sendTelegramMessage(chatId, `📝 <b>Convocation (2/5) : Le Motif</b>\n\nPourquoi convoquez-vous <b>${targetUser.firstName || ''} ${targetUser.lastName || ''}</b> ?\n\n(Ce motif apparaîtra précisément sur sa notification officielle)`);
+            return;
+        }
+
+        if (dataAction.startsWith('CONVMODE_')) {
+            if (!user.roles?.includes('ADMIN') && !user.roles?.includes('RH')) return;
+            if (user.telegramState !== 'CONV_MODE') return;
+            const stateData = user.telegramStateData ? JSON.parse(user.telegramStateData) : {};
+
+            const mode = dataAction.replace('CONVMODE_', ''); // BUREAU ou TEL
+            stateData.mode = mode === 'BUREAU' ? 'BUREAU' : 'TELEPHONE';
+            
+            await prisma.user.update({
+                where: { id: user.id },
+                data: { telegramState: 'CONV_COMMENT', telegramStateData: JSON.stringify(stateData) }
+            });
+
+            await sendTelegramMessage(chatId, "💬 <b>Convocation (5/5) : Commentaire RH</b>\n\nSouhaitez-vous ajouter une instruction pour le salarié (ex: <i>'Remenez votre badge'</i>, <i>'Pensez à votre justificatif'</i>) ?\n\nSi vous n'avez rien à ajouter, tapez simplement <code>/passer</code> dans le chat.");
+            return;
+        }
+
+        if (dataAction === 'CONV_SEND') {
+            if (!user.roles?.includes('ADMIN') && !user.roles?.includes('RH')) return;
+            if (user.telegramState !== 'CONV_CONFIRM') return;
+            
+            const stateData = user.telegramStateData ? JSON.parse(user.telegramStateData) : {};
+            
+            try {
+                // Import dynamique pour éviter les requêtes circulaires (au cas où)
+                const { createConvocationAction } = require('@/actions/appointment-request.actions');
+                await createConvocationAction(
+                    stateData.targetUserId,
+                    stateData.reason,
+                    new Date(stateData.dateStr),
+                    stateData.mode,
+                    stateData.comment || ""
+                );
+
+                await sendTelegramMessage(chatId, `✅ <b>Boom ! Convocation Envoyée.</b>\nLe salarié convoqué va immédiatement recevoir une notification Web et un e-mail officiel à son attention.`);
+            } catch(e: any) {
+                await sendTelegramMessage(chatId, `❌ Erreur durant la convocation : ${e.message}`);
+                console.error("Erreur Telegram Convocation : ", e);
+            } finally {
+                await prisma.user.update({ where: { id: user.id }, data: { telegramState: null, telegramStateData: null }});
+            }
+            return;
+        }
+
         await sendTelegramMessage(chatId, "⚠️ Bouton non reconnu ou expiré.");
     } catch (e) {
         console.error("Erreur Telegram Callback:", e);
@@ -788,6 +852,83 @@ export async function handleConversationState(chatId: string | number, text: str
         }
 
         if (currentState === 'RDV_CONFIRM') {
+            await sendTelegramMessage(chatId, "⚠️ Veuillez utiliser les boutons 'Confirmer' ou 'Annuler' ci-dessus. Ou tapez /annuler pour fermer.");
+            return;
+        }
+
+        // --- FLUX CONVOCATION (TEXT INPUTS) ---
+        if (currentState === 'CONV_REASON') {
+            if (text.length < 3) return sendTelegramMessage(chatId, "❌ Le motif est trop court. Veuillez réécrire un motif explicite (ou tapez /annuler).");
+            stateData.reason = text;
+            await prisma.user.update({
+                where: { id: user.id },
+                data: { telegramState: 'CONV_DATE', telegramStateData: JSON.stringify(stateData) }
+            });
+
+            await sendTelegramMessage(chatId, "📅 <b>Convocation (3/5) : Date et heure</b>\n\nTapez la date et l'heure exactes pour la convocation en respectant ce format :\n<code>JJ/MM/AAAA HH:MM</code>\n\n📌 <i>Exemple : 15/04/2026 14:30</i>\n(Astuce: copiez-collez l'exemple !)");
+            return;
+        }
+
+        if (currentState === 'CONV_DATE') {
+            // Regex ultra stricte
+            const match = text.trim().match(/^(\d{2})\/(\d{2})\/(\d{4}) (\d{2}):(\d{2})$/);
+            if (!match) {
+                await sendTelegramMessage(chatId, "❌ <b>Format invalide.</b>\nIl faut ABSOLUMENT respecter le format <code>JJ/MM/AAAA HH:MM</code> (les tirets et l'espace au milieu sont cruciaux). \nEssayez encore ou tapez /annuler");
+                return;
+            }
+            const [_, day, month, year, hour, min] = match;
+            const dateObj = new Date(parseInt(year), parseInt(month)-1, parseInt(day), parseInt(hour), parseInt(min));
+            
+            if (isNaN(dateObj.getTime())) {
+                await sendTelegramMessage(chatId, "❌ <b>Date impossible.</b>\nLa date est invalide. Réessayez avec une date correcte.");
+                return;
+            }
+
+            stateData.dateStr = dateObj.toISOString();
+            stateData.dateHuman = `${day}/${month}/${year} à ${hour}h${min}`;
+
+            await prisma.user.update({
+                where: { id: user.id },
+                data: { telegramState: 'CONV_MODE', telegramStateData: JSON.stringify(stateData) }
+            });
+
+            const keyboard = {
+                inline_keyboard: [
+                    [{ text: "🏢 Au Bureau", callback_data: "CONVMODE_BUREAU" }],
+                    [{ text: "📞 Par téléphone", callback_data: "CONVMODE_TEL" }]
+                ]
+            };
+            await sendTelegramMessage(chatId, "📞 <b>Convocation (4/5) : Modalité</b>\n\nComment se déroulera la réunion ?", keyboard);
+            return;
+        }
+
+        if (currentState === 'CONV_COMMENT') {
+            stateData.comment = (text.toLowerCase().trim() === '/passer') ? "" : text;
+
+            await prisma.user.update({
+                where: { id: user.id },
+                data: { telegramState: 'CONV_CONFIRM', telegramStateData: JSON.stringify(stateData) }
+            });
+
+            const summaryStr = `📄 <b>RÉCAPITULATIF DE LA CONVOCATION</b>\n\n`
+                + `<b>Salarié convoqué :</b> ${stateData.name}\n`
+                + `<b>Motif :</b> ${stateData.reason}\n`
+                + `<b>Date prévue :</b> ${stateData.dateHuman}\n`
+                + `<b>Mode :</b> ${stateData.mode === 'BUREAU' ? '🏢 Physiquement au Bureau' : '📞 Par Téléphone'}\n`
+                + (stateData.comment ? `<b>Commentaire / Instruction :</b>\n<i>${stateData.comment}</i>\n` : "");
+
+            const keyboard = {
+                inline_keyboard: [
+                    [{ text: "✅ Confirmer et Envoyer", callback_data: "CONV_SEND" }],
+                    [{ text: "❌ Annuler", callback_data: "CANCEL_ACTION" }]
+                ]
+            };
+
+            await sendTelegramMessage(chatId, summaryStr, keyboard);
+            return;
+        }
+
+        if (currentState === 'CONV_CONFIRM') {
             await sendTelegramMessage(chatId, "⚠️ Veuillez utiliser les boutons 'Confirmer' ou 'Annuler' ci-dessus. Ou tapez /annuler pour fermer.");
             return;
         }

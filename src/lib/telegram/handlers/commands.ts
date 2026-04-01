@@ -100,13 +100,24 @@ export async function handleUserCommand(chatId: string | number, text: string, u
                 await sendTelegramMessage(chatId, "⚠️ Vous n'avez pas les droits pour convoquer un collaborateur.");
                 return;
             }
-            const keyboard = {
-                inline_keyboard: [
-                    [{ text: "📝 Convoquer via l'Espace RH", url: "https://vdf-ambulance.fr/dashboard/rh/rendez-vous" }]
-                ]
-            };
-            const msg = "<b>⚠️ Convoquer un salarié</b>\n\nPour des raisons pratiques (sélection du salarié, de la date, de l'heure et du motif), les convocations se font uniquement depuis l'Espace Numérique RH sur le Web.\nCliquez sur le lien ci-dessous :";
-            await sendTelegramMessage(chatId, msg, keyboard);
+            
+            const collab = await prisma.user.findMany({
+                where: { isArchived: false, NOT: { roles: { hasSome: ['ADMIN'] } } },
+                select: { id: true, firstName: true, lastName: true },
+                orderBy: { firstName: 'asc' }
+            });
+            
+            if (collab.length === 0) {
+                await sendTelegramMessage(chatId, "❌ Aucun collaborateur éligible à convoquer.");
+                return;
+            }
+
+            const inline_keyboard = [];
+            collab.slice(0, 95).forEach(c => {
+                inline_keyboard.push([{ text: `👤 ${c.firstName || ''} ${c.lastName || ''}`, callback_data: `CONVU_${c.id}` }]);
+            });
+
+            await sendTelegramMessage(chatId, "🎯 <b>Convoquer un salarié (1/5)</b>\n\nSélectionnez le collaborateur à convoquer :", { inline_keyboard });
             return;
         }
 
