@@ -17,9 +17,9 @@ module.exports = {
         // Identifiants forcés ici !
         AMC_USERNAME: "VDF",
         AMC_PASSWORD: "Jordan95500!",
-        // À remplacer très important pour recevoir les alertes :
-        // TELEGRAM_BOT_TOKEN: "Remplacer_Par_Le_Vrai_Token",
-        // TELEGRAM_CHAT_ID: "Remplacer_Par_Le_Vrai_Chat_ID"
+        // Alertes Telegram (le nouveau bot PRTScrapBOT)
+        TELEGRAM_BOT_TOKEN: "8648311380:AAGZA5FOqAJ1BE78o96RH4R1_eHCLxkAefs",
+        TELEGRAM_CHAT_ID: "1634444351"
       }
     }
   ]
