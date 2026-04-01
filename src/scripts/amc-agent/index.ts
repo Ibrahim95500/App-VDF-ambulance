@@ -318,8 +318,11 @@ async function startAgent() {
              await new Promise(r => setTimeout(r, 8000));
          } 
          else if (snipeResult.status === "failed_already_taken") {
-             console.log("❌ ZUT ! Course déjà acceptée par un concurrent. On se retire discrètement sans rien dire sur Telegram.");
-             // On a touché l'erreur jaune, on fait profil bas et on retourne chasser
+             console.log("❌ ZUT ! Course déjà acceptée par un concurrent.");
+             // On s'est fait avoir d'une milliseconde ! Message drôle pour le groupe
+             if (snipeResult.buffer) {
+                 await sendTelegramAlert("🤬 **ARGH !! ON S'EST FAIT VOLER LA COURSE !**\nLe robot a tiré, la course était parfaite, mais une autre société de malades mentaux a cliqué 1 milliseconde avant nous ! Regarde l'écran de l'arbitre (erreur jaune). On se vengera sur la prochaine ! 🏎️💨", snipeResult.buffer)
+             }
              await page.goto(AMC_URL, { waitUntil: "networkidle2" });
              await new Promise(r => setTimeout(r, 15000));
          }
