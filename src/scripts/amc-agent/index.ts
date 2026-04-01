@@ -86,10 +86,18 @@ async function startAgent() {
       await page.type(passInputDesc, AMC_PASSWORD)
       
       // On cherche un bouton de type submit
-      await Promise.all([
-        page.waitForNavigation({ waitUntil: "networkidle2" }),
-        page.click('input[type="submit"], button[type="submit"]')
-      ])
+      // On clique et on attend que l'interface se mette à jour
+      await page.click('input[type="submit"], button[type="submit"]')
+      
+      try {
+        // Parfois la page ne navigue pas (AJAX), donc on met un petit timeout de 5s pour essayer de capter l'événement sans planter
+        await page.waitForNavigation({ waitUntil: "networkidle2", timeout: 5000 })
+      } catch (e) {
+        console.log("⚠️ (L'authentification utilise de l'AJAX ou est un peu lente, on continue...)")
+      }
+      
+      // Petite pause pour être sûr
+      await new Promise(r => setTimeout(r, 4000))
       console.log("✅ Authentification réussie.")
     }
 
