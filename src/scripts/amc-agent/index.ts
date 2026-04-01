@@ -1,171 +1,168 @@
-import puppeteer from 'puppeteer';
-import * as dotenv from 'dotenv';
-import path from 'path';
+import puppeteer from "puppeteer"
+import dotenv from "dotenv"
+import path from "path"
 
-// Charge les variables d'environnement depuis le projet Next.js (.env)
-dotenv.config({ path: path.resolve(process.cwd(), '.env') });
+// Configuration
+dotenv.config({ path: path.resolve(process.cwd(), ".env.local") })
+dotenv.config()
 
-const AMC_USERNAME = process.env.AMC_USERNAME;
-const AMC_PASSWORD = process.env.AMC_PASSWORD;
-const TELEGRAM_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-const TELEGRAM_ADMIN_CHAT_ID = process.env.TELEGRAM_ADMIN_CHAT_ID; // À ajouter pour savoir à qui envoyer
+const AMC_USERNAME = process.env.AMC_USERNAME || process.env.AMC_ID || "VDF"
+const AMC_PASSWORD = process.env.AMC_PASSWORD || "Jordan95500!" // Récupéré de ton prompt !
+const AMC_URL = "https://transportpatient.fr/Transport/TransporteurAtraiter.aspx?ModuleID=24"
 
-// --- Utilitaires Telegram ---
-async function sendTelegramAlert(text: string, photoBuffer?: Buffer) {
-    if (!TELEGRAM_TOKEN || !TELEGRAM_ADMIN_CHAT_ID) {
-        console.log("[TELEGRAM] Désactivé (Token ou Chat ID manquant).");
-        return;
+// Pour alerter sur Telegram
+const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN
+const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID // ID du canal ou ton ID
+
+async function sendTelegramAlert(message: string, imageBuffer?: Buffer) {
+  if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
+    console.log("⚠️ Variables d'environnement Telegram manquantes. Alertes désactivées.")
+    console.log("Message:", message)
+    return
+  }
+
+  try {
+    if (imageBuffer) {
+      const formData = new FormData()
+      formData.append("chat_id", TELEGRAM_CHAT_ID)
+      formData.append("caption", message)
+      formData.append("photo", new Blob([imageBuffer]), "screenshot.png")
+      
+      const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`, {
+        method: "POST",
+        body: formData,
+      })
+      if (!response.ok) {
+        console.error("Erreur Telegram:", await response.text())
+      }
+    } else {
+      await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: message }),
+      })
     }
-
-    try {
-        if (photoBuffer) {
-            const formData = new FormData();
-            formData.append('chat_id', TELEGRAM_ADMIN_CHAT_ID);
-            formData.append('caption', text);
-            formData.append('photo', new Blob([photoBuffer]), 'screenshot.png');
-
-            await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendPhoto`, {
-                method: 'POST',
-                body: formData
-            });
-        } else {
-            await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ chat_id: TELEGRAM_ADMIN_CHAT_ID, text: text, parse_mode: 'HTML' })
-            });
-        }
-    } catch (e) {
-        console.error("Erreur Telegram:", e);
-    }
+  } catch (err) {
+    console.error("Erreur d'envoi Telegram:", err)
+  }
 }
-// -----------------------------
 
-async function runSpyBot() {
-    if (!AMC_USERNAME || !AMC_PASSWORD) {
-        console.error("❌ Les identifiants AMC_USERNAME et AMC_PASSWORD sont manquants dans .env");
-        process.exit(1);
-    }
+async function startAgent() {
+  console.log("🚀 Lancement de l'Agent AMC (Espion)...")
+  
+  const browser = await puppeteer.launch({
+    headless: true, // Lancer en arrière-plan
+    args: ["--no-sandbox", "--disable-setuid-sandbox"]
+  })
+  
+  const page = await browser.newPage()
+  
+  // Fake User Agent pour éviter les blocages de base
+  await page.setUserAgent(
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+  )
 
-    console.log("🤖 Lancement de l'Agent AMC (Espion)...");
-    await sendTelegramAlert("🤖 <b>Agent AMC Espion Démarré !</b>\nJe surveille les courses toutes les 15 secondes.");
-
-    const browser = await puppeteer.launch({
-        headless: true, // Navigateur invisible
-        args: ['--no-sandbox', '--disable-setuid-sandbox'] // Indispensable sur VPS Linux
-    });
-
-    const page = await browser.newPage();
+  try {
+    // 1. Navigation Initiale et Login
+    console.log("📍 Accès à la page cible...")
+    await page.goto(AMC_URL, { waitUntil: "networkidle2" })
     
-    // Pour simuler un vrai navigateur
-    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36');
-
-    try {
-        console.log("➡️ Connexion à Default.aspx...");
-        await page.goto('https://transportpatient.fr/Default.aspx', { waitUntil: 'networkidle2' });
-
-        // Attente du formulaire de connexion
-        await page.waitForSelector('input[name*="Login"]', { timeout: 10000 });
-        
-        // Remplissage des identifiants (Les "name" ou "id" dépendent du code source exact, on vise large)
-        // D'après la capture, les placeholders sont souvent "Login" et "Mot de passe"
-        // Faisons une inspection générique :
-        const loginInput = await page.$('input[type="text"]');
-        const passInput = await page.$('input[type="password"]');
-        const submitBtn = await page.$('input[type="submit"], button[type="submit"], a.btn');
-
-        if (loginInput && passInput && submitBtn) {
-            await loginInput.type(AMC_USERNAME);
-            await passInput.type(AMC_PASSWORD);
-            await Promise.all([
-                page.waitForNavigation({ waitUntil: 'networkidle2' }),
-                submitBtn.click()
-            ]);
-            console.log("✅ Connecté !");
-        } else {
-            console.log("⚠️ Impossible de trouver le formulaire de connexion standard. Je tente de continuer.");
-        }
-
-        console.log("➡️ Navigation vers les Demandes à Traiter...");
-        await page.goto('https://transportpatient.fr/Transport/TransporteurAtraiter.aspx?ModuleID=24', { waitUntil: 'networkidle2' });
-
-        // Boucle infinie d'espionnage
-        let loopCount = 0;
-        while (true) {
-            loopCount++;
-            console.log(`[Recherche #${loopCount}] Analyse de la table...`);
-            
-            // On cherche le tableau des courses en attente
-            // "Demandes en attente"
-            const tableContent = await page.evaluate(() => {
-                // Recherche d'un texte "Demandes en attente (X)"
-                const headings = Array.from(document.querySelectorAll('div, h2, h3, h4, span, caption, th'));
-                const attenteHeader = headings.find(el => el.textContent?.trim().startsWith('Demandes en attente ('));
-                
-                let count = 0;
-                if (attenteHeader) {
-                    const match = attenteHeader.textContent?.match(/\((\d+)\)/);
-                    if (match && match[1]) count = parseInt(match[1]);
-                }
-
-                if (count === 0) {
-                    // Fallback : vérifier si "Aucune donnée" est présent dans la PREMIERE DataTable ou s'il n'y a qu'une seule ligne (le Theader)
-                    const tables = document.querySelectorAll('table.dataTable, table');
-                    if (tables.length > 0) {
-                        const firstTable = tables[0];
-                        if ((firstTable.textContent || "").includes('Aucune donnée disponible')) return "VIDE";
-                        
-                        const rows = firstTable.querySelectorAll('tr');
-                        // Si <= 1 ça veut dire qu'il n'y a que le header. Ou si =2 c'est le header + la ligne vide "Aucune donnée"
-                        if (rows.length <= 1) return "VIDE"; 
-                    } else {
-                        return "VIDE"; // Pas de table du tout = vide
-                    }
-                }
-
-                // S'il y a une course, on extrait le HTML de la première ligne de la première table
-                const tables = document.querySelectorAll('table.dataTable, table');
-                if (tables.length > 0) {
-                    const firstTbody = tables[0].querySelector('tbody');
-                    if (firstTbody) {
-                        const actionButtons = firstTbody.querySelectorAll('a, button, input[type="image"], input[type="button"]');
-                        if (actionButtons.length > 0) {
-                            return Array.from(actionButtons).map(b => b.outerHTML).join('\n---\n');
-                        }
-                        return firstTbody.innerHTML; // Retourne tout le body si pas de bouton clair trouvé
-                    }
-                }
-
-                return "COURSE DÉTECTÉE MAIS HTML INTROUVABLE";
-            });
-
-            if (tableContent !== "VIDE") {
-                console.log("🚨🚨🚨 COURSE DETECTEE !!! 🚨🚨🚨");
-                console.log("HTML des boutons:", tableContent);
-                
-                // Screenshot complet de la page pleine pour l'analyse
-                const screenshotBuf = await page.screenshot({ fullPage: true });
-
-                const alertMsg = `🚨 <b>COURSE AMC DÉTECTÉE !</b> 🚨\n\n<b>HTML Tiers Action :</b>\n<code>${tableContent.substring(0, 500)}</code>\n\n<i>Ceci est une capture du bot espion. La course n'a pas été acceptée.</i>`;
-                await sendTelegramAlert(alertMsg, screenshotBuf as Buffer);
-
-                console.log("📸 Screenshot envoyé ! Mise en pause de l'espionnage pour 5 minutes afin d'éviter le spam...");
-                await new Promise(r => setTimeout(r, 5 * 60 * 1000)); // Pause de 5 min après une détection
-            }
-
-            // Rafraîchissement dans 15 secondes
-            await new Promise(r => setTimeout(r, 15000));
-            // Actualisation de la page ASP.NET (mieux que page.reload() pour WebForms parfois)
-            await page.waitForSelector('body'); // Ensure page is somewhat loaded
-            await page.goto('https://transportpatient.fr/Transport/TransporteurAtraiter.aspx?ModuleID=24', { waitUntil: 'domcontentloaded' });
-        }
-
-    } catch (e: any) {
-        console.error("❌ ERREUR FATALE BOT:", e);
-        await sendTelegramAlert(`❌ <b>Crash Agent AMC Espion:</b>\n${e.message}`);
-    } finally {
-        await browser.close();
+    // Vérifier si on est redirigé vers la page de login (ce qui est probable au premier accès)
+    const isLoginPage = await page.$('input[type="password"]') !== null
+    
+    if (isLoginPage) {
+      console.log("🔒 Page de login détectée, authentification en cours...")
+      // IMPORTANT : Il faudra ajuster ces sélecteurs 'id' selon le vrai HTML de la page de login Atout Majeur
+      const usernameInputDesc = 'input[id*="Login"], input[name*="Login"], input[id*="Utilisateur"], input[type="text"]'
+      const passInputDesc = 'input[type="password"]'
+      
+      await page.waitForSelector(passInputDesc, { timeout: 5000 })
+      
+      const usernameInputs = await page.$$(usernameInputDesc)
+      if (usernameInputs.length > 0) {
+        await usernameInputs[0].type(AMC_USERNAME)
+      }
+      
+      await page.type(passInputDesc, AMC_PASSWORD)
+      
+      // On cherche un bouton de type submit
+      await Promise.all([
+        page.waitForNavigation({ waitUntil: "networkidle2" }),
+        page.click('input[type="submit"], button[type="submit"]')
+      ])
+      console.log("✅ Authentification réussie.")
     }
+
+    // On s'assure qu'on est bien sur la page à traiter
+    if (!page.url().includes("TransporteurAtraiter")) {
+      await page.goto(AMC_URL, { waitUntil: "networkidle2" })
+    }
+
+    console.log("⏳ Début de la boucle de surveillance (15s)...")
+    await sendTelegramAlert("👁️ L'Agent AMC (Espion) vient de démarrer la surveillance du PRT.")
+
+    // 2. Boucle Principale
+    while (true) {
+      console.log(`[${new Date().toLocaleTimeString()}] Rafraîchissement de la page...`)
+      
+      // Recharger la page (ou on pourrait simuler un clic sur "Actualiser" si c'est de l'AJAX)
+      await page.reload({ waitUntil: "networkidle2" })
+      
+      // 3. Analyse de la page
+      // On cherche des mots-clés typiques ou on analyse le tableau.
+      // Hypothèse : S'il y a une course, il y a un bouton avec "Accepter", "Prendre", ou on trouve des dates.
+      // Comme on ne connait pas le HTML, on va vérifier le contenu global
+      
+      const pageText = await page.evaluate(() => document.body.innerText)
+      const hasRienAtraiter = pageText.includes("Auncun transport à traiter") || 
+                              pageText.includes("Aucun résultat") || 
+                              pageText.includes("0 course")
+
+      if (!hasRienAtraiter) {
+         // Il y a PEUT ÊTRE une course !
+         console.log("🚨 ACTIVITÉ DÉTECTÉE SUR LE PRT !!")
+         
+         // On capture l'écran
+         const buffer = await page.screenshot({ fullPage: true }) as Buffer
+         
+         // On extrait un peu de HTML pour comprendre comment cliquer la prochaine fois
+         const htmlExtraction = await page.evaluate(() => {
+           // On va chercher tous les boutons et inputs pour repérer les ID
+           const interactables = Array.from(document.querySelectorAll('input[type="submit"], input[type="button"], button, a'))
+             .filter(el => {
+                const text = (el.textContent || (el as HTMLInputElement).value || "").toLowerCase()
+                return text.includes("prendre") || text.includes("accepter") || text.includes("valider")
+             })
+             .map(el => ({
+               tag: el.tagName,
+               id: el.id,
+               text: el.textContent || (el as HTMLInputElement).value,
+               className: el.className
+             }))
+           return interactables
+         })
+         
+         await sendTelegramAlert(
+           `🚨 **COURSE DETECTÉE !!** 🚨\n\nL'espion a trouvé une course en attente.\nVoici le HTML des boutons trouves:\n\`\`\`json\n${JSON.stringify(htmlExtraction, null, 2)}\n\`\`\`\n\n*(Regardez la capture jointe)*`,
+           buffer
+         )
+         
+         // On fait une pause plus longue pour ne pas spammer telegram s'il la course reste là plusieurs minutes
+         console.log("Pause de 2 minutes pour éviter le spam...")
+         await new Promise(r => setTimeout(r, 120000)) 
+         
+      } else {
+        // Rien, on attend 15 secondes
+        await new Promise(r => setTimeout(r, 15000))
+      }
+    }
+
+  } catch (error) {
+    console.error("❌ ERREUR FATALE:", error)
+    await sendTelegramAlert(`❌ **CRASH AMC AGENT** :\n\`${error}\``)
+    await browser.close()
+  }
 }
 
-runSpyBot();
+// Lancement automatique du processus
+startAgent()
