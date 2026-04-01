@@ -10,9 +10,9 @@ const AMC_USERNAME = process.env.AMC_USERNAME || process.env.AMC_ID || "VDF"
 const AMC_PASSWORD = process.env.AMC_PASSWORD || "Jordan95500!" // Récupéré de ton prompt !
 const AMC_URL = "https://transportpatient.fr/Transport/TransporteurAtraiter.aspx?ModuleID=24"
 
-// Pour alerter sur Telegram
-const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN
-const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID // ID du canal ou ton ID
+// Configuration Telegram Forcée pour BotPRTScrap
+const TELEGRAM_BOT_TOKEN = "8648311380:AAGZA5FOqAJ1BE78o96RH4R1_eHCLxkAefs"
+const TELEGRAM_CHAT_ID = "1634444351"
 
 async function sendTelegramAlert(message: string, imageBuffer?: Buffer) {
   if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
@@ -110,9 +110,15 @@ async function startAgent() {
                passBox.dispatchEvent(new Event('change', { bubbles: true }));
            }
            
-           // Le fameux bouton est un lien javascript, on force son exécution locale
-           const btn = document.getElementById('ctl00_ValiderButton');
-           if (btn) btn.click();
+           // Le fameux bouton est un lien javascript, on force son exécution locale par doPostBack natif
+           // @ts-ignore
+           if (typeof __doPostBack === 'function') {
+               // @ts-ignore
+               __doPostBack('ctl00$ValiderButton', '');
+           } else {
+               const btn = document.getElementById('ctl00_ValiderButton');
+               if (btn) btn.click();
+           }
         }, AMC_USERNAME, AMC_PASSWORD);
         
         try {
