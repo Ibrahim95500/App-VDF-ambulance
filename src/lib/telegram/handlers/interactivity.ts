@@ -2,6 +2,8 @@ import { prisma } from '@/lib/prisma';
 import { sendTelegramMessage } from '@/lib/telegram/telegram-api';
 import { createAdvanceRequest } from '@/actions/advance-request.actions';
 import { createServiceRequest } from '@/actions/service-request.actions';
+import { createAppointmentRequest } from '@/services/appointment-request';
+import { createManyNotifications } from '@/actions/notifications.actions';
 // --- GESTION DES CLICS SUR LES BOUTONS ---
 export async function handleBotCallback(chatId: string | number, dataAction: string, user: any, messageId: number) {
     try {
@@ -26,9 +28,31 @@ export async function handleBotCallback(chatId: string | number, dataAction: str
         if (dataAction === 'CREATE_RDV') {
             await prisma.user.update({
                 where: { id: user.id },
-                data: { telegramState: 'RDV_REASON', telegramStateData: '{}' }
+                data: { telegramState: 'RDV_TYPE', telegramStateData: '{}' }
             });
-            await sendTelegramMessage(chatId, "📅 <b>Nouveau Rendez-vous Direction</b>\n\nQuel est le motif de votre demande de rendez-vous ?");
+            const keyboard = {
+                inline_keyboard: [
+                    [{ text: "🤝 Entretien Annuel", callback_data: "RDVTYPE_ENTRETIEN_ANNUEL" }],
+                    [{ text: "💰 Augmentation / Salaire", callback_data: "RDVTYPE_AUGMENTATION_SALAIRE" }],
+                    [{ text: "⚖️ Conflit / Médiation", callback_data: "RDVTYPE_CONFLIT_MEDIATION" }],
+                    [{ text: "📄 Fin de contrat / Démission", callback_data: "RDVTYPE_DEMISSION" }],
+                    [{ text: "❓ Autre motif", callback_data: "RDVTYPE_RENDEZ_VOUS" }]
+                ]
+            };
+            await sendTelegramMessage(chatId, "📅 <b>Nouveau Rendez-vous Direction</b>\n\nQuel est le but principal de ce rendez-vous ?", keyboard);
+            return;
+        }
+
+        if (dataAction.startsWith('RDVTYPE_')) {
+            const rdvType = dataAction.replace('RDVTYPE_', '');
+            await prisma.user.update({
+                where: { id: user.id },
+                data: { 
+                    telegramState: 'RDV_REASON', 
+                    telegramStateData: JSON.stringify({ type: rdvType }) 
+                }
+            });
+            await sendTelegramMessage(chatId, "📝 <b>Le contexte :</b>\nVeuillez préciser le contexte de votre demande : (Pourquoi avez-vous besoin de ce rendez-vous ?)");
             return;
         }
 
@@ -111,10 +135,12 @@ export async function handleBotCallback(chatId: string | number, dataAction: str
                 return;
             }
             const stateData = user.telegramStateData ? JSON.parse(user.telegramStateData) : {};
+            
             try {
-                const { createAppointmentRequest } = require('@/services/appointment-request');
+                // Utilisation de l'import static
                 const newRdv = await createAppointmentRequest({
                     userId: user.id,
+                    type: stateData.type || 'RENDEZ_VOUS',
                     reason: stateData.reason || "Via Bot",
                     description: "Demande initiée via le chatbot Telegram"
                 });
@@ -123,7 +149,7 @@ export async function handleBotCallback(chatId: string | number, dataAction: str
                 const rhAdmins = await prisma.user.findMany({
                     where: { OR: [{ roles: { has: 'RH' } }, { roles: { has: 'ADMIN' } }] }
                 });
-                const { createManyNotifications } = require('@/actions/notifications.actions');
+                
                 await createManyNotifications(
                     rhAdmins.map((adm: any) => adm.id),
                     "Nouveau RDV (Telegram) 📅",
@@ -140,7 +166,8 @@ export async function handleBotCallback(chatId: string | number, dataAction: str
 
                 await sendTelegramMessage(chatId, `✅ <b>Demande de Rendez-vous envoyée !</b>\nLa Direction examinera votre motif dans les plus brefs délais.`);
             } catch (err: any) {
-                await sendTelegramMessage(chatId, `❌ <b>Erreur :</b>\nImpossible de faire la demande.`);
+                console.error("Erreur Telegram createAppointment:", err);
+                await sendTelegramMessage(chatId, `❌ <b>Erreur :</b>\n${err.message || "Impossible de faire la demande."}`);
             } finally {
                 await prisma.user.update({ where: { id: user.id }, data: { telegramState: null, telegramStateData: null } });
             }
@@ -688,6 +715,7 @@ export async function handleConversationState(chatId: string | number, text: str
         }
 
         // --- FLUX DE CRÉATION : RDV DIRECTION ---
+        // Le Type a déjà été choisi via inline_keyboard (RDVTYPE_) => donc on arrive dans l'état RDV_REASON
         if (currentState === 'RDV_REASON') {
             if (text.length < 3) {
                 await sendTelegramMessage(chatId, "❌ Votre motif est trop court. Décrivez un peu plus votre besoin (tapez /annuler pour stopper).");
@@ -707,6 +735,7 @@ export async function handleConversationState(chatId: string | number, text: str
             };
 
             const summary = `📄 <b>RÉCAPITULATIF DU RENDEZ-VOUS</b>\n\n`
+                + `<b>Type  :</b> ${stateData.type}\n`
                 + `<b>Motif :</b> ${text}\n\n`
                 + `<i>Souhaitez-vous confirmer l'envoi de cette demande à la Direction ?</i>`;
 
