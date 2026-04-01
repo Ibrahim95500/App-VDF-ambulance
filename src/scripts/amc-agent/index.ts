@@ -87,22 +87,20 @@ async function startAgent() {
       
       if (isLoginPage) {
         console.log("🔒 Page de login détectée, authentification en cours...")
-        const usernameInputDesc = 'input[id*="Login"], input[name*="Login"], input[id*="Utilisateur"], input[type="text"]'
-        const passInputDesc = 'input[type="password"]'
         
-        await page.waitForSelector(passInputDesc, { timeout: 5000 })
+        // Attendre l'apparition du champ mot de passe
+        await page.waitForSelector('#ctl00_Password', { timeout: 5000 })
         
-        const usernameInputs = await page.$$(usernameInputDesc)
-        if (usernameInputs.length > 0) {
-          await usernameInputs[0].click({ clickCount: 3 })
-          await usernameInputs[0].type(AMC_USERNAME)
-        }
+        // Remplir le champ identifiant
+        await page.click('#ctl00_Login', { clickCount: 3 })
+        await page.type('#ctl00_Login', AMC_USERNAME)
         
-        await page.click(passInputDesc, { clickCount: 3 })
-        await page.type(passInputDesc, AMC_PASSWORD)
+        // Remplir le champ mot de passe
+        await page.click('#ctl00_Password', { clickCount: 3 })
+        await page.type('#ctl00_Password', AMC_PASSWORD)
         
-        console.log("Frappe de la touche ENTRÉE...")
-        await page.keyboard.press("Enter")
+        console.log("Clic sur le bouton 'Se connecter' (ctl00_ValiderButton)...")
+        await page.click('#ctl00_ValiderButton')
         
         try {
           await page.waitForNavigation({ waitUntil: "networkidle2", timeout: 8000 })
