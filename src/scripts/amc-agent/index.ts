@@ -91,16 +91,19 @@ async function startAgent() {
         // Attendre l'apparition du champ mot de passe
         await page.waitForSelector('#ctl00_Password', { timeout: 5000 })
         
-        // Remplir le champ identifiant
-        await page.click('#ctl00_Login', { clickCount: 3 })
-        await page.type('#ctl00_Login', AMC_USERNAME)
-        
-        // Remplir le champ mot de passe
-        await page.click('#ctl00_Password', { clickCount: 3 })
-        await page.type('#ctl00_Password', AMC_PASSWORD)
-        
-        console.log("Clic sur le bouton 'Se connecter' (ctl00_ValiderButton)...")
-        await page.click('#ctl00_ValiderButton')
+        console.log("Injection furtive des identifiants (Bypass DOM)...")
+        await page.evaluate((user, pass) => {
+           // On force l'écriture des valeurs directement dans le code source de la page (100% infaillible)
+           const loginBox = document.getElementById('ctl00_Login') as HTMLInputElement;
+           const passBox = document.getElementById('ctl00_Password') as HTMLInputElement;
+           
+           if (loginBox) loginBox.value = user;
+           if (passBox) passBox.value = pass;
+           
+           // Le fameux bouton est un lien javascript, on force son exécution locale
+           const btn = document.getElementById('ctl00_ValiderButton');
+           if (btn) btn.click();
+        }, AMC_USERNAME, AMC_PASSWORD);
         
         try {
           await page.waitForNavigation({ waitUntil: "networkidle2", timeout: 8000 })
