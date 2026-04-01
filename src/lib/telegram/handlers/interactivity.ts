@@ -566,17 +566,15 @@ export async function handleBotCallback(chatId: string | number, dataAction: str
                     }
                     inline_keyboard.push(row);
                 }
-                inline_keyboard.push([{ text: "Aucun co-équipier (Seul)", callback_data: "REGUL_TEAM_NONE" }]);
-                inline_keyboard.push([{ text: "❌ Annuler", callback_data: "CANCEL_ACTION" }]);
+                inline_keyboard.push([{ text: "❌ Annuler l'opération", callback_data: "CANCEL_ACTION" }]);
 
-                await sendTelegramMessage(chatId, `🤖 <i>Étape 5/5</i> : Choisissez le CO-ÉQUIPIER (ou Seul) :`, { inline_keyboard });
+                await sendTelegramMessage(chatId, `🤖 <i>Étape 5/5</i> : Choisissez le CO-ÉQUIPIER :`, { inline_keyboard });
                 return;
             }
 
             // Étape Finale : Co-équipier -> Sauvegarde
             if (dataAction.startsWith('REGUL_TEAM_')) {
-                const teammateId = dataAction.replace('REGUL_TEAM_', '');
-                const finalTeammateId = teammateId === 'NONE' ? stateData.leaderId : teammateId; // Si seul, teammateId = leaderId pour ne pas casser la base non-nullable (si elle l'est)
+                const finalTeammateId = dataAction.replace('REGUL_TEAM_', '');
                 
                 try {
                     // Les dates en base (Planner) sont toujours UTC 00h
@@ -604,6 +602,32 @@ export async function handleBotCallback(chatId: string | number, dataAction: str
                             where: { id: user.id },
                             data: { telegramState: null, telegramStateData: null }
                         });
+                        return;
+                    }
+
+                    // 2. Vérification Anti-Doublon Utilisateur (Contre le travail Jour/Nuit le même jour et les doublons Leader/Teammate)
+                    const userTaken = await prisma.planningAssignment.findFirst({
+                        where: {
+                            date: startOfTargetDate, // Le jour complet (00:00:00 UTC)
+                            OR: [
+                                { leaderId: stateData.leaderId },
+                                { teammateId: stateData.leaderId },
+                                { leaderId: finalTeammateId },
+                                { teammateId: finalTeammateId }
+                            ]
+                        },
+                        include: { leader: true, teammate: true }
+                    });
+
+                    if (userTaken) {
+                        const badUser = [userTaken.leaderId, userTaken.teammateId].includes(stateData.leaderId) 
+                            ? userTaken.leader 
+                            : userTaken.teammate;
+                            
+                        await sendTelegramMessage(chatId, `🚫 <b>ERREUR DE PLANIFICATION :</b>\n\nLe salarié <b>${badUser?.firstName || ''} ${badUser?.lastName || ''}</b> est DÉJÀ planifié dans un équipage sur la journée du ${stateData.dateStr}.\n\n<i>Rappel : Un salarié ne peut pas faire deux vacations (Jour/Nuit) le même jour.</i>`, {
+                            inline_keyboard: [[{ text: "❌ Quitter", callback_data: "CANCEL_ACTION" }]]
+                        });
+                        await prisma.user.update({ where: { id: user.id }, data: { telegramState: null, telegramStateData: null } });
                         return;
                     }
 
