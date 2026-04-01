@@ -106,33 +106,30 @@ async function startAgent() {
         
         console.log("Clic asynchrone sur le bouton avec Puppeteer API...")
         // Au lieu d'injecter du code JS, on dit à Puppeteer de chercher et cliquer sur l'élément <a> exactement
-        await Promise.all([
-             page.waitForNavigation({ waitUntil: "networkidle2", timeout: 15000 }).catch(() => console.log("Navigation Ajax Catch")),
-             page.evaluate(() => {
-                 const btn = document.getElementById('ctl00_ValiderButton');
-                 if(btn) btn.click();
-             })
-        ]);
+        await page.evaluate(() => {
+             const btn = document.getElementById('ctl00_ValiderButton');
+             if(btn) btn.click();
+        });
         
-        try {
-          await page.waitForNavigation({ waitUntil: "networkidle2", timeout: 8000 })
-        } catch (e) {
-          console.log("⚠️ (L'authentification utilise de l'AJAX ou est un peu lente, on continue...)")
-        }
+        await page.waitForNavigation({ waitUntil: "networkidle2", timeout: 15000 }).catch(() => console.log("Navigation Ajax Catch"));
         
-        await new Promise(r => setTimeout(r, 4000))
-        console.log("✅ Authentification terminée.")
-
         // Redirection forcée vers la page Atraiter si ce n'est pas le cas
         if (!page.url().includes("TransporteurAtraiter")) {
-           await page.goto(AMC_URL, { waitUntil: "networkidle2" })
+           console.log("Redirection vers la page cible...");
+           await page.goto(AMC_URL, { waitUntil: "networkidle2" }).catch(()=>console.log("Goto catch"));
         }
         continue; // On repart au début de la boucle pour un check propre
       }
       
-      // 3. Analyse de la page
+      // --- 3. Analyse de la page UNIQUEMENT si on est sur la bonne page ---
+      if (!page.url().includes("TransporteurAtraiter")) {
+          console.log("⚠️ Nous ne sommes pas sur la page des courses à traiter. L'analyse est suspendue en attendant la redirection.");
+          await new Promise(r => setTimeout(r, 5000));
+          continue; // On retourne au début de la boucle pour retenter la connexion/redirection
+      }
+      
       const pageText = await page.evaluate(() => document.body.innerText)
-      // La détection ultra stricte basée sur la capture
+      // La détection ultra stricte basée sur le texte
       const hasRienAtraiter = pageText.includes("Demandes en attente (0)") || 
                               pageText.includes("Aucune donnée disponible dans le tableau") ||
                               pageText.includes("Aucun résultat")
