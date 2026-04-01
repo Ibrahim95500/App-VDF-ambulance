@@ -95,6 +95,21 @@ export async function handleUserCommand(chatId: string | number, text: string, u
             return;
         }
 
+        if (cmd === '/convocation') {
+            if (!user.roles.includes('ADMIN') && !user.roles.includes('RH')) {
+                await sendTelegramMessage(chatId, "⚠️ Vous n'avez pas les droits pour convoquer un collaborateur.");
+                return;
+            }
+            const keyboard = {
+                inline_keyboard: [
+                    [{ text: "📝 Convoquer via l'Espace RH", url: "https://vdf-ambulance.fr/dashboard/rh/rendez-vous" }]
+                ]
+            };
+            const msg = "<b>⚠️ Convoquer un salarié</b>\n\nPour des raisons pratiques (sélection du salarié, de la date, de l'heure et du motif), les convocations se font uniquement depuis l'Espace Numérique RH sur le Web.\nCliquez sur le lien ci-dessous :";
+            await sendTelegramMessage(chatId, msg, keyboard);
+            return;
+        }
+
         if (cmd === '/regul' || cmd === '🚑 ma régulation') {
             const tomorrow = addDays(new Date(), 1);
             const mission = await prisma.planningAssignment.findFirst({

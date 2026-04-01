@@ -32,11 +32,11 @@ export async function handleBotCallback(chatId: string | number, dataAction: str
             });
             const keyboard = {
                 inline_keyboard: [
-                    [{ text: "🤝 Entretien Annuel", callback_data: "RDVTYPE_ENTRETIEN_ANNUEL" }],
-                    [{ text: "💰 Augmentation / Salaire", callback_data: "RDVTYPE_AUGMENTATION_SALAIRE" }],
-                    [{ text: "⚖️ Conflit / Médiation", callback_data: "RDVTYPE_CONFLIT_MEDIATION" }],
-                    [{ text: "📄 Fin de contrat / Démission", callback_data: "RDVTYPE_DEMISSION" }],
-                    [{ text: "❓ Autre motif", callback_data: "RDVTYPE_RENDEZ_VOUS" }]
+                    [{ text: "🤝 Entretien Annuel", callback_data: "RDVTYPE_Entretien Annuel" }],
+                    [{ text: "💰 Augmentation / Salaire", callback_data: "RDVTYPE_Augmentation / Salaire" }],
+                    [{ text: "⚖️ Conflit / Médiation", callback_data: "RDVTYPE_Conflit / Médiation" }],
+                    [{ text: "📄 Fin de contrat / Démission", callback_data: "RDVTYPE_Fin de contrat / Démission" }],
+                    [{ text: "❓ Autre motif", callback_data: "RDVTYPE_Autre motif" }]
                 ]
             };
             await sendTelegramMessage(chatId, "📅 <b>Nouveau Rendez-vous Direction</b>\n\nQuel est le but principal de ce rendez-vous ?", keyboard);
@@ -44,12 +44,13 @@ export async function handleBotCallback(chatId: string | number, dataAction: str
         }
 
         if (dataAction.startsWith('RDVTYPE_')) {
-            const rdvType = dataAction.replace('RDVTYPE_', '');
+            const rdvReason = dataAction.replace('RDVTYPE_', '');
             await prisma.user.update({
                 where: { id: user.id },
                 data: { 
                     telegramState: 'RDV_REASON', 
-                    telegramStateData: JSON.stringify({ type: rdvType }) 
+                    // telegramStateData enregistre la raison humaine (qui sera "reason")
+                    telegramStateData: JSON.stringify({ rdvReason }) 
                 }
             });
             await sendTelegramMessage(chatId, "📝 <b>Le contexte :</b>\nVeuillez préciser le contexte de votre demande : (Pourquoi avez-vous besoin de ce rendez-vous ?)");
@@ -140,9 +141,9 @@ export async function handleBotCallback(chatId: string | number, dataAction: str
                 // Utilisation de l'import static
                 const newRdv = await createAppointmentRequest({
                     userId: user.id,
-                    type: stateData.type || 'RENDEZ_VOUS',
-                    reason: stateData.reason || "Via Bot",
-                    description: "Demande initiée via le chatbot Telegram"
+                    type: 'RENDEZ_VOUS',
+                    reason: stateData.rdvReason || "Via Bot",
+                    description: stateData.reasonText + "\n\n(Demande initiée via le chatbot Telegram)"
                 });
                 
                 // Notifications globales
@@ -154,15 +155,15 @@ export async function handleBotCallback(chatId: string | number, dataAction: str
                     rhAdmins.map((adm: any) => ({
                         userId: adm.id,
                         title: "Nouveau RDV (Telegram) 📅",
-                        message: `${user.firstName || ''} ${user.lastName || ''} demande un rdv : ${stateData.reason}`,
+                        message: `${user.firstName || ''} ${user.lastName || ''} demande un rdv : ${stateData.rdvReason}`,
                         type: "APPOINTMENT" as any, // type coercing to fix TS union error
-                        link: `/dashboard/rh/rdv/${newRdv.id}`
+                        link: `/dashboard/rh/rendez-vous`
                     }))
                 ).catch(() => {});
 
                 for (const adm of rhAdmins) {
                     if (adm.telegramChatId) {
-                        await sendTelegramMessage(adm.telegramChatId, `📅 <b>Nouveau RDV demandé</b>\nPar : ${user.firstName || ''} ${user.lastName || ''}\nMotif : ${stateData.reason}`).catch(() => {});
+                        await sendTelegramMessage(adm.telegramChatId, `📅 <b>Nouveau RDV demandé</b>\nPar : ${user.firstName || ''} ${user.lastName || ''}\nMotif : ${stateData.rdvReason}`).catch(() => {});
                     }
                 }
 
@@ -720,10 +721,10 @@ export async function handleConversationState(chatId: string | number, text: str
         // Le Type a déjà été choisi via inline_keyboard (RDVTYPE_) => donc on arrive dans l'état RDV_REASON
         if (currentState === 'RDV_REASON') {
             if (text.length < 3) {
-                await sendTelegramMessage(chatId, "❌ Votre motif est trop court. Décrivez un peu plus votre besoin (tapez /annuler pour stopper).");
+                await sendTelegramMessage(chatId, "❌ Votre contexte est trop court. Décrivez un peu plus votre besoin (tapez /annuler pour stopper).");
                 return;
             }
-            stateData.reason = text;
+            stateData.reasonText = text;
             await prisma.user.update({
                 where: { id: user.id },
                 data: { telegramState: 'RDV_CONFIRM', telegramStateData: JSON.stringify(stateData) }
@@ -737,8 +738,8 @@ export async function handleConversationState(chatId: string | number, text: str
             };
 
             const summary = `📄 <b>RÉCAPITULATIF DU RENDEZ-VOUS</b>\n\n`
-                + `<b>Type  :</b> ${stateData.type}\n`
-                + `<b>Motif :</b> ${text}\n\n`
+                + `<b>Sujet   :</b> ${stateData.rdvReason}\n`
+                + `<b>Contexte:</b> ${text}\n\n`
                 + `<i>Souhaitez-vous confirmer l'envoi de cette demande à la Direction ?</i>`;
 
             await sendTelegramMessage(chatId, summary, keyboard);
