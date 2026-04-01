@@ -12,7 +12,7 @@ const AMC_URL = "https://transportpatient.fr/Transport/TransporteurAtraiter.aspx
 
 // Configuration Telegram Forcée pour BotPRTScrap (Mode Broadcast)
 const TELEGRAM_BOT_TOKEN = "8648311380:AAGZA5FOqAJ1BE78o96RH4R1_eHCLxkAefs"
-const TELEGRAM_CHAT_IDS = ["1634444351", "8679052160", "8457900796"] // Ibrahim, VDF, Collègue
+const TELEGRAM_CHAT_IDS = ["1634444351", "8679052160", "8457900796", "6171035866"] // Ibrahim, VDF, Collègue 1, Collègue 2 (JR)
 
 async function sendTelegramAlert(message: string, imageBuffer?: Buffer) {
   if (!TELEGRAM_BOT_TOKEN || TELEGRAM_CHAT_IDS.length === 0) {
