@@ -151,11 +151,13 @@ export async function handleBotCallback(chatId: string | number, dataAction: str
                 });
                 
                 await createManyNotifications(
-                    rhAdmins.map((adm: any) => adm.id),
-                    "Nouveau RDV (Telegram) 📅",
-                    `${user.firstName || ''} ${user.lastName || ''} demande un rdv : ${stateData.reason}`,
-                    "APPOINTMENT",
-                    `/dashboard/rh/rdv/${newRdv.id}`
+                    rhAdmins.map((adm: any) => ({
+                        userId: adm.id,
+                        title: "Nouveau RDV (Telegram) 📅",
+                        message: `${user.firstName || ''} ${user.lastName || ''} demande un rdv : ${stateData.reason}`,
+                        type: "APPOINTMENT" as any, // type coercing to fix TS union error
+                        link: `/dashboard/rh/rdv/${newRdv.id}`
+                    }))
                 ).catch(() => {});
 
                 for (const adm of rhAdmins) {
