@@ -88,17 +88,27 @@ async function startAgent() {
       if (isLoginPage) {
         console.log("🔒 Page de login détectée, authentification en cours...")
         
-        // Attendre l'apparition du champ mot de passe
-        await page.waitForSelector('#ctl00_Password', { timeout: 5000 })
+        // Petite pause stratégique avant d'agir, certains sites ASP.net effacent les champs au chargement
+        console.log("Attente 3s que la page se stabilise...")
+        await new Promise(r => setTimeout(r, 3000))
         
-        console.log("Injection furtive des identifiants (Bypass DOM)...")
+        console.log(`Injection furtive: User=${AMC_USERNAME} / Pass=${"*".repeat(AMC_PASSWORD.length)}`)
         await page.evaluate((user, pass) => {
            // On force l'écriture des valeurs directement dans le code source de la page (100% infaillible)
            const loginBox = document.getElementById('ctl00_Login') as HTMLInputElement;
            const passBox = document.getElementById('ctl00_Password') as HTMLInputElement;
            
-           if (loginBox) loginBox.value = user;
-           if (passBox) passBox.value = pass;
+           if (loginBox) {
+               loginBox.value = user;
+               // On déclenche manuellement les événements pour tromper Angular/React/ASP si besoin
+               loginBox.dispatchEvent(new Event('input', { bubbles: true }));
+               loginBox.dispatchEvent(new Event('change', { bubbles: true }));
+           }
+           if (passBox) {
+               passBox.value = pass;
+               passBox.dispatchEvent(new Event('input', { bubbles: true }));
+               passBox.dispatchEvent(new Event('change', { bubbles: true }));
+           }
            
            // Le fameux bouton est un lien javascript, on force son exécution locale
            const btn = document.getElementById('ctl00_ValiderButton');
