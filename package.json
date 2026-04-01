@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "amc-agent": "tsx src/scripts/amc-agent/index.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",
