@@ -23,6 +23,15 @@ export async function handleBotCallback(chatId: string | number, dataAction: str
             return;
         }
 
+        if (dataAction === 'CREATE_RDV') {
+            await prisma.user.update({
+                where: { id: user.id },
+                data: { telegramState: 'RDV_REASON', telegramStateData: '{}' }
+            });
+            await sendTelegramMessage(chatId, "📅 <b>Nouveau Rendez-vous Direction</b>\n\nQuel est le motif de votre demande de rendez-vous ?");
+            return;
+        }
+
         if (dataAction.startsWith('VALIDATE_MISSION_')) {
             const now = new Date();
             const formatter = new Intl.DateTimeFormat('fr-FR', { timeZone: 'Europe/Paris', hour: '2-digit', hour12: false });
@@ -96,6 +105,48 @@ export async function handleBotCallback(chatId: string | number, dataAction: str
             return;
         }
 
+        if (dataAction === 'CONFIRM_RDV') {
+            if (user.telegramState !== 'RDV_CONFIRM') {
+                await sendTelegramMessage(chatId, "⚠️ Session expirée ou action non valide.");
+                return;
+            }
+            const stateData = user.telegramStateData ? JSON.parse(user.telegramStateData) : {};
+            try {
+                const { createAppointmentRequest } = require('@/services/appointment-request');
+                const newRdv = await createAppointmentRequest({
+                    userId: user.id,
+                    reason: stateData.reason || "Via Bot",
+                    description: "Demande initiée via le chatbot Telegram"
+                });
+                
+                // Notifications globales
+                const rhAdmins = await prisma.user.findMany({
+                    where: { OR: [{ roles: { has: 'RH' } }, { roles: { has: 'ADMIN' } }] }
+                });
+                const { createManyNotifications } = require('@/actions/notifications.actions');
+                await createManyNotifications(
+                    rhAdmins.map((adm: any) => adm.id),
+                    "Nouveau RDV (Telegram) 📅",
+                    `${user.firstName || ''} ${user.lastName || ''} demande un rdv : ${stateData.reason}`,
+                    "APPOINTMENT",
+                    `/dashboard/rh/rdv/${newRdv.id}`
+                ).catch(() => {});
+
+                for (const adm of rhAdmins) {
+                    if (adm.telegramChatId) {
+                        await sendTelegramMessage(adm.telegramChatId, `📅 <b>Nouveau RDV demandé</b>\nPar : ${user.firstName || ''} ${user.lastName || ''}\nMotif : ${stateData.reason}`).catch(() => {});
+                    }
+                }
+
+                await sendTelegramMessage(chatId, `✅ <b>Demande de Rendez-vous envoyée !</b>\nLa Direction examinera votre motif dans les plus brefs délais.`);
+            } catch (err: any) {
+                await sendTelegramMessage(chatId, `❌ <b>Erreur :</b>\nImpossible de faire la demande.`);
+            } finally {
+                await prisma.user.update({ where: { id: user.id }, data: { telegramState: null, telegramStateData: null } });
+            }
+            return;
+        }
+
         if (dataAction.startsWith('VIEW_PROFILE_')) {
             const profileId = dataAction.split('_')[2];
             const profile = await prisma.user.findUnique({ where: { id: profileId } });
@@ -116,6 +167,66 @@ export async function handleBotCallback(chatId: string | number, dataAction: str
 
             // On pourrait rajouter un inline keyboard "Retour Liste" si nécessaire
             await sendTelegramMessage(chatId, profileText);
+            return;
+        }
+
+        if (dataAction.startsWith('VIEW_ACOMPTE_')) {
+            const id = dataAction.split('_')[2];
+            const acompte = await prisma.advanceRequest.findUnique({ where: { id } });
+            if (!acompte) return sendTelegramMessage(chatId, "❌ Acompte introuvable.");
+            
+            const formatter = new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute:'2-digit' });
+            const dateStr = formatter.format(new Date(acompte.createdAt));
+            let icon = acompte.status === 'PENDING' ? '⏳' : (acompte.status === 'APPROVED' ? '✅' : '❌');
+            
+            const txt = `💶 <b>Détails de l'Acompte</b>\n\n`
+                + `<b>Date :</b> ${dateStr}\n`
+                + `<b>Montant :</b> ${acompte.amount} €\n`
+                + `<b>Mois ciblé :</b> ${acompte.targetMonth}\n`
+                + `<b>Statut :</b> ${icon} ${acompte.status}\n`
+                + (acompte.adminComment ? `\n💬 <b>Commentaire RH :</b> ${acompte.adminComment}` : "");
+            await sendTelegramMessage(chatId, txt);
+            return;
+        }
+
+        if (dataAction.startsWith('VIEW_SERVICE_')) {
+            const id = dataAction.split('_')[2];
+            const service = await prisma.serviceRequest.findUnique({ where: { id } });
+            if (!service) return sendTelegramMessage(chatId, "❌ Service introuvable.");
+            
+            const formatter = new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute:'2-digit' });
+            const dateStr = formatter.format(new Date(service.createdAt));
+            let icon = service.status === 'PENDING' ? '⏳' : (service.status === 'APPROVED' ? '✅' : '❌');
+            
+            const txt = `🛠 <b>Détails du Service</b>\n\n`
+                + `<b>Date :</b> ${dateStr}\n`
+                + `<b>Catégorie :</b> ${service.category || 'Non défini'}\n`
+                + `<b>Sujet :</b> ${service.subject}\n`
+                + `<b>Message :</b> ${service.description}\n`
+                + `<b>Statut :</b> ${icon} ${service.status}\n`
+                + (service.adminComment ? `\n💬 <b>Commentaire RH :</b> ${service.adminComment}` : "");
+            await sendTelegramMessage(chatId, txt);
+            return;
+        }
+
+        if (dataAction.startsWith('VIEW_RDV_')) {
+            const id = dataAction.split('_')[2];
+            const rdv = await prisma.appointmentRequest.findUnique({ where: { id } });
+            if (!rdv) return sendTelegramMessage(chatId, "❌ RDV introuvable.");
+            
+            const formatter = new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute:'2-digit' });
+            const dateStr = formatter.format(new Date(rdv.createdAt));
+            let icon = rdv.status === 'PENDING' ? '⏳' : (rdv.status === 'APPROVED' ? '✅' : '❌');
+            let dateFixe = rdv.appointmentDate ? formatter.format(new Date(rdv.appointmentDate)) : "Non fixée";
+
+            const txt = `📅 <b>Détails du RDV Direction</b>\n\n`
+                + `<b>Date de la demande :</b> ${dateStr}\n`
+                + `<b>Type :</b> ${rdv.type}\n`
+                + `<b>Motif :</b> ${rdv.reason}\n`
+                + `<b>Statut :</b> ${icon} ${rdv.status}\n`
+                + `<b>Date fixée :</b> ${dateFixe}\n`
+                + (rdv.adminComment ? `\n💬 <b>Commentaire RH :</b> ${rdv.adminComment}` : "");
+            await sendTelegramMessage(chatId, txt);
             return;
         }
         if (dataAction.startsWith('C_FILTER_')) {
@@ -572,6 +683,38 @@ export async function handleConversationState(chatId: string | number, text: str
         }
 
         if (currentState === 'SERVICE_CONFIRM') {
+            await sendTelegramMessage(chatId, "⚠️ Veuillez utiliser les boutons 'Confirmer' ou 'Annuler' ci-dessus. Ou tapez /annuler pour fermer.");
+            return;
+        }
+
+        // --- FLUX DE CRÉATION : RDV DIRECTION ---
+        if (currentState === 'RDV_REASON') {
+            if (text.length < 3) {
+                await sendTelegramMessage(chatId, "❌ Votre motif est trop court. Décrivez un peu plus votre besoin (tapez /annuler pour stopper).");
+                return;
+            }
+            stateData.reason = text;
+            await prisma.user.update({
+                where: { id: user.id },
+                data: { telegramState: 'RDV_CONFIRM', telegramStateData: JSON.stringify(stateData) }
+            });
+
+            const keyboard = {
+                inline_keyboard: [
+                    [{ text: "✅ Confirmer et Envoyer", callback_data: "CONFIRM_RDV" }],
+                    [{ text: "❌ Annuler", callback_data: "CANCEL_ACTION" }]
+                ]
+            };
+
+            const summary = `📄 <b>RÉCAPITULATIF DU RENDEZ-VOUS</b>\n\n`
+                + `<b>Motif :</b> ${text}\n\n`
+                + `<i>Souhaitez-vous confirmer l'envoi de cette demande à la Direction ?</i>`;
+
+            await sendTelegramMessage(chatId, summary, keyboard);
+            return;
+        }
+
+        if (currentState === 'RDV_CONFIRM') {
             await sendTelegramMessage(chatId, "⚠️ Veuillez utiliser les boutons 'Confirmer' ou 'Annuler' ci-dessus. Ou tapez /annuler pour fermer.");
             return;
         }

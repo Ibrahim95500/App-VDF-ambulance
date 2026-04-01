@@ -29,66 +29,69 @@ export async function handleUserCommand(chatId: string | number, text: string, u
 
         if (cmd === '/acompte' || cmd === '💶 mes acomptes') {
             const acomptes = await prisma.advanceRequest.findMany({
-                where: { userId: user.id, status: 'PENDING' },
-                orderBy: { createdAt: 'desc' }
+                where: { userId: user.id },
+                orderBy: { createdAt: 'desc' },
+                take: 5
             });
 
-            const keyboard = {
-                inline_keyboard: [[{ text: "📝 Nouvelle demande d'Acompte", callback_data: "CREATE_ACOMPTE" }]]
-            };
-
-            if (acomptes.length === 0) {
-                await sendTelegramMessage(chatId, "💶 Vous n'avez aucune demande d'acompte <b>en cours</b>.", keyboard);
-                return;
-            }
-
-            let responseText = `💶 <b>Vos Demandes d'Acomptes en attente :</b>\n\n`;
-            acomptes.forEach((a: any, i: number) => {
-                responseText += `${i+1}. <b>${a.amount} €</b> pour ${a.targetMonth}\n`;
+            const inline_keyboard = [];
+            acomptes.forEach((a: any) => {
+                let icon = a.status === 'PENDING' ? '⏳' : (a.status === 'APPROVED' ? '✅' : '❌');
+                inline_keyboard.push([{ text: `${icon} ${a.amount}€ (${a.targetMonth})`, callback_data: `VIEW_ACOMPTE_${a.id}` }]);
             });
-            await sendTelegramMessage(chatId, responseText, keyboard);
+            inline_keyboard.push([{ text: "📝 Faire une nouvelle demande", callback_data: "CREATE_ACOMPTE" }]);
+
+            const msg = acomptes.length > 0 
+                ? "💶 <b>Historique de vos Acomptes (5 derniers)</b>\nCliquez sur un acompte pour voir les détails :" 
+                : "💶 Vous n'avez aucun historique d'acompte.\nCréez votre première demande ci-dessous :";
+
+            await sendTelegramMessage(chatId, msg, { inline_keyboard });
             return;
         }
 
         if (cmd === '/service' || cmd === '🛠 mes services') {
             const services = await prisma.serviceRequest.findMany({
-                where: { userId: user.id, status: 'PENDING' },
-                orderBy: { createdAt: 'desc' }
+                where: { userId: user.id },
+                orderBy: { createdAt: 'desc' },
+                take: 5
             });
 
-            const keyboard = {
-                inline_keyboard: [[{ text: "🛠 Faire une demande", callback_data: "CREATE_SERVICE" }]]
-            };
-
-            if (services.length === 0) {
-                await sendTelegramMessage(chatId, "🛠 Vous n'avez aucune demande de service <b>en cours</b>.", keyboard);
-                return;
-            }
-
-            let responseText = `🛠 <b>Vos Demandes de Service en attente :</b>\n\n`;
-            services.forEach((s: any, i: number) => {
-                responseText += `${i+1}. <b>${s.subject}</b> (${s.category || 'Autre'})\n`;
+            const inline_keyboard = [];
+            services.forEach((s: any) => {
+                let icon = s.status === 'PENDING' ? '⏳' : (s.status === 'APPROVED' ? '✅' : '❌');
+                const title = s.subject.length > 20 ? s.subject.substring(0, 18) + '..' : s.subject;
+                inline_keyboard.push([{ text: `${icon} ${title}`, callback_data: `VIEW_SERVICE_${s.id}` }]);
             });
-            await sendTelegramMessage(chatId, responseText, keyboard);
+            inline_keyboard.push([{ text: "🛠 Faire une nouvelle demande", callback_data: "CREATE_SERVICE" }]);
+
+            const msg = services.length > 0 
+                ? "🛠 <b>Historique de vos Services (5 derniers)</b>\nCliquez sur un service pour voir les détails :" 
+                : "🛠 Vous n'avez aucun historique de service.\nCréez votre première demande ci-dessous :";
+
+            await sendTelegramMessage(chatId, msg, { inline_keyboard });
             return;
         }
 
         if (cmd === '/rdv' || cmd === '📅 mes rdv') {
             const rdvs = await prisma.appointmentRequest.findMany({
-                where: { userId: user.id, status: 'PENDING' },
-                orderBy: { createdAt: 'desc' }
+                where: { userId: user.id },
+                orderBy: { createdAt: 'desc' },
+                take: 5
             });
 
-            if (rdvs.length === 0) {
-                await sendTelegramMessage(chatId, "📅 Vous n'avez aucun rendez-vous direction de prévu ou en attente.");
-                return;
-            }
-
-            let responseText = `📅 <b>Vos RDV Direction (En attente de validation) :</b>\n\n`;
-            rdvs.forEach((r: any, i: number) => {
-                responseText += `${i+1}. <b>Type:</b> ${r.type}\n   <b>Motif:</b> ${r.reason}\n`;
+            const inline_keyboard = [];
+            rdvs.forEach((r: any) => {
+                let icon = r.status === 'PENDING' ? '⏳' : (r.status === 'APPROVED' ? '✅' : '❌');
+                const title = r.reason.length > 20 ? r.reason.substring(0, 18) + '..' : r.reason;
+                inline_keyboard.push([{ text: `${icon} ${title}`, callback_data: `VIEW_RDV_${r.id}` }]);
             });
-            await sendTelegramMessage(chatId, responseText);
+            inline_keyboard.push([{ text: "📅 Demander un Rendez-vous", callback_data: "CREATE_RDV" }]);
+
+            const msg = rdvs.length > 0 
+                ? "📅 <b>Historique de vos RDV Direction (5 derniers)</b>\nCliquez sur un RDV pour voir les détails :" 
+                : "📅 Vous n'avez aucun historique de RDV.\nPrenez votre premier rendez-vous ci-dessous :";
+
+            await sendTelegramMessage(chatId, msg, { inline_keyboard });
             return;
         }
 
