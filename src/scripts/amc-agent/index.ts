@@ -47,74 +47,136 @@ async function sendTelegramAlert(message: string, imageBuffer?: Buffer) {
 // ============================================
 // 🎯 FONCTION SNIPER : VALIDATION ÉCLAIR
 // ============================================
-async function snipeCourse(page: any): Promise<Buffer | null> {
-    console.log("🎯 DÉBUT DU SNIPING ! Tir sur le bouton vert...")
+async function snipeCourse(page: any): Promise<{ buffer: Buffer | null, status: string }> {
+    console.log("🎯 DÉBUT DU SNIPING ! Évaluation Chirurgicale des courses...")
     
-    // Étape 1: Identifier et cliquer sur le bouton d'acceptation de la course (croche/valider)
+    // Étape 1: Évaluer les lignes du tableau et filtrer "Gonesse -> Villes autorisées"
     const clicked = await page.evaluate(() => {
-        let buttons = Array.from(document.querySelectorAll('input[type="image"], img, a, button'));
-        let acceptBtn = buttons.find(b => {
-            let title = (b.getAttribute('title') || b.getAttribute('alt') || '').toLowerCase();
-            let src = (b.getAttribute('src') || '').toLowerCase();
-            let text = (b.textContent || b.innerText || '').toLowerCase();
-            // On cherche tout ce qui ressemble à Valider ou Accepter ou Check
-            return src.includes('valider') || src.includes('check') || title.includes('accepter') || title.includes('valider') || src.includes('accept') || text.includes('accepter');
-        });
+        const allowedArrivals = [
+            "gonesse", "villiers le bel", "arnouville", "sarcelles", "garges", 
+            "louvres", "goussainville", "fontenay", "bouqueval", "ecouen", 
+            "roissy", "saint brice", "saint-brice", "le thillay", "puiseux", 
+            "tremblay", "dugny", "bonneuil"
+        ];
         
-        if (acceptBtn) {
-            // Si c'est une image dans un lien, cliquer le lien
-            if (acceptBtn.tagName === 'IMG' && acceptBtn.parentElement && acceptBtn.parentElement.tagName === 'A') {
-                acceptBtn.parentElement.click();
-            } else {
-                (acceptBtn as HTMLElement).click();
+        let didClick = false;
+        
+        // On récupère les colonnes du tableau
+        const headers = Array.from(document.querySelectorAll('th'));
+        const departIdx = headers.findIndex(th => th.innerText.toLowerCase().includes('départ'));
+        const arriveeIdx = headers.findIndex(th => th.innerText.toLowerCase().includes('arrivée'));
+        
+        const rows = document.querySelectorAll('tr');
+        for (let row of rows) {
+            const acceptBtn = row.querySelector('input[type="image"][src*="valider"], img[src*="valider"], img[src*="check"], a[title*="accepter"]');
+            
+            if (acceptBtn && departIdx >= 0 && arriveeIdx >= 0) {
+                const tds = row.querySelectorAll('td');
+                if (tds.length > Math.max(departIdx, arriveeIdx)) {
+                    const departText = tds[departIdx].innerText.toLowerCase();
+                    const arriveeText = tds[arriveeIdx].innerText.toLowerCase();
+                    
+                    // RÈGLE MÉTIER STRICTE :
+                    const isGonesseDepart = departText.includes('gonesse');
+                    const isAllowedArrivee = allowedArrivals.some(city => arriveeText.includes(city));
+                    
+                    if (isGonesseDepart && isAllowedArrivee) {
+                        // ON ACCEPTE !! Pêche à la ligne validée !
+                        if (acceptBtn.tagName === 'IMG' && acceptBtn.parentElement && acceptBtn.parentElement.tagName === 'A') {
+                            acceptBtn.parentElement.click();
+                        } else {
+                            (acceptBtn as HTMLElement).click();
+                        }
+                        didClick = true;
+                        break; // On tire sur une seule course à la fois
+                    }
+                }
             }
-            return true;
         }
-        return false;
+        return didClick;
     });
 
     if (!clicked) {
-        console.log("❌ Impossible de trouver le bouton d'acceptation vert !");
-        return null;
+        console.log("❌ Aucune course ne respecte les conditions (Départ Gonesse vers notre Zone). On ignore.");
+        return { buffer: null, status: "ignored" };
     }
     
-    console.log("✅ Clic sur la course effectué ! Attente de la page d'assignation...");
+    console.log("✅ Clic sur la course effectué ! Attente de l'ouverture du Pop-up AJAX...");
     
-    // Étape 2: Attendre l'écran d'affectation
-    try {
-        await page.waitForNavigation({ waitUntil: "networkidle2", timeout: 15000 });
-    } catch (e) {
-        console.log("⏳ Navigation lente après clic d'acceptation...");
-    }
+    // Étape 2: Attendre un court instant que le Pop-up Modal ASP.NET s'affiche
+    await new Promise(r => setTimeout(r, 2000)); 
     
-    // Étape 3: Remplir les listes déroulantes de force avec le premier véhicule/personnel valide
-    console.log("🏎️ Affectation des véhicules et personnels à l'aveugle...");
+    // Étape 3: Analyser le pop-up, lire l'heure voulue, et remplir les champs
+    console.log("🏎️ Paramétrage du pop-up (Heure, VDF1, VDF2) et Validation...");
     const validationClicked = await page.evaluate(() => {
-        let selects = document.querySelectorAll('select');
-        selects.forEach(select => {
-            if (select.options.length > 1) {
-                // Trouver la première option qui n'est pas vide (généralement index 1)
-                for(let i = 1; i < select.options.length; i++) {
-                    if (select.options[i].value && select.options[i].value.trim() !== "") {
-                        select.selectedIndex = i;
-                        break;
+        // --- A. Trouver l'heure désirée par le service ---
+        const bodyText = document.body.innerText;
+        // On cherche : "Heure de départ souhaitée par l'établissement : 14:00"
+        const timeMatch = bodyText.match(/souhait[eé]e.*?(\d{2}:\d{2})/i) || bodyText.match(/à\s*(\d{2}:\d{2})/i);
+        let targetTime = "12:00"; // Fallback si raté
+        if (timeMatch && timeMatch[1]) {
+            targetTime = timeMatch[1];
+        }
+
+        // Helper pour trouver un input/select basé sur un bout de texte proche (label)
+        const getElByLabel = (txt: string, tag: string) => {
+            const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
+            let node;
+            while (node = walker.nextNode()) {
+                if (node.nodeValue && node.nodeValue.toLowerCase().includes(txt.toLowerCase())) {
+                    const parent = node.parentElement;
+                    if (parent && parent.getBoundingClientRect().width > 0) { // Visible
+                        let el = parent.nextElementSibling?.querySelector(tag) || parent.parentElement?.querySelector(tag);
+                        if (el) return el;
                     }
                 }
-                select.dispatchEvent(new Event('change', { bubbles: true }));
             }
-        });
+            return null;
+        };
         
-        // Chercher le bouton final "Valider l'affectation"
+        // --- B. Remplir Heure de PEC ---
+        const timeInput = getElByLabel('Heure de PEC', 'input');
+        if (timeInput) {
+            (timeInput as HTMLInputElement).value = targetTime;
+            timeInput.dispatchEvent(new Event('input', { bubbles: true }));
+            timeInput.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+        
+        // --- C. Remplir Chauffeur et Equipier ---
+        const chauffeurSel = getElByLabel('Chauffeur', 'select');
+        const equipierSel = getElByLabel('Equipier', 'select');
+        
+        const setSelect = (sel: Element | null, query: string) => {
+            if (!sel || !(sel instanceof HTMLSelectElement)) return;
+            for (let i = 0; i < sel.options.length; i++) {
+                if (sel.options[i].text.toLowerCase().includes(query.toLowerCase())) {
+                    sel.selectedIndex = i;
+                    sel.dispatchEvent(new Event('change', { bubbles: true }));
+                    return;
+                }
+            }
+            // Fallback: 1er element utilisable
+            if (sel.options.length > 1) {
+                sel.selectedIndex = 1;
+                sel.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        };
+
+        // Règles métiers demandées par le chef
+        setSelect(chauffeurSel, 'VDF1');
+        setSelect(equipierSel, 'VDF2');
+        
+        // --- D. Cliquer sur le Bouton Vert Valider ---
         let buttons = Array.from(document.querySelectorAll('input[type="submit"], button, a, input[type="button"]'));
         let submitBtn = buttons.find(b => {
              let text = ((b as HTMLInputElement).value || b.textContent || b.innerText || '').toLowerCase();
-             let id = (b.id || '').toLowerCase();
              let val = b.getAttribute('value') || '';
-             return text.includes('valider') || text.includes('confirmer') || text.includes('affecter') || text.includes('enregistrer') || id.includes('valider') || val.toLowerCase().includes('valider');
+             const rect = b.getBoundingClientRect();
+             // Le bouton vert final visible dans le dom
+             return rect.width > 0 && rect.height > 0 && (text.includes('valider') || val.toLowerCase().includes('valider'));
         });
         
         if (submitBtn) {
-            // Utiliser doPostBack si c'est un lien natif ASP.net
             // @ts-ignore
             if (submitBtn.tagName === 'A' && typeof __doPostBack === 'function' && submitBtn.id) {
                 // @ts-ignore
@@ -128,16 +190,23 @@ async function snipeCourse(page: any): Promise<Buffer | null> {
     });
     
     if (validationClicked) {
-        console.log("✅ Bouton d'affectation PUNCHÉ !");
+        console.log("✅ Bouton 'Valider' final cliqué ! Attente de confirmation du serveur...");
         try {
+            // On attend le rechargement de la page qui confirme
             await page.waitForNavigation({ waitUntil: "networkidle2", timeout: 8000 });
         } catch(e) {}
     } else {
-        console.log("⚠️ Le bouton final d'affectation n'a pas été trouvé (ou pas nécessaire).");
+        console.log("⚠️ Le bouton final du Pop-up n'a pas été trouvé.");
     }
     
-    // On capture le résultat final de cette mission commando
-    return await page.screenshot({ fullPage: true }) as Buffer;
+    // --- ÉTAPE 4 : Vérifier s'il y a l'erreur jaune "Demande déjà acceptée par une autre société" ---
+    const finalBuffer = await page.screenshot({ fullPage: true }) as Buffer;
+    const isError = await page.evaluate(() => document.body.innerText.includes("déjà acceptée"));
+    
+    if (isError) {
+        return { buffer: finalBuffer, status: "failed_already_taken" };
+    }
+    return { buffer: finalBuffer, status: validationClicked ? "success" : "unknown" };
 }
 
 async function startAgent() {
@@ -242,17 +311,30 @@ async function startAgent() {
          console.log("🚨 ACTIVITÉ DÉTECTÉE SUR LE PRT !!")
          
          // On lance le SNIPER
-         const finalScreenshot = await snipeCourse(page);
+         const snipeResult = await snipeCourse(page);
          
-         if (finalScreenshot) {
-             await sendTelegramAlert("🎯 **COURSE SNIPÉE ET ACCEPTÉE !** 🚑💨\nLe robot a cliqué sur le bouton vert et validé la première assignation aléatoire trouvée. Voici l'écran actuel :", finalScreenshot)
-             // Attendre 2 minutes pour ne pas sniper en boucle la même course si le site met du temps à l'enlever
-             await new Promise(r => setTimeout(r, 120000)) 
-         } else {
-             const buffer = await page.screenshot({ fullPage: true }) as Buffer
-             await sendTelegramAlert("🚨 **COURSE ATTENTION** - J'ai vu une course mais le bouton vert d'acceptation est introuvable !\nHUMAIN REQUIS IMMEDIATEMENT pour accepter la course à ma place !", buffer)
-             // On attend 20 secondes pour ne pas spammer Telegram
-             await new Promise(r => setTimeout(r, 20000)) 
+         if (snipeResult.status === "ignored") {
+             console.log("⏭️ Les courses ne matchent pas Gonesse / Villes cibles. Reprise de la veille.");
+             await new Promise(r => setTimeout(r, 8000));
+         } 
+         else if (snipeResult.status === "failed_already_taken") {
+             console.log("❌ ZUT ! Une autre société a pris la course une milliseconde avant nous.");
+             // Il y a la fameuse erreur jaune "déjà acceptée"
+             if (snipeResult.buffer) {
+                 await sendTelegramAlert("😭 **COURSE RATÉE DE JUSTESSE !**\nUne société concurrente a été plus rapide et a pris la course juste sous notre nez ! (Voir erreur Serveur en jaune) 💥", snipeResult.buffer)
+             }
+             // On doit retourner a la page principale sinon on est bloqué sur l'erreur
+             await page.goto(AMC_URL, { waitUntil: "networkidle2" });
+             await new Promise(r => setTimeout(r, 15000));
+         }
+         else if (snipeResult.status === "success") {
+             if (snipeResult.buffer) await sendTelegramAlert("🎯 **MISSION ACCOMPLIE ! COURSE SNIPÉE !** 🚑💨\n- Heure PEC ajustée dynamiquement\n- VDF1 assigné (Chauffeur)\n- VDF2 assigné (Équipier)\nLa demande est à nous ! Voici le tableau des scores :", snipeResult.buffer);
+             // Attendre 2 minutes pour apprécier la victoire
+             await new Promise(r => setTimeout(r, 120000));
+         }
+         else {
+             if (snipeResult.buffer) await sendTelegramAlert("⚠️ **COMPORTEMENT IMPRÉVU PENDANT LE SNIPING...**\nLe robot a tenté de cliquer mais l'issue est incertaine. Veuillez vérifier manuellement ! 🚨", snipeResult.buffer);
+             await new Promise(r => setTimeout(r, 30000));
          }
       } else {
         // 5. Pause Humaine Aléatoire (Anti-Détection)
