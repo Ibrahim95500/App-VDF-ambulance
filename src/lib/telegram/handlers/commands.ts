@@ -112,7 +112,7 @@ export async function handleUserCommand(chatId: string | number, text: string, u
                 return;
             }
 
-            const inline_keyboard = [];
+            const inline_keyboard: any[] = [];
             collab.slice(0, 95).forEach(c => {
                 inline_keyboard.push([{ text: `👤 ${c.firstName || ''} ${c.lastName || ''}`, callback_data: `CONVU_${c.id}` }]);
             });
