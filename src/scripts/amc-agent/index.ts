@@ -16,35 +16,128 @@ const TELEGRAM_CHAT_ID = "1634444351"
 
 async function sendTelegramAlert(message: string, imageBuffer?: Buffer) {
   if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
-    console.log("⚠️ Variables d'environnement Telegram manquantes. Alertes désactivées.")
-    console.log("Message:", message)
+    console.warn("⚠️ Telegram non configuré, alerte ignorée.")
     return
   }
+
+  const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`
 
   try {
     if (imageBuffer) {
       const formData = new FormData()
       formData.append("chat_id", TELEGRAM_CHAT_ID)
+      formData.append("photo", new Blob([imageBuffer], { type: "image/png" }), "screenshot.png")
       formData.append("caption", message)
-      formData.append("photo", new Blob([imageBuffer]), "screenshot.png")
-      
-      const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`, {
-        method: "POST",
-        body: formData,
-      })
-      if (!response.ok) {
-        console.error("Erreur Telegram:", await response.text())
-      }
+      formData.append("parse_mode", "Markdown")
+
+      await fetch(url, { method: "POST", body: formData })
     } else {
-      await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
+      const textUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`
+      await fetch(textUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: message }),
+        body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: message, parse_mode: "Markdown" })
       })
     }
   } catch (err) {
-    console.error("Erreur d'envoi Telegram:", err)
+    console.error("❌ Erreur lors de l'envoi Telegram:", err)
   }
+}
+
+// ============================================
+// 🎯 FONCTION SNIPER : VALIDATION ÉCLAIR
+// ============================================
+async function snipeCourse(page: any): Promise<Buffer | null> {
+    console.log("🎯 DÉBUT DU SNIPING ! Tir sur le bouton vert...")
+    
+    // Étape 1: Identifier et cliquer sur le bouton d'acceptation de la course (croche/valider)
+    const clicked = await page.evaluate(() => {
+        let buttons = Array.from(document.querySelectorAll('input[type="image"], img, a, button'));
+        let acceptBtn = buttons.find(b => {
+            let title = (b.getAttribute('title') || b.getAttribute('alt') || '').toLowerCase();
+            let src = (b.getAttribute('src') || '').toLowerCase();
+            let text = (b.textContent || b.innerText || '').toLowerCase();
+            // On cherche tout ce qui ressemble à Valider ou Accepter ou Check
+            return src.includes('valider') || src.includes('check') || title.includes('accepter') || title.includes('valider') || src.includes('accept') || text.includes('accepter');
+        });
+        
+        if (acceptBtn) {
+            // Si c'est une image dans un lien, cliquer le lien
+            if (acceptBtn.tagName === 'IMG' && acceptBtn.parentElement && acceptBtn.parentElement.tagName === 'A') {
+                acceptBtn.parentElement.click();
+            } else {
+                (acceptBtn as HTMLElement).click();
+            }
+            return true;
+        }
+        return false;
+    });
+
+    if (!clicked) {
+        console.log("❌ Impossible de trouver le bouton d'acceptation vert !");
+        return null;
+    }
+    
+    console.log("✅ Clic sur la course effectué ! Attente de la page d'assignation...");
+    
+    // Étape 2: Attendre l'écran d'affectation
+    try {
+        await page.waitForNavigation({ waitUntil: "networkidle2", timeout: 15000 });
+    } catch (e) {
+        console.log("⏳ Navigation lente après clic d'acceptation...");
+    }
+    
+    // Étape 3: Remplir les listes déroulantes de force avec le premier véhicule/personnel valide
+    console.log("🏎️ Affectation des véhicules et personnels à l'aveugle...");
+    const validationClicked = await page.evaluate(() => {
+        let selects = document.querySelectorAll('select');
+        selects.forEach(select => {
+            if (select.options.length > 1) {
+                // Trouver la première option qui n'est pas vide (généralement index 1)
+                for(let i = 1; i < select.options.length; i++) {
+                    if (select.options[i].value && select.options[i].value.trim() !== "") {
+                        select.selectedIndex = i;
+                        break;
+                    }
+                }
+                select.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+        });
+        
+        // Chercher le bouton final "Valider l'affectation"
+        let buttons = Array.from(document.querySelectorAll('input[type="submit"], button, a, input[type="button"]'));
+        let submitBtn = buttons.find(b => {
+             let text = ((b as HTMLInputElement).value || b.textContent || b.innerText || '').toLowerCase();
+             let id = (b.id || '').toLowerCase();
+             let val = b.getAttribute('value') || '';
+             return text.includes('valider') || text.includes('confirmer') || text.includes('affecter') || text.includes('enregistrer') || id.includes('valider') || val.toLowerCase().includes('valider');
+        });
+        
+        if (submitBtn) {
+            // Utiliser doPostBack si c'est un lien natif ASP.net
+            // @ts-ignore
+            if (submitBtn.tagName === 'A' && typeof __doPostBack === 'function' && submitBtn.id) {
+                // @ts-ignore
+                __doPostBack(submitBtn.id.replace(/_/g, '$'), '');
+            } else {
+                (submitBtn as HTMLElement).click();
+            }
+            return true;
+        }
+        return false;
+    });
+    
+    if (validationClicked) {
+        console.log("✅ Bouton d'affectation PUNCHÉ !");
+        try {
+            await page.waitForNavigation({ waitUntil: "networkidle2", timeout: 8000 });
+        } catch(e) {}
+    } else {
+        console.log("⚠️ Le bouton final d'affectation n'a pas été trouvé (ou pas nécessaire).");
+    }
+    
+    // On capture le résultat final de cette mission commando
+    return await page.screenshot({ fullPage: true }) as Buffer;
 }
 
 async function startAgent() {
@@ -146,38 +239,21 @@ async function startAgent() {
       }
 
       if (!hasRienAtraiter) {
-         // Il y a PEUT ÊTRE une course !
          console.log("🚨 ACTIVITÉ DÉTECTÉE SUR LE PRT !!")
          
-         // On capture l'écran
-         const buffer = await page.screenshot({ fullPage: true }) as Buffer
+         // On lance le SNIPER
+         const finalScreenshot = await snipeCourse(page);
          
-         // On extrait un peu de HTML pour comprendre comment cliquer la prochaine fois
-         const htmlExtraction = await page.evaluate(() => {
-           // On va chercher tous les boutons et inputs pour repérer les ID
-           const interactables = Array.from(document.querySelectorAll('input[type="submit"], input[type="button"], button, a'))
-             .filter(el => {
-                const text = (el.textContent || (el as HTMLInputElement).value || "").toLowerCase()
-                return text.includes("prendre") || text.includes("accepter") || text.includes("valider")
-             })
-             .map(el => ({
-               tag: el.tagName,
-               id: el.id,
-               text: el.textContent || (el as HTMLInputElement).value,
-               className: el.className
-             }))
-           return interactables
-         })
-         
-         await sendTelegramAlert(
-           `🚨 **COURSE DETECTÉE !!** 🚨\n\nL'espion a trouvé une course en attente.\nVoici le HTML des boutons trouves:\n\`\`\`json\n${JSON.stringify(htmlExtraction, null, 2)}\n\`\`\`\n\n*(Regardez la capture jointe)*`,
-           buffer
-         )
-         
-         // On fait une pause plus longue pour ne pas spammer telegram s'il la course reste là plusieurs minutes
-         console.log("Pause de 2 minutes pour éviter le spam...")
-         await new Promise(r => setTimeout(r, 120000)) 
-         
+         if (finalScreenshot) {
+             await sendTelegramAlert("🎯 **COURSE SNIPÉE ET ACCEPTÉE !** 🚑💨\nLe robot a cliqué sur le bouton vert et validé la première assignation aléatoire trouvée. Voici l'écran actuel :", finalScreenshot)
+             // Attendre 2 minutes pour ne pas sniper en boucle la même course si le site met du temps à l'enlever
+             await new Promise(r => setTimeout(r, 120000)) 
+         } else {
+             const buffer = await page.screenshot({ fullPage: true }) as Buffer
+             await sendTelegramAlert("🚨 **COURSE ATTENTION** - J'ai vu une course mais le bouton vert d'acceptation est introuvable !\nHUMAIN REQUIS IMMEDIATEMENT pour accepter la course à ma place !", buffer)
+             // On attend 20 secondes pour ne pas spammer Telegram
+             await new Promise(r => setTimeout(r, 20000)) 
+         }
       } else {
         // 5. Pause Humaine Aléatoire (Anti-Détection)
         // Au lieu de 15s fixes, on fait entre 12s et 20s pour faire "humain"
