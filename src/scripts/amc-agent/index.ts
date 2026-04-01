@@ -49,13 +49,16 @@ async function sendTelegramAlert(message: string, imageBuffer?: Buffer) {
 
 async function startAgent() {
   console.log("🚀 Lancement de l'Agent AMC (Espion)...")
+  let browser: any = null;
+  let page: any = null;
+  let proofSent = false; // Variable pour éviter de spammer la preuve de connexion
   
-  const browser = await puppeteer.launch({
+  browser = await puppeteer.launch({
     headless: true, // Lancer en arrière-plan
     args: ["--no-sandbox", "--disable-setuid-sandbox"]
   })
   
-  const page = await browser.newPage()
+  page = await browser.newPage()
   
   // Fake User Agent pour éviter les blocages de base
   await page.setUserAgent(
@@ -134,6 +137,14 @@ async function startAgent() {
                               pageText.includes("Aucune donnée disponible dans le tableau") ||
                               pageText.includes("Aucun résultat")
 
+      // Envoi de la preuve si c'est la toute première fois
+      if (!proofSent && page.url().includes("TransporteurAtraiter")) {
+          console.log("📸 Prise de la capture de preuve de connexion...")
+          const proofBuffer = await page.screenshot({ fullPage: true }) as Buffer
+          await sendTelegramAlert("📸 **PREUVE DE CONNEXION**\nL'Agent est bien à l'intérieur ! Voici le tableau de chasse vide que je surveille :", proofBuffer)
+          proofSent = true;
+      }
+
       if (!hasRienAtraiter) {
          // Il y a PEUT ÊTRE une course !
          console.log("🚨 ACTIVITÉ DÉTECTÉE SUR LE PRT !!")
@@ -168,15 +179,18 @@ async function startAgent() {
          await new Promise(r => setTimeout(r, 120000)) 
          
       } else {
-        // Rien, on attend 15 secondes
-        await new Promise(r => setTimeout(r, 15000))
+        // 5. Pause Humaine Aléatoire (Anti-Détection)
+        // Au lieu de 15s fixes, on fait entre 12s et 20s pour faire "humain"
+        const randomDelay = Math.floor(Math.random() * (20000 - 12000 + 1) + 12000)
+        console.log(`[Attente] Repos du robot pendant ${Math.floor(randomDelay/1000)}s pour être discret...`)
+        await new Promise(r => setTimeout(r, randomDelay))
       }
     }
 
   } catch (error) {
     console.error("❌ ERREUR FATALE:", error)
     await sendTelegramAlert(`❌ **CRASH AMC AGENT** :\n\`${error}\``)
-    await browser.close()
+    if (browser) await browser.close()
   }
 }
 
