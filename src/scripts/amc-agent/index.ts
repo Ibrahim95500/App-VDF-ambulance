@@ -10,37 +10,40 @@ const AMC_USERNAME = process.env.AMC_USERNAME || process.env.AMC_ID || "VDF"
 const AMC_PASSWORD = process.env.AMC_PASSWORD || "Jordan95500!" // Récupéré de ton prompt !
 const AMC_URL = "https://transportpatient.fr/Transport/TransporteurAtraiter.aspx?ModuleID=24"
 
-// Configuration Telegram Forcée pour BotPRTScrap
+// Configuration Telegram Forcée pour BotPRTScrap (Mode Broadcast)
 const TELEGRAM_BOT_TOKEN = "8648311380:AAGZA5FOqAJ1BE78o96RH4R1_eHCLxkAefs"
-const TELEGRAM_CHAT_ID = "1634444351"
+const TELEGRAM_CHAT_IDS = ["1634444351", "8679052160", "8457900796"] // Ibrahim, VDF, Collègue
 
 async function sendTelegramAlert(message: string, imageBuffer?: Buffer) {
-  if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) {
+  if (!TELEGRAM_BOT_TOKEN || TELEGRAM_CHAT_IDS.length === 0) {
     console.warn("⚠️ Telegram non configuré, alerte ignorée.")
     return
   }
 
   const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`
 
-  try {
-    if (imageBuffer) {
-      const formData = new FormData()
-      formData.append("chat_id", TELEGRAM_CHAT_ID)
-      formData.append("photo", new Blob([imageBuffer], { type: "image/png" }), "screenshot.png")
-      formData.append("caption", message)
-      formData.append("parse_mode", "Markdown")
+  // On envoie le message/photo à TOUS les collaborateurs enregistrés
+  for (const chatId of TELEGRAM_CHAT_IDS) {
+      try {
+        if (imageBuffer) {
+          const formData = new FormData()
+          formData.append("chat_id", chatId)
+          formData.append("photo", new Blob([imageBuffer], { type: "image/png" }), "screenshot.png")
+          formData.append("caption", message)
+          formData.append("parse_mode", "Markdown")
 
-      await fetch(url, { method: "POST", body: formData })
-    } else {
-      const textUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`
-      await fetch(textUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: message, parse_mode: "Markdown" })
-      })
-    }
-  } catch (err) {
-    console.error("❌ Erreur lors de l'envoi Telegram:", err)
+          await fetch(url, { method: "POST", body: formData })
+        } else {
+          const textUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`
+          await fetch(textUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ chat_id: chatId, text: message, parse_mode: "Markdown" })
+          })
+        }
+      } catch (err) {
+        console.error(`❌ Erreur lors de l'envoi Telegram au chat ${chatId}:`, err)
+      }
   }
 }
 
