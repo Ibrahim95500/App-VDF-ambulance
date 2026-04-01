@@ -109,12 +109,82 @@ export async function handleBotCallback(chatId: string | number, dataAction: str
             const profileText = `👤 <b>PROFIL : ${profile.firstName || ''} ${profile.lastName || profile.name || ''}</b>\n\n`
                 + `<b>UUID :</b> ${profile.id}\n`
                 + `<b>Rôle(s) :</b> ${roleLabels}\n`
+                + `<b>Structure :</b> ${profile.structure || 'Non définie'}\n`
                 + `<b>Email :</b> ${profile.email || 'Non renseigné'}\n`
                 + `<b>Téléphone :</b> ${profile.phone || 'Non renseigné'}\n`
                 + `<b>Lié Telegram :</b> ${profile.telegramChatId ? '✅ Oui' : '❌ Non'}\n`;
 
             // On pourrait rajouter un inline keyboard "Retour Liste" si nécessaire
             await sendTelegramMessage(chatId, profileText);
+            return;
+        }
+        if (dataAction.startsWith('C_FILTER_')) {
+            const isAdminOrRH = user.roles?.includes('ADMIN') || user.roles?.includes('RH');
+            if (!isAdminOrRH) {
+                await sendTelegramMessage(chatId, "⛔️ Accès réservé aux Administrateurs et RH.");
+                return;
+            }
+
+            const filterState = dataAction.replace('C_FILTER_', '');
+            let whereClause: any = { isDeleted: false };
+            if (filterState !== 'ALL') {
+                whereClause.structure = filterState;
+            }
+
+            const usersList = await prisma.user.findMany({
+                where: whereClause,
+                orderBy: { lastName: 'asc' }
+            });
+
+            if (usersList.length === 0) {
+                await sendTelegramMessage(chatId, "Aucun collaborateur trouvé pour ce filtre.");
+                return;
+            }
+
+            // Construction du Clavier Inline avec icônes
+            const inline_keyboard = [];
+            for (let i = 0; i < usersList.length; i += 2) {
+                const row = [];
+
+                const buildBtn = (u: any) => {
+                    let icon = "👤"; 
+                    if (u.structure === 'MARK') icon = '🔵';
+                    else if (u.structure === 'VDF') icon = '🟢';
+                    else if (u.structure === 'LES_2') icon = '🟣';
+                    
+                    const fullName = `${u.firstName || ''} ${u.lastName || u.name || ''}`.trim();
+                    // On tronque le nom s'il est trop long pour le bouton
+                    const display = fullName.length > 20 ? fullName.substring(0, 18) + '..' : fullName;
+                    return { text: `${icon} ${display}`, callback_data: `VIEW_PROFILE_${u.id}` };
+                };
+
+                row.push(buildBtn(usersList[i]));
+                if (i + 1 < usersList.length) {
+                    row.push(buildBtn(usersList[i+1]));
+                }
+                inline_keyboard.push(row);
+            }
+            // Ajouter un bouton retour
+            inline_keyboard.push([{ text: "🔙 Retour Filtres", callback_data: "BACK_COLLAB_MENU" }]);
+
+            let titleTxt = "👥 <b>Tous les Collaborateurs</b>";
+            if (filterState === 'MARK') titleTxt = "🔵 <b>Équipe MARK Ambulance</b>";
+            if (filterState === 'VDF') titleTxt = "🟢 <b>Équipe VDF Ambulance</b>";
+            if (filterState === 'LES_2') titleTxt = "🟣 <b>Équipe Volante (Les 2)</b>";
+
+            const keyboard = { inline_keyboard };
+            await sendTelegramMessage(chatId, `${titleTxt}\nSélectionnez une personne pour voir sa fiche complète :`, keyboard);
+            return;
+        }
+
+        if (dataAction === 'BACK_COLLAB_MENU') {
+            const inline_keyboard = [
+                [{ text: "🔵 Équipe MARK", callback_data: `C_FILTER_MARK` }, { text: "🟢 Équipe VDF", callback_data: `C_FILTER_VDF` }],
+                [{ text: "🟣 Les Volants (Les 2)", callback_data: `C_FILTER_LES_2` }],
+                [{ text: "👥 Lister Tout le Monde", callback_data: `C_FILTER_ALL` }]
+            ];
+            const keyboard = { inline_keyboard };
+            await sendTelegramMessage(chatId, `💼 <b>Annuaire des Collaborateurs</b>\nChoisissez la structure à consulter :`, keyboard);
             return;
         }
 

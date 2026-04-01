@@ -184,34 +184,14 @@ export async function handleUserCommand(chatId: string | number, text: string, u
                 return;
             }
 
-            // Récupérer les 15 premiers collaborateurs (tri alphabétique)
-            // Dans un cas réel parfait on ferait une vraie pagination inline, là on fait les 15 premiers pour l'exemple
-            const usersList = await prisma.user.findMany({
-                take: 15,
-                orderBy: { lastName: 'asc' }
-            });
-
-            if (usersList.length === 0) {
-                await sendTelegramMessage(chatId, "Aucun collaborateur trouvé.");
-                return;
-            }
-
-            // Construction du Clavier Inline avec le nom des collaborateurs
-            const inline_keyboard = [];
-            for (let i = 0; i < usersList.length; i += 2) {
-                const row = [];
-                const u1 = usersList[i];
-                row.push({ text: `${u1.firstName || ''} ${u1.lastName || u1.name || ''}`.trim(), callback_data: `VIEW_PROFILE_${u1.id}` });
-                
-                if (i + 1 < usersList.length) {
-                    const u2 = usersList[i+1];
-                    row.push({ text: `${u2.firstName || ''} ${u2.lastName || u2.name || ''}`.trim(), callback_data: `VIEW_PROFILE_${u2.id}` });
-                }
-                inline_keyboard.push(row);
-            }
+            const inline_keyboard = [
+                [{ text: "🔵 Équipe MARK", callback_data: `C_FILTER_MARK` }, { text: "🟢 Équipe VDF", callback_data: `C_FILTER_VDF` }],
+                [{ text: "🟣 Les Volants (Les 2)", callback_data: `C_FILTER_LES_2` }],
+                [{ text: "👥 Lister Tout le Monde", callback_data: `C_FILTER_ALL` }]
+            ];
 
             const keyboard = { inline_keyboard };
-            await sendTelegramMessage(chatId, `👥 <b>Annuaire des Collaborateurs</b>\nSélectionnez un membre de l'équipe pour voir sa fiche :`, keyboard);
+            await sendTelegramMessage(chatId, `💼 <b>Annuaire des Collaborateurs</b>\nChoisissez la structure à consulter :`, keyboard);
             return;
         }
 
