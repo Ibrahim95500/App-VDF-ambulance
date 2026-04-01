@@ -102,7 +102,7 @@ export async function handleUserCommand(chatId: string | number, text: string, u
             }
             
             const collab = await prisma.user.findMany({
-                where: { isArchived: false, NOT: { roles: { hasSome: ['ADMIN'] } } },
+                where: { isActive: true, NOT: { roles: { hasSome: ['ADMIN'] } } },
                 select: { id: true, firstName: true, lastName: true },
                 orderBy: { firstName: 'asc' }
             });
