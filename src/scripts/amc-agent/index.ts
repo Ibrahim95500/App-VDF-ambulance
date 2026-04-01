@@ -88,38 +88,31 @@ async function startAgent() {
       if (isLoginPage) {
         console.log("🔒 Page de login détectée, authentification en cours...")
         
-        // Petite pause stratégique avant d'agir, certains sites ASP.net effacent les champs au chargement
+        // Petite pause stratégique avant d'agir
         console.log("Attente 3s que la page se stabilise...")
         await new Promise(r => setTimeout(r, 3000))
         
-        console.log(`Injection furtive: User=${AMC_USERNAME} / Pass=${"*".repeat(AMC_PASSWORD.length)}`)
-        await page.evaluate((user, pass) => {
-           // On force l'écriture des valeurs directement dans le code source de la page (100% infaillible)
-           const loginBox = document.getElementById('ctl00_Login') as HTMLInputElement;
-           const passBox = document.getElementById('ctl00_Password') as HTMLInputElement;
-           
-           if (loginBox) {
-               loginBox.value = user;
-               // On déclenche manuellement les événements pour tromper Angular/React/ASP si besoin
-               loginBox.dispatchEvent(new Event('input', { bubbles: true }));
-               loginBox.dispatchEvent(new Event('change', { bubbles: true }));
-           }
-           if (passBox) {
-               passBox.value = pass;
-               passBox.dispatchEvent(new Event('input', { bubbles: true }));
-               passBox.dispatchEvent(new Event('change', { bubbles: true }));
-           }
-           
-           // Le fameux bouton est un lien javascript, on force son exécution locale par doPostBack natif
-           // @ts-ignore
-           if (typeof __doPostBack === 'function') {
-               // @ts-ignore
-               __doPostBack('ctl00$ValiderButton', '');
-           } else {
-               const btn = document.getElementById('ctl00_ValiderButton');
-               if (btn) btn.click();
-           }
-        }, AMC_USERNAME, AMC_PASSWORD);
+        console.log(`Frappe native des identifiants au clavier... User=${AMC_USERNAME}`)
+        
+        // On clique et on vide le champ au cas où
+        await page.click('#ctl00_Login', { clickCount: 3 });
+        await page.keyboard.press('Backspace');
+        // On tape natifement, comme un humain (delay 50ms par touche)
+        await page.type('#ctl00_Login', AMC_USERNAME, { delay: 50 });
+        
+        await page.click('#ctl00_Password', { clickCount: 3 });
+        await page.keyboard.press('Backspace');
+        await page.type('#ctl00_Password', AMC_PASSWORD, { delay: 50 });
+        
+        console.log("Clic asynchrone sur le bouton avec Puppeteer API...")
+        // Au lieu d'injecter du code JS, on dit à Puppeteer de chercher et cliquer sur l'élément <a> exactement
+        await Promise.all([
+             page.waitForNavigation({ waitUntil: "networkidle2", timeout: 15000 }).catch(() => console.log("Navigation Ajax Catch")),
+             page.evaluate(() => {
+                 const btn = document.getElementById('ctl00_ValiderButton');
+                 if(btn) btn.click();
+             })
+        ]);
         
         try {
           await page.waitForNavigation({ waitUntil: "networkidle2", timeout: 8000 })
