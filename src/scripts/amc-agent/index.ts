@@ -63,68 +63,69 @@ async function startAgent() {
   )
 
   try {
-    // 1. Navigation Initiale et Login
+    // 1. Navigation Initiale
     console.log("📍 Accès à la page cible...")
     await page.goto(AMC_URL, { waitUntil: "networkidle2" })
-    
-    // Vérifier si on est redirigé vers la page de login (ce qui est probable au premier accès)
-    const isLoginPage = await page.$('input[type="password"]') !== null
-    
-    if (isLoginPage) {
-      console.log("🔒 Page de login détectée, authentification en cours...")
-      // IMPORTANT : Il faudra ajuster ces sélecteurs 'id' selon le vrai HTML de la page de login Atout Majeur
-      const usernameInputDesc = 'input[id*="Login"], input[name*="Login"], input[id*="Utilisateur"], input[type="text"]'
-      const passInputDesc = 'input[type="password"]'
-      
-      await page.waitForSelector(passInputDesc, { timeout: 5000 })
-      
-      const usernameInputs = await page.$$(usernameInputDesc)
-      if (usernameInputs.length > 0) {
-        await usernameInputs[0].type(AMC_USERNAME)
-      }
-      
-      await page.type(passInputDesc, AMC_PASSWORD)
-      
-      // On cherche un bouton de type submit
-      // On clique et on attend que l'interface se mette à jour
-      await page.click('input[type="submit"], button[type="submit"]')
-      
-      try {
-        // Parfois la page ne navigue pas (AJAX), donc on met un petit timeout de 5s pour essayer de capter l'événement sans planter
-        await page.waitForNavigation({ waitUntil: "networkidle2", timeout: 5000 })
-      } catch (e) {
-        console.log("⚠️ (L'authentification utilise de l'AJAX ou est un peu lente, on continue...)")
-      }
-      
-      // Petite pause pour être sûr
-      await new Promise(r => setTimeout(r, 4000))
-      console.log("✅ Authentification réussie.")
-    }
-
-    // On s'assure qu'on est bien sur la page à traiter
-    if (!page.url().includes("TransporteurAtraiter")) {
-      await page.goto(AMC_URL, { waitUntil: "networkidle2" })
-    }
 
     console.log("⏳ Début de la boucle de surveillance (15s)...")
     await sendTelegramAlert("👁️ L'Agent AMC (Espion) vient de démarrer la surveillance du PRT.")
 
     // 2. Boucle Principale
     while (true) {
-      console.log(`[${new Date().toLocaleTimeString()}] Rafraîchissement de la page...`)
+      // Recharger la page si on est déjà supposément connecté
+      if (!page.url().includes("Login")) {
+        console.log(`[${new Date().toLocaleTimeString()}] Rafraîchissement de la page...`)
+        try {
+          await page.reload({ waitUntil: "networkidle2", timeout: 15000 })
+        } catch(e) {
+          console.log("Erreur de rafraichissement, on continue quand même.")
+        }
+      }
       
-      // Recharger la page (ou on pourrait simuler un clic sur "Actualiser" si c'est de l'AJAX)
-      await page.reload({ waitUntil: "networkidle2" })
+      // -- VÉRIFICATION SI DÉCONNECTÉ --
+      const isLoginPage = (await page.$('input[type="password"]')) !== null
+      
+      if (isLoginPage) {
+        console.log("🔒 Page de login détectée, authentification en cours...")
+        const usernameInputDesc = 'input[id*="Login"], input[name*="Login"], input[id*="Utilisateur"], input[type="text"]'
+        const passInputDesc = 'input[type="password"]'
+        
+        await page.waitForSelector(passInputDesc, { timeout: 5000 })
+        
+        const usernameInputs = await page.$$(usernameInputDesc)
+        if (usernameInputs.length > 0) {
+          await usernameInputs[0].click({ clickCount: 3 })
+          await usernameInputs[0].type(AMC_USERNAME)
+        }
+        
+        await page.click(passInputDesc, { clickCount: 3 })
+        await page.type(passInputDesc, AMC_PASSWORD)
+        
+        console.log("Frappe de la touche ENTRÉE...")
+        await page.keyboard.press("Enter")
+        
+        try {
+          await page.waitForNavigation({ waitUntil: "networkidle2", timeout: 8000 })
+        } catch (e) {
+          console.log("⚠️ (L'authentification utilise de l'AJAX ou est un peu lente, on continue...)")
+        }
+        
+        await new Promise(r => setTimeout(r, 4000))
+        console.log("✅ Authentification terminée.")
+
+        // Redirection forcée vers la page Atraiter si ce n'est pas le cas
+        if (!page.url().includes("TransporteurAtraiter")) {
+           await page.goto(AMC_URL, { waitUntil: "networkidle2" })
+        }
+        continue; // On repart au début de la boucle pour un check propre
+      }
       
       // 3. Analyse de la page
-      // On cherche des mots-clés typiques ou on analyse le tableau.
-      // Hypothèse : S'il y a une course, il y a un bouton avec "Accepter", "Prendre", ou on trouve des dates.
-      // Comme on ne connait pas le HTML, on va vérifier le contenu global
-      
       const pageText = await page.evaluate(() => document.body.innerText)
-      const hasRienAtraiter = pageText.includes("Auncun transport à traiter") || 
-                              pageText.includes("Aucun résultat") || 
-                              pageText.includes("0 course")
+      // La détection ultra stricte basée sur la capture
+      const hasRienAtraiter = pageText.includes("Demandes en attente (0)") || 
+                              pageText.includes("Aucune donnée disponible dans le tableau") ||
+                              pageText.includes("Aucun résultat")
 
       if (!hasRienAtraiter) {
          // Il y a PEUT ÊTRE une course !

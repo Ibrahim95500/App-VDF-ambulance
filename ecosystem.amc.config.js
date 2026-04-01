@@ -5,6 +5,7 @@ module.exports = {
       script: "node_modules/.bin/tsx",
       args: "src/scripts/amc-agent/index.ts",
       instances: 1,
+      exec_mode: "fork",
       autorestart: true,
       watch: false,
       max_memory_restart: "1G", // Relance si la mémoire dépasse 1Go (Puppeteer peut être gourmand)
