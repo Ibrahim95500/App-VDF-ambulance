@@ -1,28 +1,72 @@
 import puppeteer from "puppeteer"
 import dotenv from "dotenv"
 import path from "path"
+import fs from "fs"
+import TelegramBot from "node-telegram-bot-api"
+import { PrismaClient } from "@prisma/client"
 
 // Configuration
 dotenv.config({ path: path.resolve(process.cwd(), ".env.local") })
 dotenv.config()
 
+const prisma = new PrismaClient()
+
 const AMC_USERNAME = process.env.AMC_USERNAME || process.env.AMC_ID || "VDF"
-const AMC_PASSWORD = process.env.AMC_PASSWORD || "Jordan95500!" // Récupéré de ton prompt !
+const AMC_PASSWORD = process.env.AMC_PASSWORD || "Jordan95500!" 
 const AMC_URL = "https://transportpatient.fr/Transport/TransporteurAtraiter.aspx?ModuleID=24"
 
 // Configuration Telegram Forcée pour BotPRTScrap (Mode Broadcast)
 const TELEGRAM_BOT_TOKEN = "8648311380:AAGZA5FOqAJ1BE78o96RH4R1_eHCLxkAefs"
-const TELEGRAM_CHAT_IDS = ["1634444351", "8679052160", "8457900796", "6171035866"] // Ibrahim, VDF, Collègue 1, Collègue 2 (JR)
+const TELEGRAM_CHAT_IDS = ["1634444351", "8679052160", "8457900796", "6171035866"] 
 
-async function sendTelegramAlert(message: string, imageBuffer?: Buffer) {
-  if (!TELEGRAM_BOT_TOKEN || TELEGRAM_CHAT_IDS.length === 0) {
-    console.warn("⚠️ Telegram non configuré, alerte ignorée.")
-    return
-  }
+// Écouteur Interactif Telegram
+const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true })
+const manualClicks = new Set<string>()
+const alertedCourses = new Set<string>()
 
+bot.on('callback_query', (query) => {
+    if (query.data && query.data.startsWith('ACCEPT_')) {
+        const courseId = query.data.replace('ACCEPT_', '')
+        manualClicks.add(courseId)
+        console.log(`[TELEGRAM] Demande manuelle reçue pour sniper la course ${courseId} !`)
+        
+        bot.answerCallbackQuery(query.id, { text: "✅ Ordre reçu ! Dès le prochain balayage (15s max), je l'attrape s'il est encore là ! 🚀", show_alert: true })
+        
+        if (query.message) {
+            bot.editMessageReplyMarkup({ inline_keyboard: [[{ text: `⏳ En cours de sniper pour la course ${courseId}...`, callback_data: 'WAIT' }]] }, { chat_id: query.message.chat.id, message_id: query.message.message_id })
+        }
+    }
+})
+
+async function saveLog(status: string, buffer: Buffer | null, depart?: string, arrivee?: string, num?: string) {
+    if (status === "ignored" || status === "unknown") return; 
+    try {
+        let imageUrl = null;
+        if (buffer) {
+            const filename = `${Date.now()}_${num || 'course'}.png`;
+            const publicDir = path.join(process.cwd(), 'public', 'uploads', 'sniper');
+            if (!fs.existsSync(publicDir)) fs.mkdirSync(publicDir, { recursive: true });
+            fs.writeFileSync(path.join(publicDir, filename), buffer);
+            imageUrl = `/uploads/sniper/${filename}`;
+        }
+        await prisma.sniperLog.create({
+            data: {
+                depart: depart || "Inconnu",
+                arrivee: arrivee || "Inconnu",
+                status: status,
+                imageUrl: imageUrl,
+                datePec: new Date().toLocaleDateString('fr-FR'),
+                heurePec: new Date().toLocaleTimeString('fr-FR')
+            }
+        });
+    } catch(e) {
+        console.error("❌ Erreur sauvegarde DB Prisma :", e);
+    }
+}
+
+async function sendTelegramAlert(message: string, imageBuffer?: Buffer, courseId?: string) {
+  if (!TELEGRAM_BOT_TOKEN || TELEGRAM_CHAT_IDS.length === 0) return
   const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`
-
-  // On envoie le message/photo à TOUS les collaborateurs enregistrés
   for (const chatId of TELEGRAM_CHAT_IDS) {
       try {
         if (imageBuffer) {
@@ -31,7 +75,11 @@ async function sendTelegramAlert(message: string, imageBuffer?: Buffer) {
           formData.append("photo", new Blob([imageBuffer], { type: "image/png" }), "screenshot.png")
           formData.append("caption", message)
           formData.append("parse_mode", "Markdown")
-
+          if (courseId) {
+             formData.append("reply_markup", JSON.stringify({
+                 inline_keyboard: [[{ text: "✅ Accepter MANUELLEMENT", callback_data: `ACCEPT_${courseId}` }]]
+             }))
+          }
           await fetch(url, { method: "POST", body: formData })
         } else {
           const textUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`
@@ -42,19 +90,18 @@ async function sendTelegramAlert(message: string, imageBuffer?: Buffer) {
           })
         }
       } catch (err) {
-        console.error(`❌ Erreur lors de l'envoi Telegram au chat ${chatId}:`, err)
+        console.error(`❌ Erreur Telegram au chat ${chatId}:`, err)
       }
   }
 }
 
-// ============================================
-// 🎯 FONCTION SNIPER : VALIDATION ÉCLAIR
-// ============================================
-async function snipeCourse(page: any): Promise<{ buffer: Buffer | null, status: string }> {
+async function snipeCourse(page: any): Promise<{ buffer: Buffer | null, status: string, num?: string, depart?: string, arrivee?: string }> {
     console.log("🎯 DÉBUT DU SNIPING ! Évaluation Chirurgicale des courses...")
+    const manualClicksArray = Array.from(manualClicks);
+    const alertedCoursesArray = Array.from(alertedCourses);
     
-    // Étape 1: Évaluer les lignes du tableau et filtrer "Gonesse -> Villes autorisées"
-    const clicked = await page.evaluate(() => {
+    // Étape 1: Évaluer les lignes du tableau et filtrer
+    const extraction = await page.evaluate((manualIds: string[], alertedIds: string[]) => {
         const allowedArrivals = [
             "gonesse", "villiers le bel", "arnouville", "sarcelles", "garges", 
             "louvres", "goussainville", "fontenay", "bouqueval", "ecouen", 
@@ -62,73 +109,85 @@ async function snipeCourse(page: any): Promise<{ buffer: Buffer | null, status: 
             "tremblay", "dugny", "bonneuil"
         ];
         
-        let didClick = false;
+        let result = { clicked: false, isManual: false, num: "", departText: "", arriveeText: "", foundNotVip: false };
         
-        // On récupère les colonnes du tableau
         const headers = Array.from(document.querySelectorAll('th'));
         const departIdx = headers.findIndex(th => th.innerText.toLowerCase().includes('départ'));
         const arriveeIdx = headers.findIndex(th => th.innerText.toLowerCase().includes('arrivée'));
+        const nIdx = headers.findIndex(th => th.innerText.toLowerCase() === 'n°');
         
         const rows = document.querySelectorAll('tr');
         for (let row of rows) {
             const acceptBtn = row.querySelector('input[type="image"][src*="valider"], img[src*="valider"], img[src*="check"], a[title*="accepter"]');
             
-            if (acceptBtn && departIdx >= 0 && arriveeIdx >= 0) {
+            if (acceptBtn && departIdx >= 0 && arriveeIdx >= 0 && nIdx >= 0) {
                 const tds = row.querySelectorAll('td');
-                if (tds.length > Math.max(departIdx, arriveeIdx)) {
-                    const departText = tds[departIdx].innerText.toLowerCase();
-                    const arriveeText = tds[arriveeIdx].innerText.toLowerCase();
+                if (tds.length > Math.max(departIdx, arriveeIdx, nIdx)) {
+                    result.departText = tds[departIdx].innerText.trim();
+                    result.arriveeText = tds[arriveeIdx].innerText.trim();
+                    result.num = tds[nIdx].innerText.trim();
                     
-                    // RÈGLE MÉTIER STRICTE :
-                    const isGonesseDepart = departText.includes('gonesse');
-                    const isAllowedArrivee = allowedArrivals.some(city => arriveeText.includes(city));
+                    const isGonesseDepart = result.departText.toLowerCase().includes('gonesse');
+                    const isAllowedArrivee = allowedArrivals.some(city => result.arriveeText.toLowerCase().includes(city));
                     
-                    if (isGonesseDepart && isAllowedArrivee) {
-                        // ON ACCEPTE !! Pêche à la ligne validée !
+                    const isVIP = isGonesseDepart && isAllowedArrivee;
+                    const isManualTriggered = manualIds.includes(result.num);
+
+                    if (isVIP || isManualTriggered) {
                         if (acceptBtn.tagName === 'IMG' && acceptBtn.parentElement && acceptBtn.parentElement.tagName === 'A') {
                             acceptBtn.parentElement.click();
                         } else {
                             (acceptBtn as HTMLElement).click();
                         }
-                        didClick = true;
-                        break; // On tire sur une seule course à la fois
+                        result.clicked = true;
+                        result.isManual = isManualTriggered;
+                        break; 
+                    } else {
+                        // C'est pas VIP
+                        // On signale si on ne l'a pas déjà fait
+                        if (!alertedIds.includes(result.num)) {
+                            result.foundNotVip = true;
+                            break; 
+                        }
                     }
                 }
             }
         }
-        return didClick;
-    });
+        return result;
+    }, manualClicksArray, alertedCoursesArray);
 
-    if (!clicked) {
-        console.log("❌ Aucune course ne respecte les conditions (Départ Gonesse vers notre Zone). On ignore.");
+    if (extraction.isManual) {
+        manualClicks.delete(extraction.num); // Reset memory
+    }
+
+    if (!extraction.clicked) {
+        if (extraction.foundNotVip) {
+            alertedCourses.add(extraction.num); // Ne pas spammer à la prochaine boucle
+            const buffer = await page.screenshot({ fullPage: true }) as Buffer;
+            return { buffer, status: "ignored_not_vip", num: extraction.num, depart: extraction.departText, arrivee: extraction.arriveeText };
+        }
         return { buffer: null, status: "ignored" };
     }
     
     console.log("✅ Clic sur la course effectué ! Attente de l'ouverture du Pop-up AJAX...");
-    
-    // Étape 2: Attendre un court instant que le Pop-up Modal ASP.NET s'affiche
     await new Promise(r => setTimeout(r, 2000)); 
     
     // Étape 3: Analyser le pop-up, lire l'heure voulue, et remplir les champs
-    console.log("🏎️ Paramétrage du pop-up (Heure, VDF1, VDF2) et Validation...");
     const validationClicked = await page.evaluate(() => {
-        // --- A. Trouver l'heure désirée par le service ---
         const bodyText = document.body.innerText;
-        // On cherche : "Heure de départ souhaitée par l'établissement : 14:00"
         const timeMatch = bodyText.match(/souhait[eé]e.*?(\d{2}:\d{2})/i) || bodyText.match(/à\s*(\d{2}:\d{2})/i);
-        let targetTime = "12:00"; // Fallback si raté
+        let targetTime = "12:00"; 
         if (timeMatch && timeMatch[1]) {
             targetTime = timeMatch[1];
         }
 
-        // Helper pour trouver un input/select basé sur un bout de texte proche (label)
         const getElByLabel = (txt: string, tag: string) => {
             const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
             let node;
             while (node = walker.nextNode()) {
                 if (node.nodeValue && node.nodeValue.toLowerCase().includes(txt.toLowerCase())) {
                     const parent = node.parentElement;
-                    if (parent && parent.getBoundingClientRect().width > 0) { // Visible
+                    if (parent && parent.getBoundingClientRect().width > 0) { 
                         let el = parent.nextElementSibling?.querySelector(tag) || parent.parentElement?.querySelector(tag);
                         if (el) return el;
                     }
@@ -137,7 +196,6 @@ async function snipeCourse(page: any): Promise<{ buffer: Buffer | null, status: 
             return null;
         };
         
-        // --- B. Remplir Heure de PEC ---
         const timeInput = getElByLabel('Heure de PEC', 'input');
         if (timeInput) {
             (timeInput as HTMLInputElement).value = targetTime;
@@ -145,7 +203,6 @@ async function snipeCourse(page: any): Promise<{ buffer: Buffer | null, status: 
             timeInput.dispatchEvent(new Event('change', { bubbles: true }));
         }
         
-        // --- C. Remplir Chauffeur et Equipier ---
         const chauffeurSel = getElByLabel('Chauffeur', 'select');
         const equipierSel = getElByLabel('Equipier', 'select');
         
@@ -158,24 +215,20 @@ async function snipeCourse(page: any): Promise<{ buffer: Buffer | null, status: 
                     return;
                 }
             }
-            // Fallback: 1er element utilisable
             if (sel.options.length > 1) {
                 sel.selectedIndex = 1;
                 sel.dispatchEvent(new Event('change', { bubbles: true }));
             }
         };
 
-        // Règles métiers demandées par le chef (Termes exacts)
         setSelect(chauffeurSel, 'AMBU VDF1');
         setSelect(equipierSel, 'AMBU VDF2');
         
-        // --- D. Cliquer sur le Bouton Vert Valider ---
         let buttons = Array.from(document.querySelectorAll('input[type="submit"], button, a, input[type="button"]'));
         let submitBtn = buttons.find(b => {
              let text = ((b as HTMLInputElement).value || b.textContent || b.innerText || '').toLowerCase();
              let val = b.getAttribute('value') || '';
              const rect = b.getBoundingClientRect();
-             // Le bouton vert final visible dans le dom
              return rect.width > 0 && rect.height > 0 && (text.includes('valider') || val.toLowerCase().includes('valider'));
         });
         
@@ -193,116 +246,77 @@ async function snipeCourse(page: any): Promise<{ buffer: Buffer | null, status: 
     });
     
     if (validationClicked) {
-        console.log("✅ Bouton 'Valider' final cliqué ! Attente de confirmation du serveur...");
         try {
-            // On attend le rechargement de la page qui confirme
             await page.waitForNavigation({ waitUntil: "networkidle2", timeout: 8000 });
         } catch(e) {}
-    } else {
-        console.log("⚠️ Le bouton final du Pop-up n'a pas été trouvé.");
-    }
+    } 
     
-    // --- ÉTAPE 4 : Vérifier s'il y a l'erreur jaune "Demande déjà acceptée par une autre société" ---
+    // --- ÉTAPE 4 : Vérifier s'il y a l'erreur ---
     const finalBuffer = await page.screenshot({ fullPage: true }) as Buffer;
     const isError = await page.evaluate(() => document.body.innerText.includes("déjà acceptée"));
     
     if (isError) {
-        return { buffer: finalBuffer, status: "failed_already_taken" };
+        return { buffer: finalBuffer, status: "failed_already_taken", num: extraction.num, depart: extraction.departText, arrivee: extraction.arriveeText };
     }
-    return { buffer: finalBuffer, status: validationClicked ? "success" : "unknown" };
+    return { buffer: finalBuffer, status: extraction.isManual ? "MANUAL_SUCCESS" : "SUCCESS", num: extraction.num, depart: extraction.departText, arrivee: extraction.arriveeText };
 }
 
 async function startAgent() {
-  console.log("🚀 Lancement de l'Agent AMC (Espion)...")
-  let browser: any = null;
-  let page: any = null;
-  let proofSent = false; // Variable pour éviter de spammer la preuve de connexion
-  
-  browser = await puppeteer.launch({
-    headless: true, // Lancer en arrière-plan
-    args: ["--no-sandbox", "--disable-setuid-sandbox"]
-  })
-  
-  page = await browser.newPage()
-  
-  // Fake User Agent pour éviter les blocages de base
-  await page.setUserAgent(
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-  )
+  console.log("🚀 Lancement de l'Agent AMC (Espion & Sniper Interactif)...")
+  let browser = null
 
   try {
-    // 1. Navigation Initiale
-    console.log("📍 Accès à la page cible...")
+    browser = await puppeteer.launch({
+      headless: true,
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    })
+    const page = await browser.newPage()
+    await page.setViewport({ width: 1280, height: 800 })
+
+    console.log("📡 Accès à la page cible...")
     await page.goto(AMC_URL, { waitUntil: "networkidle2" })
 
+    let proofSent = false;
+
     console.log("⏳ Début de la boucle de surveillance (15s)...")
-    await sendTelegramAlert("👁️ L'Agent AMC (Espion) vient de démarrer la surveillance du PRT.")
-
-    // 2. Boucle Principale
     while (true) {
-      // Recharger la page si on est déjà supposément connecté
-      if (!page.url().includes("Login")) {
-        console.log(`[${new Date().toLocaleTimeString()}] Rafraîchissement de la page...`)
-        try {
-          await page.reload({ waitUntil: "networkidle2", timeout: 15000 })
-        } catch(e) {
-          console.log("Erreur de rafraichissement, on continue quand même.")
-        }
-      }
-      
-      // -- VÉRIFICATION SI DÉCONNECTÉ --
-      const isLoginPage = (await page.$('input[type="password"]')) !== null
-      
-      if (isLoginPage) {
-        console.log("🔒 Page de login détectée, authentification en cours...")
-        
-        // Petite pause stratégique avant d'agir
-        console.log("Attente 3s que la page se stabilise...")
-        await new Promise(r => setTimeout(r, 3000))
-        
-        console.log(`Frappe native des identifiants au clavier... User=${AMC_USERNAME}`)
-        
-        // On clique et on vide le champ au cas où
-        await page.click('#ctl00_Login', { clickCount: 3 });
-        await page.keyboard.press('Backspace');
-        // On tape natifement, comme un humain (delay 50ms par touche)
-        await page.type('#ctl00_Login', AMC_USERNAME, { delay: 50 });
-        
-        await page.click('#ctl00_Password', { clickCount: 3 });
-        await page.keyboard.press('Backspace');
-        await page.type('#ctl00_Password', AMC_PASSWORD, { delay: 50 });
-        
-        console.log("Clic asynchrone sur le bouton avec Puppeteer API...")
-        // Au lieu d'injecter du code JS, on dit à Puppeteer de chercher et cliquer sur l'élément <a> exactement
-        await page.evaluate(() => {
-             const btn = document.getElementById('ctl00_ValiderButton');
-             if(btn) btn.click();
-        });
-        
-        await page.waitForNavigation({ waitUntil: "networkidle2", timeout: 15000 }).catch(() => console.log("Navigation Ajax Catch"));
-        
-        // Redirection forcée vers la page Atraiter si ce n'est pas le cas
-        if (!page.url().includes("TransporteurAtraiter")) {
-           console.log("Redirection vers la page cible...");
-           await page.goto(AMC_URL, { waitUntil: "networkidle2" }).catch(()=>console.log("Goto catch"));
-        }
-        continue; // On repart au début de la boucle pour un check propre
-      }
-      
-      // --- 3. Analyse de la page UNIQUEMENT si on est sur la bonne page ---
-      if (!page.url().includes("TransporteurAtraiter")) {
-          console.log("⚠️ Nous ne sommes pas sur la page des courses à traiter. L'analyse est suspendue en attendant la redirection.");
-          await new Promise(r => setTimeout(r, 5000));
-          continue; // On retourne au début de la boucle pour retenter la connexion/redirection
-      }
-      
       const pageText = await page.evaluate(() => document.body.innerText)
-      // La détection ultra stricte basée sur le texte
-      const hasRienAtraiter = pageText.includes("Demandes en attente (0)") || 
-                              pageText.includes("Aucune donnée disponible dans le tableau") ||
-                              pageText.includes("Aucun résultat")
 
-      // Envoi de la preuve si c'est la toute première fois
+      if (pageText.includes("Mot de passe :") || pageText.includes("Se connecter")) {
+        console.log("🔒 Page de login détectée, authentification en cours...")
+        await new Promise(r => setTimeout(r, 3000))
+
+        const identifierInput = await page.$('input[name*="UserName"], input[id*="UserName"]')
+        const passwordInput = await page.$('input[name*="Password"], input[id*="Password"]')
+
+        if (identifierInput && passwordInput) {
+           console.log(`Clavier magique... User=${AMC_USERNAME}`)
+           await identifierInput.type(AMC_USERNAME, { delay: 50 })
+           await passwordInput.type(AMC_PASSWORD, { delay: 50 })
+           await new Promise(r => setTimeout(r, 500))
+
+           const submitButton = await page.$('input[type="submit"], button[type="submit"], a.btn')
+           if (submitButton) {
+              console.log("Clic asynchrone sur le bouton avec Puppeteer API...")
+              await Promise.all([
+                  page.waitForNavigation({ waitUntil: "networkidle2", timeout: 15000 }).catch(() => {}),
+                  submitButton.click(),
+              ])
+           }
+        }
+        await new Promise(r => setTimeout(r, 5000))
+        continue
+      }
+
+      if (!page.url().includes("TransporteurAtraiter")) {
+          console.log("⚠️ Redirection temporaire...")
+          await new Promise(r => setTimeout(r, 5000))
+          continue; 
+      }
+
+      const hasRienAtraiter = pageText.includes("Aucune donnée disponible dans le tableau") ||
+                              pageText.includes("Aucun résultat");
+
       if (!proofSent && page.url().includes("TransporteurAtraiter")) {
           console.log("📸 Prise de la capture de preuve de connexion...")
           const proofBuffer = await page.screenshot({ fullPage: true }) as Buffer
@@ -313,37 +327,60 @@ async function startAgent() {
       if (!hasRienAtraiter) {
          console.log("🚨 ACTIVITÉ DÉTECTÉE SUR LE PRT !!")
          
-         // On lance le SNIPER
          const snipeResult = await snipeCourse(page);
          
          if (snipeResult.status === "ignored") {
              console.log("⏭️ Les courses ne matchent pas Gonesse / Villes cibles. Reprise de la veille.");
              await new Promise(r => setTimeout(r, 8000));
          } 
+         else if (snipeResult.status === "ignored_not_vip") {
+             console.log("⚠️ Course HORS VIP trouvée. Envoi du screenshot interactif Telegram.");
+             if (snipeResult.buffer) {
+                 await sendTelegramAlert(
+                     `⚠️ **COURSE HORS SECTEUR (Dép: ${snipeResult.depart} -> Arr: ${snipeResult.arrivee})**\nUne course a été détectée mais ne remplit pas les conditions VIP strictes.\nVeux-tu la forcer ?`, 
+                     snipeResult.buffer, 
+                     snipeResult.num
+                 );
+                 await saveLog("MANUAL_PENDING", snipeResult.buffer, snipeResult.depart, snipeResult.arrivee, snipeResult.num);
+             }
+             await new Promise(r => setTimeout(r, 5000));
+         }
          else if (snipeResult.status === "failed_already_taken") {
              console.log("❌ ZUT ! Course déjà acceptée par un concurrent.");
-             // On s'est fait avoir d'une milliseconde ! Message drôle pour le groupe
              if (snipeResult.buffer) {
-                 await sendTelegramAlert("🤬 **ARGH !! ON S'EST FAIT VOLER LA COURSE !**\nLe robot a tiré, la course était parfaite, mais une autre société de malades mentaux a cliqué 1 milliseconde avant nous ! Regarde l'écran de l'arbitre (erreur jaune). On se vengera sur la prochaine ! 🏎️💨", snipeResult.buffer)
+                 await sendTelegramAlert("🤬 **ARGH !! ON S'EST FAIT VOLER LA COURSE !**\nLe robot a tiré, la course était parfaite, mais une autre société de malades mentaux a cliqué 1 milliseconde avant nous ! Regarde l'écran de l'arbitre (erreur jaune).", snipeResult.buffer);
+                 await saveLog("FAILED_ALREADY_TAKEN", snipeResult.buffer, snipeResult.depart, snipeResult.arrivee, snipeResult.num);
              }
              await page.goto(AMC_URL, { waitUntil: "networkidle2" });
              await new Promise(r => setTimeout(r, 15000));
          }
-         else if (snipeResult.status === "success") {
-             if (snipeResult.buffer) await sendTelegramAlert("🎯 **MISSION ACCOMPLIE ! COURSE SNIPÉE !** 🚑💨\n- Heure PEC ajustée dynamiquement\n- VDF1 assigné (Chauffeur)\n- VDF2 assigné (Équipier)\nLa demande est à nous ! Voici le tableau des scores :", snipeResult.buffer);
-             // Attendre 2 minutes pour apprécier la victoire
+         else if (snipeResult.status === "SUCCESS") {
+             if (snipeResult.buffer) {
+                 await sendTelegramAlert("🎯 **MISSION ACCOMPLIE ! COURSE SNIPÉE (AUTO) !** 🚑💨\n- Heure PEC ajustée dynamiquement\n- VDF1 assigné (Chauffeur)\n- VDF2 assigné (Équipier)\nLa demande est à nous !", snipeResult.buffer);
+                 await saveLog("SUCCESS", snipeResult.buffer, snipeResult.depart, snipeResult.arrivee, snipeResult.num);
+             }
+             await new Promise(r => setTimeout(r, 120000));
+         }
+         else if (snipeResult.status === "MANUAL_SUCCESS") {
+             if (snipeResult.buffer) {
+                 await sendTelegramAlert("🎯 **COURSE VALIDÉE MANUELLEMENT AVEC SUCCÈS !** 🚑💨\nC'est dans la poche !", snipeResult.buffer);
+                 await saveLog("MANUAL_SUCCESS", snipeResult.buffer, snipeResult.depart, snipeResult.arrivee, snipeResult.num);
+             }
              await new Promise(r => setTimeout(r, 120000));
          }
          else {
-             if (snipeResult.buffer) await sendTelegramAlert("⚠️ **COMPORTEMENT IMPRÉVU PENDANT LE SNIPING...**\nLe robot a tenté de cliquer mais l'issue est incertaine. Veuillez vérifier manuellement ! 🚨", snipeResult.buffer);
+             if (snipeResult.buffer) await sendTelegramAlert("⚠️ **COMPORTEMENT IMPRÉVU PENDANT LE SNIPING...**", snipeResult.buffer);
              await new Promise(r => setTimeout(r, 30000));
          }
       } else {
-        // 5. Pause Humaine Aléatoire (Anti-Détection)
-        // Au lieu de 15s fixes, on fait entre 12s et 20s pour faire "humain"
         const randomDelay = Math.floor(Math.random() * (20000 - 12000 + 1) + 12000)
         console.log(`[Attente] Repos du robot pendant ${Math.floor(randomDelay/1000)}s pour être discret...`)
         await new Promise(r => setTimeout(r, randomDelay))
+        
+        console.log(`[${new Date().toLocaleTimeString()}] Rafraîchissement de la page...`)
+        try {
+           await page.reload({ waitUntil: "networkidle2" })
+        } catch(e){}
       }
     }
 
@@ -354,5 +391,4 @@ async function startAgent() {
   }
 }
 
-// Lancement automatique du processus
 startAgent()

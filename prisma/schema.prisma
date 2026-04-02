@@ -338,3 +338,14 @@ model Disponibility {
 
   user        User                @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
+
+model SniperLog {
+  id        String   @id @default(cuid())
+  depart    String?
+  arrivee   String?
+  datePec   String?
+  heurePec  String?
+  status    String   // "SUCCESS", "FAILED_ALREADY_TAKEN", "MANUAL_PENDING", "MANUAL_SUCCESS"
+  imageUrl  String?
+  createdAt DateTime @default(now())
+}
