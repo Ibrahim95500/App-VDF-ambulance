@@ -16,8 +16,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Search, Eye, Calendar as CalendarIcon, User, Ambulance, FileSpreadsheet, FileText, Download, ChevronLeft, ChevronRight } from "lucide-react"
 import * as XLSX from 'xlsx'
-import { jsPDF } from 'jspdf'
-import 'jspdf-autotable'
+import jsPDF from 'jspdf'
+import autoTable from 'jspdf-autotable'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { HistoryDetailsDialog } from "./history-details-dialog"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -119,7 +119,7 @@ export function HistoryTable({ data }: HistoryTableProps) {
         ]);
 
         doc.text("Historique de Regulation - VDF Ambulance", 14, 15);
-        doc.autoTable({
+        autoTable(doc, {
             head: [["Date", "Vehicule", "Chef", "Equipier", "Statut", "Valide C.", "Valide E."]],
             body: tableBody,
             startY: 20,
