@@ -22,8 +22,7 @@ export function Breadcrumb() {
       {items.map((item, index) => {
         const last = index === items.length - 1;
         const active = item.path ? isActive(item.path) : false;
-
-        const isDashboardTitle = item.title === 'Dashboard VDF Ambulance';
+        const isDashboardTitle = item.title === 'VDF Ambulance';
 
         return (
           <Fragment key={`root-${index}`}>
