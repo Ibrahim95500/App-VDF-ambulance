@@ -119,8 +119,9 @@ async function snipeCourse(page: any): Promise<{ buffer: Buffer | null, status: 
         let result = { clicked: false, isManual: false, num: "", departText: "", arriveeText: "", foundNotVip: false, allNums: [] as string[] };
         
         const headers = Array.from(document.querySelectorAll('th'));
-        const departIdx = headers.findIndex(th => th.innerText.toLowerCase().includes('départ'));
-        const arriveeIdx = headers.findIndex(th => th.innerText.toLowerCase().includes('arrivée'));
+        const normalizeText = (text: string) => text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        const departIdx = headers.findIndex(th => normalizeText(th.innerText).includes('depart'));
+        const arriveeIdx = headers.findIndex(th => normalizeText(th.innerText).includes('arrive'));
         const nIdx = headers.findIndex(th => th.innerText.toLowerCase() === 'n°');
         
         const rows = document.querySelectorAll('tr');
@@ -285,13 +286,14 @@ async function snipeCourse(page: any): Promise<{ buffer: Buffer | null, status: 
 
 async function startAgent() {
   console.log("🚀 Lancement de l'Agent AMC (Espion & Sniper Interactif)...")
-  let browser = null
-
-  try {
-    browser = await puppeteer.launch({
-      headless: true,
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
-    })
+  
+  while (true) {
+    let browser = null
+    try {
+      browser = await puppeteer.launch({
+        headless: true,
+        args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      })
     const page = await browser.newPage()
     await page.setViewport({ width: 1280, height: 800 })
 
@@ -302,7 +304,14 @@ async function startAgent() {
 
     console.log("⏳ Début de la boucle de surveillance (15s)...")
     while (true) {
-      const pageText = await page.evaluate(() => document.body.innerText)
+      let pageText = "";
+      try {
+          pageText = await page.evaluate(() => document.body.innerText);
+      } catch (e) {
+          console.log("⚠️ Navigation en cours gérée silencieusement...");
+          await new Promise(r => setTimeout(r, 2000));
+          continue;
+      }
 
       if (pageText.includes("Mot de passe :") || pageText.includes("Se connecter")) {
         console.log("🔒 Page de login détectée, authentification en cours...")
@@ -489,10 +498,14 @@ async function startAgent() {
       }
     }
 
-  } catch (error) {
-    console.error("❌ ERREUR FATALE:", error)
-    await sendTelegramAlert(`❌ **CRASH AMC AGENT** :\n\`${error}\``)
-    if (browser) await browser.close()
+    } catch (error) {
+      console.error("❌ ERREUR FATALE (Redémarrage dans 15s):", error)
+      await sendTelegramAlert(`🔄 **CRASH RELAYÉ - REDÉMARRAGE AUTOMATIQUE** :\n\`${error}\``)
+      if (browser) {
+          try { await browser.close() } catch(e){}
+      }
+      await new Promise(r => setTimeout(r, 15000))
+    }
   }
 }
 
