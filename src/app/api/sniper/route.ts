@@ -31,14 +31,14 @@ export async function POST(req: Request) {
         let attachmentObj = null;
         if (file) {
             const buffer = Buffer.from(await file.arrayBuffer());
-            const filename = `${Date.now()}_${num || 'course'}.png`;
-            const publicDir = path.join(process.cwd(), 'public', 'uploads', 'sniper');
-            if (!fs.existsSync(publicDir)) fs.mkdirSync(publicDir, { recursive: true });
-            fs.writeFileSync(path.join(publicDir, filename), buffer);
-            imageUrl = `/uploads/sniper/${filename}`;
+            
+            // Convert to Base64 to avoid Docker / Next.js static asset caching issues
+            const base64String = buffer.toString("base64");
+            imageUrl = `data:image/png;base64,${base64String}`;
+            
             attachmentObj = {
                 filename: `Course_${num || 'AMC'}.png`,
-                content: buffer
+                content: buffer // NodeJS Buffer for nodemailer
             };
         }
 
