@@ -293,23 +293,29 @@ async function startAgent() {
         console.log("🔒 Page de login détectée, authentification en cours...")
         await new Promise(r => setTimeout(r, 3000))
 
-        const identifierInput = await page.$('input[name*="UserName"], input[id*="UserName"]')
-        const passwordInput = await page.$('input[name*="Password"], input[id*="Password"]')
+        const identifierInput = await page.$('input[type="email"], input[type="text"], input[name*="user" i], input[id*="user" i], input[name*="login" i], input[id*="login" i]')
+        const passwordInput = await page.$('input[type="password"], input[name*="pass" i], input[id*="pass" i]')
 
         if (identifierInput && passwordInput) {
            console.log(`Clavier magique... User=${AMC_USERNAME}`)
+           await identifierInput.click({ clickCount: 3 })
            await identifierInput.type(AMC_USERNAME, { delay: 50 })
            await passwordInput.type(AMC_PASSWORD, { delay: 50 })
            await new Promise(r => setTimeout(r, 500))
 
-           const submitButton = await page.$('input[type="submit"], button[type="submit"], a.btn')
+           const submitButton = await page.$('input[type="submit"], button[type="submit"], a.btn, input[value*="connect" i], button')
            if (submitButton) {
               console.log("Clic asynchrone sur le bouton avec Puppeteer API...")
               await Promise.all([
                   page.waitForNavigation({ waitUntil: "networkidle2", timeout: 15000 }).catch(() => {}),
                   submitButton.click(),
               ])
+           } else {
+              console.log("❌ Bouton Valider introuvable, on simule l'appui sur ENTREE !")
+              await passwordInput.press('Enter');
            }
+        } else {
+           console.log("❌ ERREUR : Je vois le texte de connexion, mais je ne trouve pas les cases HTML pour taper !")
         }
         await new Promise(r => setTimeout(r, 5000))
         continue
