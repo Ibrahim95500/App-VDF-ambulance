@@ -14,7 +14,7 @@ const AMC_URL = "https://transportpatient.fr/Transport/TransporteurAtraiter.aspx
 
 // Configuration Telegram Forcée pour BotPRTScrap (Mode Broadcast)
 const TELEGRAM_BOT_TOKEN = "8648311380:AAGZA5FOqAJ1BE78o96RH4R1_eHCLxkAefs"
-const TELEGRAM_CHAT_IDS = ["1634444351", "8679052160", "8457900796", "6171035866"] 
+const TELEGRAM_CHAT_IDS = ["1634444351", "8679052160", "8457900796", "6171035866", "8744510527"] 
 
 // Écouteur Interactif Telegram
 const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true })
