@@ -88,6 +88,11 @@ export const MENU_SIDEBAR: MenuConfig = [
     icon: Siren,
     path: '/dashboard/rh/regulation',
   },
+  {
+    title: 'Applet PRT',
+    icon: Zap,
+    path: '/dashboard/rh/sniper-logs',
+  },
   { heading: 'Mes Démarches' },
   {
     title: 'Mon Espace VDF',
