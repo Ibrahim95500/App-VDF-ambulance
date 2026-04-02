@@ -3,13 +3,10 @@ import dotenv from "dotenv"
 import path from "path"
 import fs from "fs"
 import TelegramBot from "node-telegram-bot-api"
-import { PrismaClient } from "@prisma/client"
 
 // Configuration
 dotenv.config({ path: path.resolve(process.cwd(), ".env.local") })
 dotenv.config()
-
-const prisma = new PrismaClient()
 
 const AMC_USERNAME = process.env.AMC_USERNAME || process.env.AMC_ID || "VDF"
 const AMC_PASSWORD = process.env.AMC_PASSWORD || "Jordan95500!" 
@@ -41,26 +38,23 @@ bot.on('callback_query', (query) => {
 async function saveLog(status: string, buffer: Buffer | null, depart?: string, arrivee?: string, num?: string) {
     if (status === "ignored" || status === "unknown") return; 
     try {
-        let imageUrl = null;
+        const formData = new FormData();
+        formData.append("status", status);
+        if (depart) formData.append("depart", depart);
+        if (arrivee) formData.append("arrivee", arrivee);
+        if (num) formData.append("num", num);
+        
         if (buffer) {
-            const filename = `${Date.now()}_${num || 'course'}.png`;
-            const publicDir = path.join(process.cwd(), 'public', 'uploads', 'sniper');
-            if (!fs.existsSync(publicDir)) fs.mkdirSync(publicDir, { recursive: true });
-            fs.writeFileSync(path.join(publicDir, filename), buffer);
-            imageUrl = `/uploads/sniper/${filename}`;
+            formData.append("image", new Blob([new Uint8Array(buffer)], { type: "image/png" }), "screenshot.png");
         }
-        await prisma.sniperLog.create({
-            data: {
-                depart: depart || "Inconnu",
-                arrivee: arrivee || "Inconnu",
-                status: status,
-                imageUrl: imageUrl,
-                datePec: new Date().toLocaleDateString('fr-FR'),
-                heurePec: new Date().toLocaleTimeString('fr-FR')
-            }
+        
+        // Envoi au NextJS local qui a accès à sa propre base Docker isolée
+        await fetch("http://localhost:8080/api/sniper", {
+            method: "POST",
+            body: formData
         });
     } catch(e) {
-        console.error("❌ Erreur sauvegarde DB Prisma :", e);
+        console.error("❌ Erreur de transmission au Dashboard Web :", e);
     }
 }
 
