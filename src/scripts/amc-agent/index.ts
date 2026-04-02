@@ -293,41 +293,46 @@ async function startAgent() {
         console.log("🔒 Page de login détectée, authentification en cours...")
         await new Promise(r => setTimeout(r, 3000))
 
-        const identifierInput = await page.$('input[name*="UserName" i], input[id*="UserName" i], input[type="text"], input[name*="login" i]');
-        const passwordInput = await page.$('input[name*="Password" i], input[id*="Password" i], input[type="password"]');
+        // 1. Trouver avec une précision chirurgicale les éléments liés au formulaire de mot de passe
+        const passwordInput = await page.$('input[type="password"]');
+        const identifierInput = await page.evaluateHandle(() => {
+            const pass = document.querySelector('input[type="password"]') as HTMLInputElement;
+            if (pass && pass.form) {
+                return Array.from(pass.form.querySelectorAll('input')).filter((i: HTMLInputElement) => (i.type === 'text' || i.type === 'email') && i.getBoundingClientRect().width > 0).pop();
+            }
+            return null;
+        });
+        const submitButton = await page.evaluateHandle(() => {
+            const pass = document.querySelector('input[type="password"]') as HTMLInputElement;
+            if (pass && pass.form) {
+                return pass.form.querySelector('input[type="submit"], button[type="submit"], input[value="Se connecter" i]');
+            }
+            return null;
+        });
 
-        if (identifierInput && passwordInput) {
-            console.log(`Clavier magique... User=${AMC_USERNAME}`);
+        const idEl = identifierInput ? identifierInput.asElement() : null;
+        const btnEl = submitButton ? submitButton.asElement() : null;
+
+        if (idEl && passwordInput && btnEl) {
+            console.log(`Clavier magique (Sélecteur Chirurgical)... User=${AMC_USERNAME}`);
             
-            // Vidage propre des champs au cas où
-            await identifierInput.click({ clickCount: 3 });
+            await idEl.click({ clickCount: 3 });
             await page.keyboard.press('Backspace');
-            await identifierInput.type(AMC_USERNAME, { delay: 100 });
+            await idEl.type(AMC_USERNAME, { delay: 100 });
             
             await passwordInput.click({ clickCount: 3 });
             await page.keyboard.press('Backspace');
             await passwordInput.type(AMC_PASSWORD, { delay: 100 });
             
             await new Promise(r => setTimeout(r, 1000));
-
-            // On cible STRICTEMENT le bouton "Se connecter"
-            const submitButton = await page.$('input[value="Se connecter" i], input[name*="Login" i], input[type="submit"]');
-
-            if (submitButton) {
-                console.log("Clic sur le bouton 'Se connecter'...");
-                await Promise.all([
-                    page.waitForNavigation({ waitUntil: "networkidle2", timeout: 20000 }).catch(() => {}),
-                    submitButton.click(),
-                ]);
-            } else {
-                console.log("❌ Bouton Valider strict introuvable, appui sur ENTREE clavier !");
-                await Promise.all([
-                    page.waitForNavigation({ waitUntil: "networkidle2", timeout: 20000 }).catch(() => {}),
-                    page.keyboard.press('Enter')
-                ]);
-            }
+            console.log("Clic asynchrone sur le bouton Se connecter de ce formulaire...");
+            
+            await Promise.all([
+                page.waitForNavigation({ waitUntil: "networkidle2", timeout: 20000 }).catch(() => {}),
+                btnEl.click(),
+            ]);
         } else {
-            console.log("❌ ERREUR CATACLYSMIQUE : Cases de connexion introuvables !");
+            console.log("❌ ERREUR CATACLYSMIQUE : Impossible de localiser la boîte de login !");
         }
         
         await new Promise(r => setTimeout(r, 5000));
