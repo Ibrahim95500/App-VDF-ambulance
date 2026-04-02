@@ -85,17 +85,44 @@ export function SniperLogClient({ data }: { data: any[] }) {
     }, [data])
 
     return (
-        <div className="flex flex-col">
-            <TableActions
-                data={exportData}
-                onSearch={setSearchTerm}
-                onStatusChange={setStatusFilter}
-                onDateRangeChange={setDateRange}
-                statusOptions={statusOptions}
-                counts={filterCounts}
-                filename="historique_amc_prt"
-                pdfTitle="Historiqe des validations AMC/PRT"
-            />
+        <div className="flex flex-col gap-6">
+            {/* Custom Tab Buttons like Collaborators Table */}
+            <div className="flex flex-wrap items-center gap-4">
+                <button 
+                    onClick={() => setStatusFilter("ALL")}
+                    className={`px-4 py-2 rounded-xl border flex items-center gap-2 transition-all ${statusFilter === "ALL" ? "bg-slate-100 text-slate-800 border-slate-300 shadow-sm" : "bg-background text-muted-foreground border-border hover:bg-muted opacity-80"}`}
+                >
+                    <span className="font-black">{filterCounts.ALL}</span> Historique Complet
+                </button>
+                <button 
+                    onClick={() => setStatusFilter("SUCCESS")}
+                    className={`px-4 py-2 rounded-xl border flex items-center gap-2 transition-all ${statusFilter === "SUCCESS" ? "bg-green-50 text-green-700 border-green-200 shadow-sm" : "bg-background text-muted-foreground border-border hover:bg-muted"}`}
+                >
+                    <span className="font-black text-green-800">{filterCounts.SUCCESS}</span> Succès Auto VIP
+                </button>
+                <button 
+                    onClick={() => setStatusFilter("MANUAL_SUCCESS")}
+                    className={`px-4 py-2 rounded-xl border flex items-center gap-2 transition-all ${statusFilter === "MANUAL_SUCCESS" ? "bg-blue-50 text-blue-700 border-blue-200 shadow-sm" : "bg-background text-muted-foreground border-border hover:bg-muted"}`}
+                >
+                    <span className="font-black text-blue-800">{filterCounts.MANUAL_SUCCESS}</span> Succès Manuels
+                </button>
+                <button 
+                    onClick={() => setStatusFilter("FAILED_ALREADY_TAKEN")}
+                    className={`px-4 py-2 rounded-xl border flex items-center gap-2 transition-all ${statusFilter === "FAILED_ALREADY_TAKEN" ? "bg-red-50 text-red-700 border-red-200 shadow-sm" : "bg-background text-muted-foreground border-border hover:bg-muted"}`}
+                >
+                    <span className="font-black text-red-800">{filterCounts.FAILED_ALREADY_TAKEN}</span> Coupures (Déjà Pris)
+                </button>
+            </div>
+
+            <div className="border border-border rounded-xl p-6 bg-card">
+                <TableActions
+                    data={exportData}
+                    onSearch={setSearchTerm}
+                    onDateRangeChange={setDateRange}
+                    filename="historique_amc_prt"
+                    pdfTitle="Historique des validations AMC/PRT"
+                />
+            </div>
 
             {/* Mobile card view */}
             <div className="md:hidden border border-border rounded-xl overflow-hidden divide-y divide-border bg-card">

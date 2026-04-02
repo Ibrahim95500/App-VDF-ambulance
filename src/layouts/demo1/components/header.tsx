@@ -94,8 +94,10 @@ export function Header({ notificationsCount = 0 }: { notificationsCount?: number
           </div>
         </div>
 
-        {/* Main Content (Breadcrumbs) */}
-        {pathname.startsWith('/dashboard') && <Breadcrumb />}
+        {/* Main Content (Breadcrumbs) hidden on small mobile to avoid overlapping the burger menu */}
+        <div className="hidden md:flex flex-1 items-center px-4">
+          {pathname.startsWith('/dashboard') && <Breadcrumb />}
+        </div>
 
         {/* HeaderTopbar */}
         <div className="flex items-center gap-3">
