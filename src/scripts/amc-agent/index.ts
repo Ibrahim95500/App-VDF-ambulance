@@ -22,6 +22,16 @@ const manualClicks = new Set<string>()
 const alertedCourses = new Set<string>()
 const syncedAcceptedCourses = new Set<string>()
 
+bot.on('message', (msg) => {
+    const chatId = msg.chat.id
+    const text = msg.text || ""
+    console.log(`[TELEGRAM RADAR] Message reçu de ${msg.from?.first_name || 'Inconnu'} (ID: ${chatId}): ${text}`)
+    
+    if (text === '/start' || text.toLowerCase().includes('salut')) {
+        bot.sendMessage(chatId, `Salut ${msg.from?.first_name || ''} ! 🕵️‍♂️ L'Agent PRT t'a identifié.\n\nTon code d'identification unique est : ${chatId}\n\nTransmets vite ce code à l'administrateur (Ibrahim) pour qu'il te donne l'accès aux cibles AMC 🎯.`)
+    }
+})
+
 bot.on('callback_query', (query) => {
     if (query.data && query.data.startsWith('ACCEPT_')) {
         const courseId = query.data.replace('ACCEPT_', '')
