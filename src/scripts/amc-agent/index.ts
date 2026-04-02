@@ -142,11 +142,13 @@ async function snipeCourse(page: any): Promise<{ buffer: Buffer | null, status: 
                     const isManualTriggered = manualIds.includes(result.num);
 
                     if (isVIP || isManualTriggered) {
-                        if (acceptBtn.tagName === 'IMG' && acceptBtn.parentElement && acceptBtn.parentElement.tagName === 'A') {
-                            acceptBtn.parentElement.click();
-                        } else {
-                            (acceptBtn as HTMLElement).click();
-                        }
+                        setTimeout(() => {
+                            if (acceptBtn.tagName === 'IMG' && acceptBtn.parentElement && acceptBtn.parentElement.tagName === 'A') {
+                                acceptBtn.parentElement.click();
+                            } else {
+                                (acceptBtn as HTMLElement).click();
+                            }
+                        }, 100);
                         result.clicked = true;
                         result.isManual = isManualTriggered;
                         break; 
@@ -251,13 +253,15 @@ async function snipeCourse(page: any): Promise<{ buffer: Buffer | null, status: 
         });
         
         if (submitBtn) {
-            // @ts-ignore
-            if (submitBtn.tagName === 'A' && typeof __doPostBack === 'function' && submitBtn.id) {
+            setTimeout(() => {
                 // @ts-ignore
-                __doPostBack(submitBtn.id.replace(/_/g, '$'), '');
-            } else {
-                (submitBtn as HTMLElement).click();
-            }
+                if (submitBtn.tagName === 'A' && typeof __doPostBack === 'function' && submitBtn.id) {
+                    // @ts-ignore
+                    __doPostBack(submitBtn.id.replace(/_/g, '$'), '');
+                } else {
+                    (submitBtn as HTMLElement).click();
+                }
+            }, 100);
             return true;
         }
         return false;
