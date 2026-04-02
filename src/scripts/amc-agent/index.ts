@@ -106,7 +106,9 @@ async function snipeCourse(page: any): Promise<{ buffer: Buffer | null, status: 
             "gonesse", "villiers le bel", "arnouville", "sarcelles", "garges", 
             "louvres", "goussainville", "fontenay", "bouqueval", "ecouen", 
             "roissy", "saint brice", "saint-brice", "le thillay", "puiseux", 
-            "tremblay", "dugny", "bonneuil"
+            "tremblay", "dugny", "bonneuil", "vemars", "bellefontaine", "fosses",
+            "survilliers", "saint witz", "saint-witz", "luzarches", "chaumontel",
+            "vilaine sous bois", "jagny sous bois"
         ];
         
         let result = { clicked: false, isManual: false, num: "", departText: "", arriveeText: "", foundNotVip: false, allNums: [] as string[] };
