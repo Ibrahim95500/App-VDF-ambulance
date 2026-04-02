@@ -63,6 +63,7 @@ export async function getAvailablePersonnel(dateStr: string) {
             structure: true,
             oubliCount: true,
             isRegulateur: true,
+            roles: true,
             shift: true,
         },
         orderBy: {

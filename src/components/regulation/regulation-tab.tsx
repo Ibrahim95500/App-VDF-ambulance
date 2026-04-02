@@ -129,7 +129,7 @@ export function RegulationTab({ data, personnel, dateStr, onSuccess, globalAssig
                         <div className="space-y-1.5 flex-1 w-full">
                             <label className="text-sm font-bold opacity-70">Personne</label>
                             <Combobox
-                                options={personnel.filter(p => p.isRegulateur && !globalAssignedIds.has(p.id)).map(p => ({
+                                options={personnel.filter(p => (p.isRegulateur || p.roles?.includes('ADMIN')) && !globalAssignedIds.has(p.id)).map(p => ({
                                     value: p.id,
                                     label: `${p.lastName} ${p.firstName}`
                                 }))}
