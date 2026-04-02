@@ -50,12 +50,14 @@ async function saveLog(status: string, buffer: Buffer | null, depart?: string, a
         }
         
         // Envoi au NextJS local (127.0.0.1 pour forcer IPv4, car localhost fait planter Node 20)
-        await fetch("http://127.0.0.1:8080/api/sniper", {
+        console.log(`[Dashboard] Envoi du log ${status} pour la course ${num}...`);
+        const res = await fetch("http://127.0.0.1:8080/api/sniper", {
             method: "POST",
             body: formData
         });
+        console.log(`[Dashboard] Réponse serveur : ${res.status} ${res.statusText}`);
     } catch(e) {
-        console.error("❌ Erreur de transmission au Dashboard Web :");
+        console.error("❌ Erreur de transmission au Dashboard Web :", e);
     }
 }
 
@@ -395,10 +397,13 @@ async function startAgent() {
               return results;
           }, Array.from(syncedAcceptedCourses));
 
+          console.log(`[DEBUG HISTORIQUE] Elements recupérés du DOM : ${newHistory.length}`);
+
           if (newHistory.length > 0) {
               console.log(`📌 Nouvel historique détecté : ${newHistory.length} course(s)... historisation en cours !`);
               for (let hist of newHistory) {
                   syncedAcceptedCourses.add(hist.num);
+                  console.log(`-> Push de la course history ${hist.num} (${hist.depart} -> ${hist.arrivee})`);
                   // On enregistre dans le dashboard pour qu'ils soient visibles !
                   await saveLog("MANUAL_SUCCESS", null, hist.depart, hist.arrivee, hist.num);
               }
