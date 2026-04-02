@@ -293,41 +293,44 @@ async function startAgent() {
         console.log("🔒 Page de login détectée, authentification en cours...")
         await new Promise(r => setTimeout(r, 3000))
 
-        const successLog = await page.evaluate((user, pass) => {
-            let passInput = document.querySelector('input[type="password"]') as HTMLInputElement;
-            let userInput = document.querySelector('input[name*="user" i], input[id*="user" i], input[name*="login" i], input[name*="Login" i]') as HTMLInputElement;
+        const identifierInput = await page.$('input[name*="UserName" i], input[id*="UserName" i], input[type="text"], input[name*="login" i]');
+        const passwordInput = await page.$('input[name*="Password" i], input[id*="Password" i], input[type="password"]');
+
+        if (identifierInput && passwordInput) {
+            console.log(`Clavier magique... User=${AMC_USERNAME}`);
             
-            if (!userInput && passInput && passInput.form) {
-                userInput = Array.from(passInput.form.querySelectorAll('input')).find(i => i.type === 'text' || i.type === 'email') as HTMLInputElement;
-            }
+            // Vidage propre des champs au cas où
+            await identifierInput.click({ clickCount: 3 });
+            await page.keyboard.press('Backspace');
+            await identifierInput.type(AMC_USERNAME, { delay: 100 });
+            
+            await passwordInput.click({ clickCount: 3 });
+            await page.keyboard.press('Backspace');
+            await passwordInput.type(AMC_PASSWORD, { delay: 100 });
+            
+            await new Promise(r => setTimeout(r, 1000));
 
-            if (userInput && passInput) {
-                userInput.value = user;
-                passInput.value = pass;
-                
-                if (passInput.form) {
-                    let submitBtn = passInput.form.querySelector('input[type="submit"], button[type="submit"], a.btn') as HTMLElement;
-                    if (submitBtn && submitBtn.click) {
-                        submitBtn.click();
-                    } else {
-                        passInput.form.submit();
-                    }
-                    return true;
-                }
-            }
-            return false;
-        }, AMC_USERNAME, AMC_PASSWORD);
+            // On cible STRICTEMENT le bouton "Se connecter"
+            const submitButton = await page.$('input[value="Se connecter" i], input[name*="Login" i], input[type="submit"]');
 
-        if (successLog) {
-            console.log(`Clavier magique (Injection Rapide)... User=${AMC_USERNAME}`);
-            try {
-                await page.waitForNavigation({ waitUntil: "networkidle2", timeout: 15000 });
-            } catch(e) {}
+            if (submitButton) {
+                console.log("Clic sur le bouton 'Se connecter'...");
+                await Promise.all([
+                    page.waitForNavigation({ waitUntil: "networkidle2", timeout: 20000 }).catch(() => {}),
+                    submitButton.click(),
+                ]);
+            } else {
+                console.log("❌ Bouton Valider strict introuvable, appui sur ENTREE clavier !");
+                await Promise.all([
+                    page.waitForNavigation({ waitUntil: "networkidle2", timeout: 20000 }).catch(() => {}),
+                    page.keyboard.press('Enter')
+                ]);
+            }
         } else {
-            console.log("❌ Impossible de trouver les cases de connexion via le script injecté !");
+            console.log("❌ ERREUR CATACLYSMIQUE : Cases de connexion introuvables !");
         }
         
-        await new Promise(r => setTimeout(r, 5000))
+        await new Promise(r => setTimeout(r, 5000));
         continue
       }
 
