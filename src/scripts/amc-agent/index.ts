@@ -48,43 +48,35 @@ async function saveLog(status: string, buffer: Buffer | null, depart?: string, a
             formData.append("image", new Blob([new Uint8Array(buffer)], { type: "image/png" }), "screenshot.png");
         }
         
-        // Envoi au NextJS local qui a accès à sa propre base Docker isolée
-        await fetch("http://localhost:8080/api/sniper", {
+        // Envoi au NextJS local (127.0.0.1 pour forcer IPv4, car localhost fait planter Node 20)
+        await fetch("http://127.0.0.1:8080/api/sniper", {
             method: "POST",
             body: formData
         });
     } catch(e) {
-        console.error("❌ Erreur de transmission au Dashboard Web :", e);
+        console.error("❌ Erreur de transmission au Dashboard Web :");
     }
 }
 
 async function sendTelegramAlert(message: string, imageBuffer?: Buffer, courseId?: string) {
-  if (!TELEGRAM_BOT_TOKEN || TELEGRAM_CHAT_IDS.length === 0) return
-  const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`
+  if (!TELEGRAM_BOT_TOKEN || TELEGRAM_CHAT_IDS.length === 0) return;
   for (const chatId of TELEGRAM_CHAT_IDS) {
       try {
-        if (imageBuffer) {
-          const formData = new FormData()
-          formData.append("chat_id", chatId)
-          formData.append("photo", new Blob([new Uint8Array(imageBuffer)], { type: "image/png" }), "screenshot.png")
-          formData.append("caption", message)
-          formData.append("parse_mode", "Markdown")
+          const opts: any = { parse_mode: "Markdown" };
           if (courseId) {
-             formData.append("reply_markup", JSON.stringify({
-                 inline_keyboard: [[{ text: "✅ Accepter MANUELLEMENT", callback_data: `ACCEPT_${courseId}` }]]
-             }))
+              opts.reply_markup = {
+                  inline_keyboard: [[{ text: "✅ Accepter MANUELLEMENT", callback_data: `ACCEPT_${courseId}` }]]
+              };
           }
-          await fetch(url, { method: "POST", body: formData })
-        } else {
-          const textUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`
-          await fetch(textUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ chat_id: chatId, text: message, parse_mode: "Markdown" })
-          })
-        }
-      } catch (err) {
-        console.error(`❌ Erreur Telegram au chat ${chatId}:`, err)
+
+          if (imageBuffer) {
+              opts.caption = message;
+              await bot.sendPhoto(chatId, imageBuffer, opts, { filename: 'screenshot.png', contentType: 'image/png' });
+          } else {
+              await bot.sendMessage(chatId, message, opts);
+          }
+      } catch (err: any) {
+          console.error(`❌ Erreur Telegram au chat ${chatId}: ${err.message}`);
       }
   }
 }
