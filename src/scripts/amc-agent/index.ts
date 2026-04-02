@@ -109,7 +109,7 @@ async function snipeCourse(page: any): Promise<{ buffer: Buffer | null, status: 
             "tremblay", "dugny", "bonneuil"
         ];
         
-        let result = { clicked: false, isManual: false, num: "", departText: "", arriveeText: "", foundNotVip: false };
+        let result = { clicked: false, isManual: false, num: "", departText: "", arriveeText: "", foundNotVip: false, allNums: [] as string[] };
         
         const headers = Array.from(document.querySelectorAll('th'));
         const departIdx = headers.findIndex(th => th.innerText.toLowerCase().includes('départ'));
@@ -126,6 +126,7 @@ async function snipeCourse(page: any): Promise<{ buffer: Buffer | null, status: 
                     result.departText = tds[departIdx].innerText.trim();
                     result.arriveeText = tds[arriveeIdx].innerText.trim();
                     result.num = tds[nIdx].innerText.trim();
+                    result.allNums.push(result.num);
                     
                     const isGonesseDepart = result.departText.toLowerCase().includes('gonesse');
                     const isAllowedArrivee = allowedArrivals.some(city => result.arriveeText.toLowerCase().includes(city));
@@ -158,6 +159,16 @@ async function snipeCourse(page: any): Promise<{ buffer: Buffer | null, status: 
 
     if (extraction.isManual) {
         manualClicks.delete(extraction.num); // Reset memory
+    }
+
+    // Gérer les clics manuels sur des courses qui ont disparues (Trop tard !)
+    for (const mId of manualClicksArray) {
+        if (!extraction.allNums.includes(mId)) {
+            console.log(`❌ Course manuelle ${mId} disparue du DOM !`);
+            await sendTelegramAlert(`❌ **TROP TARD !**\nLa course n°${mId} a disparu de la plateforme entre ton clic et la vérification. Quelqu'un d'autre l'a prise.`);
+            manualClicks.delete(mId);
+            await saveLog("FAILED_ALREADY_TAKEN", null, "Disparue", "Disparue", mId);
+        }
     }
 
     if (!extraction.clicked) {
@@ -322,6 +333,15 @@ async function startAgent() {
           const proofBuffer = await page.screenshot({ fullPage: true }) as Buffer
           await sendTelegramAlert("📸 **PREUVE DE CONNEXION**\nL'Agent est bien à l'intérieur ! Voici le tableau de chasse vide que je surveille :", proofBuffer)
           proofSent = true;
+      }
+
+      if (hasRienAtraiter && manualClicks.size > 0) {
+          // Si le tableau est vide mais qu'on a cliqué sur un bouton Telegram en retard
+          for (const mId of Array.from(manualClicks)) {
+              await sendTelegramAlert(`❌ **TROP TARD !**\nTa demande pour la course n°${mId} est arrivée, mais le tableau est complètement vide actuellement.`);
+              manualClicks.delete(mId);
+              await saveLog("FAILED_ALREADY_TAKEN", null, "Disparue (Vide)", "Disparue (Vide)", mId);
+          }
       }
 
       if (!hasRienAtraiter) {
