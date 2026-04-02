@@ -10,6 +10,10 @@ export async function POST(req: Request) {
         const depart = formData.get("depart") as string;
         const arrivee = formData.get("arrivee") as string;
         const num = formData.get("num") as string;
+        const demandeur = formData.get("demandeur") as string;
+        const patient = formData.get("patient") as string;
+        const datePec = formData.get("datePec") as string;
+        const heurePec = formData.get("heurePec") as string;
         const file = formData.get("image") as File | null;
 
         let imageUrl = null;
@@ -24,12 +28,15 @@ export async function POST(req: Request) {
 
         await prisma.sniperLog.create({
             data: {
+                num: num || null,
+                demandeur: demandeur || null,
+                patient: patient || null,
                 depart: depart || "Inconnu",
                 arrivee: arrivee || "Inconnu",
                 status: status,
                 imageUrl: imageUrl,
-                datePec: new Date().toLocaleDateString('fr-FR'),
-                heurePec: new Date().toLocaleTimeString('fr-FR')
+                datePec: datePec || new Date().toLocaleDateString('fr-FR'),
+                heurePec: heurePec || new Date().toLocaleTimeString('fr-FR')
             }
         });
 

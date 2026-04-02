@@ -29,48 +29,59 @@ export function SniperLogClient({ data }: { data: any[] }) {
             <Table>
                 <TableHeader>
                     <TableRow>
-                        <TableHead>Date & Heure du Bot</TableHead>
+                        <TableHead>N°</TableHead>
+                        <TableHead>Date RDV</TableHead>
+                        <TableHead>Heure</TableHead>
+                        <TableHead>Demandeur</TableHead>
                         <TableHead>Départ</TableHead>
+                        <TableHead>Patient</TableHead>
                         <TableHead>Arrivée</TableHead>
-                        <TableHead>Statut du Snipe</TableHead>
-                        <TableHead className="text-right">Capture (Preuve)</TableHead>
+                        <TableHead>Statut</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
                     {data.length === 0 ? (
-                        <TableRow><TableCell colSpan={5} className="text-center py-8">L'historique est vide. Le bot n'a encore rien attrapé ou évalué.</TableCell></TableRow>
+                        <TableRow><TableCell colSpan={9} className="text-center py-8">L'historique est vide. Le bot n'a encore rien attrapé ou évalué.</TableCell></TableRow>
                     ) : data.map((log) => (
                         <TableRow key={log.id}>
-                            <TableCell className="font-medium whitespace-nowrap">
-                                {new Date(log.createdAt).toLocaleString('fr-FR', {
-                                    day: '2-digit', month: '2-digit', year: 'numeric',
-                                    hour: '2-digit', minute: '2-digit', second: '2-digit'
-                                })}
-                            </TableCell>
+                            <TableCell className="font-bold">{log.num || "-"}</TableCell>
+                            <TableCell className="whitespace-nowrap">{log.datePec || "-"}</TableCell>
+                            <TableCell className="whitespace-nowrap">{log.heurePec || "-"}</TableCell>
+                            <TableCell className="max-w-[150px] truncate" title={log.demandeur}>{log.demandeur || "-"}</TableCell>
                             <TableCell className="max-w-[200px] truncate" title={log.depart}>{log.depart}</TableCell>
+                            <TableCell className="max-w-[150px] truncate" title={log.patient}>{log.patient || "-"}</TableCell>
                             <TableCell className="max-w-[200px] truncate" title={log.arrivee}>{log.arrivee}</TableCell>
                             <TableCell>{getStatusBadge(log.status)}</TableCell>
                             <TableCell className="text-right">
-                                {log.imageUrl ? (
-                                    <Dialog>
-                                        <DialogTrigger asChild>
-                                            <button className="p-2 hover:bg-muted rounded-full transition-colors inline-flex justify-center items-center">
-                                                <Eye className="w-5 h-5 text-muted-foreground" />
-                                            </button>
-                                        </DialogTrigger>
-                                        <DialogContent className="max-w-4xl p-2 bg-black border-none">
-                                            <DialogHeader className="sr-only">
-                                                <DialogTitle>Capture de la course AMC</DialogTitle>
-                                            </DialogHeader>
-                                            <div className="flex justify-center bg-black">
-                                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                                <img src={log.imageUrl} alt="Preuve" className="max-h-[85vh] object-contain rounded-md" />
-                                            </div>
-                                        </DialogContent>
-                                    </Dialog>
-                                ) : (
-                                    <span className="text-muted-foreground text-xs italic">Aucune photo</span>
-                                )}
+                                <div className="flex justify-end items-center gap-2">
+                                    {log.num && (
+                                        <a href={`https://transportpatient.fr/Transport/ImpDemande.aspx?IDDemande=${log.num}`} target="_blank" rel="noreferrer" title="Voir sur AMC" className="p-2 hover:bg-muted rounded-full transition-colors inline-flex justify-center items-center">
+                                            <Eye className="w-5 h-5 text-blue-400" />
+                                        </a>
+                                    )}
+                                    {log.imageUrl && (
+                                        <Dialog>
+                                            <DialogTrigger asChild>
+                                                <button title="Preuve (Capture)" className="p-2 hover:bg-muted rounded-full transition-colors inline-flex justify-center items-center">
+                                                    <span className="text-lg">📸</span>
+                                                </button>
+                                            </DialogTrigger>
+                                            <DialogContent className="max-w-4xl p-2 bg-black border-none">
+                                                <DialogHeader className="sr-only">
+                                                    <DialogTitle>Capture de la course AMC</DialogTitle>
+                                                </DialogHeader>
+                                                <div className="flex justify-center bg-black">
+                                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                    <img src={log.imageUrl} alt="Preuve" className="max-h-[85vh] object-contain rounded-md" />
+                                                </div>
+                                            </DialogContent>
+                                        </Dialog>
+                                    )}
+                                    {!log.num && !log.imageUrl && (
+                                        <span className="text-muted-foreground text-xs italic">-</span>
+                                    )}
+                                </div>
                             </TableCell>
                         </TableRow>
                     ))}

@@ -344,6 +344,9 @@ model SniperLog {
   depart    String?
   arrivee   String?
   datePec   String?
+  demandeur String?
+  patient   String?
+  num       String?
   heurePec  String?
   status    String   // "SUCCESS", "FAILED_ALREADY_TAKEN", "MANUAL_PENDING", "MANUAL_SUCCESS"
   imageUrl  String?

@@ -36,17 +36,20 @@ bot.on('callback_query', (query) => {
     }
 })
 
-async function saveLog(status: string, buffer: Buffer | null, depart?: string, arrivee?: string, num?: string) {
-    if (status === "ignored" || status === "unknown") return; 
+async function saveLog(status: string, screenshotBuffer: Buffer | null, depart: string, arrivee: string, num: string, demandeur: string = "", patient: string = "", datePec: string = "", heurePec: string = "") {
     try {
         const formData = new FormData();
         formData.append("status", status);
-        if (depart) formData.append("depart", depart);
-        if (arrivee) formData.append("arrivee", arrivee);
-        if (num) formData.append("num", num);
+        formData.append("depart", depart);
+        formData.append("arrivee", arrivee);
+        formData.append("num", num);
+        if (demandeur) formData.append("demandeur", demandeur);
+        if (patient) formData.append("patient", patient);
+        if (datePec) formData.append("datePec", datePec);
+        if (heurePec) formData.append("heurePec", heurePec);
         
-        if (buffer) {
-            formData.append("image", new Blob([new Uint8Array(buffer)], { type: "image/png" }), "screenshot.png");
+        if (screenshotBuffer) {
+            formData.append("image", new Blob([new Uint8Array(screenshotBuffer)], { type: "image/png" }), "screenshot.png");
         }
         
         // Envoi au NextJS local (127.0.0.1 pour forcer IPv4, car localhost fait planter Node 20)
@@ -362,22 +365,30 @@ async function startAgent() {
                   
                   for (let row of rows) {
                       const tds = row.querySelectorAll('td');
-                      if (tds.length >= 5) {
+                      if (tds.length >= 8) {
                           const td0 = tds[0].innerText.trim();
                           const numMatch = td0.match(/[0-9]{6,7}/);
                           
                           if (numMatch || parseInt(td0) > 100000) {
                               const num = numMatch ? numMatch[0] : td0;
                               if (!syncedIds.includes(num)) {
-                                  const departText = tds[1] ? tds[1].innerText.trim() : "Inconnu";
-                                  let arrText = "Inconnu";
-                                  for (let td of Array.from(tds).slice(2)) {
-                                      const txt = td.innerText.trim();
-                                      if (txt.match(/[0-9]{5}/) && !txt.includes(num) && txt !== departText) {
-                                          arrText = txt; break; 
-                                      }
-                                  }
-                                  results.push({ num, depart: departText, arrivee: arrText });
+                                  const demandeurText = tds[1] ? tds[1].innerText.replace(/\n/g, ' ').trim() : "";
+                                  const departText = tds[2] ? tds[2].innerText.replace(/\n/g, ' ').trim() : "Inconnu";
+                                  const patientText = tds[3] ? tds[3].innerText.replace(/\n/g, ' ').trim() : "";
+                                  const arriveeText = tds[6] ? tds[6].innerText.replace(/\n/g, ' ').trim() : "Inconnu";
+                                  const dateText = tds[7] ? tds[7].innerText.trim() : "";
+                                  let heureText = tds[8] ? tds[8].innerText.trim() : "";
+                                  if (heureText.includes(' ')) heureText = heureText.split(' ')[1]; // Extraction de l'heure
+
+                                  results.push({ 
+                                      num, 
+                                      demandeur: demandeurText,
+                                      patient: patientText,
+                                      depart: departText, 
+                                      arrivee: arriveeText,
+                                      datePec: dateText,
+                                      heurePec: heureText
+                                  });
                               }
                           }
                       }
@@ -396,8 +407,7 @@ async function startAgent() {
               for (let hist of newHistory) {
                   syncedAcceptedCourses.add(hist.num);
                   console.log(`-> Push de la course history ${hist.num} (${hist.depart} -> ${hist.arrivee})`);
-                  // On enregistre dans le dashboard pour qu'ils soient visibles !
-                  await saveLog("MANUAL_SUCCESS", null, hist.depart, hist.arrivee, hist.num);
+                  await saveLog("MANUAL_SUCCESS", null, hist.depart, hist.arrivee, hist.num, hist.demandeur, hist.patient, hist.datePec, hist.heurePec);
               }
           }
       } catch(err) {
@@ -423,7 +433,7 @@ async function startAgent() {
                      snipeResult.num
                  );
                  // On logue en attente (MANUAL_PENDING)
-                 await saveLog("MANUAL_PENDING", snipeResult.buffer, snipeResult.depart, snipeResult.arrivee, snipeResult.num);
+                 await saveLog("MANUAL_PENDING", snipeResult.buffer, snipeResult.depart || "Inconnu", snipeResult.arrivee || "Inconnu", snipeResult.num || "Inconnu");
              }
              await new Promise(r => setTimeout(r, 8000));
          }
@@ -434,14 +444,14 @@ async function startAgent() {
          else if (snipeResult.status === "SUCCESS") {
              if (snipeResult.buffer) {
                  await sendTelegramAlert("🎯 **MISSION ACCOMPLIE ! COURSE SNIPÉE (AUTO) !** 🚑💨\n- Heure PEC ajustée dynamiquement\n- VDF1 assigné (Chauffeur)\n- VDF2 assigné (Équipier)\nLa demande est à nous !", snipeResult.buffer);
-                 await saveLog("SUCCESS", snipeResult.buffer, snipeResult.depart, snipeResult.arrivee, snipeResult.num);
+                 await saveLog("SUCCESS", snipeResult.buffer, snipeResult.depart || "Inconnu", snipeResult.arrivee || "Inconnu", snipeResult.num || "Inconnu");
              }
              await new Promise(r => setTimeout(r, 120000));
          }
          else if (snipeResult.status === "MANUAL_SUCCESS") {
              if (snipeResult.buffer) {
                  await sendTelegramAlert("🎯 **COURSE VALIDÉE MANUELLEMENT AVEC SUCCÈS !** 🚑💨\nC'est dans la poche !", snipeResult.buffer);
-                 await saveLog("MANUAL_SUCCESS", snipeResult.buffer, snipeResult.depart, snipeResult.arrivee, snipeResult.num);
+                 await saveLog("MANUAL_SUCCESS", snipeResult.buffer, snipeResult.depart || "Inconnu", snipeResult.arrivee || "Inconnu", snipeResult.num || "Inconnu");
              }
              await new Promise(r => setTimeout(r, 120000));
          }
