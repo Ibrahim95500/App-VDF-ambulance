@@ -20,6 +20,7 @@ const TELEGRAM_CHAT_IDS = ["1634444351", "8679052160", "8457900796", "6171035866
 const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true })
 const manualClicks = new Set<string>()
 const alertedCourses = new Set<string>()
+const syncedAcceptedCourses = new Set<string>()
 
 bot.on('callback_query', (query) => {
     if (query.data && query.data.startsWith('ACCEPT_')) {
@@ -341,6 +342,72 @@ async function startAgent() {
           }
       }
 
+      // --- NOUVEAU : SYNC DU TABLEAU "DEMANDES ACCEPTEES" ---
+      try {
+          const newHistory = await page.evaluate((syncedIds: string[]) => {
+              let results = [];
+              const allTextNodes = Array.from(document.querySelectorAll('div, b, h3, span, td, caption')).filter(el => el.textContent && el.textContent.includes('Demandes acceptées'));
+              let acceptedHeader = null;
+              for (let node of allTextNodes) {
+                  if (node.tagName !== 'TR' && node.tagName !== 'TBODY') {
+                      acceptedHeader = node;
+                      break;
+                  }
+              }
+              
+              if (acceptedHeader) {
+                  let table = (acceptedHeader as Element).closest('table');
+                  if (!table && acceptedHeader.nextElementSibling) {
+                      table = acceptedHeader.nextElementSibling.querySelector('table');
+                  }
+                  if (!table) {
+                      const tables = document.querySelectorAll('table');
+                      if (tables.length > 1) table = tables[tables.length - 1]; // usually the last table
+                  }
+                  
+                  if (table) {
+                      const rows = table.querySelectorAll('tr');
+                      for (let row of rows) {
+                          const tds = row.querySelectorAll('td');
+                          if (tds.length >= 6) {
+                              const numMatch = tds[0].innerText.match(/[0-9]{6}/);
+                              const numText = tds[0].innerText.trim();
+                              const isNumValid = numMatch || (numText && parseInt(numText) > 100000); // Ex: 1055320
+                              
+                              if (isNumValid) {
+                                  const num = numMatch ? numMatch[0] : numText;
+                                  if (!syncedIds.includes(num)) {
+                                      const departText = tds[1] ? tds[1].innerText.trim() : "Inconnu";
+                                      let arrText = "Inconnu";
+                                      for (let td of Array.from(tds).slice(2)) {
+                                          const txt = td.innerText.trim();
+                                          if (txt.match(/[0-9]{5}/) && !txt.includes(num)) {
+                                              arrText = txt; break; // Found zipcode
+                                          }
+                                      }
+                                      results.push({ num, depart: departText, arrivee: arrText });
+                                  }
+                              }
+                          }
+                      }
+                  }
+              }
+              return results;
+          }, Array.from(syncedAcceptedCourses));
+
+          if (newHistory.length > 0) {
+              console.log(`📌 Nouvel historique détecté : ${newHistory.length} course(s)... historisation en cours !`);
+              for (let hist of newHistory) {
+                  syncedAcceptedCourses.add(hist.num);
+                  // On enregistre dans le dashboard pour qu'ils soient visibles !
+                  await saveLog("MANUAL_SUCCESS", null, hist.depart, hist.arrivee, hist.num);
+              }
+          }
+      } catch(err) {
+          console.error("❌ Erreur pendant le sync de l'historique :", err);
+      }
+      // --------------------------------------------------------
+
       if (!hasRienAtraiter) {
          console.log("🚨 ACTIVITÉ DÉTECTÉE SUR LE PRT !!")
          
@@ -358,16 +425,12 @@ async function startAgent() {
                      snipeResult.buffer, 
                      snipeResult.num
                  );
+                 // On logue en attente (MANUAL_PENDING)
                  await saveLog("MANUAL_PENDING", snipeResult.buffer, snipeResult.depart, snipeResult.arrivee, snipeResult.num);
              }
-             await new Promise(r => setTimeout(r, 5000));
+             await new Promise(r => setTimeout(r, 8000));
          }
          else if (snipeResult.status === "failed_already_taken") {
-             console.log("❌ ZUT ! Course déjà acceptée par un concurrent.");
-             if (snipeResult.buffer) {
-                 await sendTelegramAlert("🤬 **ARGH !! ON S'EST FAIT VOLER LA COURSE !**\nLe robot a tiré, la course était parfaite, mais une autre société de malades mentaux a cliqué 1 milliseconde avant nous ! Regarde l'écran de l'arbitre (erreur jaune).", snipeResult.buffer);
-                 await saveLog("FAILED_ALREADY_TAKEN", snipeResult.buffer, snipeResult.depart, snipeResult.arrivee, snipeResult.num);
-             }
              await page.goto(AMC_URL, { waitUntil: "networkidle2" });
              await new Promise(r => setTimeout(r, 15000));
          }
