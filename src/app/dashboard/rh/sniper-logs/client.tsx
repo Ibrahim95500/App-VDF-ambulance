@@ -3,14 +3,17 @@
 import { useState, useMemo, useEffect } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Eye, MapPin, Navigation, Calendar, ScanEye } from "lucide-react"
+import { Eye, MapPin, Navigation, Calendar, ScanEye, Trash2, Loader2 } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { TableActions } from "@/components/common/table-actions"
 import { TablePagination } from "@/components/common/table-pagination"
 import { isWithinInterval, startOfDay, endOfDay } from "date-fns"
 import { DateRange } from "react-day-picker"
+import { deleteSniperLog } from "@/actions/sniper-logs.actions"
+import { toast } from "sonner"
 
-export function SniperLogClient({ data }: { data: any[] }) {
+export function SniperLogClient({ data: initialData }: { data: any[] }) {
+    const [data, setData] = useState(initialData)
     const [searchTerm, setSearchTerm] = useState("")
     const [statusFilter, setStatusFilter] = useState("ALL")
     const [dateRange, setDateRange] = useState<DateRange | undefined>()
@@ -18,6 +21,29 @@ export function SniperLogClient({ data }: { data: any[] }) {
     const PAGE_SIZE = 10
 
     useEffect(() => { setCurrentPage(1) }, [searchTerm, statusFilter, dateRange])
+    useEffect(() => { setData(initialData) }, [initialData])
+
+    const [isDeleting, setIsDeleting] = useState<string | null>(null)
+
+    const handleDelete = async (id: string, e?: React.MouseEvent) => {
+        if(e) e.preventDefault()
+        if(!window.confirm("BAM ! Tu veux vraiment envoyer cette course à la poubelle ? 🗑️")) return
+        
+        setIsDeleting(id)
+        try {
+            const res = await deleteSniperLog(id)
+            if(res.success) {
+                toast.success("Trophée supprimé avec succès ! 💥")
+                setData(prev => prev.filter(req => req.id !== id))
+            } else {
+                toast.error("Erreur, cette cible résiste.")
+            }
+        } catch(err) {
+            toast.error("Erreur système.")
+        } finally {
+            setIsDeleting(null)
+        }
+    }
 
     const getStatusBadge = (status: string) => {
         switch (status) {
@@ -177,6 +203,13 @@ export function SniperLogClient({ data }: { data: any[] }) {
                                     <Eye className="size-4" /> Traiter
                                 </a>
                             )}
+                            <button 
+                                onClick={(e) => handleDelete(log.id, e)}
+                                disabled={isDeleting === log.id}
+                                className="flex items-center gap-2 text-xs font-bold text-red-500 bg-red-50 px-3 py-1.5 rounded-full hover:bg-red-100 transition-colors disabled:opacity-50"
+                            >
+                                {isDeleting === log.id ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
+                            </button>
                         </div>
                     </div>
                 ))}
@@ -258,8 +291,18 @@ export function SniperLogClient({ data }: { data: any[] }) {
                                                 </a>
                                             )}
                                             {!log.num && !log.imageUrl && (
-                                                <span className="text-muted-foreground text-[10px] italic">-</span>
+                                                <span className="text-muted-foreground text-[10px] italic mr-1">-</span>
                                             )}
+                                            <Button 
+                                                variant="ghost" 
+                                                size="icon" 
+                                                onClick={(e) => handleDelete(log.id, e)}
+                                                disabled={isDeleting === log.id}
+                                                className="size-8 text-red-500 hover:text-red-700 hover:bg-red-50 ml-1"
+                                                title="Supprimer"
+                                            >
+                                                {isDeleting === log.id ? <Loader2 className="size-4 animate-spin" /> : <Trash2 className="size-4" />}
+                                            </Button>
                                         </div>
                                     </td>
                                 </tr>
