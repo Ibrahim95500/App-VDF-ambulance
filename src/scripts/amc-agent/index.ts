@@ -414,10 +414,11 @@ async function startAgent() {
 
           if (newHistory.length > 0) {
               console.log(`📌 Nouvel historique détecté : ${newHistory.length} course(s)... historisation en cours !`);
+              const acceptedBuffer = await page.screenshot({ fullPage: true }) as Buffer;
               for (let hist of newHistory) {
                   syncedAcceptedCourses.add(hist.num);
                   console.log(`-> Push de la course history ${hist.num} (${hist.depart} -> ${hist.arrivee})`);
-                  await saveLog("MANUAL_SUCCESS", null, hist.depart, hist.arrivee, hist.num, hist.demandeur, hist.patient, hist.datePec, hist.heurePec);
+                  await saveLog("MANUAL_SUCCESS", acceptedBuffer, hist.depart, hist.arrivee, hist.num, hist.demandeur, hist.patient, hist.datePec, hist.heurePec);
               }
           }
       } catch(err) {
