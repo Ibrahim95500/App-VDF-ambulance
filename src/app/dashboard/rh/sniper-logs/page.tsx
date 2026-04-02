@@ -1,6 +1,8 @@
 import prisma from "@/lib/prisma"
 import { SniperLogClient } from "./client"
 
+export const dynamic = 'force-dynamic';
+
 export default async function SniperLogsPage() {
     const logs = await prisma.sniperLog.findMany({
         orderBy: { createdAt: "desc" },
