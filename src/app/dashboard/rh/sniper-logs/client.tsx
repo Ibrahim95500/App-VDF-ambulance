@@ -182,7 +182,7 @@ export function SniperLogClient({ data: initialData }: { data: any[] }) {
                         </div>
 
                         <div className="flex justify-end gap-2 mt-3 pt-3 border-t border-border">
-                            {log.imageUrl && (
+                            {log.imageUrl ? (
                                 <Dialog>
                                     <DialogTrigger asChild>
                                         <button className="flex items-center gap-2 text-xs font-bold text-indigo-500 bg-indigo-50 px-3 py-1.5 rounded-full hover:bg-indigo-100 transition-colors">
@@ -197,6 +197,10 @@ export function SniperLogClient({ data: initialData }: { data: any[] }) {
                                         </div>
                                     </DialogContent>
                                 </Dialog>
+                            ) : (
+                                <button disabled className="flex items-center gap-2 text-xs font-semibold text-slate-400 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-full cursor-not-allowed">
+                                    <ScanEye className="size-4 opacity-50" /> P.D.C
+                                </button>
                             )}
                             <button 
                                 onClick={(e) => handleDelete(log.id, e)}
@@ -262,7 +266,7 @@ export function SniperLogClient({ data: initialData }: { data: any[] }) {
                                     </td>
                                     <td className="px-4 py-3 align-middle text-right">
                                         <div className="flex justify-end items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
-                                            {log.imageUrl && (
+                                            {log.imageUrl ? (
                                                 <Dialog>
                                                     <DialogTrigger asChild>
                                                         <Button variant="ghost" size="icon" className="size-8 text-indigo-500 hover:text-indigo-600 hover:bg-indigo-50" title="Voir la Capture Photo">
@@ -277,9 +281,13 @@ export function SniperLogClient({ data: initialData }: { data: any[] }) {
                                                         </div>
                                                     </DialogContent>
                                                 </Dialog>
+                                            ) : (
+                                                <Button variant="ghost" size="icon" disabled className="size-8 text-slate-300" title="Pas de capture enregistrée">
+                                                    <ScanEye className="size-4" />
+                                                </Button>
                                             )}
                                             {!log.num && !log.imageUrl && (
-                                                <span className="text-muted-foreground text-[10px] italic mr-1">-</span>
+                                                <span className="text-muted-foreground text-[10px] italic mr-1 ml-1">-</span>
                                             )}
                                             <Button 
                                                 variant="ghost" 

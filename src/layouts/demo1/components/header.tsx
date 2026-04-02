@@ -67,7 +67,7 @@ export function Header({ notificationsCount = 0 }: { notificationsCount?: number
         <div className="flex gap-1 lg:hidden items-center gap-2">
           <Link href="/dashboard" className="shrink-0 flex items-center gap-2">
             <VdfLogo className="h-10 w-auto" />
-            <span className="text-base font-bold hidden sm:inline" style={{ color: '#2c3e8a' }}>
+            <span className="text-base sm:text-lg font-bold" style={{ color: '#2c3e8a' }}>
               VDF Ambulance
             </span>
           </Link>
