@@ -4,6 +4,9 @@ import path from "path"
 import fs from "fs"
 import TelegramBot from "node-telegram-bot-api"
 
+// Suppress telegram bot API deprecation warning logs
+process.env.NTBA_FIX_350 = "1";
+
 // Configuration
 dotenv.config({ path: path.resolve(process.cwd(), ".env.local") })
 dotenv.config()
