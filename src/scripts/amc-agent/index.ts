@@ -102,7 +102,7 @@ async function snipeCourse(page: any): Promise<{ buffer: Buffer | null, status: 
             "roissy", "saint brice", "saint-brice", "le thillay", "puiseux", 
             "tremblay", "dugny", "bonneuil", "vemars", "bellefontaine", "fosses",
             "survilliers", "saint witz", "saint-witz", "luzarches", "chaumontel",
-            "vilaine sous bois", "jagny sous bois"
+            "vilaine sous bois", "jagny sous bois", "marly la ville"
         ];
         
         let result = { clicked: false, isManual: false, num: "", departText: "", arriveeText: "", foundNotVip: false, allNums: [] as string[] };
