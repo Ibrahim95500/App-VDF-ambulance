@@ -346,58 +346,50 @@ async function startAgent() {
 
       // --- NOUVEAU : SYNC DU TABLEAU "DEMANDES ACCEPTEES" ---
       try {
-          const newHistory = await page.evaluate((syncedIds: string[]) => {
-              let results = [];
-              const allTextNodes = Array.from(document.querySelectorAll('div, b, h3, span, td, caption')).filter(el => el.textContent && el.textContent.includes('Demandes acceptées'));
-              let acceptedHeader = null;
-              for (let node of allTextNodes) {
-                  if (node.tagName !== 'TR' && node.tagName !== 'TBODY') {
-                      acceptedHeader = node;
-                      break;
-                  }
-              }
+          const evalResult = await page.evaluate((syncedIds: string[]) => {
+              let results: any[] = [];
+              let debugInfo = "Init;";
               
-              if (acceptedHeader) {
-                  let table = (acceptedHeader as Element).closest('table');
-                  if (!table && acceptedHeader.nextElementSibling) {
-                      table = acceptedHeader.nextElementSibling.querySelector('table');
-                  }
-                  if (!table) {
-                      const tables = document.querySelectorAll('table');
-                      if (tables.length > 1) table = tables[tables.length - 1]; // usually the last table
-                  }
+              const allTables = Array.from(document.querySelectorAll('table'));
+              debugInfo += ` Tables_On_Page:${allTables.length};`;
+              
+              const acceptedTable = allTables.find(t => t.innerText && (t.innerText.includes('Demandes acceptées') || t.innerText.includes('Acceptées')));
+              
+              if (acceptedTable) {
+                  debugInfo += " Table_Found;";
+                  const rows = acceptedTable.querySelectorAll('tr');
+                  debugInfo += ` Rows:${rows.length};`;
                   
-                  if (table) {
-                      const rows = table.querySelectorAll('tr');
-                      for (let row of rows) {
-                          const tds = row.querySelectorAll('td');
-                          if (tds.length >= 6) {
-                              const numMatch = tds[0].innerText.match(/[0-9]{6}/);
-                              const numText = tds[0].innerText.trim();
-                              const isNumValid = numMatch || (numText && parseInt(numText) > 100000); // Ex: 1055320
-                              
-                              if (isNumValid) {
-                                  const num = numMatch ? numMatch[0] : numText;
-                                  if (!syncedIds.includes(num)) {
-                                      const departText = tds[1] ? tds[1].innerText.trim() : "Inconnu";
-                                      let arrText = "Inconnu";
-                                      for (let td of Array.from(tds).slice(2)) {
-                                          const txt = td.innerText.trim();
-                                          if (txt.match(/[0-9]{5}/) && !txt.includes(num)) {
-                                              arrText = txt; break; // Found zipcode
-                                          }
+                  for (let row of rows) {
+                      const tds = row.querySelectorAll('td');
+                      if (tds.length >= 5) {
+                          const td0 = tds[0].innerText.trim();
+                          const numMatch = td0.match(/[0-9]{6,7}/);
+                          
+                          if (numMatch || parseInt(td0) > 100000) {
+                              const num = numMatch ? numMatch[0] : td0;
+                              if (!syncedIds.includes(num)) {
+                                  const departText = tds[1] ? tds[1].innerText.trim() : "Inconnu";
+                                  let arrText = "Inconnu";
+                                  for (let td of Array.from(tds).slice(2)) {
+                                      const txt = td.innerText.trim();
+                                      if (txt.match(/[0-9]{5}/) && !txt.includes(num) && txt !== departText) {
+                                          arrText = txt; break; 
                                       }
-                                      results.push({ num, depart: departText, arrivee: arrText });
                                   }
+                                  results.push({ num, depart: departText, arrivee: arrText });
                               }
                           }
                       }
                   }
+              } else {
+                  debugInfo += " NO_ACCEPTED_TABLE_FOUND;";
               }
-              return results;
+              return { results, debugInfo };
           }, Array.from(syncedAcceptedCourses));
 
-          console.log(`[DEBUG HISTORIQUE] Elements recupérés du DOM : ${newHistory.length}`);
+          const newHistory = evalResult.results;
+          console.log(`🔥 [DEBUG V2] Info interne historique : ${evalResult.debugInfo}`);
 
           if (newHistory.length > 0) {
               console.log(`📌 Nouvel historique détecté : ${newHistory.length} course(s)... historisation en cours !`);
