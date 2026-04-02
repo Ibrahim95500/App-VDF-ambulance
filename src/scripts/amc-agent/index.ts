@@ -24,6 +24,7 @@ const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true })
 const manualClicks = new Set<string>()
 const alertedCourses = new Set<string>()
 const syncedAcceptedCourses = new Set<string>()
+const activityMemory = new Set<string>()
 
 bot.on('message', (msg) => {
     const chatId = msg.chat.id
@@ -445,6 +446,19 @@ async function startAgent() {
       if (!hasRienAtraiter) {
          console.log("🚨 ACTIVITÉ DÉTECTÉE SUR LE PRT !!")
          
+         // Nouvelle logique : Screenshot TOUTE activité nouvelle
+         try {
+             const currentNums = await page.evaluate(() => {
+                 return Array.from(document.querySelectorAll('tr td:nth-child(4)')).map(td => td.innerText.trim()).filter(n => n);
+             });
+             const newNums = currentNums.filter(n => !activityMemory.has(n));
+             if (newNums.length > 0) {
+                 const snapBuffer = await page.screenshot({ fullPage: true }) as Buffer;
+                 await sendTelegramAlert(`👀 **MOUVEMENT DÉTECTÉ !**\nDe nouvelles demandes viennent d'apparaître sur le tableau. Évaluation en cours...`, snapBuffer);
+                 newNums.forEach(n => activityMemory.add(n));
+             }
+         } catch(e) {}
+
          const snipeResult = await snipeCourse(page);
          
          if (snipeResult.status === "ignored") {
@@ -500,7 +514,20 @@ async function startAgent() {
 
     } catch (error) {
       console.error("❌ ERREUR FATALE (Redémarrage dans 15s):", error)
-      await sendTelegramAlert(`🔄 **CRASH RELAYÉ - REDÉMARRAGE AUTOMATIQUE** :\n\`${error}\``)
+      let crashBuffer = null;
+      try {
+          if (browser) {
+              const pages = await browser.pages();
+              if (pages.length > 0) crashBuffer = await pages[0].screenshot({ fullPage: true });
+          }
+      } catch(e) {}
+
+      if (crashBuffer) {
+          await sendTelegramAlert(`🔄 **CRASH RELAYÉ - REDÉMARRAGE AUTOMATIQUE** :\n\`${error}\`\n\n📸 **TRACE DU TABLEAU AVANT LE CRASH :**`, crashBuffer)
+      } else {
+          await sendTelegramAlert(`🔄 **CRASH RELAYÉ - REDÉMARRAGE AUTOMATIQUE** :\n\`${error}\``)
+      }
+      
       if (browser) {
           try { await browser.close() } catch(e){}
       }
