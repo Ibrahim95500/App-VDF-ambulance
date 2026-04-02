@@ -186,7 +186,7 @@ export function SniperLogClient({ data: initialData }: { data: any[] }) {
                                 <Dialog>
                                     <DialogTrigger asChild>
                                         <button className="flex items-center gap-2 text-xs font-bold text-indigo-500 bg-indigo-50 px-3 py-1.5 rounded-full hover:bg-indigo-100 transition-colors">
-                                            <ScanEye className="size-4" /> Preuve
+                                            <ScanEye className="size-4" /> Capture
                                         </button>
                                     </DialogTrigger>
                                     <DialogContent className="max-w-[95vw] sm:max-w-4xl p-2 bg-black border-none">
@@ -197,11 +197,6 @@ export function SniperLogClient({ data: initialData }: { data: any[] }) {
                                         </div>
                                     </DialogContent>
                                 </Dialog>
-                            )}
-                            {log.num && (
-                                <a href={`https://transportpatient.fr/Transport/ImpDemande.aspx?IDDemande=${log.num}`} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-xs font-bold text-blue-500 bg-blue-50 px-3 py-1.5 rounded-full hover:bg-blue-100 transition-colors">
-                                    <Eye className="size-4" /> Traiter
-                                </a>
                             )}
                             <button 
                                 onClick={(e) => handleDelete(log.id, e)}
@@ -270,7 +265,7 @@ export function SniperLogClient({ data: initialData }: { data: any[] }) {
                                             {log.imageUrl && (
                                                 <Dialog>
                                                     <DialogTrigger asChild>
-                                                        <Button variant="ghost" size="icon" className="size-8 text-indigo-500 hover:text-indigo-600 hover:bg-indigo-50" title="Preuve Photo (Bot)">
+                                                        <Button variant="ghost" size="icon" className="size-8 text-indigo-500 hover:text-indigo-600 hover:bg-indigo-50" title="Voir la Capture Photo">
                                                             <ScanEye className="size-4" />
                                                         </Button>
                                                     </DialogTrigger>
@@ -282,13 +277,6 @@ export function SniperLogClient({ data: initialData }: { data: any[] }) {
                                                         </div>
                                                     </DialogContent>
                                                 </Dialog>
-                                            )}
-                                            {log.num && (
-                                                <a href={`https://transportpatient.fr/Transport/ImpDemande.aspx?IDDemande=${log.num}`} target="_blank" rel="noreferrer" title="Ouvrir sur AMC">
-                                                    <Button variant="ghost" size="icon" className="size-8 text-blue-500 hover:text-blue-600 hover:bg-blue-50">
-                                                        <Eye className="size-4" />
-                                                    </Button>
-                                                </a>
                                             )}
                                             {!log.num && !log.imageUrl && (
                                                 <span className="text-muted-foreground text-[10px] italic mr-1">-</span>

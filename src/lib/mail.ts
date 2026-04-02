@@ -36,6 +36,7 @@ interface SendBrandedEmailProps {
     actionUrl?: string;
     actionText?: string;
     signatureHtml?: string;
+    attachments?: any[];
 }
 
 export async function sendBrandedEmail({
@@ -50,7 +51,8 @@ export async function sendBrandedEmail({
     content,
     actionUrl,
     actionText,
-    signatureHtml
+    signatureHtml,
+    attachments
 }: SendBrandedEmailProps) {
     console.log(`--- MAIL-TRACE: Attempting to send email ---`);
     console.log(`To: ${to}`);
@@ -83,7 +85,8 @@ export async function sendBrandedEmail({
                     path: path.join(process.cwd(), 'public/brand/logo-email.png'),
                     cid: 'logo_vdf_header',
                     contentDisposition: 'inline'
-                }
+                },
+                ...(attachments || [])
             ]
         };
         if (replyTo) mailOptions.replyTo = replyTo;

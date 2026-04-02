@@ -28,6 +28,7 @@ export async function POST(req: Request) {
         }
 
         let imageUrl = null;
+        let attachmentObj = null;
         if (file) {
             const buffer = Buffer.from(await file.arrayBuffer());
             const filename = `${Date.now()}_${num || 'course'}.png`;
@@ -35,6 +36,10 @@ export async function POST(req: Request) {
             if (!fs.existsSync(publicDir)) fs.mkdirSync(publicDir, { recursive: true });
             fs.writeFileSync(path.join(publicDir, filename), buffer);
             imageUrl = `/uploads/sniper/${filename}`;
+            attachmentObj = {
+                filename: `Course_${num || 'AMC'}.png`,
+                content: buffer
+            };
         }
 
         await prisma.sniperLog.create({
@@ -72,8 +77,7 @@ export async function POST(req: Request) {
                         </ul>
                     </div>
                 `,
-                actionUrl: num ? `https://transportpatient.fr/Transport/ImpDemande.aspx?IDDemande=${num}` : undefined,
-                actionText: "Voir sur Atout Majeur Concept"
+                attachments: attachmentObj ? [attachmentObj] : undefined
             });
             console.log("Email Sniper envoyé avec succès à prisederendezvousvdf@gmail.com");
         } catch (mailErr) {
