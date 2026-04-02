@@ -293,30 +293,40 @@ async function startAgent() {
         console.log("🔒 Page de login détectée, authentification en cours...")
         await new Promise(r => setTimeout(r, 3000))
 
-        const identifierInput = await page.$('input[type="email"], input[type="text"], input[name*="user" i], input[id*="user" i], input[name*="login" i], input[id*="login" i]')
-        const passwordInput = await page.$('input[type="password"], input[name*="pass" i], input[id*="pass" i]')
+        const successLog = await page.evaluate((user, pass) => {
+            let passInput = document.querySelector('input[type="password"]') as HTMLInputElement;
+            let userInput = document.querySelector('input[name*="user" i], input[id*="user" i], input[name*="login" i], input[name*="Login" i]') as HTMLInputElement;
+            
+            if (!userInput && passInput && passInput.form) {
+                userInput = Array.from(passInput.form.querySelectorAll('input')).find(i => i.type === 'text' || i.type === 'email') as HTMLInputElement;
+            }
 
-        if (identifierInput && passwordInput) {
-           console.log(`Clavier magique... User=${AMC_USERNAME}`)
-           await identifierInput.click({ clickCount: 3 })
-           await identifierInput.type(AMC_USERNAME, { delay: 50 })
-           await passwordInput.type(AMC_PASSWORD, { delay: 50 })
-           await new Promise(r => setTimeout(r, 500))
+            if (userInput && passInput) {
+                userInput.value = user;
+                passInput.value = pass;
+                
+                if (passInput.form) {
+                    let submitBtn = passInput.form.querySelector('input[type="submit"], button[type="submit"], a.btn') as HTMLElement;
+                    if (submitBtn && submitBtn.click) {
+                        submitBtn.click();
+                    } else {
+                        passInput.form.submit();
+                    }
+                    return true;
+                }
+            }
+            return false;
+        }, AMC_USERNAME, AMC_PASSWORD);
 
-           const submitButton = await page.$('input[type="submit"], button[type="submit"], a.btn, input[value*="connect" i], button')
-           if (submitButton) {
-              console.log("Clic asynchrone sur le bouton avec Puppeteer API...")
-              await Promise.all([
-                  page.waitForNavigation({ waitUntil: "networkidle2", timeout: 15000 }).catch(() => {}),
-                  submitButton.click(),
-              ])
-           } else {
-              console.log("❌ Bouton Valider introuvable, on simule l'appui sur ENTREE !")
-              await passwordInput.press('Enter');
-           }
+        if (successLog) {
+            console.log(`Clavier magique (Injection Rapide)... User=${AMC_USERNAME}`);
+            try {
+                await page.waitForNavigation({ waitUntil: "networkidle2", timeout: 15000 });
+            } catch(e) {}
         } else {
-           console.log("❌ ERREUR : Je vois le texte de connexion, mais je ne trouve pas les cases HTML pour taper !")
+            console.log("❌ Impossible de trouver les cases de connexion via le script injecté !");
         }
+        
         await new Promise(r => setTimeout(r, 5000))
         continue
       }
