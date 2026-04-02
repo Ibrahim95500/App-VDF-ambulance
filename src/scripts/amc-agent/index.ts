@@ -72,7 +72,7 @@ async function sendTelegramAlert(message: string, imageBuffer?: Buffer, courseId
         if (imageBuffer) {
           const formData = new FormData()
           formData.append("chat_id", chatId)
-          formData.append("photo", new Blob([imageBuffer], { type: "image/png" }), "screenshot.png")
+          formData.append("photo", new Blob([new Uint8Array(imageBuffer)], { type: "image/png" }), "screenshot.png")
           formData.append("caption", message)
           formData.append("parse_mode", "Markdown")
           if (courseId) {
@@ -237,7 +237,7 @@ async function snipeCourse(page: any): Promise<{ buffer: Buffer | null, status: 
         
         let buttons = Array.from(document.querySelectorAll('input[type="submit"], button, a, input[type="button"]'));
         let submitBtn = buttons.find(b => {
-             let text = ((b as HTMLInputElement).value || b.textContent || b.innerText || '').toLowerCase();
+             let text = ((b as HTMLInputElement).value || b.textContent || (b as HTMLElement).innerText || '').toLowerCase();
              let val = b.getAttribute('value') || '';
              const rect = b.getBoundingClientRect();
              return rect.width > 0 && rect.height > 0 && (text.includes('valider') || val.toLowerCase().includes('valider'));
