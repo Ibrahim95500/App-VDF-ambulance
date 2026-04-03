@@ -52,7 +52,12 @@ bot.on('message', async (msg) => {
     
     if (text === '/run' || text.includes('Démarrer')) { 
         isBotPaused = false; 
-        bot.sendMessage(chatId, '▶️ **Robot réactivé.** \n\nJe reprends mon rôle de Sniper, je retourne cliquer sur le bouton de rafraîchissement au moindre nouveau radar !', {parse_mode: 'Markdown', ...botKeyboard}); 
+        if (isBotDisconnected) {
+            isBotDisconnected = false;
+            bot.sendMessage(chatId, '▶️ **Robot réactivé après Déconnexion.** \n\nJe lance le navigateur et me reconnecte au site AMC de zéro !', {parse_mode: 'Markdown', ...botKeyboard}); 
+            return;
+        }
+        bot.sendMessage(chatId, '▶️ **Robot réactivé (Sniper ON).** \n\nJe reprends mon rôle de Sniper, je retourne cliquer sur le bouton de rafraîchissement au moindre nouveau radar !', {parse_mode: 'Markdown', ...botKeyboard}); 
         return; 
     }
 
@@ -72,7 +77,8 @@ bot.on('message', async (msg) => {
     }
 
     if (text.includes('xion')) {
-        bot.sendMessage(chatId, "🔌 **Déconnexion volontaire.**\n\nLe robot va fermer la vraie page et quitter son navigateur. Il redémarrera de zéro d'ici 15 secondes pour te laisser prendre le compte AMC si nécessaire.", {parse_mode: 'Markdown'});
+        isBotDisconnected = true;
+        bot.sendMessage(chatId, "🔌 **Déconnexion totale accomplie.**\n\nLe robot AMC a fermé sa connexion internet. Le compte t'est rendu. Il restera profondément endormi jusqu'à ce que tu cliques sur **▶️ Démarrer**.", {parse_mode: 'Markdown'});
         if (act_page) {
             try { await act_page.close(); } catch(e) {}
         }
@@ -565,6 +571,11 @@ async function startAgent() {
     }
 
     } catch (error) {
+      if (isBotDisconnected) {
+          console.log("✅ Déconnexion volontaire accomplie, silence radio.");
+          if (browser) { try { await browser.close() } catch(e){} }
+          continue;
+      }
       console.error("❌ ERREUR FATALE (Redémarrage dans 15s):", error)
       let crashBuffer = null;
       try {
