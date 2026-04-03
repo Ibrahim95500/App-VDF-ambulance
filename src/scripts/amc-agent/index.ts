@@ -383,6 +383,13 @@ async function startAgent() {
 
     console.log("⏳ Début de la boucle de surveillance (15s)...")
     while (true) {
+      if (page.isClosed()) {
+          if (isBotDisconnected) {
+              console.log("✅ Fermeture interceptée pendant le repos.");
+          }
+          throw new Error("Target closed manually");
+      }
+
       if (isBotPaused) {
           await new Promise(r => setTimeout(r, 8000));
           continue;
