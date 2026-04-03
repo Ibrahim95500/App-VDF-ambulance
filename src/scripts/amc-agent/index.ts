@@ -281,20 +281,23 @@ async function snipeCourse(page: any, withFilters: boolean = true): Promise<{ bu
         const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
         let node;
         while (node = walker.nextNode()) {
-            let txt = node.nodeValue ? node.nodeValue.toLowerCase() : "";
-            const parent = node.parentElement;
+            let txt = node.nodeValue ? node.nodeValue.toLowerCase().trim() : "";
+            const parent = node.parentElement as HTMLElement;
             if (parent && parent.getBoundingClientRect().width > 0) {
-                if (!dateInput && (txt.includes('date de pec') || txt.includes('date :'))) {
-                    dateInput = parent.nextElementSibling?.querySelector('input') || parent.parentElement?.querySelector('input');
-                }
-                if (!timeInput && (txt.includes('heure de pec') || txt.includes('heure :'))) {
-                    timeInput = parent.nextElementSibling?.querySelector('input') || parent.parentElement?.querySelector('input');
-                }
-                if (!chauffeurSel && txt.includes('chauffeur')) {
-                    chauffeurSel = parent.nextElementSibling?.querySelector('select') || parent.parentElement?.querySelector('select');
-                }
-                if (!equipierSel && txt.includes('equipier')) {
-                    equipierSel = parent.nextElementSibling?.querySelector('select') || parent.parentElement?.querySelector('select');
+                const tr = parent.closest('tr');
+                if (tr) {
+                    if (!dateInput && (txt === 'date de pec' || txt.includes('date de pec'))) {
+                        dateInput = tr.querySelector('input[type="text"], input:not([type="hidden"])');
+                    }
+                    if (!timeInput && (txt === 'heure de pec' || txt.includes('heure de pec'))) {
+                        timeInput = tr.querySelector('input[type="text"], input:not([type="hidden"])');
+                    }
+                    if (!chauffeurSel && txt === 'chauffeur') {
+                        chauffeurSel = tr.querySelector('select');
+                    }
+                    if (!equipierSel && txt === 'equipier') {
+                        equipierSel = tr.querySelector('select');
+                    }
                 }
             }
         }
