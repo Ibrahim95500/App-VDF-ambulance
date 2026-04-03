@@ -120,7 +120,7 @@ async function snipeCourse(page: any): Promise<{ buffer: Buffer | null, status: 
         let result = { clicked: false, isManual: false, num: "", departText: "", arriveeText: "", foundNotVip: false, allNums: [] as string[] };
         
         const headers = Array.from(document.querySelectorAll('th'));
-        const normalizeText = (text: string) => text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        function normalizeText(text: string) { return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); }
         const departIdx = headers.findIndex(th => normalizeText(th.innerText).includes('depart'));
         const arriveeIdx = headers.findIndex(th => normalizeText(th.innerText).includes('arrive'));
         const nIdx = headers.findIndex(th => th.innerText.toLowerCase() === 'n°');
@@ -203,7 +203,7 @@ async function snipeCourse(page: any): Promise<{ buffer: Buffer | null, status: 
             targetTime = timeMatch[1];
         }
 
-        const getElByLabel = (txt: string, tag: string) => {
+        function getElByLabel(txt: string, tag: string) {
             const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
             let node;
             while (node = walker.nextNode()) {
@@ -216,7 +216,7 @@ async function snipeCourse(page: any): Promise<{ buffer: Buffer | null, status: 
                 }
             }
             return null;
-        };
+        }
         
         const timeInput = getElByLabel('Heure de PEC', 'input');
         if (timeInput) {
@@ -228,7 +228,7 @@ async function snipeCourse(page: any): Promise<{ buffer: Buffer | null, status: 
         const chauffeurSel = getElByLabel('Chauffeur', 'select');
         const equipierSel = getElByLabel('Equipier', 'select');
         
-        const setSelect = (sel: Element | null, query: string) => {
+        function setSelect(sel: Element | null, query: string) {
             if (!sel || !(sel instanceof HTMLSelectElement)) return;
             for (let i = 0; i < sel.options.length; i++) {
                 if (sel.options[i].text.toLowerCase().includes(query.toLowerCase())) {
@@ -241,7 +241,7 @@ async function snipeCourse(page: any): Promise<{ buffer: Buffer | null, status: 
                 sel.selectedIndex = 1;
                 sel.dispatchEvent(new Event('change', { bubbles: true }));
             }
-        };
+        }
 
         setSelect(chauffeurSel, 'AMBU VDF1');
         setSelect(equipierSel, 'AMBU VDF2');
