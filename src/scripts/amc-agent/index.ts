@@ -186,12 +186,13 @@ async function snipeCourse(page: any, withFilters: boolean = true): Promise<{ bu
         
         let result = { clicked: false, isManual: false, num: "", departText: "", arriveeText: "", foundNotVip: false, allNums: [] as string[] };
         
-        const headers = Array.from(document.querySelectorAll('th'));
+        const targetTable = document.querySelector('#AT_Affectation') || document;
+        const headers = Array.from(targetTable.querySelectorAll('th'));
         const departIdx = headers.findIndex(th => (th.innerText || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes('depart'));
         const arriveeIdx = headers.findIndex(th => (th.innerText || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes('arrive'));
         const nIdx = headers.findIndex(th => (th.innerText || "").toLowerCase() === 'n°');
         
-        const rows = document.querySelectorAll('tr');
+        const rows = targetTable.querySelectorAll('tr');
         for (let row of rows) {
             const acceptBtn = row.querySelector('input[type="image"][src*="valider"], img[src*="valider"], img[src*="check"], a[title*="accepter"]');
             
@@ -540,11 +541,12 @@ async function startAgent() {
          // Nouvelle logique : Screenshot TOUTE activité nouvelle (uniquement les courses non acceptées)
          try {
              const currentNums = await page.evaluate(() => {
-                 const headers = Array.from(document.querySelectorAll('th'));
-                 const nIdx = headers.findIndex(th => (th.innerText || "").trim().toLowerCase() === 'n°');
+                 const targetTable = document.querySelector('#AT_Affectation') || document;
+                 const headers = Array.from(targetTable.querySelectorAll('th'));
+                 const nIdx = headers.findIndex((th: any) => (th.innerText || "").trim().toLowerCase() === 'n°');
                  
-                 return Array.from(document.querySelectorAll('tr'))
-                     .filter(tr => tr.querySelector('input[type="image"][src*="valider"], img[src*="valider"], img[src*="check"], a[title*="accepter"]') !== null)
+                 return Array.from(targetTable.querySelectorAll('tr'))
+                     .filter((tr: any) => tr.querySelector('input[type="image"][src*="valider"], img[src*="valider"], img[src*="check"], a[title*="accepter"]') !== null)
                      .map((tr: any) => {
                          const tds = tr.querySelectorAll('td');
                          if (nIdx >= 0 && tds.length > nIdx) return tds[nIdx].innerText.trim();
