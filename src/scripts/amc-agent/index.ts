@@ -28,12 +28,11 @@ const syncedAcceptedCourses = new Set<string>()
 const activityMemory = new Set<string>()
 let act_page: any = null;
 
-
 const botKeyboard = {
     reply_markup: {
         keyboard: [
             [{ text: "▶️ Démarrer" }, { text: "⏸️ Pause" }],
-            [{ text: "�� Capture d'écran (Direct)" }]
+            [{ text: "📸 Capture d'écran" }, { text: "🔌 Déconnexion" }]
         ],
         resize_keyboard: true,
         is_persistent: true
@@ -45,37 +44,43 @@ bot.on('message', async (msg) => {
     const text = msg.text || "";
     console.log(`[TELEGRAM RADAR] Message reçu de ${msg.from?.first_name || 'Inconnu'} (ID: ${chatId}): ${text}`);
     
-    if (text === '/stop' || text === '⏸️ Pause') { 
+    if (text === '/stop' || text.includes('Pause')) { 
         isBotPaused = true; 
-        bot.sendMessage(chatId, '🛑 **Robot mis en pause.** Je ne scannerai plus les courses jusqu a la commande Démarrer.', {parse_mode: 'Markdown', ...botKeyboard}); 
+        bot.sendMessage(chatId, '🛑 **Robot mis en pause.** \n\n*Que se passe-t-il ?*\nLe robot reste connecté sur la page AMC de VDF, mais il se met dans un coin et arrête de cliquer sur "Rechercher". Il laisse l\'utilisateur manipuler le site sans le déconnecter. \n\nPour reprendre le sniping, clique sur Démarrer.', {parse_mode: 'Markdown', ...botKeyboard}); 
         return; 
     }
     
-    if (text === '/run' || text === '▶️ Démarrer') { 
+    if (text === '/run' || text.includes('Démarrer')) { 
         isBotPaused = false; 
-        bot.sendMessage(chatId, '▶️ **Robot réactivé.** Je reprends la surveillance de PRT !', {parse_mode: 'Markdown', ...botKeyboard}); 
+        bot.sendMessage(chatId, '▶️ **Robot réactivé.** \n\nJe reprends mon rôle de Sniper, je retourne cliquer sur le bouton de rafraîchissement au moindre nouveau radar !', {parse_mode: 'Markdown', ...botKeyboard}); 
         return; 
     }
 
-    if (text === '📸 Capture d\'écran (Direct)') {
+    if (text.includes('Capture')) {
         if (act_page) {
             bot.sendMessage(chatId, "📸 *Prise de vue en cours, patiente une seconde...*", {parse_mode: 'Markdown'});
             try {
                 const buf = await act_page.screenshot({ fullPage: true });
                 await bot.sendPhoto(chatId, buf as Buffer);
             } catch (e) {
-                bot.sendMessage(chatId, "❌ Impossible de capturer l'écran (le robot est en train de cliquer ou charger la page).");
+                bot.sendMessage(chatId, "❌ Impossible de capturer l'écran pour l'instant (le robot est probablement en pleine navigation).");
             }
         } else {
             bot.sendMessage(chatId, "⏳ Le robot n'est pas encore totalement connecté au site AMC.");
         }
         return;
     }
+
+    if (text.includes('xion')) {
+        bot.sendMessage(chatId, "🔌 **Déconnexion volontaire.**\n\nLe robot va fermer la vraie page et quitter son navigateur. Il redémarrera de zéro d'ici 15 secondes pour te laisser prendre le compte AMC si nécessaire.", {parse_mode: 'Markdown'});
+        if (act_page) {
+            try { await act_page.close(); } catch(e) {}
+        }
+        return;
+    }
     
     if (text === '/start' || text.toLowerCase().includes('salut')) {
-        bot.sendMessage(chatId, `Salut ${msg.from?.first_name || ''} ! 🕵️‍♂️ L'Agent PRT de VDF est à ton service pour sniper les courses.
-
-Utilise le clavier ci-dessous pour piloter le robot en temps réel.`, botKeyboard);
+        bot.sendMessage(chatId, `Salut ${msg.from?.first_name || ''} ! 🕵️‍♂️ L'Agent PRT de VDF est à ton service pour sniper les courses.\n\nUtilise le clavier ci-dessous pour piloter le robot en temps réel.`, botKeyboard);
     }
 });
 
