@@ -26,18 +26,58 @@ const alertedCourses = new Set<string>()
 let isBotPaused = false
 const syncedAcceptedCourses = new Set<string>()
 const activityMemory = new Set<string>()
+let act_page: any = null;
 
-bot.on('message', (msg) => {
-    const chatId = msg.chat.id
-    const text = msg.text || ""
-    console.log(`[TELEGRAM RADAR] Message reçu de ${msg.from?.first_name || 'Inconnu'} (ID: ${chatId}): ${text}`)
-    
-    if (text === '/stop') { isBotPaused = true; bot.sendMessage(chatId, '🛑 **Robot mis en pause.** Je ne scannerai plus les courses jusqu a la commande /run.', {parse_mode: 'Markdown'}); return; }
-    if (text === '/run') { isBotPaused = false; bot.sendMessage(chatId, '▶️ **Robot réactivé.** Je reprends la surveillance de PRT !', {parse_mode: 'Markdown'}); return; }
-    if (text === '/start' || text.toLowerCase().includes('salut')) {
-        bot.sendMessage(chatId, `Salut ${msg.from?.first_name || ''} ! 🕵️‍♂️ L'Agent PRT t'a identifié.\n\nTon code d'identification unique est : ${chatId}\n\nTransmets vite ce code à l'administrateur (Ibrahim) pour qu'il te donne l'accès aux cibles AMC 🎯.`)
+
+const botKeyboard = {
+    reply_markup: {
+        keyboard: [
+            [{ text: "▶️ Démarrer" }, { text: "⏸️ Pause" }],
+            [{ text: "�� Capture d'écran (Direct)" }]
+        ],
+        resize_keyboard: true,
+        is_persistent: true
     }
-})
+};
+
+bot.on('message', async (msg) => {
+    const chatId = msg.chat.id;
+    const text = msg.text || "";
+    console.log(`[TELEGRAM RADAR] Message reçu de ${msg.from?.first_name || 'Inconnu'} (ID: ${chatId}): ${text}`);
+    
+    if (text === '/stop' || text === '⏸️ Pause') { 
+        isBotPaused = true; 
+        bot.sendMessage(chatId, '🛑 **Robot mis en pause.** Je ne scannerai plus les courses jusqu a la commande Démarrer.', {parse_mode: 'Markdown', ...botKeyboard}); 
+        return; 
+    }
+    
+    if (text === '/run' || text === '▶️ Démarrer') { 
+        isBotPaused = false; 
+        bot.sendMessage(chatId, '▶️ **Robot réactivé.** Je reprends la surveillance de PRT !', {parse_mode: 'Markdown', ...botKeyboard}); 
+        return; 
+    }
+
+    if (text === '📸 Capture d\'écran (Direct)') {
+        if (act_page) {
+            bot.sendMessage(chatId, "📸 *Prise de vue en cours, patiente une seconde...*", {parse_mode: 'Markdown'});
+            try {
+                const buf = await act_page.screenshot({ fullPage: true });
+                await bot.sendPhoto(chatId, buf as Buffer);
+            } catch (e) {
+                bot.sendMessage(chatId, "❌ Impossible de capturer l'écran (le robot est en train de cliquer ou charger la page).");
+            }
+        } else {
+            bot.sendMessage(chatId, "⏳ Le robot n'est pas encore totalement connecté au site AMC.");
+        }
+        return;
+    }
+    
+    if (text === '/start' || text.toLowerCase().includes('salut')) {
+        bot.sendMessage(chatId, `Salut ${msg.from?.first_name || ''} ! 🕵️‍♂️ L'Agent PRT de VDF est à ton service pour sniper les courses.
+
+Utilise le clavier ci-dessous pour piloter le robot en temps réel.`, botKeyboard);
+    }
+});
 
 bot.on('callback_query', (query) => {
     if (query.data && query.data.startsWith('ACCEPT_')) {
