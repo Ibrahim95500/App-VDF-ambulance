@@ -23,6 +23,7 @@ const TELEGRAM_CHAT_IDS = ["1634444351", "8679052160", "8457900796", "6171035866
 const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true })
 const manualClicks = new Set<string>()
 const alertedCourses = new Set<string>()
+let isBotPaused = false
 const syncedAcceptedCourses = new Set<string>()
 const activityMemory = new Set<string>()
 
@@ -31,6 +32,8 @@ bot.on('message', (msg) => {
     const text = msg.text || ""
     console.log(`[TELEGRAM RADAR] Message reçu de ${msg.from?.first_name || 'Inconnu'} (ID: ${chatId}): ${text}`)
     
+    if (text === '/stop') { isBotPaused = true; bot.sendMessage(chatId, '🛑 **Robot mis en pause.** Je ne scannerai plus les courses jusqu a la commande /run.', {parse_mode: 'Markdown'}); return; }
+    if (text === '/run') { isBotPaused = false; bot.sendMessage(chatId, '▶️ **Robot réactivé.** Je reprends la surveillance de PRT !', {parse_mode: 'Markdown'}); return; }
     if (text === '/start' || text.toLowerCase().includes('salut')) {
         bot.sendMessage(chatId, `Salut ${msg.from?.first_name || ''} ! 🕵️‍♂️ L'Agent PRT t'a identifié.\n\nTon code d'identification unique est : ${chatId}\n\nTransmets vite ce code à l'administrateur (Ibrahim) pour qu'il te donne l'accès aux cibles AMC 🎯.`)
     }
@@ -120,10 +123,9 @@ async function snipeCourse(page: any): Promise<{ buffer: Buffer | null, status: 
         let result = { clicked: false, isManual: false, num: "", departText: "", arriveeText: "", foundNotVip: false, allNums: [] as string[] };
         
         const headers = Array.from(document.querySelectorAll('th'));
-        function normalizeText(text: string) { return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); }
-        const departIdx = headers.findIndex(th => normalizeText(th.innerText).includes('depart'));
-        const arriveeIdx = headers.findIndex(th => normalizeText(th.innerText).includes('arrive'));
-        const nIdx = headers.findIndex(th => th.innerText.toLowerCase() === 'n°');
+        const departIdx = headers.findIndex(th => (th.innerText || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes('depart'));
+        const arriveeIdx = headers.findIndex(th => (th.innerText || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes('arrive'));
+        const nIdx = headers.findIndex(th => (th.innerText || "").toLowerCase() === 'n°');
         
         const rows = document.querySelectorAll('tr');
         for (let row of rows) {
@@ -203,48 +205,53 @@ async function snipeCourse(page: any): Promise<{ buffer: Buffer | null, status: 
             targetTime = timeMatch[1];
         }
 
-        function getElByLabel(txt: string, tag: string) {
-            const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
-            let node;
-            while (node = walker.nextNode()) {
-                if (node.nodeValue && node.nodeValue.toLowerCase().includes(txt.toLowerCase())) {
-                    const parent = node.parentElement;
-                    if (parent && parent.getBoundingClientRect().width > 0) { 
-                        let el = parent.nextElementSibling?.querySelector(tag) || parent.parentElement?.querySelector(tag);
-                        if (el) return el;
-                    }
+        let timeInput = null;
+        let chauffeurSel = null;
+        let equipierSel = null;
+
+        const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
+        let node;
+        while (node = walker.nextNode()) {
+            let txt = node.nodeValue ? node.nodeValue.toLowerCase() : "";
+            const parent = node.parentElement;
+            if (parent && parent.getBoundingClientRect().width > 0) {
+                if (!timeInput && txt.includes('heure de pec')) {
+                    timeInput = parent.nextElementSibling?.querySelector('input') || parent.parentElement?.querySelector('input');
+                }
+                if (!chauffeurSel && txt.includes('chauffeur')) {
+                    chauffeurSel = parent.nextElementSibling?.querySelector('select') || parent.parentElement?.querySelector('select');
+                }
+                if (!equipierSel && txt.includes('equipier')) {
+                    equipierSel = parent.nextElementSibling?.querySelector('select') || parent.parentElement?.querySelector('select');
                 }
             }
-            return null;
         }
         
-        const timeInput = getElByLabel('Heure de PEC', 'input');
         if (timeInput) {
             (timeInput as HTMLInputElement).value = targetTime;
             timeInput.dispatchEvent(new Event('input', { bubbles: true }));
             timeInput.dispatchEvent(new Event('change', { bubbles: true }));
         }
-        
-        const chauffeurSel = getElByLabel('Chauffeur', 'select');
-        const equipierSel = getElByLabel('Equipier', 'select');
-        
-        function setSelect(sel: Element | null, query: string) {
-            if (!sel || !(sel instanceof HTMLSelectElement)) return;
-            for (let i = 0; i < sel.options.length; i++) {
-                if (sel.options[i].text.toLowerCase().includes(query.toLowerCase())) {
-                    sel.selectedIndex = i;
-                    sel.dispatchEvent(new Event('change', { bubbles: true }));
-                    return;
+
+        if (chauffeurSel && chauffeurSel instanceof HTMLSelectElement) {
+            for (let i = 0; i < chauffeurSel.options.length; i++) {
+                if (chauffeurSel.options[i].text.toLowerCase().includes('ambu vdf1')) {
+                    chauffeurSel.selectedIndex = i;
+                    chauffeurSel.dispatchEvent(new Event('change', { bubbles: true }));
+                    break;
                 }
-            }
-            if (sel.options.length > 1) {
-                sel.selectedIndex = 1;
-                sel.dispatchEvent(new Event('change', { bubbles: true }));
             }
         }
 
-        setSelect(chauffeurSel, 'AMBU VDF1');
-        setSelect(equipierSel, 'AMBU VDF2');
+        if (equipierSel && equipierSel instanceof HTMLSelectElement) {
+            for (let i = 0; i < equipierSel.options.length; i++) {
+                if (equipierSel.options[i].text.toLowerCase().includes('ambu vdf2')) {
+                    equipierSel.selectedIndex = i;
+                    equipierSel.dispatchEvent(new Event('change', { bubbles: true }));
+                    break;
+                }
+            }
+        }
         
         let buttons = Array.from(document.querySelectorAll('input[type="submit"], button, a, input[type="button"]'));
         let submitBtn = buttons.find(b => {
