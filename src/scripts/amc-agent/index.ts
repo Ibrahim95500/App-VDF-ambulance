@@ -265,20 +265,13 @@ async function snipeCourse(page: any, withFilters: boolean = true): Promise<{ bu
     const validationClicked = await page.evaluate(() => {
         const bodyText = document.body.innerText;
         
-        // Ex: "RDV le 03/04/2026 à 00:15"
-        const rdvMatch = bodyText.match(/RDV\s+le\s+(\d{2}\/\d{2}\/\d{4})\s+à\s+(\d{2}:\d{2})/i) 
-                        || bodyText.match(/(\d{2}\/\d{2}\/\d{4}).*?(\d{2}:\d{2})/i); 
-                        
-        let targetDate = "";
-        let targetTime = ""; 
-        if (rdvMatch && rdvMatch[1] && rdvMatch[2]) {
-            targetDate = rdvMatch[1];
-            targetTime = rdvMatch[2];
-        } else {
-            // Fallbacks if RDV format is different
-            const timeFallback = bodyText.match(/souhait[eé]e.*?(\d{2}:\d{2})/i) || bodyText.match(/à\s*(\d{2}:\d{2})/i);
-            if (timeFallback && timeFallback[1]) targetTime = timeFallback[1];
-        }
+        // Extract Date from RDV (e.g. "RDV le 03/04/2026")
+        const rdvDateMatch = bodyText.match(/RDV\s+le\s+(\d{2}\/\d{2}\/\d{4})/i) || bodyText.match(/(\d{2}\/\d{2}\/\d{4})/i);
+        let targetDate = rdvDateMatch ? rdvDateMatch[1] : "";
+        
+        // Extract Time from "Heure de départ souhaitée par l'établissement : 00:00"
+        const timeMatch = bodyText.match(/souhait[eé]e.*?(?:l'établissement|)[:\s]*(\d{2}:\d{2})/i) || bodyText.match(/à\s*(\d{2}:\d{2})/i);
+        let targetTime = timeMatch ? timeMatch[1] : "12:00";
 
         let dateInput = null;
         let timeInput = null;
