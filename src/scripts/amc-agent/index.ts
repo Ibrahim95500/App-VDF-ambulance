@@ -383,6 +383,11 @@ async function startAgent() {
 
     console.log("⏳ Début de la boucle de surveillance (15s)...")
     while (true) {
+      if (isBotPaused) {
+          await new Promise(r => setTimeout(r, 8000));
+          continue;
+      }
+
       let pageText = "";
       try {
           pageText = await page.evaluate(() => document.body.innerText);
