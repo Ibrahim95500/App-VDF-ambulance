@@ -187,10 +187,12 @@ async function snipeCourse(page: any, withFilters: boolean = true): Promise<{ bu
         let result = { clicked: false, isManual: false, num: "", departText: "", arriveeText: "", foundNotVip: false, allNums: [] as string[] };
         
         const targetTable = document.querySelector('#AT_Affectation') || document;
-        const headers = Array.from(targetTable.querySelectorAll('th'));
-        const departIdx = headers.findIndex(th => (th.innerText || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes('depart'));
-        const arriveeIdx = headers.findIndex(th => (th.innerText || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes('arrive'));
-        const nIdx = headers.findIndex(th => (th.innerText || "").toLowerCase() === 'n°');
+        const theadRows = targetTable.querySelectorAll('thead tr');
+        const headerTr = theadRows.length > 1 ? theadRows[1] : (theadRows[0] || targetTable);
+        const headers = Array.from(headerTr.querySelectorAll('th'));
+        const departIdx = headers.findIndex((th: any) => (th.innerText || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes('depart'));
+        const arriveeIdx = headers.findIndex((th: any) => (th.innerText || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes('arrive'));
+        const nIdx = headers.findIndex((th: any) => (th.innerText || "").trim().toLowerCase() === 'n°');
         
         const rows = targetTable.querySelectorAll('tr');
         for (let row of rows) {
@@ -558,7 +560,9 @@ async function startAgent() {
          try {
              const currentNums = await page.evaluate(() => {
                  const targetTable = document.querySelector('#AT_Affectation') || document;
-                 const headers = Array.from(targetTable.querySelectorAll('th'));
+                 const theadRows = targetTable.querySelectorAll('thead tr');
+                 const headerTr = theadRows.length > 1 ? theadRows[1] : (theadRows[0] || targetTable);
+                 const headers = Array.from(headerTr.querySelectorAll('th'));
                  const nIdx = headers.findIndex((th: any) => (th.innerText || "").trim().toLowerCase() === 'n°');
                  
                  return Array.from(targetTable.querySelectorAll('tr'))
