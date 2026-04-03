@@ -23,7 +23,9 @@ const TELEGRAM_CHAT_IDS = ["1634444351", "8679052160", "8457900796", "6171035866
 const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true })
 const manualClicks = new Set<string>()
 const alertedCourses = new Set<string>()
-let isBotPaused = false
+let isBotPaused = false;
+let isBotDisconnected = false;
+let isFilterActive = true;
 const syncedAcceptedCourses = new Set<string>()
 const activityMemory = new Set<string>()
 let act_page: any = null;
@@ -32,6 +34,7 @@ const botKeyboard = {
     reply_markup: {
         keyboard: [
             [{ text: "▶️ Démarrer" }, { text: "⏸️ Pause" }],
+            [{ text: "✅ Mode: AVEC Villes" }, { text: "⚠️ Mode: TOUT PRENDRE" }],
             [{ text: "📸 Capture d'écran" }, { text: "🔌 Déconnexion" }]
         ],
         resize_keyboard: true,
@@ -59,6 +62,18 @@ bot.on('message', async (msg) => {
         }
         bot.sendMessage(chatId, '▶️ **Robot réactivé (Sniper ON).** \n\nJe reprends mon rôle de Sniper, je retourne cliquer sur le bouton de rafraîchissement au moindre nouveau radar !', {parse_mode: 'Markdown', ...botKeyboard}); 
         return; 
+    }
+
+    if (text.includes('TOUT PRENDRE')) {
+        isFilterActive = false;
+        bot.sendMessage(chatId, "⚠️ **MODE SANS CONDITION ACTIVÉ !**\n\nLe robot va sniper absolument TOUTES LES COURSES qui apparaissent sur l'écran (sans vérifier Gonesse, Paris, ou Province).\n\nPour réactiver la sécurité, utilise le bouton *✅ Mode: AVEC Villes*.", {parse_mode: 'Markdown'});
+        return;
+    }
+    
+    if (text.includes('AVEC Villes')) {
+        isFilterActive = true;
+        bot.sendMessage(chatId, "✅ **MODE SÉCURISÉ ACTIVÉ !**\n\nLe robot redevient sélectif. Il ne prendra QUE les courses au départ de Gonesse (GHT) vers les villes autorisées (Goussainville, Villiers, etc.)", {parse_mode: 'Markdown'});
+        return;
     }
 
     if (text.includes('Capture')) {
@@ -155,13 +170,13 @@ async function sendTelegramAlert(message: string, imageBuffer?: Buffer, courseId
   }
 }
 
-async function snipeCourse(page: any): Promise<{ buffer: Buffer | null, status: string, num?: string, depart?: string, arrivee?: string }> {
+async function snipeCourse(page: any, withFilters: boolean = true): Promise<{ buffer: Buffer | null, status: string, num?: string, depart?: string, arrivee?: string }> {
     console.log("🎯 DÉBUT DU SNIPING ! Évaluation Chirurgicale des courses...")
     const manualClicksArray = Array.from(manualClicks);
     const alertedCoursesArray = Array.from(alertedCourses);
     
     // Étape 1: Évaluer les lignes du tableau et filtrer
-    const extraction = await page.evaluate((manualIds: string[], alertedIds: string[]) => {
+    const extraction = await page.evaluate((manualIds: string[], alertedIds: string[], withFilters: boolean) => {
         const allowedArrivals = [
             "gonesse", "villiers le bel", "arnouville", "sarcelles", "garges", 
             "louvres", "goussainville", "fontenay", "bouqueval", "ecouen", 
@@ -193,7 +208,7 @@ async function snipeCourse(page: any): Promise<{ buffer: Buffer | null, status: 
                     const isGonesseDepart = result.departText.toLowerCase().includes('gonesse');
                     const isAllowedArrivee = allowedArrivals.some(city => result.arriveeText.toLowerCase().includes(city));
                     
-                    const isVIP = isGonesseDepart && isAllowedArrivee;
+                    const isVIP = withFilters ? (isGonesseDepart && isAllowedArrivee) : true;
                     const isManualTriggered = manualIds.includes(result.num);
 
                     if (isVIP || isManualTriggered) {
@@ -219,7 +234,7 @@ async function snipeCourse(page: any): Promise<{ buffer: Buffer | null, status: 
             }
         }
         return result;
-    }, manualClicksArray, alertedCoursesArray);
+    }, manualClicksArray, alertedCoursesArray, withFilters);
 
     if (extraction.isManual) {
         manualClicks.delete(extraction.num); // Reset memory
@@ -517,7 +532,7 @@ async function startAgent() {
              }
          } catch(e) {}
 
-         const snipeResult = await snipeCourse(page);
+         const snipeResult = await snipeCourse(page, isFilterActive);
          
          if (snipeResult.status === "ignored") {
              console.log("⏭️ Les courses ne matchent pas Gonesse / Villes cibles. Reprise de la veille.");
