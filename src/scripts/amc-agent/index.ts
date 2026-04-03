@@ -369,7 +369,7 @@ async function startAgent() {
         args: ["--no-sandbox", "--disable-setuid-sandbox"],
       })
     const page = await browser.newPage()
-    await page.setViewport({ width: 1280, height: 800 })
+    act_page = page;    await page.setViewport({ width: 1280, height: 800 })
 
     console.log("📡 Accès à la page cible...")
     await page.goto(AMC_URL, { waitUntil: "networkidle2" })
@@ -519,12 +519,22 @@ async function startAgent() {
       if (!hasRienAtraiter) {
          console.log("🚨 ACTIVITÉ DÉTECTÉE SUR LE PRT !!")
          
-         // Nouvelle logique : Screenshot TOUTE activité nouvelle
+         // Nouvelle logique : Screenshot TOUTE activité nouvelle (uniquement les courses non acceptées)
          try {
              const currentNums = await page.evaluate(() => {
-                 return Array.from(document.querySelectorAll('tr td:nth-child(4)')).map(td => td.innerText.trim()).filter(n => n);
+                 const headers = Array.from(document.querySelectorAll('th'));
+                 const nIdx = headers.findIndex(th => (th.innerText || "").trim().toLowerCase() === 'n°');
+                 
+                 return Array.from(document.querySelectorAll('tr'))
+                     .filter(tr => tr.querySelector('input[type="image"][src*="valider"], img[src*="valider"], img[src*="check"], a[title*="accepter"]') !== null)
+                     .map((tr: any) => {
+                         const tds = tr.querySelectorAll('td');
+                         if (nIdx >= 0 && tds.length > nIdx) return tds[nIdx].innerText.trim();
+                         return null;
+                     })
+                     .filter(n => n);
              });
-             const newNums = currentNums.filter(n => !activityMemory.has(n));
+             const newNums = (currentNums as string[]).filter(n => !activityMemory.has(n));
              if (newNums.length > 0) {
                  const snapBuffer = await page.screenshot({ fullPage: true }) as Buffer;
                  await sendTelegramAlert(`👀 **MOUVEMENT DÉTECTÉ !**\nDe nouvelles demandes viennent d'apparaître sur le tableau. Évaluation en cours...`, snapBuffer);
