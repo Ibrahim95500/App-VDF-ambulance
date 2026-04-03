@@ -264,12 +264,23 @@ async function snipeCourse(page: any, withFilters: boolean = true): Promise<{ bu
     // Étape 3: Analyser le pop-up, lire l'heure voulue, et remplir les champs
     const validationClicked = await page.evaluate(() => {
         const bodyText = document.body.innerText;
-        const timeMatch = bodyText.match(/souhait[eé]e.*?(\d{2}:\d{2})/i) || bodyText.match(/à\s*(\d{2}:\d{2})/i);
-        let targetTime = "12:00"; 
-        if (timeMatch && timeMatch[1]) {
-            targetTime = timeMatch[1];
+        
+        // Ex: "RDV le 03/04/2026 à 00:15"
+        const rdvMatch = bodyText.match(/RDV\s+le\s+(\d{2}\/\d{2}\/\d{4})\s+à\s+(\d{2}:\d{2})/i) 
+                        || bodyText.match(/(\d{2}\/\d{2}\/\d{4}).*?(\d{2}:\d{2})/i); 
+                        
+        let targetDate = "";
+        let targetTime = ""; 
+        if (rdvMatch && rdvMatch[1] && rdvMatch[2]) {
+            targetDate = rdvMatch[1];
+            targetTime = rdvMatch[2];
+        } else {
+            // Fallbacks if RDV format is different
+            const timeFallback = bodyText.match(/souhait[eé]e.*?(\d{2}:\d{2})/i) || bodyText.match(/à\s*(\d{2}:\d{2})/i);
+            if (timeFallback && timeFallback[1]) targetTime = timeFallback[1];
         }
 
+        let dateInput = null;
         let timeInput = null;
         let chauffeurSel = null;
         let equipierSel = null;
@@ -280,7 +291,10 @@ async function snipeCourse(page: any, withFilters: boolean = true): Promise<{ bu
             let txt = node.nodeValue ? node.nodeValue.toLowerCase() : "";
             const parent = node.parentElement;
             if (parent && parent.getBoundingClientRect().width > 0) {
-                if (!timeInput && txt.includes('heure de pec')) {
+                if (!dateInput && (txt.includes('date de pec') || txt.includes('date :'))) {
+                    dateInput = parent.nextElementSibling?.querySelector('input') || parent.parentElement?.querySelector('input');
+                }
+                if (!timeInput && (txt.includes('heure de pec') || txt.includes('heure :'))) {
                     timeInput = parent.nextElementSibling?.querySelector('input') || parent.parentElement?.querySelector('input');
                 }
                 if (!chauffeurSel && txt.includes('chauffeur')) {
@@ -292,7 +306,13 @@ async function snipeCourse(page: any, withFilters: boolean = true): Promise<{ bu
             }
         }
         
-        if (timeInput) {
+        if (dateInput && targetDate) {
+            (dateInput as HTMLInputElement).value = targetDate;
+            dateInput.dispatchEvent(new Event('input', { bubbles: true }));
+            dateInput.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+
+        if (timeInput && targetTime) {
             (timeInput as HTMLInputElement).value = targetTime;
             timeInput.dispatchEvent(new Event('input', { bubbles: true }));
             timeInput.dispatchEvent(new Event('change', { bubbles: true }));
