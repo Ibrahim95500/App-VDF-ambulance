@@ -362,6 +362,11 @@ async function startAgent() {
   console.log("🚀 Lancement de l'Agent AMC (Espion & Sniper Interactif)...")
   
   while (true) {
+    if (isBotDisconnected) {
+        await new Promise(r => setTimeout(r, 5000));
+        continue;
+    }
+
     let browser = null
     try {
       browser = await puppeteer.launch({
@@ -381,7 +386,10 @@ async function startAgent() {
       let pageText = "";
       try {
           pageText = await page.evaluate(() => document.body.innerText);
-      } catch (e) {
+      } catch (e: any) {
+          if (isBotDisconnected || (e.message && e.message.includes("Target closed"))) {
+              throw e; // Laisse l'erreur remonter au catch global pour fermer et hiberner
+          }
           console.log("⚠️ Navigation en cours gérée silencieusement...");
           await new Promise(r => setTimeout(r, 2000));
           continue;
