@@ -177,13 +177,11 @@ async function snipeCourse(page: any, withFilters: boolean = true): Promise<{ bu
     
     // Étape 1: Évaluer les lignes du tableau et filtrer
     const extraction = await page.evaluate((manualIds: string[], alertedIds: string[], withFilters: boolean) => {
-        const allowedArrivals = [
-            "gonesse", "villiers le bel", "arnouville", "sarcelles", "garges", 
-            "louvres", "goussainville", "fontenay", "bouqueval", "ecouen", 
-            "roissy", "saint brice", "saint-brice", "le thillay", "puiseux", 
-            "tremblay", "dugny", "bonneuil", "vemars", "bellefontaine", "fosses",
-            "survilliers", "saint witz", "saint-witz", "luzarches", "chaumontel",
-            "vilaine sous bois", "jagny sous bois", "marly la ville"
+        const allowedZipCodes = [
+            "95500", "95400", "95200", "95140", "95380", 
+            "95190", "95470", "95270", "95700", "95440", 
+            "95350", "95670", "95720", "95570", "95850", 
+            "93290", "93440"
         ];
         
         let result = { clicked: false, isManual: false, num: "", departText: "", arriveeText: "", foundNotVip: false, allNums: [] as string[] };
@@ -205,8 +203,8 @@ async function snipeCourse(page: any, withFilters: boolean = true): Promise<{ bu
                     result.num = tds[nIdx].innerText.trim();
                     result.allNums.push(result.num);
                     
-                    const isGonesseDepart = result.departText.toLowerCase().includes('gonesse');
-                    const isAllowedArrivee = allowedArrivals.some(city => result.arriveeText.toLowerCase().includes(city));
+                    const isGonesseDepart = result.departText.toLowerCase().includes('gonesse') || result.departText.includes('95500');
+                    const isAllowedArrivee = allowedZipCodes.some(zip => result.arriveeText.includes(zip));
                     
                     const isVIP = withFilters ? (isGonesseDepart && isAllowedArrivee) : true;
                     const isManualTriggered = manualIds.includes(result.num);
