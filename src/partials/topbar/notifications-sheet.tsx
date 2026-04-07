@@ -110,150 +110,153 @@ export function NotificationsSheet({ trigger, onAllRead }: { trigger: ReactNode;
     <Sheet onOpenChange={handleOpenChange}>
       <SheetTrigger asChild>{trigger}</SheetTrigger>
       <SheetContent className="p-0 gap-0 sm:w-[500px] sm:max-w-none inset-5 start-auto h-auto rounded-lg p-0 sm:max-w-none [&_[data-slot=sheet-close]]:top-4.5 [&_[data-slot=sheet-close]]:end-5">
-        <SheetHeader className="mb-0 flex flex-row items-center justify-between pr-12 pb-2 border-b border-border/50">
-          <SheetTitle className="p-3 pb-0">
+        <SheetHeader className="mb-0 flex flex-col items-start pr-12 pb-3 border-b border-border/50 gap-2 relative">
+          <SheetTitle className="px-5 pt-4 pb-0">
             Notifications
           </SheetTitle>
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-7 text-[10px] border-orange-200 text-orange-700 hover:bg-orange-100 font-bold px-2 rounded-full mt-3 dark:border-orange-500/30 dark:text-orange-400 dark:hover:bg-orange-900/30"
-            onClick={async () => {
-              const platform = Capacitor.getPlatform();
-              console.log(">>> CLICK NOTIFICATIONS - Platform:", platform);
-              
-              if (Capacitor.isNativePlatform()) {
-                console.log(">>> NATIVE DETECTED - Starting Push sequence");
-                try {
-                  // 1. Permissions
-                  console.log(">>> Checking permissions...");
-                  let permStatus = await PushNotifications.checkPermissions();
-                  console.log(">>> Initial permission status:", permStatus.receive);
+          
+          <div className="flex flex-row flex-wrap gap-2 px-5 z-20 w-full relative">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 text-[11px] border-orange-200 text-orange-700 hover:bg-orange-100 font-bold px-3 rounded-full dark:border-orange-500/30 dark:text-orange-400 dark:hover:bg-orange-900/30 shadow-sm"
+              onClick={async () => {
+                const platform = Capacitor.getPlatform();
+                console.log(">>> CLICK NOTIFICATIONS - Platform:", platform);
+                
+                if (Capacitor.isNativePlatform()) {
+                  console.log(">>> NATIVE DETECTED - Starting Push sequence");
+                  try {
+                    // 1. Permissions
+                    console.log(">>> Checking permissions...");
+                    let permStatus = await PushNotifications.checkPermissions();
+                    console.log(">>> Initial permission status:", permStatus.receive);
 
-                  if (permStatus.receive === 'prompt') {
-                    console.log(">>> Requesting permissions...");
-                    permStatus = await PushNotifications.requestPermissions();
-                    console.log(">>> New permission status:", permStatus.receive);
-                  }
-
-                  if (permStatus.receive !== 'granted') {
-                    console.warn(">>> Permission NOT granted:", permStatus.receive);
-                    alert("Autorisation nécessaire pour les alertes (" + permStatus.receive + ").");
-                     return;
-                  }
-
-                  // 2. Create Notification Channel for Android (CRITICAL for background)
-                  if (platform === 'android') {
-                    console.log(">>> Creating notification channel...");
-                    try {
-                      await PushNotifications.createChannel({
-                        id: 'vdf-notifications',
-                        name: 'Alertes VDF',
-                        description: 'Notifications pour les demandes et rendez-vous',
-                        importance: 5,
-                        visibility: 1,
-                        vibration: true,
-                        sound: 'default'
-                      });
-                      console.log(">>> Channel created successfully");
-                    } catch (err) {
-                      console.error(">>> Failed to create channel:", err);
+                    if (permStatus.receive === 'prompt') {
+                      console.log(">>> Requesting permissions...");
+                      permStatus = await PushNotifications.requestPermissions();
+                      console.log(">>> New permission status:", permStatus.receive);
                     }
-                  }
 
-                  // 3. Listeners
-                  console.log(">>> Setting up Push listeners...");
-                  await PushNotifications.removeAllListeners();
-                  
-                  await PushNotifications.addListener('registration', async (token) => {
-                    console.log('>>> SUCCESS: FCM Token received:', token.value);
-                    await saveFcmToken(token.value);
-                    alert("Notifications mobiles activées ! Appuyez sur OK pour finir. 🚀");
-                  });
+                    if (permStatus.receive !== 'granted') {
+                      console.warn(">>> Permission NOT granted:", permStatus.receive);
+                      alert("Autorisation nécessaire pour les alertes (" + permStatus.receive + ").");
+                       return;
+                    }
 
-                  await PushNotifications.addListener('registrationError', (error: any) => {
-                    console.error('>>> ERROR: Push registration fails:', error);
-                    alert("Erreur Google/FCM : " + JSON.stringify(error));
-                  });
+                    // 2. Create Notification Channel for Android (CRITICAL for background)
+                    if (platform === 'android') {
+                      console.log(">>> Creating notification channel...");
+                      try {
+                        await PushNotifications.createChannel({
+                          id: 'vdf-notifications',
+                          name: 'Alertes VDF',
+                          description: 'Notifications pour les demandes et rendez-vous',
+                          importance: 5,
+                          visibility: 1,
+                          vibration: true,
+                          sound: 'default'
+                        });
+                        console.log(">>> Channel created successfully");
+                      } catch (err) {
+                        console.error(">>> Failed to create channel:", err);
+                      }
+                    }
 
-                  await PushNotifications.addListener('pushNotificationReceived', (notification) => {
-                    console.log('>>> Push received in foreground:', notification);
-                    alert("Alerte reçue (App ouverte) : " + notification.title + "\n" + notification.body);
-                  });
-
-                  // 3. Register
-                  console.log(">>> Calling PushNotifications.register()...");
-                  await PushNotifications.register();
-                  console.log(">>> Register called, waiting for 'registration' event...");
-                  
-                } catch (error) {
-                  console.error(">>> CRITICAL ERROR in Push sequence:", error);
-                  alert("Erreur système : " + (error instanceof Error ? error.message : "Inconnue"));
-                }
-                return;
-              }
-
-              console.log(">>> WEB/PWA DETECTED");
-              if (!("Notification" in window) || !("serviceWorker" in navigator)) {
-                alert("Ce navigateur ne supporte pas les notifications avancées.");
-                return;
-              }
-
-              try {
-                const permission = await Notification.requestPermission();
-                if (permission === "granted") {
-                  const registration = await navigator.serviceWorker.ready;
-                  let subscription = await registration.pushManager.getSubscription();
-
-                  if (!subscription) {
-                    const publicKey = await getVapidPublicKey();
-                    if (!publicKey) throw new Error("VAPID public key not configured");
-                    const convertedVapidKey = urlBase64ToUint8Array(publicKey);
-
-                    subscription = await registration.pushManager.subscribe({
-                      userVisibleOnly: true,
-                      applicationServerKey: convertedVapidKey
+                    // 3. Listeners
+                    console.log(">>> Setting up Push listeners...");
+                    await PushNotifications.removeAllListeners();
+                    
+                    await PushNotifications.addListener('registration', async (token) => {
+                      console.log('>>> SUCCESS: FCM Token received:', token.value);
+                      await saveFcmToken(token.value);
+                      alert("Notifications mobiles activées ! Appuyez sur OK pour finir. 🚀");
                     });
+
+                    await PushNotifications.addListener('registrationError', (error: any) => {
+                      console.error('>>> ERROR: Push registration fails:', error);
+                      alert("Erreur Google/FCM : " + JSON.stringify(error));
+                    });
+
+                    await PushNotifications.addListener('pushNotificationReceived', (notification) => {
+                      console.log('>>> Push received in foreground:', notification);
+                      alert("Alerte reçue (App ouverte) : " + notification.title + "\n" + notification.body);
+                    });
+
+                    // 3. Register
+                    console.log(">>> Calling PushNotifications.register()...");
+                    await PushNotifications.register();
+                    console.log(">>> Register called, waiting for 'registration' event...");
+                    
+                  } catch (error) {
+                    console.error(">>> CRITICAL ERROR in Push sequence:", error);
+                    alert("Erreur système : " + (error instanceof Error ? error.message : "Inconnue"));
                   }
-
-                  await savePushSubscription(JSON.parse(JSON.stringify(subscription)));
-
-                  new Notification("VDF Ambulance", {
-                    body: "Les notifications sont activées ! 🚀",
-                    icon: "/media/app/logo.png"
-                  });
-                } else if (permission === "denied") {
-                  alert("Notifications bloquées. Veuillez les autoriser dans les réglages de votre navigateur.");
+                  return;
                 }
-              } catch (error) {
-                console.error("Failed to subscribe to Web Push:", error);
-                alert("Une erreur est survenue lors de l'activation des notifications.");
-              }
-            }}
-          >
-            S'abonner aux alertes 🔔
-          </Button>
 
-          <Button 
-            variant="outline" 
-            size="sm"
-            className="h-7 text-[10px] border-blue-200 text-blue-700 hover:bg-blue-100 font-bold px-2 rounded-full mt-2 dark:border-blue-500/30 dark:text-blue-400 dark:hover:bg-blue-900/30"
-            onClick={async () => {
-              if (session?.user?.id) {
-                await sendPushNotification(
-                  session.user.id, 
-                  "Test VDF - " + (session.user.name || "Utilisateur"), 
-                  "Ceci est une notification de test pour vérifier le son et l'arrière-plan ! 🚀", 
-                  "/dashboard/salarie"
-                );
-                alert("Test envoyé ! Regarde ton téléphone (ferme l'app pour tester le son).");
-              } else {
-                alert("Erreur : Session non trouvée. Reconnecte-toi.");
-              }
-            }}
-          >
-            Tester l'envoi 🧪
-          </Button>
+                console.log(">>> WEB/PWA DETECTED");
+                if (!("Notification" in window) || !("serviceWorker" in navigator)) {
+                  alert("Ce navigateur ne supporte pas les notifications avancées.");
+                  return;
+                }
+
+                try {
+                  const permission = await Notification.requestPermission();
+                  if (permission === "granted") {
+                    const registration = await navigator.serviceWorker.ready;
+                    let subscription = await registration.pushManager.getSubscription();
+
+                    if (!subscription) {
+                      const publicKey = await getVapidPublicKey();
+                      if (!publicKey) throw new Error("VAPID public key not configured");
+                      const convertedVapidKey = urlBase64ToUint8Array(publicKey);
+
+                      subscription = await registration.pushManager.subscribe({
+                        userVisibleOnly: true,
+                        applicationServerKey: convertedVapidKey
+                      });
+                    }
+
+                    await savePushSubscription(JSON.parse(JSON.stringify(subscription)));
+
+                    new Notification("VDF Ambulance", {
+                      body: "Les notifications sont activées ! 🚀",
+                      icon: "/media/app/logo.png"
+                    });
+                  } else if (permission === "denied") {
+                    alert("Notifications bloquées. Veuillez les autoriser dans les réglages de votre navigateur.");
+                  }
+                } catch (error) {
+                  console.error("Failed to subscribe to Web Push:", error);
+                  alert("Une erreur est survenue lors de l'activation des notifications.");
+                }
+              }}
+            >
+              S'abonner aux alertes 🔔
+            </Button>
+
+            <Button 
+              variant="outline" 
+              size="sm"
+              className="h-8 text-[11px] border-blue-200 text-blue-700 hover:bg-blue-100 font-bold px-3 rounded-full dark:border-blue-500/30 dark:text-blue-400 dark:hover:bg-blue-900/30 shadow-sm"
+              onClick={async () => {
+                if (session?.user?.id) {
+                  await sendPushNotification(
+                    session.user.id, 
+                    "Test VDF - " + (session.user.name || "Utilisateur"), 
+                    "Ceci est une notification de test pour vérifier le son et l'arrière-plan ! 🚀", 
+                    "/dashboard/salarie"
+                  );
+                  alert("Test envoyé ! Regarde ton téléphone (ferme l'app pour tester le son).");
+                } else {
+                  alert("Erreur : Session non trouvée. Reconnecte-toi.");
+                }
+              }}
+            >
+              Tester l'envoi 🧪
+            </Button>
+          </div>
         </SheetHeader>
         <SheetBody className="p-0">
           <ScrollArea className="h-[calc(100vh-10.5rem)]">
