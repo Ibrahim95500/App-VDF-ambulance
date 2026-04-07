@@ -1,4 +1,6 @@
-import puppeteer from "puppeteer"
+import { chromium } from "playwright-extra"
+import stealthPlugin from "puppeteer-extra-plugin-stealth"
+chromium.use(stealthPlugin())
 import dotenv from "dotenv"
 import path from "path"
 import fs from "fs"
@@ -196,7 +198,7 @@ async function snipeCourse(page: any, withFilters: boolean = true): Promise<{ bu
         
         const rows = targetTable.querySelectorAll('tr');
         for (let row of rows) {
-            const acceptBtn = row.querySelector('input[type="image"][src*="valider"], img[src*="valider"], img[src*="check"], a[title*="accepter"]');
+            const acceptBtn = row.querySelector('input[type="image"][src*="valider"], img[src*="valider"], img[src*="check"], a[title*="accepter"], .fa-check, img[src*="V_Vert"]');
             
             if (acceptBtn && departIdx >= 0 && arriveeIdx >= 0 && nIdx >= 0) {
                 const tds = row.querySelectorAll('td');
@@ -361,7 +363,7 @@ async function snipeCourse(page: any, withFilters: boolean = true): Promise<{ bu
     
     if (validationClicked) {
         try {
-            await page.waitForNavigation({ waitUntil: "networkidle2", timeout: 8000 });
+            await page.waitForLoadState('networkidle', { timeout: 8000 });
         } catch(e) {}
     } 
     
@@ -386,15 +388,16 @@ async function startAgent() {
 
     let browser = null
     try {
-      browser = await puppeteer.launch({
+      browser = await chromium.launch({
         headless: true,
         args: ["--no-sandbox", "--disable-setuid-sandbox"],
       })
-    const page = await browser.newPage()
-    act_page = page;    await page.setViewport({ width: 1280, height: 800 })
+      const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
+      const page = await context.newPage()
+      act_page = page;
 
     console.log("📡 Accès à la page cible...")
-    await page.goto(AMC_URL, { waitUntil: "networkidle2" })
+    await page.goto(AMC_URL, { waitUntil: "networkidle" })
 
     let proofSent = false;
 
@@ -447,10 +450,10 @@ async function startAgent() {
             await new Promise(r => setTimeout(r, 1000));
             console.log("Clic asynchrone sur le vrai bouton a#ctl00_ValiderButton...");
             
-            await Promise.all([
-                page.waitForNavigation({ waitUntil: "networkidle2", timeout: 20000 }).catch(() => {}),
-                submitButton.evaluate((b: any) => b.click()),
-            ]);
+            try {
+                await submitButton.evaluate((b: any) => b.click());
+                await page.waitForLoadState("networkidle", { timeout: 20000 });
+            } catch(e) {}
         } else {
             console.log("❌ ERREUR CATACLYSMIQUE : Impossible de localiser les IDs ctl00_Login, ctl00_Password ou ctl00_ValiderButton !");
         }
@@ -566,7 +569,7 @@ async function startAgent() {
                  const nIdx = headers.findIndex((th: any) => (th.innerText || "").trim().toLowerCase() === 'n°');
                  
                  return Array.from(targetTable.querySelectorAll('tr'))
-                     .filter((tr: any) => tr.querySelector('input[type="image"][src*="valider"], img[src*="valider"], img[src*="check"], a[title*="accepter"]') !== null)
+                     .filter((tr: any) => tr.querySelector('input[type="image"][src*="valider"], img[src*="valider"], img[src*="check"], a[title*="accepter"], .fa-check, img[src*="V_Vert"]') !== null)
                      .map((tr: any) => {
                          const tds = tr.querySelectorAll('td');
                          if (nIdx >= 0 && tds.length > nIdx) return tds[nIdx].innerText.trim();
@@ -602,7 +605,7 @@ async function startAgent() {
              await new Promise(r => setTimeout(r, 8000));
          }
          else if (snipeResult.status === "failed_already_taken") {
-             await page.goto(AMC_URL, { waitUntil: "networkidle2" });
+             await page.goto(AMC_URL, { waitUntil: "networkidle" });
              await new Promise(r => setTimeout(r, 15000));
          }
          else if (snipeResult.status === "SUCCESS") {
@@ -625,13 +628,19 @@ async function startAgent() {
          }
       } else {
         const randomDelay = Math.floor(Math.random() * (20000 - 12000 + 1) + 12000)
-        console.log(`[Attente] Repos du robot pendant ${Math.floor(randomDelay/1000)}s pour être discret...`)
-        await new Promise(r => setTimeout(r, randomDelay))
+        console.log(`[Surveillance Temps Réel] En écoute active du DOM pendant ${Math.floor(randomDelay/1000)}s (sans recharger)...`)
         
-        console.log(`[${new Date().toLocaleTimeString()}] Rafraîchissement de la page...`)
         try {
-           await page.reload({ waitUntil: "networkidle2" })
-        } catch(e){}
+            // Event-Driven: Playwright attend la milli-seconde où le bouton accpeter apparaît.
+            await page.waitForSelector('#AT_Affectation tbody tr input[src*="valider"], #AT_Affectation tbody tr img[src*="valider"], #AT_Affectation tbody tr .fa-check, #AT_Affectation tbody tr a[title*="accepter"]', { state: 'attached', timeout: randomDelay });
+            console.log("⚡ [EVENT] Apparition soudaine d'une course détectée ! Action immédiate !");
+            continue; 
+        } catch(e) {
+            console.log(`[${new Date().toLocaleTimeString()}] Fin de l'écoute active. Rafraîchissement de la page...`)
+            try {
+               await page.reload({ waitUntil: "domcontentloaded" })
+            } catch(e){}
+        }
       }
     }
 
@@ -645,8 +654,11 @@ async function startAgent() {
       let crashBuffer = null;
       try {
           if (browser) {
-              const pages = await browser.pages();
-              if (pages.length > 0) crashBuffer = await pages[0].screenshot({ fullPage: true });
+              const contexts = browser.contexts();
+              if (contexts.length > 0) {
+                  const pages = contexts[0].pages();
+                  if (pages.length > 0) crashBuffer = await pages[0].screenshot({ fullPage: true }) as Buffer;
+              }
           }
       } catch(e) {}
 
