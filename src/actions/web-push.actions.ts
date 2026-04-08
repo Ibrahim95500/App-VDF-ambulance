@@ -69,8 +69,8 @@ export async function getVapidPublicKey() {
 }
 
 export async function sendPushNotification(userId: string, title: string, message: string, url: string = "/") {
-    console.log(`[PUSH_DEBUG] Start: userId=${userId}, title=${title}`);
     try {
+        console.log(`[PUSH_DEBUG] Start: userId=${userId}, title=${title}`);
         // 1. Web Push (PWA)
         const webSubscriptions = await db.pushSubscription.findMany({
             where: { userId }
@@ -202,4 +202,22 @@ export async function sendPushNotification(userId: string, title: string, messag
         console.error("[PUSH_DEBUG] Global Error:", error);
         return { error: "Erreur d'envoi de notification push" };
     }
+}
+
+export async function scheduleTestPushNotification(userId: string, name: string) {
+    // Le serveur exécute l'attente lui-même
+    setTimeout(async () => {
+        try {
+            await sendPushNotification(
+                userId,
+                "Test VDF - " + name,
+                "Ceci est une notification de test pour vérifier le son et l'arrière-plan ! 🚀",
+                "/dashboard/salarie"
+            );
+            console.log(`[PUSH_DEBUG] Delayed test push sent to ${userId}`);
+        } catch (err) {
+            console.error(`[PUSH_DEBUG] Failed delayed test push to ${userId}:`, err);
+        }
+    }, 5000);
+    return { success: true, delayed: true };
 }

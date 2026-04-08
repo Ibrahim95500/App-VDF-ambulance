@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Calendar, Settings, Settings2, Shield, Users, Clock, CheckCircle, XCircle, Info, X, Siren } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getNotifications, markAllAsRead, markAsRead, dismissNotification } from '@/actions/notifications.actions';
-import { getVapidPublicKey, savePushSubscription, saveFcmToken, sendPushNotification } from '@/actions/web-push.actions';
+import { getVapidPublicKey, savePushSubscription, saveFcmToken, sendPushNotification, scheduleTestPushNotification } from '@/actions/web-push.actions';
 import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { cn } from '@/lib/utils';
@@ -249,13 +249,7 @@ export function NotificationsSheet({ trigger, onAllRead }: { trigger: ReactNode;
                   alert("Test programmé ! ⏱️ Tu as 5 secondes pour fermer l'application et la mettre en arrière-plan pour voir la bannière Apple !");
                   
                   try {
-                      await sendPushNotification(
-                        id, 
-                        "Test VDF - " + name, 
-                        "Ceci est une notification de test pour vérifier le son et l'arrière-plan ! 🚀", 
-                        "/dashboard/salarie",
-                        5000 // Le serveur fera lui-même la pause de 5 secondes, l'appli iOS peut être éteinte
-                      );
+                      await scheduleTestPushNotification(id, name);
                       console.log(">>> Test push delayed sent.");
                   } catch (err) {
                       console.error(">>> Error in delayed push:", err);
