@@ -150,14 +150,7 @@ export async function sendPushNotification(userId: string, title: string, messag
                         visibility: 'public'
                     }
                 },
-                apns: {
-                    payload: {
-                        aps: {
-                            sound: 'default',
-                            badge: 1
-                        }
-                    }
-                },
+                // Apple va tout gérer automatiquement depuis le bloc "notification" principal
             }).then((response) => {
                 console.log(`[PUSH_DEBUG] FCM Multicast Result: success=${response.successCount}, failure=${response.failureCount}`);
                 if (response.failureCount > 0) {
