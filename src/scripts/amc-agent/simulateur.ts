@@ -178,7 +178,7 @@ async function snipeCourse(page: any, withFilters: boolean = true): Promise<{ bu
     const alertedCoursesArray = Array.from(alertedCourses);
     
     // Étape 1: Évaluer les lignes du tableau et filtrer
-    const extraction = await page.evaluate((manualIds: string[], alertedIds: string[], withFilters: boolean) => {
+    const extraction = await page.evaluate(({ manualIds, alertedIds, withFilters }: { manualIds: string[], alertedIds: string[], withFilters: boolean }) => {
         const allowedZipCodes = [
             "95500", "95400", "95200", "95140", "95380", 
             "95190", "95470", "95270", "95700", "95440", 
@@ -237,7 +237,7 @@ async function snipeCourse(page: any, withFilters: boolean = true): Promise<{ bu
             }
         }
         return result;
-    }, manualClicksArray, alertedCoursesArray, withFilters);
+    }, { manualIds: manualClicksArray, alertedIds: alertedCoursesArray, withFilters });
 
     if (extraction.isManual) {
         manualClicks.delete(extraction.num); // Reset memory
