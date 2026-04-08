@@ -248,20 +248,18 @@ export function NotificationsSheet({ trigger, onAllRead }: { trigger: ReactNode;
                   // On lance l'alerte UI en premier
                   alert("Test programmé ! ⏱️ Tu as 5 secondes pour fermer l'application et la mettre en arrière-plan pour voir la bannière Apple !");
                   
-                  // On déclenche l'API Push avec un retard pour laisser le temps de fermer l'app
-                  setTimeout(async () => {
-                    try {
+                  try {
                       await sendPushNotification(
                         id, 
                         "Test VDF - " + name, 
                         "Ceci est une notification de test pour vérifier le son et l'arrière-plan ! 🚀", 
-                        "/dashboard/salarie"
+                        "/dashboard/salarie",
+                        5000 // Le serveur fera lui-même la pause de 5 secondes, l'appli iOS peut être éteinte
                       );
                       console.log(">>> Test push delayed sent.");
-                    } catch (err) {
+                  } catch (err) {
                       console.error(">>> Error in delayed push:", err);
-                    }
-                  }, 5000);
+                  }
                   
                 } else {
                   alert("Erreur : Session non trouvée. Reconnecte-toi.");
