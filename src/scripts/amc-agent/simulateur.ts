@@ -469,6 +469,12 @@ async function startAgent() {
       }
 
       const hasRienAtraiter = await page.evaluate(() => {
+          // Idée métier Ibrahim: Si le compteur affiche 1 ou +, y'a une course confirmée !
+          const spanCompteur = document.querySelector('#ctl00_ContentPlaceHolder1_LabAAffecter') as HTMLElement;
+          if (spanCompteur && !isNaN(parseInt(spanCompteur.innerText))) {
+              if (parseInt(spanCompteur.innerText) > 0) return false; 
+          }
+
           const atTable = document.querySelector('#AT_Affectation');
           if (!atTable) return true;
           const validationButtons = atTable.querySelectorAll('input[src*="valider"], img[src*="valider"], .fa-check, a[title*="accepter"]');
