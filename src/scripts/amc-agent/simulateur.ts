@@ -601,7 +601,7 @@ async function startAgent() {
          
          if (snipeResult.status === "ignored") {
              console.log("⏭️ Les courses ne matchent pas Gonesse / Villes cibles. Reprise de la veille.");
-             await new Promise(r => setTimeout(r, 8000));
+             await new Promise(r => setTimeout(r, 2000));
          } 
          else if (snipeResult.status === "ignored_not_vip") {
              console.log("⚠️ Course HORS VIP trouvée. Envoi du screenshot interactif Telegram.");

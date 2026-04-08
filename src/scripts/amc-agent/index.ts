@@ -600,8 +600,8 @@ async function startAgent() {
          const snipeResult = await snipeCourse(page, isFilterActive);
          
          if (snipeResult.status === "ignored") {
-             console.log("⏭️ Les courses ne matchent pas Gonesse / Villes cibles. Reprise de la veille.");
-             await new Promise(r => setTimeout(r, 8000));
+             console.log("⏭️ Les courses ne matchent pas. Évaluation en boucle (2s)...");
+             await new Promise(r => setTimeout(r, 2000));
          } 
          else if (snipeResult.status === "ignored_not_vip") {
              console.log("⚠️ Course HORS VIP trouvée. Envoi du screenshot interactif Telegram.");
@@ -612,9 +612,9 @@ async function startAgent() {
                      snipeResult.num
                  );
                  // On logue en attente (MANUAL_PENDING)
-                 await saveLog("MANUAL_PENDING", snipeResult.buffer, snipeResult.depart || "Inconnu", snipeResult.arrivee || "Inconnu", snipeResult.num || "Inconnu");
+                 await saveLog("MANUAL_PENDING", snipeResult.buffer, snipeResult.depart || "Inconnu", snipeResult.arrivee || "Inconnu", snipeResult.num || "Inconnu", snipeResult.demandeur);
              }
-             await new Promise(r => setTimeout(r, 8000));
+             await new Promise(r => setTimeout(r, 2000));
          }
          else if (snipeResult.status === "failed_already_taken") {
              await page.goto(AMC_URL, { waitUntil: "networkidle" });
