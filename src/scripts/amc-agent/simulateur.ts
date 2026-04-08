@@ -172,7 +172,7 @@ async function sendTelegramAlert(message: string, imageBuffer?: Buffer, courseId
   }
 }
 
-async function snipeCourse(page: any, withFilters: boolean = true): Promise<{ buffer: Buffer | null, status: string, num?: string, depart?: string, arrivee?: string }> {
+async function snipeCourse(page: any, withFilters: boolean = true): Promise<{ buffer: Buffer | null, status: string, num?: string, depart?: string, arrivee?: string, demandeur?: string }> {
     console.log("🎯 DÉBUT DU SNIPING ! Évaluation Chirurgicale des courses...")
     const manualClicksArray = Array.from(manualClicks);
     const alertedCoursesArray = Array.from(alertedCourses);
@@ -186,12 +186,13 @@ async function snipeCourse(page: any, withFilters: boolean = true): Promise<{ bu
             "93290", "93440"
         ];
         
-        let result = { clicked: false, isManual: false, num: "", departText: "", arriveeText: "", foundNotVip: false, allNums: [] as string[] };
+        let result = { clicked: false, isManual: false, num: "", departText: "", arriveeText: "", demandeurText: "", foundNotVip: false, allNums: [] as string[] };
         
         const targetTable = document.querySelector('#AT_Affectation') || document;
         const theadRows = targetTable.querySelectorAll('thead tr');
         const headerTr = theadRows.length > 1 ? theadRows[1] : (theadRows[0] || targetTable);
         const headers = Array.from(headerTr.querySelectorAll('th'));
+        const demandeurIdx = headers.findIndex((th: any) => (th.innerText || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes('demandeur'));
         const departIdx = headers.findIndex((th: any) => (th.innerText || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes('depart'));
         const arriveeIdx = headers.findIndex((th: any) => (th.innerText || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes('arrive'));
         const nIdx = headers.findIndex((th: any) => (th.innerText || "").trim().toLowerCase() === 'n°');
@@ -203,6 +204,7 @@ async function snipeCourse(page: any, withFilters: boolean = true): Promise<{ bu
             if (acceptBtn && departIdx >= 0 && arriveeIdx >= 0 && nIdx >= 0) {
                 const tds = row.querySelectorAll('td');
                 if (tds.length > Math.max(departIdx, arriveeIdx, nIdx)) {
+                    if (demandeurIdx >= 0) result.demandeurText = tds[demandeurIdx].innerText.trim();
                     result.departText = tds[departIdx].innerText.trim();
                     result.arriveeText = tds[arriveeIdx].innerText.trim();
                     result.num = tds[nIdx].innerText.trim();
@@ -372,9 +374,9 @@ async function snipeCourse(page: any, withFilters: boolean = true): Promise<{ bu
     const isError = await page.evaluate(() => document.body.innerText.includes("déjà acceptée"));
     
     if (isError) {
-        return { buffer: finalBuffer, status: "failed_already_taken", num: extraction.num, depart: extraction.departText, arrivee: extraction.arriveeText };
+        return { buffer: finalBuffer, status: "failed_already_taken", num: extraction.num, depart: extraction.departText, arrivee: extraction.arriveeText, demandeur: extraction.demandeurText };
     }
-    return { buffer: finalBuffer, status: extraction.isManual ? "MANUAL_SUCCESS" : "SUCCESS", num: extraction.num, depart: extraction.departText, arrivee: extraction.arriveeText };
+    return { buffer: finalBuffer, status: extraction.isManual ? "MANUAL_SUCCESS" : "SUCCESS", num: extraction.num, depart: extraction.departText, arrivee: extraction.arriveeText, demandeur: extraction.demandeurText };
 }
 
 async function startAgent() {

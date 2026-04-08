@@ -22,7 +22,21 @@ export async function POST(req: Request) {
                 where: { num }
             });
             if (existing) {
-                console.log(`Course AMC N°${num} ignorée: Déjà en base.`);
+                if (patient && !existing.patient) {
+                     console.log(`[API Sniper] Course ${num} mise à jour avec le patient: ${patient}`);
+                     await prisma.sniperLog.update({
+                         where: { id: existing.id },
+                         data: { 
+                             patient, 
+                             demandeur: demandeur || existing.demandeur, 
+                             datePec: datePec || existing.datePec, 
+                             heurePec: heurePec || existing.heurePec 
+                         }
+                     });
+                     return NextResponse.json({ success: true, message: "Mis à jour avec infos patient" });
+                }
+                
+                console.log(`Course AMC N°${num} ignorée: Déjà en base avec toutes les infos.`);
                 return NextResponse.json({ success: true, skipped: true, message: "Déjà en base" });
             }
         }
