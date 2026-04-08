@@ -151,20 +151,12 @@ export async function sendPushNotification(userId: string, title: string, messag
                     }
                 },
                 apns: {
-                    headers: {
-                        "apns-priority": "10",
-                        "apns-push-type": "alert"
-                    },
                     payload: {
                         aps: {
-                            alert: {
-                                title: title,
-                                body: message
-                            },
                             sound: 'default',
                             badge: 1
                         }
-                    },
+                    }
                 },
             }).then((response) => {
                 console.log(`[PUSH_DEBUG] FCM Multicast Result: success=${response.successCount}, failure=${response.failureCount}`);
