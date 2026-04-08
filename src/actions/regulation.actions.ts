@@ -75,7 +75,7 @@ export async function getAvailablePersonnel(dateStr: string) {
 export async function saveAssignment(data: {
     vehicleId: string
     leaderId: string
-    teammateId: string
+    teammateId?: string | null
     dateStr: string
     startTime?: string
     endTime?: string
@@ -88,7 +88,7 @@ export async function saveAssignment(data: {
 
         // --- VALIDATION JOUR / NUIT ---
         // On vérifie si l'un des deux est déjà assigné sur l'autre shift (ou celui-ci d'ailleurs) ce jour là
-        const personIds = [data.leaderId, data.teammateId].filter(id => id !== "")
+        const personIds = [data.leaderId, data.teammateId].filter((id): id is string => typeof id === 'string' && id !== "")
         
         for (const pid of personIds) {
             const otherAssignment = await prisma.planningAssignment.findFirst({
@@ -104,7 +104,7 @@ export async function saveAssignment(data: {
                 include: { vehicle: true }
             })
 
-            if (otherAssignment) {
+            if (otherAssignment && otherAssignment.vehicle) {
                 const user = await prisma.user.findUnique({ where: { id: pid }, select: { firstName: true, lastName: true } })
                 throw new Error(`🚫 CONFLIT JOUR/NUIT : ${user?.lastName} ${user?.firstName} est déjà assigné sur le véhicule ${otherAssignment.vehicleId} (${otherAssignment.vehicle.plateNumber}) en vacation ${isNight ? 'du MATIN' : 'du SOIR'}. Un salarié ne peut pas faire les deux vacations le même jour.`)
             }
@@ -129,7 +129,7 @@ export async function saveAssignment(data: {
                 where: { id: existing.id },
                 data: {
                     leaderId: data.leaderId,
-                    teammateId: data.teammateId,
+                    teammateId: data.teammateId || null,
                     startTime: data.startTime,
                     endTime: data.endTime,
                     status: 'PENDING',
@@ -145,7 +145,7 @@ export async function saveAssignment(data: {
                 data: {
                     vehicleId: data.vehicleId,
                     leaderId: data.leaderId,
-                    teammateId: data.teammateId,
+                    teammateId: data.teammateId || null,
                     date: startOfDay,
                     startTime: data.startTime,
                     endTime: data.endTime,
@@ -161,7 +161,8 @@ export async function saveAssignment(data: {
 
         // --- NOTIFICATIONS ---
         const formattedDate = format(startOfDay, 'EEEE d MMMM', { locale: fr })
-        for (const pid of personIds) {
+        const personIdsToNotify = [data.leaderId, data.teammateId].filter((id): id is string => typeof id === 'string' && id !== "")
+        for (const pid of personIdsToNotify) {
             await createNotification({
                 userId: pid,
                 title: "Nouvelle Mission Disponible",
@@ -551,27 +552,7 @@ export async function validateMyRegulation(userId: string, id: string) {
             data: { validated: true, validatedAt: new Date() }
         })
 
-        // Notification & Email to ADMIN
-        const admins = await prisma.user.findMany({ where: { roles: { has: 'ADMIN' } }, select: { id: true, email: true } })
-        const formattedDate = format(reg.date, 'dd/MM/yyyy')
-        for (const admin of admins) {
-            if (admin.email) {
-                await sendBrandedEmail({
-                    to: admin.email,
-                    from: '"App VDF" <vdf95rh@gmail.com>',
-                    subject: `✅ Régulation Validée - ${reg.user?.lastName} ${reg.user?.firstName}`,
-                    title: `Régulation Validée`,
-                    preheader: `${reg.user?.lastName} a validé ${formattedDate}`,
-                    content: `<p>Le collaborateur <strong>${reg.user?.lastName} ${reg.user?.firstName}</strong> a validé son poste de régulateur pour le <strong>${formattedDate}</strong> (${reg.startTime}).</p>`
-                }).catch(console.error)
-            }
-            await createNotification({
-                userId: admin.id,
-                title: "Régulation Validée",
-                message: `${reg.user?.lastName} a validé son poste de régulateur pour le ${formattedDate}.`,
-                type: "MISSION"
-            }).catch(console.error)
-        }
+        // La notification aux Admins est supprimée car recouverte par le bilan de 21h00.
 
         revalidatePath('/dashboard/rh/regulation')
         revalidatePath('/dashboard/salarie')
@@ -596,27 +577,7 @@ export async function validateMyDispo(userId: string, id: string) {
             data: { validated: true, validatedAt: new Date() }
         })
 
-        // Notification & Email to ADMIN
-        const admins = await prisma.user.findMany({ where: { OR: [{ roles: { has: 'ADMIN' } }, { isRegulateur: true }] }, select: { id: true, email: true } })
-        const formattedDate = format(dispo.date, 'dd/MM/yyyy')
-        for (const admin of admins) {
-            if (admin.email) {
-                await sendBrandedEmail({
-                    to: admin.email,
-                    from: '"App VDF" <vdf95rh@gmail.com>',
-                    subject: `✅ Dispo Validée - ${dispo.user?.lastName} ${dispo.user?.firstName}`,
-                    title: `Dispo Validée`,
-                    preheader: `${dispo.user?.lastName} a validé ${formattedDate}`,
-                    content: `<p>Le collaborateur <strong>${dispo.user?.lastName} ${dispo.user?.firstName}</strong> a validé sa disponibilité (attente de placement) pour le <strong>${formattedDate}</strong> à partir de ${dispo.startTime}.</p>`
-                }).catch(console.error)
-            }
-            await createNotification({
-                userId: admin.id,
-                title: "Dispo Validée",
-                message: `${dispo.user?.lastName} a validé sa présence en tant que Dispo pour le ${formattedDate}.`,
-                type: "MISSION"
-            }).catch(console.error)
-        }
+        // La notification aux Admins est supprimée car recouverte par le bilan de 21h00.
 
         revalidatePath('/dashboard/rh/regulation')
         revalidatePath('/dashboard/salarie')

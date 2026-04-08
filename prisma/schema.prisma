@@ -274,7 +274,7 @@ model PlanningAssignment {
   date               DateTime
   vehicleId          String
   leaderId           String
-  teammateId         String
+  teammateId         String?
   status             AssignmentStatus @default(PENDING)
   leaderValidated    Boolean          @default(false)
   leaderValidatedAt  DateTime?
@@ -287,7 +287,7 @@ model PlanningAssignment {
 
   vehicle     Vehicle          @relation(fields: [vehicleId], references: [id])
   leader      User             @relation("Leader", fields: [leaderId], references: [id])
-  teammate    User             @relation("Teammate", fields: [teammateId], references: [id])
+  teammate    User?            @relation("Teammate", fields: [teammateId], references: [id])
 }
 
 model CronJob {

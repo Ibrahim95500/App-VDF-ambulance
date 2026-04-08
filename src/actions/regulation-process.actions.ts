@@ -61,7 +61,7 @@ export async function sendPlanningsToEmployees(dateStr: string) {
             const { vehicle, leader, teammate, startTime, endTime } = assignment
 
             const leaderName = `${leader.firstName || ''} ${leader.lastName || ''}`.trim() || leader.name || leader.email
-            const teammateName = `${teammate.firstName || ''} ${teammate.lastName || ''}`.trim() || teammate.name || teammate.email
+            const teammateName = teammate ? (`${teammate.firstName || ''} ${teammate.lastName || ''}`.trim() || teammate.name || teammate.email) : 'Non assigné'
 
             const timeRange = `${startTime || '07:00'} - ${endTime || '19:00'}`
             const tgBaseMessage = `🚑 <b>NOUVELLE MISSION (${dateDisplay})</b>\n\n🚐 <b>Véhicule :</b> ${vehicle.plateNumber}\n⏱ <b>Horaires :</b> ${timeRange}\n\n`;

@@ -45,16 +45,18 @@ export function AmbulanceCard({
     onClick,
     isCompact = false
 }: AmbulanceCardProps) {
-    const isFull = !!(leaderName && teammateName)
-    const isEmpty = !leaderName && !teammateName
+    const isVSL = plateNumber.toUpperCase().includes('VSL')
+
+    const isFull = isVSL ? !!leaderName : !!(leaderName && teammateName)
+    const isEmpty = isVSL ? !leaderName : !leaderName && !teammateName
 
     // Compteur de validation par véhicule
-    const validatedCount = (leaderValidated ? 1 : 0) + (teammateValidated ? 1 : 0)
-    const totalCount = isFull ? 2 : leaderName || teammateName ? 1 : 0
+    const validatedCount = (leaderValidated ? 1 : 0) + (isVSL ? 0 : (teammateValidated ? 1 : 0))
+    const totalCount = isVSL ? (leaderName ? 1 : 0) : (isFull ? 2 : leaderName || teammateName ? 1 : 0)
 
     // Statut global du véhicule basé sur les validations individuelles
     const vehicleStatus: 'none' | 'partial' | 'full' = isFull
-        ? validatedCount === 2 ? 'full' : validatedCount === 1 ? 'partial' : 'none'
+        ? validatedCount === totalCount && totalCount > 0 ? 'full' : validatedCount > 0 ? 'partial' : 'none'
         : 'none'
 
     const categoryStyles = {
@@ -169,7 +171,9 @@ export function AmbulanceCard({
                 {/* Équipage */}
                 <div className="space-y-2 mb-3">
                     <PersonRow name={leaderName} isLeader={true} validated={leaderValidated} diploma={leaderDiploma} isRegulateur={leaderIsRegulateur} />
-                    <PersonRow name={teammateName} isLeader={false} validated={teammateValidated} diploma={teammateDiploma} isRegulateur={teammateIsRegulateur} />
+                    {!isVSL && (
+                        <PersonRow name={teammateName} isLeader={false} validated={teammateValidated} diploma={teammateDiploma} isRegulateur={teammateIsRegulateur} />
+                    )}
                 </div>
 
                 {/* Footer : statut global du véhicule + compteur */}

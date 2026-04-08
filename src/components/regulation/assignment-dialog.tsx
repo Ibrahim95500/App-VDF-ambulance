@@ -107,21 +107,23 @@ export function AssignmentDialog({
     // Personnel libre ce jour-là (pas déjà affecté sur un autre véhicule aujourd'hui)
     const freePersonnel = personnel.filter(p => !assignedIds.has(p.id));
 
-    // Responsables : isTeamLeader = true ET structure compatible avec le véhicule
+    const isVSL = plateNumber.toUpperCase().includes('VSL')
+
+    // Responsables : isTeamLeader = true ET structure compatible avec le véhicule (Sauf pour VSL : tout le monde peut l'être)
     const availableLeaders = freePersonnel.filter(p =>
-        p.isTeamLeader === true && isCompatible(p.structure, category)
+        (isVSL || p.isTeamLeader === true) && isCompatible(p.structure, category)
     );
 
-    // Co-équipiers : isTeamLeader = false ET structure compatible avec le véhicule
+    // Co-équipiers : Tout le monde, avec structure compatible
     const availableTeammates = freePersonnel.filter(p =>
-        p.isTeamLeader === false && isCompatible(p.structure, category)
+        isCompatible(p.structure, category)
     );
 
     const isSamePerson = leaderId !== "" && teammateId !== "" && leaderId === teammateId;
 
     const handleSave = async () => {
-        if (!leaderId || !teammateId) {
-            toast.error("Veuillez sélectionner un équipage complet.")
+        if (!leaderId || (!isVSL && !teammateId)) {
+            toast.error(isVSL ? "Veuillez sélectionner un conducteur." : "Veuillez sélectionner un équipage complet.")
             return
         }
 
@@ -209,23 +211,25 @@ export function AssignmentDialog({
                     </div>
 
                     {/* Co-équipier */}
-                    <div className="space-y-2">
-                        <Label className="text-xs font-bold uppercase opacity-60 flex items-center gap-2">
-                            <User size={14} className="text-blue-500" /> Co-équipier (Auxiliaire/Stagiaire)
-                        </Label>
-                        <Combobox
-                            options={availableTeammates.filter(p => p.id !== leaderId).map(p => ({
-                                value: p.id,
-                                label: `${p.lastName} ${p.firstName}`,
-                                description: p.diploma || "Auxiliaire"
-                            }))}
-                            value={teammateId}
-                            onValueChange={setTeammateId}
-                            placeholder="Choisir un co-équipier"
-                            searchPlaceholder="Rechercher par nom..."
-                            className="h-12 border-2"
-                        />
-                    </div>
+                    {!isVSL && (
+                        <div className="space-y-2">
+                            <Label className="text-xs font-bold uppercase opacity-60 flex items-center gap-2">
+                                <User size={14} className="text-blue-500" /> Co-équipier (Auxiliaire/Stagiaire)
+                            </Label>
+                            <Combobox
+                                options={availableTeammates.filter(p => p.id !== leaderId).map(p => ({
+                                    value: p.id,
+                                    label: `${p.lastName} ${p.firstName}`,
+                                    description: `${p.diploma || "Auxiliaire"} ${p.isTeamLeader ? "⭐ Chef" : ""}`
+                                }))}
+                                value={teammateId}
+                                onValueChange={setTeammateId}
+                                placeholder="Choisir un co-équipier"
+                                searchPlaceholder="Rechercher par nom..."
+                                className="h-12 border-2"
+                            />
+                        </div>
+                    )}
                 </div>
  
                  {serverError && (
