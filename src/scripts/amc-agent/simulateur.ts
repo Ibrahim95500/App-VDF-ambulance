@@ -468,8 +468,12 @@ async function startAgent() {
           continue; 
       }
 
-      const hasRienAtraiter = pageText.includes("Aucune donnée disponible dans le tableau") ||
-                              pageText.includes("Aucun résultat");
+      const hasRienAtraiter = await page.evaluate(() => {
+          const atTable = document.querySelector('#AT_Affectation');
+          if (!atTable) return true;
+          const validationButtons = atTable.querySelectorAll('input[src*="valider"], img[src*="valider"], .fa-check, a[title*="accepter"]');
+          return validationButtons.length === 0;
+      });
 
       if (!proofSent && page.url().includes("TransporteurAtraiter")) {
           console.log("📸 Prise de la capture de preuve de connexion...")
