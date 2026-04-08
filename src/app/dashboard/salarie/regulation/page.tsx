@@ -1,4 +1,5 @@
 import { auth } from "@/auth"
+import { prisma } from "@/lib/prisma"
 import { getMyAssignment, getMyRegulationHistory, getMyRegulation, getMyDisponibility } from "@/actions/regulation.actions"
 import { MyAssignment } from "@/components/regulation/my-assignment"
 import { MySpecialAssignment } from "@/components/regulation/my-special-assignment"
@@ -15,6 +16,15 @@ export default async function SalarieRegulationPage() {
 
     if (!session?.user) {
         redirect("/login")
+    }
+
+    // Force refresh oubliCount from DB to avoid stale JWT data
+    const dbUser = await prisma.user.findUnique({
+        where: { id: session.user.id },
+        select: { oubliCount: true }
+    });
+    if (dbUser) {
+        session.user.oubliCount = dbUser.oubliCount;
     }
 
     // 1. On cherche pour DEMAIN (Règle de base en forçant le fuseau horaire Paris)
