@@ -173,9 +173,11 @@ export async function sendPushNotification(userId: string, title: string, messag
                         if (!resp.success) {
                             const error = resp.error;
                             console.error(`[PUSH_DEBUG] FCM Token Error [${idx}]:`, error);
-                            // On supprime n'importe quel token qui retourne une erreur (y compris le mauvais format APNs)
+                            // On supprime n'importe quel token qui retourne une erreur
                             removePromises.push(
-                                db.fcmToken.delete({ where: { token: tokens[idx] } })
+                                db.fcmToken.deleteMany({ where: { token: tokens[idx] } }).catch(e => {
+                                    console.error(`[PUSH_DEBUG] Failed to delete bad token: ${tokens[idx]}`, e);
+                                })
                             );
                         }
                     });
