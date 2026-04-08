@@ -301,7 +301,7 @@ export function NotificationsSheet({ trigger, onAllRead }: { trigger: ReactNode;
                             </div>
                             <p className="text-xs text-muted-foreground mt-1">{n.message}</p>
                             {n.link && (
-                              <Link href={n.link} className="text-[10px] uppercase font-bold text-secondary mt-2 hover:underline">
+                              <Link href={n.link} onClick={() => setIsOpen(false)} className="text-[10px] uppercase font-bold text-secondary mt-2 hover:underline">
                                 Voir la demande
                               </Link>
                             )}
@@ -358,7 +358,7 @@ export function NotificationsSheet({ trigger, onAllRead }: { trigger: ReactNode;
                           </div>
                           <p className="text-xs text-muted-foreground mt-1">{n.message}</p>
                           {n.link && (
-                            <Link href={n.link} className="text-[10px] font-bold text-secondary mt-2 hover:underline">
+                            <Link href={n.link} onClick={() => setIsOpen(false)} className="text-[10px] font-bold text-secondary mt-2 hover:underline">
                               Gérer
                             </Link>
                           )}

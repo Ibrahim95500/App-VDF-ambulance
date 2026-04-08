@@ -132,13 +132,11 @@ export async function sendPushNotification(userId: string, title: string, messag
             
             fcmNotification = fcm.sendEachForMulticast({
                 tokens,
-                notification: {
-                    title,
-                    body: message,
-                },
                 android: {
                     priority: 'high',
                     notification: {
+                        title: title,
+                        body: message,
                         sound: 'default',
                         clickAction: 'FCM_PLUGIN_ACTIVITY',
                         icon: 'stock_ticker_update',
@@ -164,7 +162,8 @@ export async function sendPushNotification(userId: string, title: string, messag
                             },
                             sound: 'default',
                             badge: 1
-                        }
+                        },
+                        url: url
                     }
                 },
             }).then((response) => {
