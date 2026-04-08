@@ -198,7 +198,7 @@ async function snipeCourse(page: any, withFilters: boolean = true): Promise<{ bu
         
         const rows = targetTable.querySelectorAll('tr');
         for (let row of rows) {
-            const acceptBtn = row.querySelector('input[type="image"][src*="valider"], img[src*="valider"], img[src*="check"], a[title*="accepter"], .fa-check, img[src*="V_Vert"]');
+            const acceptBtn = row.querySelector('input[src*="valide"], input[src*="check"], img[src*="valide"], img[src*="check"], a[title*="accepter"], .fa-check, img[src*="V_Vert"]');
             
             if (acceptBtn && departIdx >= 0 && arriveeIdx >= 0 && nIdx >= 0) {
                 const tds = row.querySelectorAll('td');
@@ -477,7 +477,7 @@ async function startAgent() {
 
           const atTable = document.querySelector('#AT_Affectation');
           if (!atTable) return true;
-          const validationButtons = atTable.querySelectorAll('input[src*="valider"], img[src*="valider"], .fa-check, a[title*="accepter"]');
+          const validationButtons = atTable.querySelectorAll('input[src*="valide"], input[src*="check"], img[src*="valide"], img[src*="check"], .fa-check, a[title*="accepter"]');
           return validationButtons.length === 0;
       });
 
@@ -579,7 +579,7 @@ async function startAgent() {
                  const nIdx = headers.findIndex((th: any) => (th.innerText || "").trim().toLowerCase() === 'n°');
                  
                  return Array.from(targetTable.querySelectorAll('tr'))
-                     .filter((tr: any) => tr.querySelector('input[type="image"][src*="valider"], img[src*="valider"], img[src*="check"], a[title*="accepter"], .fa-check, img[src*="V_Vert"]') !== null)
+                     .filter((tr: any) => tr.querySelector('input[src*="valide"], input[src*="check"], img[src*="valide"], img[src*="check"], a[title*="accepter"], .fa-check, img[src*="V_Vert"]') !== null)
                      .map((tr: any) => {
                          const tds = tr.querySelectorAll('td');
                          if (nIdx >= 0 && tds.length > nIdx) return tds[nIdx].innerText.trim();
@@ -642,7 +642,7 @@ async function startAgent() {
         
         try {
             // Event-Driven: Playwright attend la milli-seconde où le bouton accpeter apparaît.
-            await page.waitForSelector('#AT_Affectation tbody tr input[src*="valider"], #AT_Affectation tbody tr img[src*="valider"], #AT_Affectation tbody tr .fa-check, #AT_Affectation tbody tr a[title*="accepter"]', { state: 'attached', timeout: randomDelay });
+            await page.waitForSelector('#AT_Affectation tbody tr input[src*="valide"], #AT_Affectation tbody tr input[src*="check"], #AT_Affectation tbody tr img[src*="valide"], #AT_Affectation tbody tr .fa-check, #AT_Affectation tbody tr a[title*="accepter"]', { state: 'attached', timeout: randomDelay });
             console.log("⚡ [EVENT] Apparition soudaine d'une course détectée ! Action immédiate !");
             continue; 
         } catch(e) {
