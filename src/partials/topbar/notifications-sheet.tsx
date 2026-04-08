@@ -242,13 +242,27 @@ export function NotificationsSheet({ trigger, onAllRead }: { trigger: ReactNode;
               className="h-8 text-[11px] border-blue-200 text-blue-700 hover:bg-blue-100 font-bold px-3 rounded-full dark:border-blue-500/30 dark:text-blue-400 dark:hover:bg-blue-900/30 shadow-sm"
               onClick={async () => {
                 if (session?.user?.id) {
-                  await sendPushNotification(
-                    session.user.id, 
-                    "Test VDF - " + (session.user.name || "Utilisateur"), 
-                    "Ceci est une notification de test pour vérifier le son et l'arrière-plan ! 🚀", 
-                    "/dashboard/salarie"
-                  );
-                  alert("Test envoyé ! Regarde ton téléphone (ferme l'app pour tester le son).");
+                  const id = session.user.id;
+                  const name = session.user.name || "Utilisateur";
+                  
+                  // On lance l'alerte UI en premier
+                  alert("Test programmé ! ⏱️ Tu as 5 secondes pour fermer l'application et la mettre en arrière-plan pour voir la bannière Apple !");
+                  
+                  // On déclenche l'API Push avec un retard pour laisser le temps de fermer l'app
+                  setTimeout(async () => {
+                    try {
+                      await sendPushNotification(
+                        id, 
+                        "Test VDF - " + name, 
+                        "Ceci est une notification de test pour vérifier le son et l'arrière-plan ! 🚀", 
+                        "/dashboard/salarie"
+                      );
+                      console.log(">>> Test push delayed sent.");
+                    } catch (err) {
+                      console.error(">>> Error in delayed push:", err);
+                    }
+                  }, 5000);
+                  
                 } else {
                   alert("Erreur : Session non trouvée. Reconnecte-toi.");
                 }
