@@ -6,15 +6,28 @@ async function main() {
     const user = await prisma.user.findUnique({ where: { email: "ibrahim.nifa01@gmail.com" } })
     if (!user) return console.error("Introuvable !");
 
+    // Limite avant 24h (la veille à minuit)
+    const thresholdDate = new Date()
+    thresholdDate.setDate(thresholdDate.getDate() - 1)
+    thresholdDate.setHours(0, 0, 0, 0)
+    console.log(`Suppression de tout l'historique avant le : ${thresholdDate.toLocaleDateString('fr-FR')}`)
+
     const delPlanning = await prisma.planningAssignment.deleteMany({
-        where: { OR: [{ leaderId: user.id }, { teammateId: user.id }] }
+        where: { 
+            OR: [{ leaderId: user.id }, { teammateId: user.id }],
+            date: { lt: thresholdDate }
+        }
     })
     console.log(`- ${delPlanning.count} assignations Planning effacées.`)
 
-    const delRegul = await prisma.regulationAssignment.deleteMany({ where: { userId: user.id } })
+    const delRegul = await prisma.regulationAssignment.deleteMany({ 
+        where: { userId: user.id, date: { lt: thresholdDate } }
+    })
     console.log(`- ${delRegul.count} Régulation effacées.`)
 
-    const delDispo = await prisma.disponibility.deleteMany({ where: { userId: user.id } })
+    const delDispo = await prisma.disponibility.deleteMany({ 
+        where: { userId: user.id, date: { lt: thresholdDate } }
+    })
     console.log(`- ${delDispo.count} Disponibilité effacées.`)
 
     const updated = await prisma.user.update({
