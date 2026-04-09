@@ -170,7 +170,7 @@ export function NotificationsSheet({ trigger, onAllRead }: { trigger: ReactNode;
                     await PushNotifications.addListener('registration', async (token) => {
                       console.log('>>> SUCCESS: FCM Token received:', token.value);
                       await saveFcmToken(token.value);
-                      alert("⚠️ CODE REÇU : " + token.value.substring(0, 15) + "..." + token.value.slice(-15));
+                      alert("Notifications mobiles activées ! Appuyez sur OK pour finir. 🚀");
                     });
 
                     await PushNotifications.addListener('registrationError', (error: any) => {
