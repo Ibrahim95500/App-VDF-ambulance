@@ -13,6 +13,25 @@
   *:focus-visible {
     @apply outline-ring rounded-xs shadow-none outline-2 outline-offset-3 transition-none!;
   }
+
+  /* --- FIX MOBILE (iOS/Android) : Responsivité Native --- */
+  html, body {
+    overflow-x: hidden; /* Empêche le glissement de gauche à droite */
+    max-width: 100vw;
+    width: 100vw;
+  }
+  
+  body {
+    overscroll-behavior-y: none; /* Empêche l'effet élastique chiant tout en haut/bas de l'appli */
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* APPLE BUG : Force la police des champs à 16px sur mobile (sinon l'iPhone Zoom tout seul au clic !) */
+  @media screen and (max-width: 768px) {
+    input, textarea, select {
+      font-size: 16px !important;
+    }
+  }
 }
 
 /* Metronic Components  */
