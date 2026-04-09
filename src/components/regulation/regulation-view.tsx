@@ -201,7 +201,7 @@ export function RegulationView() {
     const statusObj = getStatusDisplay();
 
     return (
-        <div className="flex flex-col gap-4 p-3 sm:p-6 pb-24 overflow-x-hidden">
+        <div className="flex flex-col gap-4 p-3 sm:p-6 pb-24 w-full min-w-0 max-w-full overflow-hidden">
             {/* Header / Toolbar */}
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 shadow-sm">
                 <div>
@@ -267,7 +267,7 @@ export function RegulationView() {
             </div>
 
             {/* Main Navigation Tabs */}
-            <div className="flex w-full overflow-x-auto hide-scrollbar bg-slate-100 dark:bg-slate-800 p-1.5 rounded-xl border-2 border-slate-200 dark:border-slate-800 gap-1">
+            <div className="flex w-full min-w-0 max-w-full overflow-x-auto hide-scrollbar bg-slate-100 dark:bg-slate-800 p-1.5 rounded-xl border-2 border-slate-200 dark:border-slate-800 gap-1">
                 <button
                     onClick={() => setViewMode('PLANNING_JOUR')}
                     className={`flex-none px-3 py-2.5 rounded-lg font-bold text-xs sm:text-sm transition-all whitespace-nowrap ${
@@ -351,7 +351,7 @@ export function RegulationView() {
                     </TabsList>
                 </Tabs>
 
-                <div className="relative flex-1 w-full">
+                <div className="relative flex-1 w-full min-w-0">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
                     <Input
                         placeholder="Rechercher une plaque (ex: EP-268...)"
