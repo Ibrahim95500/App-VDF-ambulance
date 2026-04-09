@@ -245,9 +245,9 @@ export function RegulationView() {
                         </PopoverContent>
                     </Popover>
 
-                    <div className={`px-4 py-2 rounded-xl border-2 ${statusObj.className} flex items-center gap-2 h-12`}>
-                        <div className={`w-2 h-2 rounded-full ${statusObj.className.includes('blue') ? 'bg-blue-500' : statusObj.className.includes('orange') ? 'bg-orange-500' : statusObj.className.includes('green') ? 'bg-green-500' : statusObj.className.includes('purple') ? 'bg-purple-500' : 'bg-slate-500'}`}></div>
-                        <span className="text-sm">{statusObj.label}</span>
+                    <div className={`px-4 py-2 rounded-xl border-2 ${statusObj.className} flex items-start sm:items-center gap-2 min-h-[48px] w-full sm:w-auto`}>
+                        <div className={`w-2 h-2 rounded-full mt-1 sm:mt-0 flex-shrink-0 ${statusObj.className.includes('blue') ? 'bg-blue-500' : statusObj.className.includes('orange') ? 'bg-orange-500' : statusObj.className.includes('green') ? 'bg-green-500' : statusObj.className.includes('purple') ? 'bg-purple-500' : 'bg-slate-500'}`}></div>
+                        <span className="text-xs sm:text-sm leading-tight font-medium">{statusObj.label}</span>
                     </div>
 
                     {/* Bouton Actualiser Stylé */}
@@ -267,10 +267,10 @@ export function RegulationView() {
             </div>
 
             {/* Main Navigation Tabs */}
-            <div className="flex flex-wrap w-full bg-slate-100 dark:bg-slate-800 p-1.5 rounded-xl border-2 border-slate-200 dark:border-slate-800">
+            <div className="flex w-full overflow-x-auto hide-scrollbar bg-slate-100 dark:bg-slate-800 p-1.5 rounded-xl border-2 border-slate-200 dark:border-slate-800 gap-1">
                 <button
                     onClick={() => setViewMode('PLANNING_JOUR')}
-                    className={`flex-1 px-4 py-3 rounded-lg font-bold text-sm transition-all sm:text-xs lg:text-sm ${
+                    className={`flex-none px-3 py-2.5 rounded-lg font-bold text-xs sm:text-sm transition-all whitespace-nowrap ${
                         viewMode === 'PLANNING_JOUR' 
                             ? 'bg-white shadow-sm text-slate-900 border border-slate-200' 
                             : 'text-slate-500 hover:text-slate-700'
@@ -280,7 +280,7 @@ export function RegulationView() {
                 </button>
                 <button
                     onClick={() => setViewMode('PLANNING_NUIT')}
-                    className={`flex-1 px-4 py-3 rounded-lg font-bold text-sm transition-all sm:text-xs lg:text-sm ${
+                    className={`flex-none px-3 py-2.5 rounded-lg font-bold text-xs sm:text-sm transition-all whitespace-nowrap ${
                         viewMode === 'PLANNING_NUIT' 
                             ? 'bg-slate-900 shadow-sm text-white border border-slate-800' 
                             : 'text-slate-500 hover:text-slate-700'
@@ -290,7 +290,7 @@ export function RegulationView() {
                 </button>
                 <button
                     onClick={() => setViewMode('REGULATION')}
-                    className={`flex-1 px-4 py-3 rounded-lg font-bold text-sm transition-all sm:text-xs lg:text-sm ${
+                    className={`flex-none px-3 py-2.5 rounded-lg font-bold text-xs sm:text-sm transition-all whitespace-nowrap ${
                         viewMode === 'REGULATION' 
                             ? 'bg-orange-500 shadow-sm text-white border border-orange-600' 
                             : 'text-slate-500 hover:text-slate-700'
@@ -300,7 +300,7 @@ export function RegulationView() {
                 </button>
                 <button
                     onClick={() => setViewMode('DISPO')}
-                    className={`flex-1 px-4 py-3 rounded-lg font-bold text-sm transition-all sm:text-xs lg:text-sm ${
+                    className={`flex-none px-3 py-2.5 rounded-lg font-bold text-xs sm:text-sm transition-all whitespace-nowrap ${
                         viewMode === 'DISPO' 
                             ? 'bg-blue-600 shadow-sm text-white border border-blue-700' 
                             : 'text-slate-500 hover:text-slate-700'
@@ -310,7 +310,7 @@ export function RegulationView() {
                 </button>
                 <button
                     onClick={() => setViewMode('HISTORY')}
-                    className={`flex-1 px-4 py-3 rounded-lg font-bold text-sm transition-all sm:text-xs lg:text-sm ${
+                    className={`flex-none px-3 py-2.5 rounded-lg font-bold text-xs sm:text-sm transition-all whitespace-nowrap ${
                         viewMode === 'HISTORY' 
                             ? 'bg-white dark:bg-slate-900 shadow-sm text-slate-900 dark:text-white border' 
                             : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'
