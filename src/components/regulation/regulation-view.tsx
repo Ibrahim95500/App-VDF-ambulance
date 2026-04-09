@@ -431,6 +431,7 @@ export function RegulationView() {
                     onSuccess={() => loadData()}
                     defaultTime={viewMode === 'PLANNING_NUIT' ? '19:30' : '05:30'}
                     initialData={selectedVehicle.assignments?.[0] ? {
+                        id: selectedVehicle.assignments[0].id,
                         leaderId: selectedVehicle.assignments[0].leaderId,
                         teammateId: selectedVehicle.assignments[0].teammateId,
                         startTime: selectedVehicle.assignments[0].startTime,
