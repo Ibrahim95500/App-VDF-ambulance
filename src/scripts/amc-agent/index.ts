@@ -442,7 +442,10 @@ async function startAgent() {
           (global as any).lastCronSentDay = now.getDate();
           console.log(`[${now.toLocaleTimeString()}] ⏰ DÉCLENCHEMENT DU CRON 20H00 (WebPush Alert)...`);
           try {
-              fetch('http://localhost:3000/api/cron/validate-alert', { method: 'POST' }).catch(() => {});
+              fetch('http://localhost:8080/api/cron/validate-alert', { method: 'POST' })
+                  .then(r => r.json())
+                  .then(data => console.log(`[CRON RESULT]`, data))
+                  .catch(e => console.error(`[CRON ERROR]`, e));
           } catch(e) {}
       }
 
