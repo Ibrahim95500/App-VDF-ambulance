@@ -48,6 +48,7 @@ interface AssignmentDialogProps {
     onSuccess: () => void
     defaultTime?: string
     initialData?: {
+        id?: string
         leaderId?: string
         teammateId?: string
         startTime?: string
@@ -104,19 +105,21 @@ export function AssignmentDialog({
         return pStructure === vehicleCategory;
     };
 
-    // Personnel libre ce jour-là (pas déjà affecté sur un autre véhicule aujourd'hui)
-    const freePersonnel = personnel.filter(p => !assignedIds.has(p.id));
+    // Personnel libre ce jour-là (pas déjà affecté sur un autre véhicule aujourd'hui), 
+    // ou bien la personne DEJA affectée sur ce véhicule (pour qu'elle s'affiche correctement !)
+    const freePersonnel = personnel.filter(p => !assignedIds.has(p.id) || p.id === initialData?.leaderId || p.id === initialData?.teammateId);
 
     const isVSL = plateNumber.toUpperCase().includes('VSL')
 
     // Responsables : isTeamLeader = true ET structure compatible avec le véhicule (Sauf pour VSL : tout le monde peut l'être)
+    // On force aussi l'inclusion si c'est LE leader de cette réservation, pour corriger le bug dropdown vide
     const availableLeaders = freePersonnel.filter(p =>
-        (isVSL || p.isTeamLeader === true) && isCompatible(p.structure, category)
+        p.id === initialData?.leaderId || ((isVSL || p.isTeamLeader === true) && isCompatible(p.structure, category))
     );
 
-    // Co-équipiers : Tout le monde, avec structure compatible
+    // Co-équipiers : Tout le monde, avec structure compatible, et on force la cible actuelle
     const availableTeammates = freePersonnel.filter(p =>
-        isCompatible(p.structure, category)
+        p.id === initialData?.teammateId || isCompatible(p.structure, category)
     );
 
     const isSamePerson = leaderId !== "" && teammateId !== "" && leaderId === teammateId;
@@ -135,6 +138,7 @@ export function AssignmentDialog({
         try {
             setLoading(true)
             const result = await saveAssignment({
+                planningId: initialData?.id,
                 vehicleId,
                 leaderId,
                 teammateId,
