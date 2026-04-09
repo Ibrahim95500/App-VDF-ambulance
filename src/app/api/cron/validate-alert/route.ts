@@ -13,13 +13,19 @@ export async function POST(req: Request) {
         // On cherche toutes les assignations non validées de ce soir ou demain
         const assignments = await prisma.planningAssignment.findMany({
             where: {
-                OR: [
-                    { date: startOfDay, startTime: { gte: "18:00" } }, // Les équipes de nuit ce soir
-                    { date: tomorrow } // Les équipes de demain
-                ],
-                OR: [
-                    { leaderValidated: false },
-                    { teammateValidated: false }
+                AND: [
+                    {
+                        OR: [
+                            { date: startOfDay, startTime: { gte: "18:00" } }, // Les équipes de nuit ce soir
+                            { date: tomorrow } // Les équipes de demain
+                        ]
+                    },
+                    {
+                        OR: [
+                            { leaderValidated: false },
+                            { teammateValidated: false }
+                        ]
+                    }
                 ]
             },
             include: {
