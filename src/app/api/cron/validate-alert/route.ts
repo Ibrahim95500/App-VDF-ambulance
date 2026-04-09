@@ -6,9 +6,10 @@ export async function POST(req: Request) {
     try {
         // Optionnel : sécuriser la route avec un token CRON
         const today = new Date()
-        const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+        // Création forcée en UTC pour correspondre exactement aux entrées Prisma qui stockent '2026-04-10T00:00:00.000Z'
+        const startOfDay = new Date(Date.UTC(today.getFullYear(), today.getMonth(), today.getDate()))
         const tomorrow = new Date(startOfDay)
-        tomorrow.setDate(tomorrow.getDate() + 1)
+        tomorrow.setUTCDate(tomorrow.getUTCDate() + 1)
 
         // On cherche toutes les assignations non validées de ce soir ou demain
         const assignments = await prisma.planningAssignment.findMany({
