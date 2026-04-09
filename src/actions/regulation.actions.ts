@@ -140,12 +140,15 @@ export async function saveAssignment(data: {
 
         let assignmentId = ""
 
+        // Pour éviter le fameux "Null constraint violation" sur les VSL si la base PostgreSQL attend un teammateId obligatoire
+        const teammateFallback = (data.teammateId && data.teammateId.trim() !== "") ? data.teammateId : (isVSL ? data.leaderId : null);
+
         if (existing) {
             await prisma.planningAssignment.update({
                 where: { id: existing.id },
                 data: {
                     leaderId: data.leaderId,
-                    teammateId: data.teammateId || null,
+                    teammateId: teammateFallback,
                     startTime: data.startTime,
                     endTime: data.endTime,
                     status: 'PENDING',
@@ -158,12 +161,11 @@ export async function saveAssignment(data: {
             assignmentId = existing.id
         } else {
             // SAFE CREATE FALLBACK : si un champ relationnel est vide, Prisma peut planter sur une Null Constraint
-            const teammateFinal = (data.teammateId && data.teammateId.trim() !== "") ? data.teammateId : null;
             const created = await prisma.planningAssignment.create({
                 data: {
                     vehicleId: data.vehicleId,
                     leaderId: data.leaderId,
-                    teammateId: teammateFinal,
+                    teammateId: teammateFallback,
                     date: startOfDay,
                     startTime: data.startTime,
                     endTime: data.endTime,
