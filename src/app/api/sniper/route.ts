@@ -99,6 +99,34 @@ export async function POST(req: Request) {
             // On ne bloque pas la réponse pour l'app
         }
 
+        // --- ENVOI NOTIFICATION PUSH ---
+        try {
+            const { sendPushNotification } = await import("@/actions/web-push.actions");
+            const targetUsers = await prisma.user.findMany({
+                where: {
+                    roles: {
+                        hasSome: ["ADMIN", "REGULATEUR"]
+                    }
+                }
+            });
+
+            const emoji = status.toLowerCase().includes("succès") ? "✅" : "👀";
+            
+            const pushPromises = targetUsers.map(user => 
+                sendPushNotification(
+                    user.id,
+                    `${emoji} PRT : Course ${status}`,
+                    `Départ: ${depart || '?'}\n(À vérifier aussi sur PRT)`,
+                    "/dashboard/rh/sniper-logs"
+                )
+            );
+
+            await Promise.allSettled(pushPromises);
+            console.log(`[PUSH_DEBUG] Notifications envoyées à ${targetUsers.length} Admins/Regulateurs pour la course PRT.`);
+        } catch (pushErr) {
+            console.error("Erreur d'envoi Push Sniper:", pushErr);
+        }
+
         return NextResponse.json({ success: true });
     } catch(e) {
         console.error("Erreur API Sniper:", e);
