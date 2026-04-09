@@ -139,6 +139,14 @@ export async function sendPushNotification(userId: string, title: string, messag
                 data: {
                     url: url
                 },
+                apns: {
+                    payload: {
+                        aps: {
+                            sound: 'default',
+                            interruptionLevel: 'active'
+                        }
+                    }
+                },
                 android: {
                     priority: 'high',
                     notification: {
