@@ -216,13 +216,13 @@ export function RegulationView() {
                     </p>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-3">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full">
                     {/* Date Picker */}
                     <Popover>
                         <PopoverTrigger asChild>
-                            <Button variant="outline" className="h-12 px-4 gap-2 font-bold border-2">
+                            <Button variant="outline" className="h-12 px-3 sm:px-4 gap-2 font-bold border-2 flex-grow sm:flex-grow-0">
                                 <CalendarIcon size={18} className="text-orange-500" />
-                                {format(date, 'd MMM yyyy', { locale: fr })}
+                                <span className="text-sm sm:text-base">{format(date, 'd MMM yyyy', { locale: fr })}</span>
                             </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0" align="end">
@@ -245,24 +245,24 @@ export function RegulationView() {
                         </PopoverContent>
                     </Popover>
 
-                    <div className={`px-4 py-2 rounded-xl border-2 ${statusObj.className} flex items-start sm:items-center gap-2 min-h-[48px] w-full sm:w-auto`}>
-                        <div className={`w-2 h-2 rounded-full mt-1 sm:mt-0 flex-shrink-0 ${statusObj.className.includes('blue') ? 'bg-blue-500' : statusObj.className.includes('orange') ? 'bg-orange-500' : statusObj.className.includes('green') ? 'bg-green-500' : statusObj.className.includes('purple') ? 'bg-purple-500' : 'bg-slate-500'}`}></div>
-                        <span className="text-xs sm:text-sm leading-tight font-medium">{statusObj.label}</span>
-                    </div>
-
                     {/* Bouton Actualiser Stylé */}
                     <Button 
                         variant="outline" 
                         size="icon" 
                         onClick={() => loadData()}
                         disabled={loading}
-                        className="h-12 w-12 rounded-xl border-2 hover:bg-slate-50 hover:text-orange-500 hover:border-orange-200 transition-all duration-300 shadow-sm group"
+                        className="h-12 w-12 rounded-xl border-2 hover:bg-slate-50 hover:text-orange-500 hover:border-orange-200 transition-all duration-300 shadow-sm group flex-shrink-0"
                     >
                         <Loader2 className={cn(
                             "size-5 transition-transform duration-500 group-hover:rotate-180",
                             loading && "animate-spin"
                         )} />
                     </Button>
+
+                    <div className={`px-3 sm:px-4 py-2 rounded-xl border-2 ${statusObj.className} flex items-start sm:items-center gap-2 min-h-[48px] w-full mt-1 sm:mt-0`}>
+                        <div className={`w-2 h-2 rounded-full mt-1 sm:mt-0 flex-shrink-0 ${statusObj.className.includes('blue') ? 'bg-blue-500' : statusObj.className.includes('orange') ? 'bg-orange-500' : statusObj.className.includes('green') ? 'bg-green-500' : statusObj.className.includes('purple') ? 'bg-purple-500' : 'bg-slate-500'}`}></div>
+                        <span className="text-[11px] sm:text-sm leading-tight font-medium">{statusObj.label}</span>
+                    </div>
                 </div>
             </div>
 
