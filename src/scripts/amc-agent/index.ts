@@ -365,8 +365,15 @@ async function snipeCourse(page: any, withFilters: boolean = true): Promise<{ bu
     
     if (validationClicked) {
         try {
-            await page.waitForLoadState('networkidle', { timeout: 8000 });
-        } catch(e) {}
+            console.log("⏳ Attente de la validation (Navigation/PostBack)...");
+            await Promise.all([
+                page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 10000 }),
+                new Promise(r => setTimeout(r, 2000)) // Force à attendre au moins 2 sec le temps que l'action s'enclenche
+            ]);
+        } catch(e) {
+            console.log("⚠️ Aucune navigation détectée. Utilisation du délai de secours.");
+            await new Promise(r => setTimeout(r, 4000));
+        }
     } 
     
     // --- ÉTAPE 4 : Vérifier s'il y a l'erreur ---
