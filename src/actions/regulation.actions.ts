@@ -114,11 +114,10 @@ export async function saveAssignment(data: {
                 const user = await prisma.user.findUnique({ where: { id: pid }, select: { firstName: true, lastName: true } })
                 throw new Error(`🚫 CONFLIT JOUR/NUIT : ${user?.lastName} ${user?.firstName} est déjà assigné sur le véhicule ${otherAssignment.vehicleId} (${otherAssignment.vehicle.plateNumber}) en vacation ${isNight ? 'du MATIN' : 'du SOIR'}. Un salarié ne peut pas faire les deux vacations le même jour.`)
             }
-                }
-            }
         }
-        
-        // On cherche l'assignation existante par ID en priorité, ou par horaires
+    }
+    
+    // On cherche l'assignation existante par ID en priorité, ou par horaires
         let existing = null;
         if (data.planningId) {
             existing = await prisma.planningAssignment.findUnique({
