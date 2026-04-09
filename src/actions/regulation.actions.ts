@@ -220,10 +220,15 @@ export async function validateMyPlanning(userId: string, assignmentId: string) {
         const isTeammate = assignment.teammateId === userId
         if (!isLeader && !isTeammate) return { error: 'Non autorisé' }
 
-        const updateField = isLeader 
-            ? { leaderValidated: true, leaderValidatedAt: new Date() } 
-            : { teammateValidated: true, teammateValidatedAt: new Date() }
-    
+        const updateField: any = {}
+        if (isLeader) {
+            updateField.leaderValidated = true
+            updateField.leaderValidatedAt = new Date()
+        }
+        if (isTeammate) {
+            updateField.teammateValidated = true
+            updateField.teammateValidatedAt = new Date()
+        }
         const updated = await prisma.planningAssignment.update({
             where: { id: assignmentId },
             data: updateField
