@@ -73,6 +73,7 @@ export async function getAvailablePersonnel(dateStr: string) {
 }
 
 export async function saveAssignment(data: {
+    planningId?: string
     vehicleId: string
     leaderId: string
     teammateId?: string | null
