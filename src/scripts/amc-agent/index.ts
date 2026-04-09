@@ -217,13 +217,13 @@ async function snipeCourse(page: any, withFilters: boolean = true): Promise<{ bu
                     const isManualTriggered = manualIds.includes(result.num);
 
                     if (isVIP || isManualTriggered) {
-                        setTimeout(() => {
+                        try {
                             if (acceptBtn.tagName === 'IMG' && acceptBtn.parentElement && acceptBtn.parentElement.tagName === 'A') {
                                 acceptBtn.parentElement.click();
                             } else {
                                 (acceptBtn as HTMLElement).click();
                             }
-                        }, 100);
+                        } catch(e) {}
                         result.clicked = true;
                         result.isManual = isManualTriggered;
                         break; 
@@ -264,8 +264,8 @@ async function snipeCourse(page: any, withFilters: boolean = true): Promise<{ bu
         return { buffer: null, status: "ignored" };
     }
     
-    console.log("✅ Clic sur la course effectué ! Attente de l'ouverture du Pop-up AJAX...");
-    await new Promise(r => setTimeout(r, 2000)); 
+    console.log("⚡ Clic sur la course effectué ! Attente Éclair (250ms) de l'ouverture du Pop-up AJAX...");
+    await new Promise(r => setTimeout(r, 250)); 
     
     // Étape 3: Analyser le pop-up, lire l'heure voulue, et remplir les champs
     const validationClicked = await page.evaluate(() => {
@@ -349,7 +349,7 @@ async function snipeCourse(page: any, withFilters: boolean = true): Promise<{ bu
         });
         
         if (submitBtn) {
-            setTimeout(() => {
+            try {
                 // @ts-ignore
                 if (submitBtn.tagName === 'A' && typeof __doPostBack === 'function' && submitBtn.id) {
                     // @ts-ignore
@@ -357,7 +357,7 @@ async function snipeCourse(page: any, withFilters: boolean = true): Promise<{ bu
                 } else {
                     (submitBtn as HTMLElement).click();
                 }
-            }, 100);
+            } catch(e) {}
             return true;
         }
         return false;
@@ -367,8 +367,8 @@ async function snipeCourse(page: any, withFilters: boolean = true): Promise<{ bu
         try {
             console.log("⏳ Attente de la validation (Navigation/PostBack)...");
             await Promise.all([
-                page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 10000 }),
-                new Promise(r => setTimeout(r, 2000)) // Force à attendre au moins 2 sec le temps que l'action s'enclenche
+                page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 6000 }),
+                new Promise(r => setTimeout(r, 300)) // Force delay minimal de survie du submit HTTP
             ]);
         } catch(e) {
             console.log("⚠️ Aucune navigation détectée. Utilisation du délai de secours.");
@@ -422,6 +422,28 @@ async function startAgent() {
       if (isBotPaused) {
           await new Promise(r => setTimeout(r, 8000));
           continue;
+      }
+
+      // --- PAUSE MATINALE CRITIQUE (05:30 -> 07:00) ---
+      const now = new Date();
+      // Ajustement auto sur l'heure locale VPS (qui devrait être sur Europe/Paris), sinon prévoir un offset
+      const hours = now.getHours();
+      const mins = now.getMinutes();
+      const isMorningPause = (hours === 5 && mins >= 30) || (hours === 6) || (hours === 7 && mins === 0);
+      if (isMorningPause) {
+          console.log(`[${now.toLocaleTimeString()}] ☕ PAUSE MATINALE OBLIGATOIRE (05:30 - 07:00). Le robot se met en veille 1 minute...`);
+          await new Promise(r => setTimeout(r, 60000));
+          continue; 
+      }
+
+      // --- CRON ALERT 20H00 (Rappel de Prise de Service) ---
+      let isCronAlertSentToday = (global as any).lastCronSentDay === now.getDate();
+      if (!isCronAlertSentToday && hours === 20 && mins < 5) {
+          (global as any).lastCronSentDay = now.getDate();
+          console.log(`[${now.toLocaleTimeString()}] ⏰ DÉCLENCHEMENT DU CRON 20H00 (WebPush Alert)...`);
+          try {
+              fetch('http://localhost:3000/api/cron/validate-alert', { method: 'POST' }).catch(() => {});
+          } catch(e) {}
       }
 
       let pageText = "";
@@ -624,8 +646,11 @@ async function startAgent() {
              await new Promise(r => setTimeout(r, 2000));
          }
          else if (snipeResult.status === "failed_already_taken") {
+             console.log("❌ ÉCHEC : Course prise par quelqu'un de plus rapide. Enregistrement de l'échec et log...");
+             await sendTelegramAlert("❌ **TROP LENT ! ÉCHEC !**\nLe robot a cliqué et soumis le formulaire, mais quelqu'un d'autre l'avait déjà piquée juste avant.\n*La course a filé.*", snipeResult.buffer || undefined);
+             await saveLog("FAILED_ALREADY_TAKEN", snipeResult.buffer, snipeResult.depart || "Inconnu", snipeResult.arrivee || "Inconnu", snipeResult.num || "Inconnu", snipeResult.demandeur);
              await page.goto(AMC_URL, { waitUntil: "networkidle" });
-             await new Promise(r => setTimeout(r, 15000));
+             await new Promise(r => setTimeout(r, 8000));
          }
          else if (snipeResult.status === "SUCCESS") {
              if (snipeResult.buffer) {

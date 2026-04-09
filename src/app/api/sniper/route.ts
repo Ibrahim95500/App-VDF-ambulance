@@ -70,7 +70,8 @@ export async function POST(req: Request) {
             }
         });
 
-        // Envoi Email dès la récupération
+        // Envoi Email désactivé à la demande du client (seule la Push Notification est conservée pour les Régulateurs)
+        /*
         try {
             await sendBrandedEmail({
                 to: "prisederendezvousvdf@gmail.com",
@@ -96,8 +97,8 @@ export async function POST(req: Request) {
             console.log("Email Sniper envoyé avec succès à prisederendezvousvdf@gmail.com");
         } catch (mailErr) {
             console.error("Erreur d'envoi d'email Sniper:", mailErr);
-            // On ne bloque pas la réponse pour l'app
         }
+        */
 
         // --- ENVOI NOTIFICATION PUSH ---
         try {

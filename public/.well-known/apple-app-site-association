@@ -4,7 +4,10 @@
     "details": [
       {
         "appID": "K93FQ2M3NS.fr.vdfambulance.app",
-        "paths": ["*"]
+        "paths": [
+          "NOT /auth/reset*",
+          "*"
+        ]
       }
     ]
   }

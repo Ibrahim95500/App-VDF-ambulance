@@ -110,17 +110,26 @@ export async function saveAssignment(data: {
             }
         }
         
-        // On cherche s'il existe déjà une assignation pour ce véhicule à cette date (et sur le BON créneau)
-        const existing = await prisma.planningAssignment.findFirst({
-            where: {
-                vehicleId: data.vehicleId,
-                date: {
-                    gte: startOfDay,
-                    lte: endOfDay
-                },
-                startTime: isNight ? { gte: "12:00" } : { lt: "12:00" }
-            }
-        })
+        // On cherche l'assignation existante par ID en priorité, ou par horaires
+        let existing = null;
+        if (data.planningId) {
+            existing = await prisma.planningAssignment.findUnique({
+                where: { id: data.planningId }
+            });
+        }
+        
+        if (!existing) {
+            existing = await prisma.planningAssignment.findFirst({
+                where: {
+                    vehicleId: data.vehicleId,
+                    date: {
+                        gte: startOfDay,
+                        lte: endOfDay
+                    },
+                    startTime: isNight ? { gte: "12:00" } : { lt: "12:00" }
+                }
+            });
+        }
 
         let assignmentId = ""
 
@@ -141,11 +150,13 @@ export async function saveAssignment(data: {
             })
             assignmentId = existing.id
         } else {
+            // SAFE CREATE FALLBACK : si un champ relationnel est vide, Prisma peut planter sur une Null Constraint
+            const teammateFinal = (data.teammateId && data.teammateId.trim() !== "") ? data.teammateId : null;
             const created = await prisma.planningAssignment.create({
                 data: {
                     vehicleId: data.vehicleId,
                     leaderId: data.leaderId,
-                    teammateId: data.teammateId || null,
+                    teammateId: teammateFinal,
                     date: startOfDay,
                     startTime: data.startTime,
                     endTime: data.endTime,
