@@ -89,14 +89,19 @@ export async function saveAssignment(data: {
 
         // --- VALIDATION JOUR / NUIT ---
         // On vérifie si l'un des deux est déjà assigné sur l'autre shift (ou celui-ci d'ailleurs) ce jour là
-        const personIds = [data.leaderId, data.teammateId].filter((id): id is string => typeof id === 'string' && id !== "")
+        const vehicle = await prisma.vehicle.findUnique({ where: { id: data.vehicleId } });
+        const isVSL = vehicle?.plateNumber.toUpperCase().includes('VSL') || false;
         
-        for (const pid of personIds) {
-            const otherAssignment = await prisma.planningAssignment.findFirst({
-                where: {
-                    date: { gte: startOfDay, lte: endOfDay },
-                    OR: [{ leaderId: pid }, { teammateId: pid }],
-                    // On cherche spécifiquement un conflit (si on est Night, on cherche s'il est déjà en Day et vice versa)
+        // On désactive le contrôle bloquant pour les VSL, comme demandé (tout le monde peut y aller)
+        if (!isVSL) {
+            const personIds = [data.leaderId, data.teammateId].filter((id): id is string => typeof id === 'string' && id !== "")
+            
+            for (const pid of personIds) {
+                const otherAssignment = await prisma.planningAssignment.findFirst({
+                    where: {
+                        date: { gte: startOfDay, lte: endOfDay },
+                        OR: [{ leaderId: pid }, { teammateId: pid }],
+                        // On cherche spécifiquement un conflit (si on est Night, on cherche s'il est déjà en Day et vice versa)
                     // Mais en réalité, le client demande "ne peut pas être de nuit s'il est de jour", donc n'importe quel autre assignment le même jour est suspect
                     // Sauf si c'est pour le MÊME véhicule (modification d'équipage en cours)
                     vehicleId: { not: data.vehicleId }, 
@@ -108,6 +113,8 @@ export async function saveAssignment(data: {
             if (otherAssignment && otherAssignment.vehicle) {
                 const user = await prisma.user.findUnique({ where: { id: pid }, select: { firstName: true, lastName: true } })
                 throw new Error(`🚫 CONFLIT JOUR/NUIT : ${user?.lastName} ${user?.firstName} est déjà assigné sur le véhicule ${otherAssignment.vehicleId} (${otherAssignment.vehicle.plateNumber}) en vacation ${isNight ? 'du MATIN' : 'du SOIR'}. Un salarié ne peut pas faire les deux vacations le même jour.`)
+            }
+                }
             }
         }
         
