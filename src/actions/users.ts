@@ -315,7 +315,7 @@ export async function requestPasswordReset(formData: FormData) {
 
         console.log(`[RESET] Token created and saved in VerificationToken for ${email}`);
 
-        const resetLink = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/login/reset-password?token=${token}`;
+        const resetLink = `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/auth/reset-password?token=${token}`;
 
         console.log(`[RESET] Attempting to send email to ${email} via ${process.env.EMAIL_SERVER_HOST}`);
 
