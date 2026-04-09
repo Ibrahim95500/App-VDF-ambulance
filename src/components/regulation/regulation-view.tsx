@@ -338,15 +338,15 @@ export function RegulationView() {
                     {/* Filters Row (Planning Mode ONLY) */}
             <div className="flex flex-col md:flex-row gap-4 items-center">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full md:w-auto">
-                    <TabsList className="bg-slate-100 dark:bg-slate-800 p-1 rounded-xl h-12 border">
-                        <TabsTrigger value="ALL" className="rounded-lg px-6 font-bold">
-                            Tous <Badge variant="secondary" className="ml-2 bg-slate-200 dark:bg-slate-700">{counts.ALL}</Badge>
+                    <TabsList className="bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border h-auto flex flex-wrap justify-start">
+                        <TabsTrigger value="ALL" className="flex-1 rounded-lg px-2 sm:px-6 py-2 font-bold text-xs sm:text-sm">
+                            Tous <Badge variant="secondary" className="ml-1 sm:ml-2 bg-slate-200 dark:bg-slate-700 text-[10px] sm:text-xs">{counts.ALL}</Badge>
                         </TabsTrigger>
-                        <TabsTrigger value="MARK" className="rounded-lg px-6 font-bold data-[state=active]:bg-blue-600 data-[state=active]:text-white">
-                            MARK <Badge variant="secondary" className="ml-2 bg-blue-100 text-blue-600">{counts.MARK}</Badge>
+                        <TabsTrigger value="MARK" className="flex-1 rounded-lg px-2 sm:px-6 py-2 font-bold text-xs sm:text-sm data-[state=active]:bg-blue-600 data-[state=active]:text-white">
+                            MARK <Badge variant="secondary" className="ml-1 sm:ml-2 bg-blue-100 text-blue-600 text-[10px] sm:text-xs">{counts.MARK}</Badge>
                         </TabsTrigger>
-                        <TabsTrigger value="VDF" className="rounded-lg px-6 font-bold data-[state=active]:bg-orange-500 data-[state=active]:text-white">
-                            VDF <Badge variant="secondary" className="ml-2 bg-orange-100 text-orange-600">{counts.VDF}</Badge>
+                        <TabsTrigger value="VDF" className="flex-1 rounded-lg px-2 sm:px-6 py-2 font-bold text-xs sm:text-sm data-[state=active]:bg-orange-500 data-[state=active]:text-white">
+                            VDF <Badge variant="secondary" className="ml-1 sm:ml-2 bg-orange-100 text-orange-600 text-[10px] sm:text-xs">{counts.VDF}</Badge>
                         </TabsTrigger>
                     </TabsList>
                 </Tabs>
