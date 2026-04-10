@@ -259,6 +259,32 @@ export function RegulationView() {
                         )} />
                     </Button>
 
+                    {/* Bouton Relance d'Alerte Manuel */}
+                    <Button
+                        variant="default"
+                        onClick={async () => {
+                            try {
+                                toast.loading("Déclenchement du missile d'alerte...", { id: 'relance' })
+                                const res = await fetch('/api/cron/validate-alert', { method: 'POST' })
+                                const data = await res.json()
+                                if (res.ok) {
+                                    if (data.alerted > 0) {
+                                        toast.success(`BOOM ! 🚀 ${data.alerted} agents oublieux relancés !`, { id: 'relance', duration: 5000 })
+                                    } else {
+                                        toast.success(`Tout le monde a déjà validé pour la période ciblée.`, { id: 'relance', duration: 4000 })
+                                    }
+                                } else {
+                                    toast.error(`Erreur: ${data.message || data.error || 'Erreur interne'}`, { id: 'relance' })
+                                }
+                            } catch (e) {
+                                toast.error("Erreur réseau vers le serveur.", { id: 'relance' })
+                            }
+                        }}
+                        className="h-12 px-4 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold shadow-lg shadow-red-600/30 border-2 border-red-500 hover:border-red-400 transition-all duration-300 flex items-center gap-2"
+                    >
+                        🚨 Relancer les oublis
+                    </Button>
+
                     <div className={`px-3 sm:px-4 py-2 rounded-xl border-2 ${statusObj.className} flex items-start sm:items-center gap-2 min-h-[48px] w-full mt-1 sm:mt-0`}>
                         <div className={`w-2 h-2 rounded-full mt-1 sm:mt-0 flex-shrink-0 ${statusObj.className.includes('blue') ? 'bg-blue-500' : statusObj.className.includes('orange') ? 'bg-orange-500' : statusObj.className.includes('green') ? 'bg-green-500' : statusObj.className.includes('purple') ? 'bg-purple-500' : 'bg-slate-500'}`}></div>
                         <span className="text-[11px] sm:text-sm leading-tight font-medium">{statusObj.label}</span>
