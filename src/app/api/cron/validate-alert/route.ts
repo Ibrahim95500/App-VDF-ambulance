@@ -48,14 +48,15 @@ export async function POST(req: Request) {
 
         console.log(`[CRON 20h00] Relance de validation : ${usersToAlert.size} agents identifiés.`)
 
-        if (!process.env.VAPID_PUBLIC_KEY || !process.env.VAPID_PRIVATE_KEY) {
+        const vapidPublicKey = process.env.VAPID_PUBLIC_KEY || process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+        if (!vapidPublicKey || !process.env.VAPID_PRIVATE_KEY) {
             console.error("VAPID keys missing env config")
             return NextResponse.json({ error: "Missing VAPID" }, { status: 500 })
         }
 
         webpush.setVapidDetails(
             'mailto:contact@vdf-ambulance.fr',
-            process.env.VAPID_PUBLIC_KEY,
+            vapidPublicKey,
             process.env.VAPID_PRIVATE_KEY
         )
 
