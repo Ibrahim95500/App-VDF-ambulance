@@ -264,11 +264,20 @@ async function snipeCourse(page: any, withFilters: boolean = true): Promise<{ bu
         return { buffer: null, status: "ignored" };
     }
     
-    console.log("⚡ Clic sur la course effectué ! Attente Éclair (250ms) de l'ouverture du Pop-up AJAX...");
-    await new Promise(r => setTimeout(r, 250)); 
+    console.log("⚡ Clic sur la course effectué ! En attente de la navigation ou du pop-up...");
     
-    // Étape 3: Analyser le pop-up, lire l'heure voulue, et remplir les champs
-    const validationClicked = await page.evaluate(() => {
+    // Si la page fait une navigation complète (PostBack au lieu de Ajax), on l'attend
+    try { await page.waitForLoadState('networkidle', { timeout: 1500 }); } catch (e) {}
+    
+    let validationClicked = false;
+    let attempts = 0;
+    while (attempts < 5) {
+        attempts++;
+        try {
+            await new Promise(r => setTimeout(r, 400)); // Laisse le temps au nouveau DOM/Popup de pop
+            
+            // Étape 3: Analyser la page, lire l'heure voulue, et remplir les champs
+            validationClicked = await page.evaluate(() => {
         const bodyText = document.body.innerText;
         
         // Extract Date from RDV (e.g. "RDV le 03/04/2026")
@@ -502,18 +511,30 @@ async function startAgent() {
           continue; 
       }
 
-      const hasRienAtraiter = await page.evaluate(() => {
-          // Idée métier Ibrahim: Si le compteur affiche 1 ou +, y'a une course confirmée !
-          const spanCompteur = document.querySelector('#ctl00_ContentPlaceHolder1_LabAAffecter') as HTMLElement;
-          if (spanCompteur && !isNaN(parseInt(spanCompteur.innerText))) {
-              if (parseInt(spanCompteur.innerText) > 0) return false; 
-          }
+      let hasRienAtraiter = true;
+      for (let attempts = 1; attempts <= 5; attempts++) {
+          try {
+              hasRienAtraiter = await page.evaluate(() => {
+                  const spanCompteur = document.querySelector('#ctl00_ContentPlaceHolder1_LabAAffecter') as HTMLElement;
+                  if (spanCompteur && !isNaN(parseInt(spanCompteur.innerText))) {
+                      if (parseInt(spanCompteur.innerText) > 0) return false; 
+                  }
 
-          const atTable = document.querySelector('#AT_Affectation');
-          if (!atTable) return true;
-          const validationButtons = atTable.querySelectorAll('input[src*="valide"], input[src*="check"], img[src*="valide"], img[src*="check"], .fa-check, a[title*="accepter"]');
-          return validationButtons.length === 0;
-      });
+                  const atTable = document.querySelector('#AT_Affectation');
+                  if (!atTable) return true;
+                  const validationButtons = atTable.querySelectorAll('input[src*="valide"], input[src*="check"], img[src*="valide"], img[src*="check"], .fa-check, a[title*="accepter"]');
+                  return validationButtons.length === 0;
+              });
+              break;
+          } catch (e: any) {
+              if (e.message?.includes("Execution context was destroyed") || e.message?.includes("Target closed")) {
+                  console.log(`⚠️ Navigation en cours détectée (Tentative ${attempts}/5)... Attente du nouveau contexte.`);
+                  await new Promise(r => setTimeout(r, 1000));
+              } else {
+                  throw e;
+              }
+          }
+      }
 
       if (!proofSent && page.url().includes("TransporteurAtraiter")) {
           console.log("📸 Prise de la capture de preuve de connexion...")
