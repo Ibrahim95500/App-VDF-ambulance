@@ -660,7 +660,7 @@ export async function overrideHistoryAssignment(data: {
             userId: data.newLeaderId,
             title: "🚑 Modification d'Urgence",
             message: pushMessage,
-            type: "WARNING",
+            type: "MISSION",
             link: "/dashboard/salarie",
         });
 
@@ -669,7 +669,7 @@ export async function overrideHistoryAssignment(data: {
                 userId: data.newTeammateId,
                 title: "🚑 Modification d'Urgence",
                 message: pushMessage,
-                type: "WARNING",
+                type: "MISSION",
                 link: "/dashboard/salarie",
             });
         }
