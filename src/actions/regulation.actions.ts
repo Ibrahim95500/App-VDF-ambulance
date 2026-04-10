@@ -677,7 +677,11 @@ export async function overrideHistoryAssignment(data: {
             await sendBrandedEmail({
                 to: newLeader.email,
                 subject: "🚨🚑 Affectation d'Urgence",
-                html: `Bonjour ${newLeader.firstName},<br><br>Ton régulateur vient de modifier le planning en urgence.<br><br><b>${pushMessage}</b><br><br><a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://dev.vdf-ambulance.fr'}${actionLink}">Consulter ma demande</a>`
+                title: "Alerte de Régulation",
+                preheader: "Modification d'Urgence",
+                content: `Bonjour ${newLeader.firstName},<br><br>Ton régulateur vient de modifier le planning en urgence.<br><br><b>${pushMessage}</b>`,
+                actionUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'https://dev.vdf-ambulance.fr'}${actionLink}`,
+                actionText: "Consulter ma demande"
             }).catch(() => {});
         }
 
@@ -697,7 +701,11 @@ export async function overrideHistoryAssignment(data: {
                 await sendBrandedEmail({
                     to: newTeammate.email,
                     subject: "🚨🚑 Affectation d'Urgence",
-                    html: `Bonjour ${newTeammate.firstName},<br><br>Ton régulateur vient de modifier le planning en urgence.<br><br><b>${pushMessage}</b><br><br><a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://dev.vdf-ambulance.fr'}${actionLink}">Consulter ma demande</a>`
+                    title: "Alerte de Régulation",
+                    preheader: "Modification d'Urgence",
+                    content: `Bonjour ${newTeammate.firstName},<br><br>Ton régulateur vient de modifier le planning en urgence.<br><br><b>${pushMessage}</b>`,
+                    actionUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'https://dev.vdf-ambulance.fr'}${actionLink}`,
+                    actionText: "Consulter ma demande"
                 }).catch(() => {});
             }
         }
