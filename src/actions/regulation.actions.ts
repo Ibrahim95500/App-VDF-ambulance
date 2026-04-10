@@ -141,7 +141,7 @@ export async function saveAssignment(data: {
         let assignmentId = ""
 
         // Pour éviter le fameux "Null constraint violation" sur les VSL si la base PostgreSQL attend un teammateId obligatoire
-        const teammateFallback = (data.teammateId && data.teammateId.trim() !== "") ? data.teammateId : (isVSL ? data.leaderId : null);
+        const teammateFallback = ((data.teammateId && data.teammateId.trim() !== "") ? data.teammateId : (isVSL ? data.leaderId : null)) as any;
 
         if (existing) {
             await prisma.planningAssignment.update({
