@@ -674,11 +674,11 @@ export async function overrideHistoryAssignment(data: {
         await sendPushNotification(data.newLeaderId, "🚑 Modification d'Urgence", pushMessage, actionLink);
 
         if (newLeader?.email) {
-            await sendBrandedEmail(
-                newLeader.email,
-                "🚨🚑 Affectation d'Urgence",
-                `Bonjour ${newLeader.firstName},<br><br>Ton régulateur vient de modifier le planning en urgence.<br><br><b>${pushMessage}</b><br><br><a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://dev.vdf-ambulance.fr'}${actionLink}">Consulter ma demande</a>`
-            ).catch(() => {});
+            await sendBrandedEmail({
+                to: newLeader.email,
+                subject: "🚨🚑 Affectation d'Urgence",
+                html: `Bonjour ${newLeader.firstName},<br><br>Ton régulateur vient de modifier le planning en urgence.<br><br><b>${pushMessage}</b><br><br><a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://dev.vdf-ambulance.fr'}${actionLink}">Consulter ma demande</a>`
+            }).catch(() => {});
         }
 
         // --- Pour le Co-équipier ---
@@ -694,11 +694,11 @@ export async function overrideHistoryAssignment(data: {
             await sendPushNotification(data.newTeammateId, "🚑 Modification d'Urgence", pushMessage, actionLink);
 
             if (newTeammate.email) {
-                await sendBrandedEmail(
-                    newTeammate.email,
-                    "🚨🚑 Affectation d'Urgence",
-                    `Bonjour ${newTeammate.firstName},<br><br>Ton régulateur vient de modifier le planning en urgence.<br><br><b>${pushMessage}</b><br><br><a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://dev.vdf-ambulance.fr'}${actionLink}">Consulter ma demande</a>`
-                ).catch(() => {});
+                await sendBrandedEmail({
+                    to: newTeammate.email,
+                    subject: "🚨🚑 Affectation d'Urgence",
+                    html: `Bonjour ${newTeammate.firstName},<br><br>Ton régulateur vient de modifier le planning en urgence.<br><br><b>${pushMessage}</b><br><br><a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://dev.vdf-ambulance.fr'}${actionLink}">Consulter ma demande</a>`
+                }).catch(() => {});
             }
         }
         revalidatePath('/dashboard/rh/regulation');
