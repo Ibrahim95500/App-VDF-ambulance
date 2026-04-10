@@ -631,7 +631,8 @@ export async function overrideHistoryAssignment(data: {
 }) {
     try {
         const assignment = await prisma.planningAssignment.findUnique({
-            where: { id: data.assignmentId }
+            where: { id: data.assignmentId },
+            include: { vehicle: true }
         });
         if (!assignment) throw new Error("Assignation introuvable !");
 
