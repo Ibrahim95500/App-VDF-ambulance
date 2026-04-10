@@ -24,6 +24,7 @@ const TELEGRAM_CHAT_IDS = ["1634444351", "8679052160", "8457900796", "6171035866
 // Écouteur Interactif Telegram
 const bot = new TelegramBot(TELEGRAM_BOT_TOKEN, { polling: true })
 const manualClicks = new Set<string>()
+const manualRejects = new Set<string>()
 const alertedCourses = new Set<string>()
 let isBotPaused = false;
 let isBotDisconnected = false;
@@ -111,12 +112,22 @@ bot.on('callback_query', (query) => {
     if (query.data && query.data.startsWith('ACCEPT_')) {
         const courseId = query.data.replace('ACCEPT_', '')
         manualClicks.add(courseId)
-        console.log(`[TELEGRAM] Demande manuelle reçue pour sniper la course ${courseId} !`)
+        console.log(`[TELEGRAM] Demande manuelle reçue pour Accepter la course ${courseId} !`)
         
-        bot.answerCallbackQuery(query.id, { text: "✅ Ordre reçu ! Dès le prochain balayage (15s max), je l'attrape s'il est encore là ! 🚀", show_alert: true })
+        bot.answerCallbackQuery(query.id, { text: "✅ Ordre reçu ! Dès le prochain balayage (15s max), je l'accepte s'il est encore là ! 🚀", show_alert: true })
         
         if (query.message) {
-            bot.editMessageReplyMarkup({ inline_keyboard: [[{ text: `⏳ En cours de sniper pour la course ${courseId}...`, callback_data: 'WAIT' }]] }, { chat_id: query.message.chat.id, message_id: query.message.message_id })
+            bot.editMessageReplyMarkup({ inline_keyboard: [[{ text: `⏳ En cours d'acceptation de la course ${courseId}...`, callback_data: 'WAIT' }]] }, { chat_id: query.message.chat.id, message_id: query.message.message_id })
+        }
+    } else if (query.data && query.data.startsWith('ANNULER_')) {
+        const courseId = query.data.replace('ANNULER_', '')
+        manualRejects.add(courseId)
+        console.log(`[TELEGRAM] Demande manuelle reçue pour Refuser la course ${courseId} !`)
+        
+        bot.answerCallbackQuery(query.id, { text: "❌ Ordre reçu ! Dès le prochain balayage (15s max), je la supprime ! 🗑️", show_alert: true })
+        
+        if (query.message) {
+            bot.editMessageReplyMarkup({ inline_keyboard: [[{ text: `⏳ En cours de suppression de la course ${courseId}...`, callback_data: 'WAIT' }]] }, { chat_id: query.message.chat.id, message_id: query.message.message_id })
         }
     }
 })
@@ -156,7 +167,10 @@ async function sendTelegramAlert(message: string, imageBuffer?: Buffer, courseId
           const opts: any = { parse_mode: "Markdown" };
           if (courseId) {
               opts.reply_markup = {
-                  inline_keyboard: [[{ text: "✅ Accepter MANUELLEMENT", callback_data: `ACCEPT_${courseId}` }]]
+                  inline_keyboard: [[
+                      { text: "✅ Accepter", callback_data: `ACCEPT_${courseId}` },
+                      { text: "❌ Refuser", callback_data: `ANNULER_${courseId}` }
+                  ]]
               };
           }
 
@@ -176,9 +190,10 @@ async function snipeCourse(page: any, withFilters: boolean = true): Promise<{ bu
     console.log("🎯 DÉBUT DU SNIPING ! Évaluation Chirurgicale des courses...")
     const manualClicksArray = Array.from(manualClicks);
     const alertedCoursesArray = Array.from(alertedCourses);
+    const manualRejectsArray = Array.from(manualRejects);
     
     // Étape 1: Évaluer les lignes du tableau et filtrer
-    const extraction = await page.evaluate(({ manualIds, alertedIds, withFilters }: { manualIds: string[], alertedIds: string[], withFilters: boolean }) => {
+    const extraction = await page.evaluate(({ manualIds, alertedIds, manualRejectIds, withFilters }: { manualIds: string[], alertedIds: string[], manualRejectIds: string[], withFilters: boolean }) => {
         const allowedZipCodes = [
             "95500", "95400", "95200", "95140", "95380", 
             "95190", "95470", "95270", "95700", "95440", 
@@ -186,7 +201,7 @@ async function snipeCourse(page: any, withFilters: boolean = true): Promise<{ bu
             "93290", "93440"
         ];
         
-        let result = { clicked: false, isManual: false, num: "", departText: "", arriveeText: "", demandeurText: "", foundNotVip: false, allNums: [] as string[] };
+        let result = { clicked: false, isManual: false, isRejected: false, num: "", departText: "", arriveeText: "", demandeurText: "", foundNotVip: false, allNums: [] as string[] };
         
         const targetTable = document.querySelector('#AT_Affectation') || document;
         const theadRows = targetTable.querySelectorAll('thead tr');
@@ -215,8 +230,22 @@ async function snipeCourse(page: any, withFilters: boolean = true): Promise<{ bu
                     
                     const isVIP = withFilters ? (isGonesseDepart && isAllowedArrivee) : true;
                     const isManualTriggered = manualIds.includes(result.num);
+                    const isManualRejected = manualRejectIds.includes(result.num);
 
-                    if (isVIP || isManualTriggered) {
+                    if (isManualRejected) {
+                        const rejectBtn = row.querySelector('input[src*="croix_supprime"], img[src*="croix_supprime"], a[title*="Refuser"]');
+                        if (rejectBtn) {
+                            try {
+                                if (rejectBtn.tagName === 'IMG' && rejectBtn.parentElement && rejectBtn.parentElement.tagName === 'A') {
+                                    rejectBtn.parentElement.click();
+                                } else {
+                                    (rejectBtn as HTMLElement).click();
+                                }
+                            } catch(e) {}
+                            result.isRejected = true;
+                            break; 
+                        }
+                    } else if (isVIP || isManualTriggered) {
                         try {
                             if (acceptBtn.tagName === 'IMG' && acceptBtn.parentElement && acceptBtn.parentElement.tagName === 'A') {
                                 acceptBtn.parentElement.click();
@@ -239,10 +268,14 @@ async function snipeCourse(page: any, withFilters: boolean = true): Promise<{ bu
             }
         }
         return result;
-    }, { manualIds: manualClicksArray, alertedIds: alertedCoursesArray, withFilters });
+    }, { manualIds: manualClicksArray, alertedIds: alertedCoursesArray, manualRejectIds: manualRejectsArray, withFilters });
 
     if (extraction.isManual) {
         manualClicks.delete(extraction.num); // Reset memory
+    }
+    
+    if (extraction.isRejected) {
+        manualRejects.delete(extraction.num);
     }
 
     // Gérer les clics manuels sur des courses qui ont disparues (Trop tard !)
@@ -253,6 +286,25 @@ async function snipeCourse(page: any, withFilters: boolean = true): Promise<{ bu
             manualClicks.delete(mId);
             await saveLog("FAILED_ALREADY_TAKEN", null, "Disparue", "Disparue", mId);
         }
+    }
+    
+    // Gérer les refus manuels sur des courses disparues
+    for (const mId of manualRejectsArray) {
+        if (!extraction.allNums.includes(mId)) {
+            console.log(`❌ Course refusée manuellement ${mId} disparue du DOM !`);
+            manualRejects.delete(mId);
+        }
+    }
+
+    if (extraction.isRejected) {
+        try {
+            console.log(`⏳ Attente après le refus manuel de la course ${extraction.num}...`);
+            await page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 5000 }).catch(() => {});
+            await new Promise(r => setTimeout(r, 1000));
+        } catch(e) {}
+        
+        const finalBuffer = await page.screenshot({ fullPage: true }) as Buffer;
+        return { buffer: finalBuffer, status: "REJECTED_SUCCESS", num: extraction.num, depart: extraction.departText, arrivee: extraction.arriveeText, demandeur: extraction.demandeurText };
     }
 
     if (!extraction.clicked) {
@@ -331,7 +383,7 @@ async function snipeCourse(page: any, withFilters: boolean = true): Promise<{ bu
 
         if (chauffeurSel && chauffeurSel instanceof HTMLSelectElement) {
             for (let i = 0; i < chauffeurSel.options.length; i++) {
-                if (chauffeurSel.options[i].text.toLowerCase().includes('ambu vdf1')) {
+                if (chauffeurSel.options[i].text.toLowerCase().includes('cheikh hamid')) {
                     chauffeurSel.selectedIndex = i;
                     chauffeurSel.dispatchEvent(new Event('change', { bubbles: true }));
                     break;
@@ -341,7 +393,7 @@ async function snipeCourse(page: any, withFilters: boolean = true): Promise<{ bu
 
         if (equipierSel && equipierSel instanceof HTMLSelectElement) {
             for (let i = 0; i < equipierSel.options.length; i++) {
-                if (equipierSel.options[i].text.toLowerCase().includes('ambu vdf2')) {
+                if (equipierSel.options[i].text.toLowerCase().includes('cheikh hamid')) {
                     equipierSel.selectedIndex = i;
                     equipierSel.dispatchEvent(new Event('change', { bubbles: true }));
                     break;
@@ -349,13 +401,7 @@ async function snipeCourse(page: any, withFilters: boolean = true): Promise<{ bu
             }
         }
         
-        let buttons = Array.from(document.querySelectorAll('input[type="submit"], button, a, input[type="button"]'));
-        let submitBtn = buttons.find(b => {
-             let text = ((b as HTMLInputElement).value || b.textContent || (b as HTMLElement).innerText || '').toLowerCase();
-             let val = b.getAttribute('value') || '';
-             const rect = b.getBoundingClientRect();
-             return rect.width > 0 && rect.height > 0 && (text.includes('valider') || val.toLowerCase().includes('valider'));
-        });
+        let submitBtn = document.querySelector('#ctl00_ContentPlaceHolder1_BtnValider') || document.querySelector('input[src*="valide"], input[src*="check"], img[src*="valide"], img[src*="check"], a[title*="accepter"], .fa-check, img[src*="V_Vert"]');
         
         if (submitBtn) {
             try {
@@ -701,6 +747,12 @@ async function startAgent() {
                  await saveLog("MANUAL_SUCCESS", snipeResult.buffer, snipeResult.depart || "Inconnu", snipeResult.arrivee || "Inconnu", snipeResult.num || "Inconnu");
              }
              await new Promise(r => setTimeout(r, 120000));
+         }
+         else if (snipeResult.status === "REJECTED_SUCCESS") {
+              if (snipeResult.buffer) {
+                  await sendTelegramAlert("🗑️ **COURSE REFUSÉE MANUELLEMENT !**\nElle a été supprimée définitivement.", snipeResult.buffer);
+              }
+              await new Promise(r => setTimeout(r, 2000));
          }
          else {
              if (snipeResult.buffer) await sendTelegramAlert("⚠️ **COMPORTEMENT IMPRÉVU PENDANT LE SNIPING...**", snipeResult.buffer);
