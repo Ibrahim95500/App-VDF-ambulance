@@ -6,6 +6,7 @@ import { createNotification, createManyNotifications } from "@/actions/notificat
 import { sendTelegramMessage } from "@/lib/telegram/telegram-api"
 import { format } from "date-fns"
 import { fr } from "date-fns/locale"
+import { sendPushNotification } from "@/actions/web-push.actions"
 
 /**
  * Appelée à 19h par le gros bouton "Figer et Envoyer"
@@ -111,9 +112,15 @@ export async function sendPlanningsToEmployees(dateStr: string) {
                     userId: leader.id,
                     title: "Nouvelle Mission 🚑",
                     message: `Vous êtes assigné au véhicule ${vehicle.plateNumber} pour le ${dateDisplay}. Pensez à valider avant 21h !`,
-                    type: "MISSION",
                     link: "/dashboard/salarie/regulation"
                 }).catch(console.error)
+
+                await sendPushNotification(
+                    leader.id,
+                    "Nouvelle Mission 🚑",
+                    `Vous êtes assigné au véhicule ${vehicle.plateNumber} pour le ${dateDisplay}. Pensez à valider avant 21h !`,
+                    "/dashboard/salarie/regulation"
+                ).catch(console.error);
 
                 if (leader.telegramChatId) {
                     const tgLeaderMsg = tgBaseMessage + `👥 <b>Rôle :</b> Responsable\n🤝 <b>Co-équipier :</b> ${teammateName}` + tgValidationMsg;
@@ -161,9 +168,15 @@ export async function sendPlanningsToEmployees(dateStr: string) {
                     userId: teammate.id,
                     title: "Nouvelle Mission 🚑",
                     message: `Vous êtes assigné au véhicule ${vehicle.plateNumber} pour le ${dateDisplay}. Pensez à valider avant 21h !`,
-                    type: "MISSION",
                     link: "/dashboard/salarie/regulation"
                 }).catch(console.error)
+
+                await sendPushNotification(
+                    teammate.id,
+                    "Nouvelle Mission 🚑",
+                    `Vous êtes assigné au véhicule ${vehicle.plateNumber} pour le ${dateDisplay}. Pensez à valider avant 21h !`,
+                    "/dashboard/salarie/regulation"
+                ).catch(console.error);
 
                 if (teammate.telegramChatId) {
                     const tgTeammateMsg = tgBaseMessage + `👥 <b>Rôle :</b> Co-équipier\n🤝 <b>Responsable :</b> ${leaderName}` + tgValidationMsg;
