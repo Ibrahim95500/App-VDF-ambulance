@@ -63,7 +63,7 @@ export function BottomTabBar() {
         ? [
             safeIsRealRH ? { label: 'Accueil', href: '/dashboard/rh', icon: Home } : null,
             { label: 'Régule RH', href: '/dashboard/rh/regulation', icon: Siren, badgeCount: stats.global.regulation },
-            safeIsRealRH ? { label: 'Équipe', href: '/dashboard/rh/collaborateurs', icon: Users } : null,
+            (safeIsRealRH || safeIsRegulateur) ? { label: 'Équipe', href: '/dashboard/rh/collaborateurs', icon: Users } : null,
             { label: 'Côté Salarié', href: '/dashboard/salarie', icon: ArrowLeftRight, isSwitch: true }
         ].filter(Boolean) as any[]
         : [

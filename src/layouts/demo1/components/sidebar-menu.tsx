@@ -70,12 +70,12 @@ export function SidebarMenu() {
     }
 
     // 3. Section "Espace RH" (RH)
-    if (item.heading === 'Espace RH' || (item.path?.startsWith('/dashboard/rh') && !['/dashboard/rh/regulation', '/dashboard/rh/sniper-logs'].includes(item.path))) {
+    if (item.heading === 'Espace RH' || (item.path?.startsWith('/dashboard/rh') && !['/dashboard/rh/regulation', '/dashboard/rh/sniper-logs', '/dashboard/rh/collaborateurs'].includes(item.path))) {
       return isRH;
     }
 
-    // 4. Module Régulation & Sniper (Régule RH & Applet PRT)
-    if (item.path === '/dashboard/rh/regulation' || item.path === '/dashboard/rh/sniper-logs') {
+    // 4. Module Régulation & Sniper & Collaborateurs
+    if (item.path === '/dashboard/rh/regulation' || item.path === '/dashboard/rh/sniper-logs' || item.path === '/dashboard/rh/collaborateurs') {
       return isRegulateur || isRH;
     }
 

@@ -14,7 +14,9 @@ export default async function CollaboratorsPage() {
     const session = await auth();
     const roles = (session?.user as any)?.roles || [];
 
-    if (!session?.user || (!roles.includes("ADMIN") && !roles.includes("RH"))) {
+    const isRegulateur = roles.includes("REGULATEUR") || (session?.user as any)?.isRegulateur;
+
+    if (!session?.user || (!roles.includes("ADMIN") && !roles.includes("RH") && !isRegulateur)) {
         redirect("/dashboard/salarie");
     }
 
