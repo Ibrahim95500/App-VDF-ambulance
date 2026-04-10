@@ -69,7 +69,7 @@ export async function POST(req: Request) {
                     title: "Action Requise !",
                     message: "⏰ Veuillez valider votre heure de prise de service dans le planning pour votre prochaine garde.",
                     type: "REMINDER_VALIDATION",
-                    link: "/dashboard/salarie"
+                    link: "/dashboard/salarie/regulation"
                 }
             })
 
@@ -78,7 +78,7 @@ export async function POST(req: Request) {
                 userId,
                 "Action Requise !",
                 "⏰ Veuillez valider votre heure de prise de service.",
-                "/dashboard/salarie"
+                "/dashboard/salarie/regulation"
             )
         }
 
