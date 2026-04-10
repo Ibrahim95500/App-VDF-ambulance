@@ -212,3 +212,34 @@ export async function updateServiceRequestStatus(requestId: string, status: "APP
     revalidatePath('/dashboard/salarie/services')
     return { success: true }
 }
+
+/**
+ * Super Admin: Force delete a service request
+ */
+export async function adminDeleteServiceRequest(requestId: string) {
+    const session = await auth()
+
+    if (!session?.user?.id) {
+        throw new Error("Unauthorized")
+    }
+
+    const roles = (session.user as any)?.roles || [];
+    if (!roles.includes("ADMIN")) {
+        throw new Error("Seul un Administrateur peut forcer la suppression d'une demande")
+    }
+
+    const request = await prisma.serviceRequest.findUnique({
+        where: { id: requestId }
+    })
+
+    if (!request) {
+        throw new Error("Demande introuvable")
+    }
+
+    await prisma.serviceRequest.delete({
+        where: { id: requestId }
+    })
+
+    revalidatePath('/dashboard/rh/services')
+    revalidatePath('/dashboard/salarie/services')
+}

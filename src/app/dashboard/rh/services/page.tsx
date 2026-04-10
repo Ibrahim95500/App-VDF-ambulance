@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 import { Fragment } from 'react';
 import { getAllServiceRequests } from "@/services/service-request"
+import { auth } from "@/auth"
 import { RHServiceRequestsTable } from "./services-table"
 import { Container } from "@/components/common/container"
 import {
@@ -11,6 +12,10 @@ import {
 import { BriefcaseIcon } from "lucide-react"
 
 export default async function RHServicesPage() {
+    const session = await auth();
+    const roles = (session?.user as any)?.roles || [];
+    const isAdmin = roles.includes("ADMIN");
+    
     const requests = await getAllServiceRequests()
 
     return (
@@ -33,7 +38,7 @@ export default async function RHServicesPage() {
 
             <Container className="mt-8 pb-10">
                 <div className="border border-border border-t-4 border-t-secondary rounded-xl overflow-hidden">
-                    <RHServiceRequestsTable initialData={requests} />
+                    <RHServiceRequestsTable initialData={requests} isAdmin={isAdmin} />
                 </div>
             </Container>
         </Fragment>

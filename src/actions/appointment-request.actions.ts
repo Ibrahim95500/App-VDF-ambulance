@@ -498,3 +498,31 @@ export async function submitRescheduleReply(
         return { error: error.message || "Une erreur est survenue" }
     }
 }
+
+export async function adminDeleteAppointmentRequest(requestId: string) {
+    const session = await auth()
+
+    if (!session?.user?.id) {
+        throw new Error("Unauthorized")
+    }
+
+    const roles = (session.user as any)?.roles || [];
+    if (!roles.includes("ADMIN")) {
+        throw new Error("Seul un Administrateur peut forcer la suppression d'une demande")
+    }
+
+    const request = await prisma.appointmentRequest.findUnique({
+        where: { id: requestId }
+    })
+
+    if (!request) {
+        throw new Error("Demande introuvable")
+    }
+
+    await prisma.appointmentRequest.delete({
+        where: { id: requestId }
+    })
+
+    revalidatePath('/dashboard/rh/rendez-vous')
+    revalidatePath('/dashboard/salarie/rendez-vous')
+}

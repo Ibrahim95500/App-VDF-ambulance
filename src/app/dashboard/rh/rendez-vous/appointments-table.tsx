@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { TablePagination } from "@/components/common/table-pagination"
 import { TableActions } from "@/components/common/table-actions"
-import { Loader2, CheckCircle2, XCircle, Eye, MessageSquareQuote, Search, Calendar as CalendarIcon, Phone, MapPin, List } from "lucide-react"
+import { Loader2, CheckCircle2, XCircle, Eye, MessageSquareQuote, Search, Calendar as CalendarIcon, Phone, MapPin, List, Trash2, AlertTriangle } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { AppointmentsCalendar } from "./components/appointments-calendar"
 import {
@@ -22,7 +22,7 @@ import { isWithinInterval, startOfDay, endOfDay, format } from "date-fns"
 import { fr } from "date-fns/locale"
 import { DateRange } from "react-day-picker"
 import { toast } from "sonner"
-import { updateAppointmentStatus, submitRescheduleReply } from "@/actions/appointment-request.actions"
+import { updateAppointmentStatus, submitRescheduleReply, adminDeleteAppointmentRequest } from "@/actions/appointment-request.actions"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 type RequestWithUser = AppointmentRequest & {
@@ -36,9 +36,11 @@ type RequestWithUser = AppointmentRequest & {
     }
 }
 
-export function AppointmentsTable({ initialData }: { initialData: RequestWithUser[] }) {
+export function AppointmentsTable({ initialData, isAdmin = false }: { initialData: RequestWithUser[], isAdmin?: boolean }) {
     const [loadingId, setLoadingId] = useState<string | null>(null)
     const [selectedRequest, setSelectedRequest] = useState<RequestWithUser | null>(null)
+    const [deletingRequest, setDeletingRequest] = useState<RequestWithUser | null>(null)
+    const [isDeleting, setIsDeleting] = useState(false)
 
     // Filtres
     const [searchTerm, setSearchTerm] = useState("")
@@ -170,6 +172,21 @@ export function AppointmentsTable({ initialData }: { initialData: RequestWithUse
             toast.error(error.message || "Une erreur est survenue")
         } finally {
             setLoadingId(null)
+        }
+    }
+
+    const handleDelete = async () => {
+        if (!deletingRequest) return;
+        try {
+            setIsDeleting(true)
+            await adminDeleteAppointmentRequest(deletingRequest.id)
+            toast.success("Demande supprimée avec succès")
+            setDeletingRequest(null)
+            setSelectedRequest(null) // Cacher les détails si c'était ouvert
+        } catch (error: any) {
+            toast.error(error.message || "Erreur lors de la suppression")
+        } finally {
+            setIsDeleting(false)
         }
     }
 
@@ -327,6 +344,11 @@ export function AppointmentsTable({ initialData }: { initialData: RequestWithUse
                                                 </Button>
                                             </>
                                         )}
+                                        {isAdmin && (
+                                            <Button variant="ghost" size="icon" className="size-7 text-red-500 hover:bg-red-50 ml-1" onClick={() => setDeletingRequest(req)}>
+                                                <Trash2 className="size-3.5" />
+                                            </Button>
+                                        )}
                                     </div>
                                 </div>
                             ))
@@ -433,6 +455,18 @@ export function AppointmentsTable({ initialData }: { initialData: RequestWithUse
                                                                     <XCircle className="w-4 h-4" />
                                                                 </Button>
                                                             </>
+                                                        )}
+                                                        {isAdmin && (
+                                                            <Button
+                                                                size="icon"
+                                                                variant="ghost"
+                                                                className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50 ml-1 shadow-sm"
+                                                                disabled={isDeleting && deletingRequest?.id === req.id}
+                                                                onClick={() => setDeletingRequest(req)}
+                                                                title="Supprimer"
+                                                            >
+                                                                <Trash2 className="w-4 h-4" />
+                                                            </Button>
                                                         )}
                                                     </div>
                                                 </td>
@@ -818,6 +852,38 @@ export function AppointmentsTable({ initialData }: { initialData: RequestWithUse
                             </div>
                         )}
                     </div>
+                        )}
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* Admin Delete Confirmation Dialog */}
+            <Dialog open={!!deletingRequest} onOpenChange={(open) => !open && setDeletingRequest(null)}>
+                <DialogContent className="max-w-[90vw] sm:max-w-md border-red-200" style={{ zIndex: 100 }}>
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2 text-red-600">
+                            <AlertTriangle className="w-5 h-5" /> Supprimer la demande ?
+                        </DialogTitle>
+                        <DialogDescription className="pt-2">
+                            Vous êtes sur le point de supprimer définitivement la demande de rendez-vous de <strong>{deletingRequest?.user.firstName} {deletingRequest?.user.lastName}</strong>.
+                            <br /><br />
+                            Cette action est irréversible.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="gap-2 sm:gap-0 mt-4">
+                        <Button variant="ghost" onClick={() => setDeletingRequest(null)} disabled={isDeleting}>
+                            Annuler
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            onClick={handleDelete}
+                            disabled={isDeleting}
+                            className="bg-red-600 hover:bg-red-700"
+                        >
+                            {isDeleting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Trash2 className="w-4 h-4 mr-2" />}
+                            Oui, supprimer
+                        </Button>
+                    </DialogFooter>
                 </DialogContent>
             </Dialog>
         </div >

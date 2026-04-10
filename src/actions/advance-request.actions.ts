@@ -264,3 +264,31 @@ export async function deleteAdvanceRequest(requestId: string) {
     revalidatePath('/dashboard/salarie')
     revalidatePath('/dashboard/rh/acomptes')
 }
+
+export async function adminDeleteAdvanceRequest(requestId: string) {
+    const session = await auth()
+
+    if (!session?.user?.id) {
+        throw new Error("Unauthorized")
+    }
+
+    const roles = (session.user as any)?.roles || [];
+    if (!roles.includes("ADMIN")) {
+        throw new Error("Seul un Administrateur peut forcer la suppression d'une demande")
+    }
+
+    const request = await prisma.advanceRequest.findUnique({
+        where: { id: requestId }
+    })
+
+    if (!request) {
+        throw new Error("Demande introuvable")
+    }
+
+    await prisma.advanceRequest.delete({
+        where: { id: requestId }
+    })
+
+    revalidatePath('/dashboard/rh/acomptes')
+    revalidatePath('/dashboard/salarie')
+}

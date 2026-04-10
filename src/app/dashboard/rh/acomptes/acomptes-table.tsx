@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react"
 import { AdvanceRequestWithUser } from "@/services/advance-request"
-import { updateRequestStatus } from "@/actions/advance-request.actions"
+import { updateRequestStatus, adminDeleteAdvanceRequest } from "@/actions/advance-request.actions"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { Badge } from "@/components/ui/badge"
@@ -11,12 +11,12 @@ import { TablePagination } from "@/components/common/table-pagination"
 import { isWithinInterval, startOfDay, endOfDay, format } from "date-fns"
 import { fr } from "date-fns/locale"
 import { DateRange } from "react-day-picker"
-import { Loader2, CheckCircle2, XCircle, Eye, MessageSquareQuote } from "lucide-react"
+import { Loader2, CheckCircle2, XCircle, Eye, MessageSquareQuote, Trash2, AlertTriangle } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
 import { HRStatsCharts } from "../components/hr-stats-charts"
 
-export function AcomptesTable({ initialData }: { initialData: AdvanceRequestWithUser[] }) {
+export function AcomptesTable({ initialData, isAdmin = false }: { initialData: AdvanceRequestWithUser[], isAdmin?: boolean }) {
     const [loadingId, setLoadingId] = useState<string | null>(null)
     const [searchTerm, setSearchTerm] = useState("")
     const [statusFilter, setStatusFilter] = useState("ALL")
@@ -24,6 +24,8 @@ export function AcomptesTable({ initialData }: { initialData: AdvanceRequestWith
     const [currentPage, setCurrentPage] = useState(1)
     const [selectedRequest, setSelectedRequest] = useState<AdvanceRequestWithUser | null>(null)
     const [processingAction, setProcessingAction] = useState<{ id: string, status: "APPROVED" | "REJECTED", request: AdvanceRequestWithUser } | null>(null)
+    const [deletingRequest, setDeletingRequest] = useState<AdvanceRequestWithUser | null>(null)
+    const [isDeleting, setIsDeleting] = useState(false)
     const [adminComment, setAdminComment] = useState("")
 
     const PAGE_SIZE = 10
@@ -47,6 +49,21 @@ export function AcomptesTable({ initialData }: { initialData: AdvanceRequestWith
             toast.error(error.message || "Une erreur est survenue")
         } finally {
             setLoadingId(null)
+        }
+    }
+
+    const handleDelete = async () => {
+        if (!deletingRequest) return;
+        try {
+            setIsDeleting(true)
+            await adminDeleteAdvanceRequest(deletingRequest.id)
+            toast.success("Demande supprimée avec succès")
+            setDeletingRequest(null)
+            setSelectedRequest(null) // Just in case it was open
+        } catch (error: any) {
+            toast.error(error.message || "Erreur lors de la suppression")
+        } finally {
+            setIsDeleting(false)
         }
     }
 
@@ -186,6 +203,11 @@ export function AcomptesTable({ initialData }: { initialData: AdvanceRequestWith
                                             <Button size="sm" variant="destructive" className="h-7 text-[11px] px-2.5" disabled={loadingId === req.id} onClick={() => initiateAction(req, "REJECTED")}>Refuser</Button>
                                         </>
                                     )}
+                                    {isAdmin && (
+                                        <Button variant="ghost" size="icon" className="size-7 text-red-500 hover:bg-red-50 ml-1" onClick={() => setDeletingRequest(req)}>
+                                            <Trash2 className="size-3.5" />
+                                        </Button>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -279,6 +301,18 @@ export function AcomptesTable({ initialData }: { initialData: AdvanceRequestWith
                                                 </>
                                             ) : (
                                                 <span className="text-[10px] italic text-muted-foreground ml-2">Traité</span>
+                                            )}
+                                            {isAdmin && (
+                                                <Button
+                                                    size="icon"
+                                                    variant="ghost"
+                                                    className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50 ml-2"
+                                                    disabled={isDeleting && deletingRequest?.id === req.id}
+                                                    onClick={() => setDeletingRequest(req)}
+                                                    title="Supprimer"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </Button>
                                             )}
                                         </div>
                                     </td>
@@ -400,6 +434,36 @@ export function AcomptesTable({ initialData }: { initialData: AdvanceRequestWith
                         >
                             {loadingId === processingAction?.id && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
                             {processingAction?.status === 'APPROVED' ? "Confirmer l'approbation" : "Confirmer le refus"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+
+            {/* Admin Delete Confirmation Dialog */}
+            <Dialog open={!!deletingRequest} onOpenChange={(open) => !open && setDeletingRequest(null)}>
+                <DialogContent className="max-w-[90vw] sm:max-w-md border-red-200">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2 text-red-600">
+                            <AlertTriangle className="w-5 h-5" /> Supprimer la demande ?
+                        </DialogTitle>
+                        <DialogDescription className="pt-2">
+                            Vous êtes sur le point de supprimer définitivement la demande d'acompte de <strong>{deletingRequest?.amount}€</strong> faite par <strong>{deletingRequest?.user.name || deletingRequest?.user.email}</strong>.
+                            <br /><br />
+                            Cette action est irréversible.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="gap-2 sm:gap-0 mt-4">
+                        <Button variant="ghost" onClick={() => setDeletingRequest(null)} disabled={isDeleting}>
+                            Annuler
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            onClick={handleDelete}
+                            disabled={isDeleting}
+                            className="bg-red-600 hover:bg-red-700"
+                        >
+                            {isDeleting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Trash2 className="w-4 h-4 mr-2" />}
+                            Oui, supprimer
                         </Button>
                     </DialogFooter>
                 </DialogContent>

@@ -84,7 +84,7 @@ export default async function RHRendezvousPage() {
 
             <Container>
                 <div className="mb-8 border border-border border-t-4 border-t-secondary rounded-xl overflow-hidden">
-                    <AppointmentsTable initialData={allRequests} />
+                    <AppointmentsTable initialData={allRequests} isAdmin={roles.includes("ADMIN")} />
                 </div>
             </Container>
 
