@@ -180,7 +180,7 @@ async function snipeCourse(page: any, withFilters: boolean = true): Promise<{ bu
     // Étape 1: Évaluer les lignes du tableau et filtrer
     const extraction = await page.evaluate(({ manualIds, alertedIds, withFilters }: { manualIds: string[], alertedIds: string[], withFilters: boolean }) => {
         const allowedZipCodes = [
-            "95500", "95400", "95200", "95140", "95380", 
+            "95500", "95400", "95200", "95140", "95380", "95600", 
             "95190", "95470", "95270", "95700", "95440", 
             "95350", "95670", "95720", "95570", "95850", 
             "93290", "93440"

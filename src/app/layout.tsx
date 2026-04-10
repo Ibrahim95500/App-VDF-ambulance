@@ -51,6 +51,8 @@ export const viewport = {
   viewportFit: 'cover',
 };
 
+import { CapacitorDeepLink } from '@/components/capacitor-deep-link';
+
 export default function RootLayout({
   children,
 }: {
@@ -69,6 +71,7 @@ export default function RootLayout({
           <AuthProvider>
             <PWARegistration />
             <InstallPWAPrompt />
+            <CapacitorDeepLink />
             <ModulesProvider>
               <SettingsProvider>
                 <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>

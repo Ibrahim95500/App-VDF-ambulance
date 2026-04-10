@@ -12,6 +12,7 @@
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.1",
     "@capacitor/android": "^8.2.0",
+    "@capacitor/app": "^8.1.0",
     "@capacitor/core": "^8.2.0",
     "@capacitor/ios": "^8.2.0",
     "@capacitor/push-notifications": "^8.0.2",
