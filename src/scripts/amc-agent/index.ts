@@ -371,6 +371,18 @@ async function snipeCourse(page: any, withFilters: boolean = true): Promise<{ bu
         }
         return false;
     });
+            
+            // Si on arrive ici, l'évaluation a réussi sans crash, on stoppe le retry
+            break;
+        } catch (e: any) {
+            if (e.message?.includes("Execution context was destroyed") || e.message?.includes("Target closed")) {
+                console.log(`⚠️ Navigation contextuelle interceptée (Tentative ${attempts}/5)...`);
+                await new Promise(r => setTimeout(r, 1000));
+            } else {
+                throw e; 
+            }
+        }
+    }
     
     if (validationClicked) {
         try {
