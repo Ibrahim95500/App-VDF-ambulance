@@ -340,34 +340,10 @@ async function snipeCourse(page: any, withFilters: boolean = true): Promise<{ bu
         const timeMatch = bodyText.match(/souhait[eé]e.*?(?:l'établissement|)[:\s]*(\d{2}:\d{2})/i) || bodyText.match(/à\s*(\d{2}:\d{2})/i);
         let targetTime = timeMatch ? timeMatch[1] : "12:00";
 
-        let dateInput = null;
-        let timeInput = null;
-        let chauffeurSel = null;
-        let equipierSel = null;
-
-        const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null);
-        let node;
-        while (node = walker.nextNode()) {
-            let txt = node.nodeValue ? node.nodeValue.toLowerCase().trim() : "";
-            const parent = node.parentElement as HTMLElement;
-            if (parent && parent.getBoundingClientRect().width > 0) {
-                const tr = parent.closest('tr');
-                if (tr) {
-                    if (!dateInput && (txt === 'date de pec' || txt.includes('date de pec'))) {
-                        dateInput = tr.querySelector('input[type="text"], input:not([type="hidden"])');
-                    }
-                    if (!timeInput && (txt === 'heure de pec' || txt.includes('heure de pec'))) {
-                        timeInput = tr.querySelector('input[type="text"], input:not([type="hidden"])');
-                    }
-                    if (!chauffeurSel && txt === 'chauffeur') {
-                        chauffeurSel = tr.querySelector('select');
-                    }
-                    if (!equipierSel && txt === 'equipier') {
-                        equipierSel = tr.querySelector('select');
-                    }
-                }
-            }
-        }
+        let dateInput = document.getElementById('ctl00_ContentPlaceHolder1_TBDate') as HTMLInputElement;
+        let timeInput = document.getElementById('ctl00_ContentPlaceHolder1_TBHeureRecuperation') as HTMLInputElement;
+        let chauffeurSel = document.getElementById('ctl00_ContentPlaceHolder1_DDLChauffeur') as HTMLSelectElement;
+        let equipierSel = document.getElementById('ctl00_ContentPlaceHolder1_DDLEquipier') as HTMLSelectElement;
         
         if (dateInput && targetDate) {
             (dateInput as HTMLInputElement).value = targetDate;
@@ -385,6 +361,7 @@ async function snipeCourse(page: any, withFilters: boolean = true): Promise<{ bu
             for (let i = 0; i < chauffeurSel.options.length; i++) {
                 if (chauffeurSel.options[i].text.toLowerCase().includes('cheikh hamid')) {
                     chauffeurSel.selectedIndex = i;
+                    chauffeurSel.value = chauffeurSel.options[i].value;
                     chauffeurSel.dispatchEvent(new Event('change', { bubbles: true }));
                     break;
                 }
@@ -395,6 +372,7 @@ async function snipeCourse(page: any, withFilters: boolean = true): Promise<{ bu
             for (let i = 0; i < equipierSel.options.length; i++) {
                 if (equipierSel.options[i].text.toLowerCase().includes('cheikh hamid')) {
                     equipierSel.selectedIndex = i;
+                    equipierSel.value = equipierSel.options[i].value;
                     equipierSel.dispatchEvent(new Event('change', { bubbles: true }));
                     break;
                 }
