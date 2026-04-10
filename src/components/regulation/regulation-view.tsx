@@ -261,7 +261,7 @@ export function RegulationView() {
 
                     {/* Bouton Relance d'Alerte Manuel */}
                     <Button
-                        variant="default"
+                        variant="primary"
                         onClick={async () => {
                             try {
                                 toast.loading("Déclenchement du missile d'alerte...", { id: 'relance' })
