@@ -28,15 +28,15 @@ interface HistoryDetailsDialogProps {
 
 export function HistoryDetailsDialog({ isOpen, onOpenChange, assignment, personnel = [], globalAssignedIds = new Set(), onSuccess }: HistoryDetailsDialogProps) {
     const [isEditing, setIsEditing] = useState(false)
-    const [newLeaderId, setNewLeaderId] = useState(assignment?.leaderId || "")
-    const [newTeammateId, setNewTeammateId] = useState(assignment?.teammateId || "")
+    const [newLeaderId, setNewLeaderId] = useState(assignment?.leaderId || "unassigned")
+    const [newTeammateId, setNewTeammateId] = useState(assignment?.teammateId || "unassigned")
     const [isSaving, setIsSaving] = useState(false)
 
     useEffect(() => {
         if (isOpen && assignment) {
             setIsEditing(false)
-            setNewLeaderId(assignment.leaderId || "")
-            setNewTeammateId(assignment.teammateId || "")
+            setNewLeaderId(assignment.leaderId || "unassigned")
+            setNewTeammateId(assignment.teammateId || "unassigned")
         }
     }, [isOpen, assignment])
 
@@ -69,7 +69,10 @@ export function HistoryDetailsDialog({ isOpen, onOpenChange, assignment, personn
     }
 
     const handleSave = async () => {
-        if (!newLeaderId) {
+        const finalLeaderId = newLeaderId === "unassigned" ? "" : newLeaderId;
+        const finalTeammateId = newTeammateId === "unassigned" ? "" : newTeammateId;
+
+        if (!finalLeaderId) {
             toast.error("Veuillez sélectionner au moins un Chef de bord !");
             return;
         }
@@ -78,8 +81,8 @@ export function HistoryDetailsDialog({ isOpen, onOpenChange, assignment, personn
         try {
             const res = await overrideHistoryAssignment({
                 assignmentId: assignment.id,
-                newLeaderId,
-                newTeammateId: newTeammateId || null
+                newLeaderId: finalLeaderId,
+                newTeammateId: finalTeammateId || null
             });
             if (res.error) throw new Error(res.error);
             
@@ -165,11 +168,12 @@ export function HistoryDetailsDialog({ isOpen, onOpenChange, assignment, personn
                             <div className="flex flex-col w-full min-w-0">
                                 <div className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Responsable / Chef de bord</div>
                                 {isEditing ? (
-                                    <Select value={newLeaderId || undefined} onValueChange={setNewLeaderId}>
+                                    <Select value={newLeaderId} onValueChange={setNewLeaderId}>
                                         <SelectTrigger className="w-full mt-1 border-2 focus:ring-0">
                                             <SelectValue placeholder="Sélectionner..." />
                                         </SelectTrigger>
                                         <SelectContent>
+                                            <SelectItem value="unassigned" disabled className="hidden">Sélectionner...</SelectItem>
                                             {availablePersonnel.map((p) => (
                                                 <SelectItem key={p.id} value={p.id} className="font-bold cursor-pointer">
                                                     {p.lastName} {p.firstName}
@@ -197,12 +201,12 @@ export function HistoryDetailsDialog({ isOpen, onOpenChange, assignment, personn
                                 <div className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Co-équipier</div>
                                 {isEditing ? (
                                     <div className="flex gap-2 w-full mt-1">
-                                        <Select value={newTeammateId || undefined} onValueChange={setNewTeammateId}>
+                                        <Select value={newTeammateId} onValueChange={setNewTeammateId}>
                                             <SelectTrigger className="w-full border-2 focus:ring-0">
                                                 <SelectValue placeholder="Personne (Equipage Solo)" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="" className="text-slate-400 italic font-medium cursor-pointer">Aucun co-équipier</SelectItem>
+                                                <SelectItem value="unassigned" className="text-slate-400 italic font-medium cursor-pointer">Aucun co-équipier</SelectItem>
                                                 {availablePersonnel.map((p) => (
                                                     <SelectItem key={p.id} value={p.id} className="font-bold cursor-pointer" disabled={p.id === newLeaderId}>
                                                         {p.lastName} {p.firstName}
@@ -210,8 +214,8 @@ export function HistoryDetailsDialog({ isOpen, onOpenChange, assignment, personn
                                                 ))}
                                             </SelectContent>
                                         </Select>
-                                        {newTeammateId && (
-                                            <Button variant="ghost" size="icon" className="shrink-0 text-slate-400 hover:text-red-500" onClick={() => setNewTeammateId("")}>
+                                        {newTeammateId !== "unassigned" && (
+                                            <Button variant="ghost" size="icon" className="shrink-0 text-slate-400 hover:text-red-500" onClick={() => setNewTeammateId("unassigned")}>
                                                 <X size={16} />
                                             </Button>
                                         )}
@@ -236,7 +240,7 @@ export function HistoryDetailsDialog({ isOpen, onOpenChange, assignment, personn
                             <Button 
                                 className="flex-1 font-bold gap-2 h-11 bg-orange-500 hover:bg-orange-600 shadow-md shadow-orange-500/20" 
                                 onClick={handleSave} 
-                                disabled={isSaving || !newLeaderId}
+                                disabled={isSaving || newLeaderId === "unassigned"}
                             >
                                 {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
                                 Valider
