@@ -79,7 +79,7 @@ export async function createNotification({
     userId: string,
     title: string,
     message: string,
-    type: "ADVANCE" | "LEAVE" | "SERVICE" | "MISSION",
+    type: "ADVANCE" | "LEAVE" | "SERVICE" | "MISSION" | "REMINDER_VALIDATION",
     status?: string,
     link?: string
 }) {
@@ -100,7 +100,7 @@ export async function createManyNotifications(notifications: {
     userId: string,
     title: string,
     message: string,
-    type: "ADVANCE" | "LEAVE" | "SERVICE" | "MISSION",
+    type: "ADVANCE" | "LEAVE" | "SERVICE" | "MISSION" | "REMINDER_VALIDATION",
     status?: string,
     link?: string
 }[]) {

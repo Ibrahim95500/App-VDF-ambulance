@@ -2,8 +2,17 @@ import { prisma } from "@/lib/prisma"
 import { NextResponse } from "next/server"
 import webpush from 'web-push'
 import { sendPushNotification } from "@/actions/web-push.actions"
+import { sendTelegramMessage } from "@/lib/telegram/telegram-api"
+
+export async function GET(req: Request) {
+    return handleCron(req);
+}
 
 export async function POST(req: Request) {
+    return handleCron(req);
+}
+
+async function handleCron(req: Request) {
     try {
         // Optionnel : sécuriser la route avec un token CRON
         const today = new Date()
@@ -31,8 +40,8 @@ export async function POST(req: Request) {
                 ]
             },
             include: {
-                leader: { select: { id: true, pushSubscriptions: true, fcmTokens: true } },
-                teammate: { select: { id: true, pushSubscriptions: true, fcmTokens: true } }
+                leader: { select: { id: true, telegramChatId: true, pushSubscriptions: true, fcmTokens: true } },
+                teammate: { select: { id: true, telegramChatId: true, pushSubscriptions: true, fcmTokens: true } }
             }
         })
 
@@ -40,11 +49,11 @@ export async function POST(req: Request) {
             return NextResponse.json({ message: "Personne à relancer." })
         }
 
-        const usersToAlert = new Set<string>()
+        const usersToAlert = new Map<string, string | null>()
 
         for (const a of assignments) {
-            if (!a.leaderValidated && a.leaderId) usersToAlert.add(a.leaderId)
-            if (!a.teammateValidated && a.teammateId) usersToAlert.add(a.teammateId)
+            if (!a.leaderValidated && a.leader?.id) usersToAlert.set(a.leader.id, a.leader.telegramChatId)
+            if (!a.teammateValidated && a.teammate?.id) usersToAlert.set(a.teammate.id, a.teammate.telegramChatId)
         }
 
         console.log(`[CRON 20h00] Relance de validation : ${usersToAlert.size} agents identifiés.`)
@@ -61,7 +70,13 @@ export async function POST(req: Request) {
             process.env.VAPID_PRIVATE_KEY
         )
 
-        for (const userId of Array.from(usersToAlert)) {
+        const tgKeyboard = {
+            inline_keyboard: [
+                [{ text: "✅ Valider ma mission", url: `${process.env.NEXTAUTH_URL}/dashboard/salarie/regulation` }]
+            ]
+        };
+
+        for (const [userId, tgChatId] of Array.from(usersToAlert.entries())) {
             // Créer une notification interne
             await prisma.notification.create({
                 data: {
@@ -80,6 +95,11 @@ export async function POST(req: Request) {
                 "⏰ Veuillez valider votre heure de prise de service.",
                 "/dashboard/salarie/regulation"
             )
+
+            if (tgChatId) {
+                const msg = `🚨 <b>ACTION REQUISE</b>\n\n⏰ Vous n'avez pas encore validé votre prise de poste pour votre prochaine garde.\n👉 Merci de le faire immédiatement via l'App !`;
+                await sendTelegramMessage(tgChatId, msg, tgKeyboard).catch(console.error);
+            }
         }
 
         return NextResponse.json({ success: true, alerted: usersToAlert.size })
