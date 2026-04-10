@@ -852,8 +852,6 @@ export function AppointmentsTable({ initialData, isAdmin = false }: { initialDat
                             </div>
                         )}
                     </div>
-                        )}
-                    </div>
                 </DialogContent>
             </Dialog>
 
