@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma"
 import { NextResponse } from "next/server"
 import webpush from 'web-push'
+import { sendPushNotification } from "@/actions/web-push.actions"
 
 export async function POST(req: Request) {
     try {
@@ -72,20 +73,13 @@ export async function POST(req: Request) {
                 }
             })
 
-            // Firebase: Notif PWA...
-            const userSub = await prisma.pushSubscription.findMany({ where: { userId } })
-            for (const sub of userSub) {
-                try {
-                    await webpush.sendNotification({
-                        endpoint: sub.endpoint,
-                        keys: { p256dh: sub.p256dh, auth: sub.auth }
-                    }, JSON.stringify({
-                        title: "Action Requise !",
-                        message: "⏰ Veuillez valider votre heure de prise de service.",
-                        url: "/dashboard/salarie"
-                    }))
-                } catch (e) { }
-            }
+            // Appel de la méthode unifiée (PWA Web Push + Native FCM iOS/Android)
+            await sendPushNotification(
+                userId,
+                "Action Requise !",
+                "⏰ Veuillez valider votre heure de prise de service.",
+                "/dashboard/salarie"
+            )
         }
 
         return NextResponse.json({ success: true, alerted: usersToAlert.size })
