@@ -37,6 +37,8 @@ services:
       EMAIL_SERVER_PASSWORD: ${EMAIL_SERVER_PASSWORD}
       EMAIL_FROM: ${EMAIL_FROM}
       EMAIL_ADMIN_NOTIFY: ${EMAIL_ADMIN_NOTIFY}
+      VAPID_PUBLIC_KEY: ${VAPID_PUBLIC_KEY}
+      VAPID_PRIVATE_KEY: ${VAPID_PRIVATE_KEY}
     depends_on:
       - db-dev
     networks:
