@@ -157,7 +157,8 @@ export function AssignmentDialog({
                 onOpenChange(false)
             }
         } catch (error: any) {
-            toast.error("Erreur lors de l'enregistrement")
+            console.error("UI Dialog Error:", error);
+            toast.error(`Erreur critique: ${error.message || error}`)
         } finally {
             setLoading(false)
         }

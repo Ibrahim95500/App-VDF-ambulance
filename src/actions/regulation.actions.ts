@@ -196,7 +196,7 @@ export async function saveAssignment(data: {
         return { success: true }
     } catch (error: any) {
         console.error("Erreur saveAssignment:", error)
-        return { error: error.message }
+        return { error: String(error.message || error) }
     }
 }
 
