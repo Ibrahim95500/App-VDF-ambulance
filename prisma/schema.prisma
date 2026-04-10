@@ -282,6 +282,7 @@ model PlanningAssignment {
   teammateValidatedAt DateTime?
   startTime          String?
   endTime            String?
+  isRegulatorForced  Boolean          @default(false)
   createdAt          DateTime         @default(now())
   updatedAt          DateTime         @updatedAt
 

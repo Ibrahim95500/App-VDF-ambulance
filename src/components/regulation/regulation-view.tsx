@@ -353,7 +353,7 @@ export function RegulationView() {
                         <p className="font-bold">Chargement de l'historique...</p>
                     </div>
                 ) : (
-                    <HistoryTable data={historyData} />
+                    <HistoryTable data={historyData} personnel={personnel} globalAssignedIds={globalAssignedIds} onSuccess={() => { loadHistory(); loadData(); }} />
                 )
             ) : viewMode === 'REGULATION' ? (
                 <RegulationTab data={regulationData} personnel={personnel} dateStr={format(date, 'yyyy-MM-dd')} onSuccess={loadData} globalAssignedIds={globalAssignedIds} />

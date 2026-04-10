@@ -26,9 +26,12 @@ import { cn } from "@/lib/utils"
 
 interface HistoryTableProps {
     data: any[]
+    personnel?: any[]
+    globalAssignedIds?: Set<string>
+    onSuccess?: () => void
 }
 
-export function HistoryTable({ data }: HistoryTableProps) {
+export function HistoryTable({ data, personnel = [], globalAssignedIds = new Set(), onSuccess }: HistoryTableProps) {
     const [searchTerm, setSearchTerm] = useState("")
     const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
     const [selectedAssignment, setSelectedAssignment] = useState<any>(null)
@@ -462,7 +465,13 @@ export function HistoryTable({ data }: HistoryTableProps) {
                 <HistoryDetailsDialog 
                     isOpen={isDialogOpen} 
                     onOpenChange={setIsDialogOpen} 
-                    assignment={selectedAssignment} 
+                    assignment={selectedAssignment}
+                    personnel={personnel}
+                    globalAssignedIds={globalAssignedIds}
+                    onSuccess={() => {
+                        setIsDialogOpen(false);
+                        if (onSuccess) onSuccess();
+                    }}
                 />
             )}
         </div>

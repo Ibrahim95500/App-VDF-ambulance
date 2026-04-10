@@ -622,3 +622,35 @@ export async function detachDispoFromCrew(dispoId: string) {
         return { error: error.message }
     }
 }
+
+// Fonction de forçage et remplacement d'urgence du régulateur (Outil : Historique)
+export async function overrideHistoryAssignment(data: {
+    assignmentId: string;
+    newLeaderId: string;
+    newTeammateId: string | null;
+}) {
+    try {
+        const assignment = await prisma.planningAssignment.findUnique({
+            where: { id: data.assignmentId }
+        });
+        if (!assignment) throw new Error("Assignation introuvable !");
+
+        await prisma.planningAssignment.update({
+            where: { id: data.assignmentId },
+            data: {
+                leaderId: data.newLeaderId,
+                teammateId: data.newTeammateId,
+                status: 'VALIDATED', // Validé direct selon ta demande
+                leaderValidated: true,
+                leaderValidatedAt: new Date(),
+                teammateValidated: !!data.newTeammateId,
+                teammateValidatedAt: data.newTeammateId ? new Date() : null,
+                isRegulatorForced: true // Marqueur pour le tag "Validé par régulateur"
+            }
+        });
+        revalidatePath('/dashboard/rh/regulation');
+        return { success: true };
+    } catch (error: any) {
+        return { error: error.message };
+    }
+}

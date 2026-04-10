@@ -298,10 +298,56 @@ async function snipeCourse(page: any, withFilters: boolean = true): Promise<{ bu
 
     if (extraction.isRejected) {
         try {
-            console.log(`⏳ Attente après le refus manuel de la course ${extraction.num}...`);
+            console.log(`⏳ Remplissage du motif de refus pour la course ${extraction.num}...`);
+            await page.waitForTimeout(1000); // Wait for the modal to pop up
+            
+            // Gérer la boîte de dialogue (Popup DOM)
+            await page.evaluate(() => {
+                // 1. Renseigner le motif dans la liste déroulante (select) si elle existe
+                const selects = document.querySelectorAll('select');
+                for (let i = 0; i < selects.length; i++) {
+                    const sel = selects[i] as HTMLSelectElement;
+                    if (sel.options.length > 1 && sel.offsetParent !== null) { // Si visible
+                        sel.selectedIndex = 1; // Par défaut le 1er motif
+                        for(let j=0; j<sel.options.length; j++) {
+                            const optionText = sel.options[j].text.toLowerCase();
+                            if (optionText.includes('hors secteur') || optionText.includes('indisponible') || optionText.includes('pas de véhicule')) {
+                                sel.selectedIndex = j;
+                                break;
+                            }
+                        }
+                        sel.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
+                }
+                
+                // 2. Renseigner un texte libre si besoin
+                const textareas = document.querySelectorAll('textarea');
+                for (let i = 0; i < textareas.length; i++) {
+                    const ta = textareas[i] as HTMLTextAreaElement;
+                    if (ta.offsetParent !== null) {
+                        ta.value = "Hors secteur / Refus manuel Telegram";
+                        ta.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
+                }
+                
+                // 3. Chercher et Cliquer sur le bouton "Valider"
+                const buttons = document.querySelectorAll('button, input[type="button"], input[type="submit"], .btn, a');
+                for (let i = 0; i < buttons.length; i++) {
+                    const btn = buttons[i] as HTMLElement;
+                    const text = (btn.innerText || btn.getAttribute('value') || "").toLowerCase().trim();
+                    if (btn.offsetParent !== null && (text === 'valider' || text.includes('valider'))) {
+                        btn.click();
+                        break;
+                    }
+                }
+            });
+            
+            console.log(`✅ Motif renseigné et "Valider" cliqué.`);
+            await page.waitForTimeout(2000); // Laisse le temps à l'Ajax de supprimer la ligne
             await page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 5000 }).catch(() => {});
-            await new Promise(r => setTimeout(r, 1000));
-        } catch(e) {}
+        } catch(e) {
+            console.error(`❌ Erreur lors du clic sur Valider :`, e);
+        }
         
         const finalBuffer = await page.screenshot({ fullPage: true }) as Buffer;
         return { buffer: finalBuffer, status: "REJECTED_SUCCESS", num: extraction.num, depart: extraction.departText, arrivee: extraction.arriveeText, demandeur: extraction.demandeurText };
