@@ -165,7 +165,7 @@ export function HistoryDetailsDialog({ isOpen, onOpenChange, assignment, personn
                             <div className="flex flex-col w-full min-w-0">
                                 <div className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Responsable / Chef de bord</div>
                                 {isEditing ? (
-                                    <Select value={newLeaderId} onValueChange={setNewLeaderId}>
+                                    <Select value={newLeaderId || undefined} onValueChange={setNewLeaderId}>
                                         <SelectTrigger className="w-full mt-1 border-2 focus:ring-0">
                                             <SelectValue placeholder="Sélectionner..." />
                                         </SelectTrigger>
@@ -197,7 +197,7 @@ export function HistoryDetailsDialog({ isOpen, onOpenChange, assignment, personn
                                 <div className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Co-équipier</div>
                                 {isEditing ? (
                                     <div className="flex gap-2 w-full mt-1">
-                                        <Select value={newTeammateId} onValueChange={setNewTeammateId}>
+                                        <Select value={newTeammateId || undefined} onValueChange={setNewTeammateId}>
                                             <SelectTrigger className="w-full border-2 focus:ring-0">
                                                 <SelectValue placeholder="Personne (Equipage Solo)" />
                                             </SelectTrigger>
