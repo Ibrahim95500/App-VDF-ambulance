@@ -17,6 +17,7 @@ import {
     DialogHeader,
     DialogTitle,
     DialogDescription,
+    DialogFooter,
 } from "@/components/ui/dialog"
 import { isWithinInterval, startOfDay, endOfDay, format } from "date-fns"
 import { fr } from "date-fns/locale"
