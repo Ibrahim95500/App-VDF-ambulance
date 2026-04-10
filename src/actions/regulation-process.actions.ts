@@ -112,6 +112,7 @@ export async function sendPlanningsToEmployees(dateStr: string) {
                     userId: leader.id,
                     title: "Nouvelle Mission 🚑",
                     message: `Vous êtes assigné au véhicule ${vehicle.plateNumber} pour le ${dateDisplay}. Pensez à valider avant 21h !`,
+                    type: "MISSION",
                     link: "/dashboard/salarie/regulation"
                 }).catch(console.error)
 
@@ -168,6 +169,7 @@ export async function sendPlanningsToEmployees(dateStr: string) {
                     userId: teammate.id,
                     title: "Nouvelle Mission 🚑",
                     message: `Vous êtes assigné au véhicule ${vehicle.plateNumber} pour le ${dateDisplay}. Pensez à valider avant 21h !`,
+                    type: "MISSION",
                     link: "/dashboard/salarie/regulation"
                 }).catch(console.error)
 
