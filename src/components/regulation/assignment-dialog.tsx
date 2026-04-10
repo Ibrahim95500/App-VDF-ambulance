@@ -85,7 +85,7 @@ export function AssignmentDialog({
             setEndTime(initialData?.endTime || "19:00")
             setServerError(null)
         }
-    }, [isOpen, initialData])
+    }, [isOpen, initialData?.id]) // Dépendance sur l'ID et non sur l'objet pour éviter le reset par le polling de 2s
 
     // On utilise les IDs globaux (Jour + Nuit + Dispo + Regulateur)
     const assignedIds = new Set(globalAssignedIds);
