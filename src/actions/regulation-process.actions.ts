@@ -354,9 +354,9 @@ export async function checkConfirmationsAndPenalize(dateStr: string) {
             htmlReport += `</tbody></table>`;
         }
 
-        // Récupérer les admins pour envoyer le mail et telegram
+        // Récupérer les admins et régulateurs pour envoyer le mail et telegram
         const admins = await prisma.user.findMany({
-            where: { roles: { has: 'ADMIN' } },
+            where: { OR: [{ roles: { has: 'ADMIN' } }, { roles: { has: 'REGULATEUR' } }] },
             select: { email: true, telegramChatId: true }
         });
 
