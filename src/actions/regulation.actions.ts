@@ -648,6 +648,30 @@ export async function overrideHistoryAssignment(data: {
                 isRegulatorForced: true // Marqueur pour le tag "Validé par régulateur"
             }
         });
+
+        // 🚨 ENVOI DE NOTIFICATIONS PUSH URGENTES 🚨
+        const dateStr = format(new Date(assignment.date), "EEEE d MMMM yyyy", { locale: fr });
+        const carStr = assignment.vehicle ? `${assignment.vehicle.category} ${assignment.vehicle.plateNumber}` : "Véhicule";
+        
+        const pushMessage = `🚨 URGENT : Ton régulateur t'a affecté en urgence sur le ${carStr} le ${dateStr} à ${assignment.startTime}.`;
+
+        await createNotification({
+            userId: data.newLeaderId,
+            title: "🚑 Modification d'Urgence",
+            message: pushMessage,
+            type: "WARNING",
+            link: "/dashboard/salarie",
+        });
+
+        if (data.newTeammateId) {
+            await createNotification({
+                userId: data.newTeammateId,
+                title: "🚑 Modification d'Urgence",
+                message: pushMessage,
+                type: "WARNING",
+                link: "/dashboard/salarie",
+            });
+        }
         revalidatePath('/dashboard/rh/regulation');
         return { success: true };
     } catch (error: any) {
