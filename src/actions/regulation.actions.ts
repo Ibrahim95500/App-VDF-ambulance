@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache"
 import type { AssignmentStatus } from "@prisma/client"
 import { sendBrandedEmail } from "@/lib/mail"
 import { createNotification } from "@/actions/notifications.actions"
+import { sendPushNotification } from "@/actions/web-push.actions"
 import { format } from "date-fns"
 import { fr } from "date-fns/locale"
 
@@ -655,23 +656,50 @@ export async function overrideHistoryAssignment(data: {
         const carStr = assignment.vehicle ? `${assignment.vehicle.category} ${assignment.vehicle.plateNumber}` : "Véhicule";
         
         const pushMessage = `🚨 URGENT : Ton régulateur t'a affecté en urgence sur le ${carStr} le ${dateStr} à ${assignment.startTime}.`;
+        const actionLink = "/dashboard/salarie/regulation?tab=history";
 
+        // Récupérer les infos des utilisateurs pour envoyer les emails
+        const newLeader = await prisma.user.findUnique({ where: { id: data.newLeaderId } });
+        const newTeammate = data.newTeammateId ? await prisma.user.findUnique({ where: { id: data.newTeammateId } }) : null;
+
+        // --- Pour le Leader ---
         await createNotification({
             userId: data.newLeaderId,
             title: "🚑 Modification d'Urgence",
             message: pushMessage,
             type: "MISSION",
-            link: "/dashboard/salarie",
+            link: actionLink,
         });
 
-        if (data.newTeammateId) {
+        await sendPushNotification(data.newLeaderId, "🚑 Modification d'Urgence", pushMessage, actionLink);
+
+        if (newLeader?.email) {
+            await sendBrandedEmail(
+                newLeader.email,
+                "🚨🚑 Affectation d'Urgence",
+                `Bonjour ${newLeader.firstName},<br><br>Ton régulateur vient de modifier le planning en urgence.<br><br><b>${pushMessage}</b><br><br><a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://dev.vdf-ambulance.fr'}${actionLink}">Consulter ma demande</a>`
+            ).catch(() => {});
+        }
+
+        // --- Pour le Co-équipier ---
+        if (data.newTeammateId && newTeammate) {
             await createNotification({
                 userId: data.newTeammateId,
                 title: "🚑 Modification d'Urgence",
                 message: pushMessage,
                 type: "MISSION",
-                link: "/dashboard/salarie",
+                link: actionLink,
             });
+
+            await sendPushNotification(data.newTeammateId, "🚑 Modification d'Urgence", pushMessage, actionLink);
+
+            if (newTeammate.email) {
+                await sendBrandedEmail(
+                    newTeammate.email,
+                    "🚨🚑 Affectation d'Urgence",
+                    `Bonjour ${newTeammate.firstName},<br><br>Ton régulateur vient de modifier le planning en urgence.<br><br><b>${pushMessage}</b><br><br><a href="${process.env.NEXT_PUBLIC_APP_URL || 'https://dev.vdf-ambulance.fr'}${actionLink}">Consulter ma demande</a>`
+                ).catch(() => {});
+            }
         }
         revalidatePath('/dashboard/rh/regulation');
         return { success: true };
