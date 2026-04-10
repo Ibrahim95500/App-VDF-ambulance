@@ -586,7 +586,7 @@ export async function handleBotCallback(chatId: string | number, dataAction: str
                         where: {
                             vehicleId: stateData.vehicleId,
                             date: startOfTargetDate,
-                            startTime: isNight ? { gte: "12:00" } : { lt: "12:00" }
+                            startTime: isNight ? { gte: "19:30" } : { lt: "19:30" }
                         },
                         include: { leader: true, vehicle: true }
                     });

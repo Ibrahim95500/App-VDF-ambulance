@@ -328,7 +328,7 @@ export function DispoTab({ data, personnel, vehicles, dateStr, onSuccess, global
                                     <SelectContent>
                                         {vehicles.filter(v => v.assignments && v.assignments.length > 0).map(v => {
                                             const a = v.assignments[0];
-                                            const isNight = a.startTime >= "12:00";
+                                            const isNight = !!a.startTime && a.startTime >= "19:30";
                                             return (
                                                 <SelectItem key={a.id} value={a.id}>
                                                     AMB: {v.plateNumber} ({v.category}) - {isNight ? "Nuit" : "Jour"}

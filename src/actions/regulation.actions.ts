@@ -21,7 +21,7 @@ export async function getVehiclesWithAssignments(dateStr: string, shift: 'JOUR' 
                             gte: startOfTargetDate,
                             lte: endOfTargetDate
                         },
-                        startTime: shift === 'JOUR' ? { lt: "12:00" } : { gte: "12:00" }
+                        startTime: shift === 'JOUR' ? { lt: "19:30" } : { gte: "19:30" }
                     },
                     include: {
                         leader: true,
@@ -85,7 +85,7 @@ export async function saveAssignment(data: {
         const startOfDay = new Date(`${data.dateStr}T00:00:00.000Z`)
         const endOfDay = new Date(`${data.dateStr}T23:59:59.999Z`)
 
-        const isNight = !!data.startTime && data.startTime >= "12:00"
+        const isNight = !!data.startTime && data.startTime >= "19:30"
 
         // --- VALIDATION JOUR / NUIT ---
         // On vérifie si l'un des deux est déjà assigné sur l'autre shift (ou celui-ci d'ailleurs) ce jour là
@@ -105,7 +105,7 @@ export async function saveAssignment(data: {
                     // Mais en réalité, le client demande "ne peut pas être de nuit s'il est de jour", donc n'importe quel autre assignment le même jour est suspect
                     // Sauf si c'est pour le MÊME véhicule (modification d'équipage en cours)
                     vehicleId: { not: data.vehicleId }, 
-                    startTime: isNight ? { lt: "12:00" } : { gte: "12:00" }
+                    startTime: isNight ? { lt: "19:30" } : { gte: "19:30" }
                 },
                 include: { vehicle: true }
             })
@@ -133,7 +133,7 @@ export async function saveAssignment(data: {
                         gte: startOfDay,
                         lte: endOfDay
                     },
-                    startTime: isNight ? { gte: "12:00" } : { lt: "12:00" }
+                    startTime: isNight ? { gte: "19:30" } : { lt: "19:30" }
                 }
             });
         }
