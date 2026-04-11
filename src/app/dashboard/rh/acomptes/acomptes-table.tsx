@@ -171,41 +171,53 @@ export function AcomptesTable({ initialData, isAdmin = false }: { initialData: A
                     </div>
                 ) : paginatedData.map((req) => (
                     <div key={req.id} className="p-4 flex gap-3 items-start hover:bg-muted/5 transition-colors">
-                        {req.user.image ? (
-                            <img src={req.user.image} className="w-9 h-9 rounded-full object-cover shrink-0 border border-border" alt="" />
-                        ) : (
-                            <div className="size-9 rounded-full bg-primary/10 text-primary font-semibold flex items-center justify-center shrink-0 border border-primary/20 text-sm">
-                                {req.user.name?.charAt(0) || req.user.email?.charAt(0) || '?'}
-                            </div>
-                        )}
+                        <div className="relative shrink-0">
+                            {req.user.image ? (
+                                <img src={req.user.image} className="w-9 h-9 rounded-full object-cover border border-border" alt="" />
+                            ) : (
+                                <div className="size-9 rounded-full bg-primary/10 text-primary font-semibold flex items-center justify-center border border-primary/20 text-sm">
+                                    {req.user.name?.charAt(0) || req.user.email?.charAt(0) || '?'}
+                                </div>
+                            )}
+                            {req.status === 'PENDING' && (
+                                <span className="absolute -top-0.5 -right-0.5 flex size-3">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full size-3 bg-red-500 border border-background"></span>
+                                </span>
+                            )}
+                        </div>
                         <div className="flex flex-col grow gap-1.5 min-w-0">
                             <div className="flex items-start justify-between gap-2">
                                 <div className="min-w-0">
                                     <p className="font-semibold text-foreground text-sm truncate">{req.user.name || req.user.email}</p>
                                     <p className="text-xs text-muted-foreground truncate">{req.user.email}</p>
                                 </div>
-                                <span className="text-base font-bold text-foreground shrink-0">{req.amount} €</span>
+                                <Badge variant="outline" className="text-sm font-bold bg-muted/30 border-border shrink-0">{req.amount} €</Badge>
                             </div>
-                            {req.reason && <p className="text-xs text-muted-foreground italic truncate">{req.reason}</p>}
-                            <div className="flex items-center justify-between gap-2">
-                                <div>
-                                    {req.status === 'PENDING' && <Badge variant="outline" className="text-yellow-600 bg-yellow-50 border-yellow-200 text-[10px]">En Attente</Badge>}
+                            {req.reason && <p className="text-sm text-foreground line-clamp-2">{req.reason}</p>}
+                            <div className="flex items-center justify-between gap-2 mt-1">
+                                <div className="flex items-center gap-1.5">
+                                    {req.status === 'PENDING' && <Badge variant="outline" className="text-yellow-600 bg-yellow-50 border-yellow-200 text-[10px]">En attente</Badge>}
                                     {req.status === 'APPROVED' && <Badge variant="outline" className="text-green-600 bg-green-50 border-green-200 text-[10px]">Approuvé</Badge>}
                                     {req.status === 'REJECTED' && <Badge variant="outline" className="text-red-600 bg-red-50 border-red-200 text-[10px]">Refusé</Badge>}
                                 </div>
                                 <div className="flex items-center gap-1.5">
-                                    <Button variant="ghost" size="icon" className="size-7 text-blue-500 hover:bg-blue-50" onClick={() => setSelectedRequest(req)}>
-                                        <Eye className="size-3.5" />
+                                    <Button variant="ghost" size="icon" className="size-7 text-blue-500 hover:text-blue-600 hover:bg-blue-50" onClick={() => setSelectedRequest(req)}>
+                                        <Eye className="size-4" />
                                     </Button>
                                     {req.status === 'PENDING' && (
                                         <>
-                                            <Button size="sm" variant="secondary" className="h-7 text-[11px] px-2.5" disabled={loadingId === req.id} onClick={() => initiateAction(req, "APPROVED")}>Accepter</Button>
-                                            <Button size="sm" variant="destructive" className="h-7 text-[11px] px-2.5" disabled={loadingId === req.id} onClick={() => initiateAction(req, "REJECTED")}>Refuser</Button>
+                                            <Button variant="outline" size="icon" className="size-7 text-green-600 border-green-200 bg-green-50 hover:bg-green-100 hover:text-green-700 shadow-sm" disabled={loadingId === req.id} onClick={() => initiateAction(req, "APPROVED")}>
+                                                {loadingId === req.id ? <Loader2 className="size-4 animate-spin" /> : <CheckCircle2 className="size-4" />}
+                                            </Button>
+                                            <Button variant="outline" size="icon" className="size-7 text-red-600 border-red-200 bg-red-50 hover:bg-red-100 hover:text-red-700 shadow-sm" disabled={loadingId === req.id} onClick={() => initiateAction(req, "REJECTED")}>
+                                                {loadingId === req.id ? <Loader2 className="size-4 animate-spin" /> : <XCircle className="size-4" />}
+                                            </Button>
                                         </>
                                     )}
                                     {isAdmin && (
                                         <Button variant="ghost" size="icon" className="size-7 text-red-500 hover:bg-red-50 ml-1" onClick={() => setDeletingRequest(req)}>
-                                            <Trash2 className="size-3.5" />
+                                            <Trash2 className="size-4" />
                                         </Button>
                                     )}
                                 </div>
