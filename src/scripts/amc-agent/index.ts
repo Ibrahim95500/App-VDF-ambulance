@@ -201,7 +201,7 @@ async function snipeCourse(page: any, withFilters: boolean = true): Promise<{ bu
             "93290", "93440"
         ];
         
-        let result = { clicked: false, isManual: false, isRejected: false, num: "", departText: "", arriveeText: "", demandeurText: "", foundNotVip: false, allNums: [] as string[] };
+        let result = { clicked: false, isManual: false, isRejected: false, num: "", departText: "", arriveeText: "", demandeurText: "", foundNotVip: false, foundSunday: false, allNums: [] as string[] };
         
         const targetTable = document.querySelector('#AT_Affectation') || document;
         const theadRows = targetTable.querySelectorAll('thead tr');
@@ -211,6 +211,7 @@ async function snipeCourse(page: any, withFilters: boolean = true): Promise<{ bu
         const departIdx = headers.findIndex((th: any) => (th.innerText || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes('depart'));
         const arriveeIdx = headers.findIndex((th: any) => (th.innerText || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes('arrive'));
         const nIdx = headers.findIndex((th: any) => (th.innerText || "").trim().toLowerCase() === 'n°');
+        const dateIdx = headers.findIndex((th: any) => (th.innerText || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes('date'));
         
         const rows = targetTable.querySelectorAll('tr');
         for (let row of rows) {
@@ -232,6 +233,18 @@ async function snipeCourse(page: any, withFilters: boolean = true): Promise<{ bu
                     const isManualTriggered = manualIds.includes(result.num);
                     const isManualRejected = manualRejectIds.includes(result.num);
 
+                    let isSunday = false;
+                    if (dateIdx >= 0 && tds.length > dateIdx) {
+                        const dateText = tds[dateIdx].innerText.trim();
+                        const m = dateText.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+                        if (m) {
+                            const d = new Date(parseInt(m[3]), parseInt(m[2]) - 1, parseInt(m[1]));
+                            if (d.getDay() === 0) isSunday = true;
+                        } else if (dateText.toLowerCase().includes('dimanche') || dateText.toLowerCase().includes('dim')) {
+                            isSunday = true;
+                        }
+                    }
+
                     if (isManualRejected) {
                         const rejectBtn = row.querySelector('input[src*="croix_supprime"], img[src*="croix_supprime"], a[title*="Refuser"]');
                         if (rejectBtn) {
@@ -246,16 +259,23 @@ async function snipeCourse(page: any, withFilters: boolean = true): Promise<{ bu
                             break; 
                         }
                     } else if (isVIP || isManualTriggered) {
-                        try {
-                            if (acceptBtn.tagName === 'IMG' && acceptBtn.parentElement && acceptBtn.parentElement.tagName === 'A') {
-                                acceptBtn.parentElement.click();
-                            } else {
-                                (acceptBtn as HTMLElement).click();
+                        if (isSunday && !isManualTriggered) {
+                            if (!alertedIds.includes(result.num)) {
+                                result.foundSunday = true;
+                                break;
                             }
-                        } catch(e) {}
-                        result.clicked = true;
-                        result.isManual = isManualTriggered;
-                        break; 
+                        } else {
+                            try {
+                                if (acceptBtn.tagName === 'IMG' && acceptBtn.parentElement && acceptBtn.parentElement.tagName === 'A') {
+                                    acceptBtn.parentElement.click();
+                                } else {
+                                    (acceptBtn as HTMLElement).click();
+                                }
+                            } catch(e) {}
+                            result.clicked = true;
+                            result.isManual = isManualTriggered;
+                            break; 
+                        }
                     } else {
                         // C'est pas VIP
                         // On signale si on ne l'a pas déjà fait
@@ -354,6 +374,11 @@ async function snipeCourse(page: any, withFilters: boolean = true): Promise<{ bu
     }
 
     if (!extraction.clicked) {
+        if (extraction.foundSunday) {
+            alertedCourses.add(extraction.num); // Ne pas spammer
+            const buffer = await page.screenshot({ fullPage: true }) as Buffer;
+            return { buffer, status: "ignored_sunday", num: extraction.num, depart: extraction.departText, arrivee: extraction.arriveeText, demandeur: extraction.demandeurText };
+        }
         if (extraction.foundNotVip) {
             alertedCourses.add(extraction.num); // Ne pas spammer à la prochaine boucle
             const buffer = await page.screenshot({ fullPage: true }) as Buffer;
@@ -738,6 +763,18 @@ async function startAgent() {
              console.log("⏭️ Les courses ne matchent pas. Évaluation en boucle (2s)...");
              await new Promise(r => setTimeout(r, 2000));
          } 
+         else if (snipeResult.status === "ignored_sunday") {
+             console.log("⚠️ Course VIP DU DIMANCHE trouvée. Envoi du screenshot interactif Telegram.");
+             if (snipeResult.buffer) {
+                 await sendTelegramAlert(
+                     `⚠️ **COURSE DU DIMANCHE ! (Dép: ${snipeResult.depart} -> Arr: ${snipeResult.arrivee})**\nCette course remplit nos conditions VIP, mais elle est prévue un **DIMANCHE**.\nDoit-on l'accepter ?`, 
+                     snipeResult.buffer, 
+                     snipeResult.num
+                 );
+                 await saveLog("MANUAL_PENDING", snipeResult.buffer, snipeResult.depart || "Inconnu", snipeResult.arrivee || "Inconnu", snipeResult.num || "Inconnu", snipeResult.demandeur);
+             }
+             await new Promise(r => setTimeout(r, 2000));
+         }
          else if (snipeResult.status === "ignored_not_vip") {
              console.log("⚠️ Course HORS VIP trouvée. Envoi du screenshot interactif Telegram.");
              if (snipeResult.buffer) {
