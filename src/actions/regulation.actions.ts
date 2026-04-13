@@ -187,7 +187,7 @@ export async function saveAssignment(data: {
             await createNotification({
                 userId: pid,
                 title: "Nouvelle Mission Disponible",
-                message: `Vous avez été affecté au véhicule ${data.vehicleId} pour le ${formattedDate} (${isNight ? 'Nuit' : 'Jour'}). Merci de valider.`,
+                message: `Vous avez été affecté au véhicule ${vehicle?.plateNumber || "Inconnu"} pour le ${formattedDate} (${isNight ? 'Nuit' : 'Jour'}). Merci de valider.`,
                 type: "MISSION",
                 link: "/dashboard/salarie/regulation"
             }).catch(console.error)
