@@ -2,8 +2,8 @@
 
 import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-
 import { sendBrandedEmail } from "@/lib/mail";
+import { sendPushNotification } from "@/actions/web-push.actions";
 
 export async function updateTicketStatus(ticketId: string, status: "OPEN" | "IN_PROGRESS" | "RESOLVED" | "CLOSED", adminComment?: string) {
     try {
@@ -53,6 +53,16 @@ export async function updateTicketStatus(ticketId: string, status: "OPEN" | "IN_
                     console.error("IT Action Mail Error (Silent):", e);
                 }
             }
+        }
+
+        // Envoi de Notification PUSH native peu importe le statut !
+        const pushTitle = `Ticket IT : ${status === 'IN_PROGRESS' ? 'Pris en charge' : status === 'RESOLVED' ? 'Résolu !' : status === 'CLOSED' ? 'Fermé' : 'Mis à jour'}`;
+        const pushMessage = `Le statut de votre demande technique "${ticket.subject.substring(0, 20)}..." a évolué.`;
+        
+        try {
+            await sendPushNotification(ticket.userId, pushTitle, pushMessage, "/dashboard/it");
+        } catch (e) {
+            console.error("IT Action Push Notification Error (Silent):", e);
         }
 
         revalidatePath('/dashboard/it');
