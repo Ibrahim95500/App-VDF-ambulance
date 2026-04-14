@@ -13,6 +13,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Combobox } from "@/components/ui/combobox"
 import { toast } from "sonner"
 import { createConvocationAction } from "@/actions/appointment-request.actions"
 
@@ -105,18 +106,17 @@ export function ConvocationFab({ employees }: { employees: UserForConvocation[] 
                             <label className="text-sm font-medium flex items-center gap-2">
                                 <User className="w-4 h-4 text-muted-foreground" /> Salarié concerné *
                             </label>
-                            <Select value={selectedUser} onValueChange={setSelectedUser} required disabled={isSubmitting}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Sélectionner un collaborateur" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {employees.map(emp => (
-                                        <SelectItem key={emp.id} value={emp.id}>
-                                            {emp.firstName && emp.lastName ? `${emp.firstName} ${emp.lastName}` : emp.email}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <Combobox
+                                options={employees.map(emp => ({
+                                    value: emp.id,
+                                    label: `${emp.firstName || ''} ${emp.lastName || ''}`.trim() || emp.email || 'Inconnu',
+                                }))}
+                                value={selectedUser}
+                                onValueChange={setSelectedUser}
+                                placeholder="Sélectionner un collaborateur"
+                                searchPlaceholder="Rechercher par nom..."
+                                className="w-full bg-white"
+                            />
                         </div>
 
                         <div className="space-y-2">

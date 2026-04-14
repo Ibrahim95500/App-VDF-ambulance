@@ -22,7 +22,7 @@ export default async function RHRendezvousPage() {
 
     const allRequests = await getAppointmentRequests()
     const employees = await prisma.user.findMany({
-        where: { roles: { has: 'SALARIE' } },
+        where: { roles: { has: 'SALARIE' }, isActive: true, isDeleted: false },
         select: { id: true, firstName: true, lastName: true, email: true },
         orderBy: { firstName: 'asc' }
     });
