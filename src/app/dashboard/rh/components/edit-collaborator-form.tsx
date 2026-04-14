@@ -90,6 +90,7 @@ export function EditCollaboratorForm({ user, onCancel, onSuccess }: { user: any,
                         <SelectItem value="RH">RH / Admin</SelectItem>
                         <SelectItem value="REGULATEUR">Régulateur</SelectItem>
                         <SelectItem value="ADMIN">Admin</SelectItem>
+                        <SelectItem value="SERVICE_IT">Support IT ServiceNow</SelectItem>
                     </SelectContent>
                 </Select>
             </div>

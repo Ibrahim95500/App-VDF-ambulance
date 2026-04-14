@@ -5,16 +5,17 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { SearchDialog } from '@/partials/dialogs/search/search-dialog';
 import { AppsDropdownMenu } from '@/partials/topbar/apps-dropdown-menu';
-import { ChatSheet } from '@/partials/topbar/chat-sheet';
 import { NotificationsSheet } from '@/partials/topbar/notifications-sheet';
 import { UserDropdownMenu } from '@/partials/topbar/user-dropdown-menu';
 import { NotificationBell } from '@/partials/topbar/notification-bell';
+import { SupportTicketModal } from '@/components/support/support-ticket-modal';
 import { useSession } from 'next-auth/react';
 import {
   LayoutGrid,
   Menu,
   MessageCircleMore,
   Search,
+  LifeBuoy
 } from 'lucide-react';
 import { toAbsoluteUrl } from '@/lib/helpers';
 import { cn } from '@/lib/utils';
@@ -38,6 +39,7 @@ import { VdfLogo } from '@/components/vdf-logo';
 
 export function Header({ notificationsCount = 0 }: { notificationsCount?: number }) {
   const [isSidebarSheetOpen, setIsSidebarSheetOpen] = useState(false);
+  const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
 
   const pathname = usePathname();
   const mobileMode = useIsMobile();
@@ -101,6 +103,15 @@ export function Header({ notificationsCount = 0 }: { notificationsCount?: number
 
         {/* HeaderTopbar */}
         <div className="flex items-center gap-3">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="rounded-full text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+            onClick={() => setIsSupportModalOpen(true)}
+            title="Support Technique IT"
+          >
+            <LifeBuoy className="h-5 w-5" />
+          </Button>
           <NotificationBell initialCount={notificationsCount} />
           <UserDropdownMenu trigger={
             <div className="size-9 rounded-full border-2 border-green-500 shrink-0 cursor-pointer overflow-hidden flex items-center justify-center bg-primary/10 text-primary font-bold text-xs">
@@ -118,6 +129,8 @@ export function Header({ notificationsCount = 0 }: { notificationsCount?: number
           } />
         </div>
       </Container>
+      
+      <SupportTicketModal isOpen={isSupportModalOpen} onClose={() => setIsSupportModalOpen(false)} />
     </header>
   );
 }

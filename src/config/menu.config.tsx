@@ -53,6 +53,7 @@ import {
   Briefcase as WorkIcon,
   Zap,
   Siren,
+  ShieldAlert
 } from 'lucide-react';
 import { type MenuConfig } from './types';
 
@@ -118,6 +119,12 @@ export const MENU_SIDEBAR: MenuConfig = [
     title: 'Régule Salarié',
     icon: Siren,
     path: '/dashboard/salarie/regulation',
+  },
+  { heading: 'Support Technique' },
+  {
+    title: 'Tickets IT ServiceNow',
+    icon: ShieldAlert,
+    path: '/dashboard/it',
   },
 ];
 
