@@ -3,6 +3,24 @@ import prisma from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { sendBrandedEmail } from "@/lib/mail";
 
+export async function GET(req: Request) {
+    try {
+        const session = await auth();
+        if (!session?.user?.id) {
+            return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+        }
+
+        const tickets = await prisma.supportTicket.findMany({
+            where: { userId: session.user.id },
+            orderBy: { createdAt: 'desc' }
+        });
+
+        return NextResponse.json(tickets);
+    } catch (error) {
+        return NextResponse.json({ error: "Erreur lors de la récupération" }, { status: 500 });
+    }
+}
+
 export async function POST(req: Request) {
     try {
         const session = await auth();
@@ -49,7 +67,11 @@ export async function POST(req: Request) {
         // Envoyer l'email
         const emailContent = `
             <div style="font-family: Arial, sans-serif;">
-                <p><strong>Déclaré par:</strong> ${ticket.user.firstName} ${ticket.user.lastName} (${roleStr})</p>
+                <div style="background-color: #f8fafc; border-left: 4px solid #3b82f6; padding: 15px; margin-bottom: 20px;">
+                    <p style="margin:0 0 5px 0;"><strong>👤 Demandeur :</strong> ${ticket.user.firstName} ${ticket.user.lastName} (${roleStr})</p>
+                    <p style="margin:0;"><strong>📧 Contact :</strong> <a href="mailto:${ticket.user.email}" style="color: #3b82f6;">${ticket.user.email}</a></p>
+                </div>
+                
                 <p><strong>Sujet:</strong> <span style="color:#2563eb; font-weight:bold;">${subject}</span></p>
                 <p><strong>Urgence:</strong> <span style="background:#fee2e2; color:#b91c1c; padding:2px 6px; border-radius:4px; font-weight:bold;">${urgency}</span></p>
                 <p><strong>Catégorie:</strong> ${category}</p>
@@ -70,6 +92,7 @@ export async function POST(req: Request) {
         await sendBrandedEmail({
             to: "digitagency.nifa@gmail.com",
             bcc: bccString,
+            replyTo: ticket.user.email,
             subject: `[VDF IT - ${urgency}] ${subject.substring(0, 40)}...`,
             title: "Alerte Incident Informatique",
             preheader: `Un nouvel incident a été déclaré par ${ticket.user.firstName}.`,
