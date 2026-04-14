@@ -17,7 +17,7 @@ const CreateCollaboratorSchema = z.object({
     phone: z.string().max(12, "Le numéro de téléphone ne doit pas dépasser 12 caractères").optional().nullable(),
     birthDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Format de date invalide (AAAA-MM-JJ)").optional().nullable(),
     role: z.any().optional(), // On garde ça pour rétrocompatibilité
-    roles: z.array(z.enum(["SALARIE", "RH", "REGULATEUR", "ADMIN"])).default(["SALARIE"]),
+    roles: z.array(z.enum(["SALARIE", "RH", "REGULATEUR", "ADMIN", "SERVICE_IT"])).default(["SALARIE"]),
     structure: z.preprocess((val) => val === "" ? null : val, z.enum(["MARK", "VDF", "LES_2"]).optional().nullable()),
     diploma: z.preprocess((val) => val === "" ? null : val, z.enum(["AUXILIAIRE", "DEA"]).optional().nullable()),
     shift: z.preprocess((val) => val === "" ? null : val, z.enum(["JOUR", "NUIT", "VACATAIRE", "JOUR_NUIT"]).optional().nullable()),
