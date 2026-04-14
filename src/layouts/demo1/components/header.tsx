@@ -40,6 +40,7 @@ import { VdfLogo } from '@/components/vdf-logo';
 export function Header({ notificationsCount = 0 }: { notificationsCount?: number }) {
   const [isSidebarSheetOpen, setIsSidebarSheetOpen] = useState(false);
   const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
+  const [hasUnreadSupport, setHasUnreadSupport] = useState(false);
 
   const pathname = usePathname();
   const mobileMode = useIsMobile();
@@ -48,6 +49,27 @@ export function Header({ notificationsCount = 0 }: { notificationsCount?: number
 
   // Reset error state when session changes (e.g. after image upload)
   useEffect(() => { setImgError(false) }, [(session?.user as any)?.image])
+
+  // Poll for support badge
+  useEffect(() => {
+    if (session?.user?.id) {
+      const fetchSupportBadge = async () => {
+        try {
+          const res = await fetch('/api/support/ticket/badge');
+          if (res.ok) {
+            const data = await res.json();
+            setHasUnreadSupport(data.hasUnreadResolved);
+          }
+        } catch (e) {
+          // Silent fail
+        }
+      };
+
+      fetchSupportBadge();
+      const interval = setInterval(fetchSupportBadge, 10000); // 10 secondes polling
+      return () => clearInterval(interval);
+    }
+  }, [session?.user?.id]);
 
   const scrollPosition = useScrollPosition();
   const headerSticky: boolean = scrollPosition > 0;
@@ -103,15 +125,23 @@ export function Header({ notificationsCount = 0 }: { notificationsCount?: number
 
         {/* HeaderTopbar */}
         <div className="flex items-center gap-3">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="rounded-full text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
-            onClick={() => setIsSupportModalOpen(true)}
-            title="Support Technique IT"
-          >
-            <LifeBuoy className="h-5 w-5" />
-          </Button>
+          <div className="relative">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="rounded-full text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+              onClick={() => setIsSupportModalOpen(true)}
+              title="Support Technique IT"
+            >
+              <LifeBuoy className="h-5 w-5" />
+            </Button>
+            {hasUnreadSupport && (
+              <span className="absolute top-0 right-0 flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500 border border-white"></span>
+              </span>
+            )}
+          </div>
           <NotificationBell initialCount={notificationsCount} />
           <UserDropdownMenu trigger={
             <div className="size-9 rounded-full border-2 border-green-500 shrink-0 cursor-pointer overflow-hidden flex items-center justify-center bg-primary/10 text-primary font-bold text-xs">
