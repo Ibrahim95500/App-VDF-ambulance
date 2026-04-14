@@ -115,7 +115,7 @@ export function ConvocationFab({ employees }: { employees: UserForConvocation[] 
                                 onValueChange={setSelectedUser}
                                 placeholder="Sélectionner un collaborateur"
                                 searchPlaceholder="Rechercher par nom..."
-                                className="w-full bg-white"
+                                className="w-full"
                             />
                         </div>
 
