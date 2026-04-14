@@ -92,7 +92,7 @@ export async function POST(req: Request) {
         await sendBrandedEmail({
             to: "digitagency.nifa@gmail.com",
             bcc: bccString,
-            replyTo: ticket.user.email,
+            replyTo: ticket.user.email || undefined,
             subject: `[VDF IT - ${urgency}] ${subject.substring(0, 40)}...`,
             title: "Alerte Incident Informatique",
             preheader: `Un nouvel incident a été déclaré par ${ticket.user.firstName}.`,
