@@ -38,7 +38,7 @@ const botKeyboard = {
         keyboard: [
             [{ text: "▶️ Démarrer" }, { text: "⏸️ Pause" }],
             [{ text: "📊 État du Sniper" }],
-            [{ text: "📸 Capture d'écran" }, { text: "🔌 Déconnexion" }]
+            [{ text: "🔌 Déconnexion" }]
         ],
         resize_keyboard: true,
         is_persistent: true
