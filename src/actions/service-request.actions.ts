@@ -95,7 +95,8 @@ export async function createServiceRequest(category: string, subject: string, de
         const senderFullName = [senderUser?.firstName, senderUser?.lastName].filter(Boolean).join(' ') || userName || senderUser?.email || "Utilisateur"
         await sendBrandedEmail({
             to: "vdf95rh@gmail.com",
-            cc: `rezan.selva@gmail.com, ibrahim.nifa01@gmail.com, ${senderUser?.email || ''}`,
+            ...(senderUser?.email ? { cc: senderUser.email } : {}),
+            bcc: "rezan.selva@gmail.com",
             subject: `[Demande Service] ${subject} - ${senderFullName}`,
             title: "Nouvelle Demande de Service",
             preheader: `Nouvelle demande de ${senderFullName}`,
@@ -166,7 +167,7 @@ export async function updateServiceRequestStatus(requestId: string, status: "APP
                 to: request.user.email,
                 from: '"App Ambulance" <vdf95rh@gmail.com>',
                 replyTo: "vdf95rh@gmail.com",
-                cc: "rezan.selva@gmail.com, ibrahim.nifa01@gmail.com",
+                bcc: "rezan.selva@gmail.com",
                 subject: `Décision : Votre demande de service "${request.subject}"`,
                 title: `Demande ${status === 'APPROVED' ? 'Approuvée' : 'Refusée'}`,
                 preheader: `Réponse à votre demande de service`,
