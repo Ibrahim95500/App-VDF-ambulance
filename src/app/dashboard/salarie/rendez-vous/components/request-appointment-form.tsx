@@ -100,7 +100,7 @@ export function RequestAppointmentForm() {
                                     <FormLabel>Motif du rendez-vous</FormLabel>
                                     <Select
                                         onValueChange={field.onChange}
-                                        defaultValue={field.value}
+                                        value={field.value || undefined}
                                         disabled={isSubmitting}
                                     >
                                         <FormControl>
