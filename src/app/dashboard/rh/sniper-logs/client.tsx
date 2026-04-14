@@ -71,7 +71,13 @@ export function SniperLogClient({ data: initialData }: { data: any[] }) {
             const searchStr = `${req.num || ''} ${req.demandeur || ''} ${req.patient || ''} ${req.depart} ${req.arrivee}`.toLowerCase()
             if (searchTerm && !searchStr.includes(searchTerm.toLowerCase())) return false
 
-            if (statusFilter !== "ALL" && req.status !== statusFilter) return false
+            if (statusFilter === "CHOIX_VDF") {
+                if (req.patientChoice !== true) return false
+            } else if (statusFilter === "ALEATOIRE") {
+                if (req.patientChoice !== false) return false
+            } else if (statusFilter !== "ALL" && req.status !== statusFilter) {
+                return false
+            }
 
             if (dateRange?.from) {
                 const reqDate = new Date(req.createdAt)
@@ -112,12 +118,15 @@ export function SniperLogClient({ data: initialData }: { data: any[] }) {
     ]
 
     const filterCounts = useMemo(() => {
-        const counts: Record<string, number> = { ALL: data.length, SUCCESS: 0, MANUAL_SUCCESS: 0, FAILED_ALREADY_TAKEN: 0, MANUAL_PENDING: 0 }
+        const counts: Record<string, number> = { ALL: data.length, SUCCESS: 0, MANUAL_SUCCESS: 0, FAILED_ALREADY_TAKEN: 0, MANUAL_PENDING: 0, CHOIX_VDF: 0, ALEATOIRE: 0 }
         data.forEach(req => {
             if (req.status === 'SUCCESS') counts.SUCCESS++
             else if (req.status === 'MANUAL_SUCCESS') counts.MANUAL_SUCCESS++
             else if (req.status === 'FAILED_ALREADY_TAKEN') counts.FAILED_ALREADY_TAKEN++
             else if (req.status === 'MANUAL_PENDING') counts.MANUAL_PENDING++
+
+            if (req.patientChoice === true) counts.CHOIX_VDF++
+            else if (req.patientChoice === false) counts.ALEATOIRE++
         })
         return counts
     }, [data])
@@ -144,15 +153,15 @@ export function SniperLogClient({ data: initialData }: { data: any[] }) {
                     <p className="text-muted-foreground text-sm mt-1 font-medium">Registre en temps réel des activités du robot d'interception de courses AMC.</p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full lg:w-auto">
-                    {/* Bouton Actualiser Stylé */}
+                    {/* Bouton Actualiser Stylé avec texte */}
                     <Button 
                         variant="outline" 
-                        size="icon" 
                         onClick={handleRefresh}
                         disabled={isRefreshing}
-                        className="h-12 w-12 rounded-xl border-2 hover:bg-slate-50 hover:text-blue-600 hover:border-blue-200 transition-all duration-300 shadow-sm group flex-shrink-0"
+                        className="h-12 px-4 rounded-xl border-2 font-bold hover:bg-slate-50 hover:text-blue-600 hover:border-blue-200 transition-all duration-300 shadow-sm group flex-shrink-0 flex items-center gap-2"
                     >
                         <Loader2 className={`size-5 transition-transform duration-500 group-hover:rotate-180 ${isRefreshing ? "animate-spin" : ""}`} />
+                        Rafraîchir
                     </Button>
                 </div>
             </div>
@@ -182,6 +191,19 @@ export function SniperLogClient({ data: initialData }: { data: any[] }) {
                     className={`px-4 py-2 rounded-xl border flex items-center gap-2 transition-all ${statusFilter === "FAILED_ALREADY_TAKEN" ? "bg-red-50 text-red-700 border-red-200 shadow-sm" : "bg-background text-muted-foreground border-border hover:bg-muted"}`}
                 >
                     <span className="font-black text-red-800">{filterCounts.FAILED_ALREADY_TAKEN}</span> Coupures (Déjà Pris)
+                </button>
+                <div className="w-px h-6 bg-border mx-1"></div>
+                <button 
+                    onClick={() => setStatusFilter("CHOIX_VDF")}
+                    className={`px-4 py-2 rounded-xl border flex items-center gap-2 transition-all ${statusFilter === "CHOIX_VDF" ? "bg-emerald-50 text-emerald-700 border-emerald-200 shadow-sm" : "bg-background text-muted-foreground border-border hover:bg-muted"}`}
+                >
+                    <span className="font-black text-emerald-800">{filterCounts.CHOIX_VDF}</span> ⭐ Choix VDF
+                </button>
+                <button 
+                    onClick={() => setStatusFilter("ALEATOIRE")}
+                    className={`px-4 py-2 rounded-xl border flex items-center gap-2 transition-all ${statusFilter === "ALEATOIRE" ? "bg-amber-50 text-amber-700 border-amber-200 shadow-sm" : "bg-background text-muted-foreground border-border hover:bg-muted"}`}
+                >
+                    <span className="font-black text-amber-800">{filterCounts.ALEATOIRE}</span> 🎲 Aléatoire
                 </button>
             </div>
 
