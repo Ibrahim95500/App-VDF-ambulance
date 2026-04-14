@@ -37,13 +37,60 @@ const botKeyboard = {
     reply_markup: {
         keyboard: [
             [{ text: "▶️ Démarrer" }, { text: "⏸️ Pause" }],
-            [{ text: "✅ Mode: AVEC Villes" }, { text: "⚠️ Mode: TOUT PRENDRE" }],
+            [{ text: "📊 État du Sniper" }],
             [{ text: "📸 Capture d'écran" }, { text: "🔌 Déconnexion" }]
         ],
         resize_keyboard: true,
         is_persistent: true
     }
 };
+
+async function sendStatusReport(reqChatId?: number) {
+    const isCo = !isBotDisconnected;
+    const isPaused = isBotPaused;
+    
+    let msg = "📊 *Rapport d'État - Sniper PRT*\n\n";
+    const dateStr = new Date().toLocaleString('fr-FR', { timeZone: 'Europe/Paris' });
+    msg += `🕒 *Heure* : ${dateStr}\n\n`;
+
+    if (!isCo) {
+        msg += `🔌 *Statut* : **DÉCONNECTÉ 🔴**\nLe robot dort profondément, la connexion au site est fermée.`;
+        if (reqChatId) bot.sendMessage(reqChatId, msg, { parse_mode: 'Markdown' });
+        else sendTelegramAlert(msg);
+        return;
+    }
+
+    if (isPaused) {
+        msg += `⏸️ *Statut* : **EN PAUSE 🟡**\nLe robot est connecté au site mais le sniping est mis sur pause.`;
+    } else {
+        msg += `✅ *Statut* : **EN MISSION (SNIPING ACTIF) 🟢**\nLe robot scanne activement le radar PRT !`;
+    }
+
+    if (act_page) {
+        try {
+            const buf = await act_page.screenshot({ fullPage: true });
+            if (reqChatId) {
+                 bot.sendPhoto(reqChatId, buf as Buffer, { caption: msg, parse_mode: 'Markdown' }, { filename: 'status.png', contentType: 'image/png' });
+            } else {
+                 sendTelegramAlert(msg, buf as Buffer);
+            }
+        } catch(e) {
+            msg += "\n\n❌ _Impossible de capturer l'écran pour l'instant (la navigation est en cours)._";
+            if (reqChatId) bot.sendMessage(reqChatId, msg, { parse_mode: 'Markdown' });
+            else sendTelegramAlert(msg);
+        }
+    } else {
+        msg += "\n\n⏳ _Plateforme non initialisée._";
+        if (reqChatId) bot.sendMessage(reqChatId, msg, { parse_mode: 'Markdown' });
+        else sendTelegramAlert(msg);
+    }
+}
+
+// Notification d'état toutes les heures (3600000 ms)
+setInterval(() => {
+    console.log("[TELEGRAM] Envoi du rapport d'état horaire automatique.");
+    sendStatusReport();
+}, 60 * 60 * 1000);
 
 bot.on('message', async (msg) => {
     const chatId = msg.chat.id;
@@ -67,15 +114,8 @@ bot.on('message', async (msg) => {
         return;
     }
 
-    if (text.includes('TOUT PRENDRE')) {
-        isFilterActive = false;
-        bot.sendMessage(chatId, "⚠️ **MODE SANS CONDITION ACTIVÉ !**\n\nLe robot va sniper absolument TOUTES LES COURSES qui apparaissent sur l'écran (sans vérifier Gonesse, Paris, ou Province).\n\nPour réactiver la sécurité, utilise le bouton *✅ Mode: AVEC Villes*.", { parse_mode: 'Markdown' });
-        return;
-    }
-
-    if (text.includes('AVEC Villes')) {
-        isFilterActive = true;
-        bot.sendMessage(chatId, "✅ **MODE SÉCURISÉ ACTIVÉ !**\n\nLe robot redevient sélectif. Il ne prendra QUE les courses au départ de Gonesse (GHT) vers les villes autorisées (Goussainville, Villiers, etc.)", { parse_mode: 'Markdown' });
+    if (text.includes('tat du Sniper')) {
+        await sendStatusReport(chatId);
         return;
     }
 
