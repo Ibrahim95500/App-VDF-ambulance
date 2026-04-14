@@ -93,7 +93,7 @@ export async function salarieUpdateTicketStatus(ticketId: string, status: "CLOSE
         });
         
         // Notifier le service IT par email (en silencieux pour ne pas bloquer l'UI)
-        const roleStr = ticket.user.role || "SALARIE";
+        const roleStr = ticket.user.roles && ticket.user.roles.length > 0 ? ticket.user.roles[0] : "SALARIE";
         const emailContent = `
             <div style="font-family: Arial, sans-serif;">
                 <div style="background-color: ${status === 'CLOSED' ? '#f0fdf4' : '#fef2f2'}; border-left: 4px solid ${status === 'CLOSED' ? '#22c55e' : '#ef4444'}; padding: 15px; margin-bottom: 20px;">
