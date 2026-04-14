@@ -2,7 +2,7 @@
 
 import { ReactNode } from 'react';
 import Link from 'next/link';
-import { Calendar, Settings, Settings2, Shield, Users, Clock, CheckCircle, XCircle, Info, X, Siren } from 'lucide-react';
+import { Calendar, Settings, Settings2, Shield, Users, Clock, CheckCircle, XCircle, Info, X, Siren, ShieldAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getNotifications, markAllAsRead, markAsRead, dismissNotification } from '@/actions/notifications.actions';
 import { getVapidPublicKey, savePushSubscription, saveFcmToken, sendPushNotification, scheduleTestPushNotification } from '@/actions/web-push.actions';
@@ -97,6 +97,7 @@ export function NotificationsSheet({ trigger, onAllRead }: { trigger: ReactNode;
     if (status === 'REJECTED') return <XCircle className="size-4 text-red-500" />;
     if (type === 'ADVANCE') return <div className="text-orange-500 font-bold text-xs">€</div>;
     if (type === 'MISSION') return <Siren className="size-4 text-blue-600" />;
+    if (type === 'IT_SUPPORT') return <ShieldAlert className="size-4 text-slate-800" />;
     return <Calendar className="size-4 text-blue-500" />;
   };
   const handleOpenChange = (open: boolean) => {

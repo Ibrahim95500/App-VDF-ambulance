@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { sendBrandedEmail } from "@/lib/mail";
 import { sendPushNotification } from "@/actions/web-push.actions";
+import { createNotification } from "@/actions/notifications.actions";
 
 export async function updateTicketStatus(ticketId: string, status: "OPEN" | "IN_PROGRESS" | "RESOLVED" | "CLOSED", adminComment?: string) {
     try {
@@ -61,6 +62,16 @@ export async function updateTicketStatus(ticketId: string, status: "OPEN" | "IN_
         
         try {
             await sendPushNotification(ticket.userId, pushTitle, pushMessage, "/dashboard/it");
+            
+            // Notification Interne (Cloche)
+            await createNotification({
+                userId: ticket.userId,
+                title: pushTitle,
+                message: pushMessage,
+                type: "IT_SUPPORT",
+                status: status,
+                link: undefined // Pas de lien direct car c'est géré via la modale globale pour l'instant
+            });
         } catch (e) {
             console.error("IT Action Push Notification Error (Silent):", e);
         }
