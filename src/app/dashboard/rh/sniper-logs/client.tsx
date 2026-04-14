@@ -85,6 +85,7 @@ export function SniperLogClient({ data: initialData }: { data: any[] }) {
             "Heure": req.heurePec || "-",
             "Demandeur": req.demandeur || "-",
             "Patient": req.patient || "-",
+            "Départ": req.depart,
             "Arrivée": req.arrivee,
             "Choix": req.patientChoice === true ? "Oui (Choix VDF)" : req.patientChoice === false ? "Non (Aléatoire)" : "Inconnu",
             "Statut": req.status,
