@@ -228,6 +228,7 @@ export function SniperLogClient({ data: initialData }: { data: any[] }) {
                             <th scope="col" className="px-4 py-3 font-semibold">Date RDV</th>
                             <th scope="col" className="px-4 py-3 font-semibold">Patient & Demandeur</th>
                             <th scope="col" className="px-4 py-3 font-semibold">Trajet (Départ ➔ Arrivée)</th>
+                            <th scope="col" className="px-4 py-3 font-semibold text-center">Choix Patient</th>
                             <th scope="col" className="px-4 py-3 font-semibold text-center">Statut</th>
                             <th scope="col" className="px-4 py-3 font-semibold text-right w-24">Aperçu</th>
                         </tr>
@@ -253,8 +254,6 @@ export function SniperLogClient({ data: initialData }: { data: any[] }) {
                                     <td className="px-4 py-3 align-top">
                                         <div className="font-semibold text-foreground max-w-[150px] truncate" title={log.patient}>{log.patient || "-"}</div>
                                         <div className="text-[10px] uppercase font-bold text-muted-foreground max-w-[150px] truncate mt-1" title={log.demandeur}>{log.demandeur || "-"}</div>
-                                        {log.patientChoice === true && <div className="mt-1.5 text-[9px] font-extrabold text-green-700 bg-green-100 uppercase px-1.5 py-0.5 rounded-sm inline-block">⭐ CHOIX VDF</div>}
-                                        {log.patientChoice === false && <div className="mt-1.5 text-[9px] font-extrabold text-amber-700 bg-amber-100/80 uppercase px-1.5 py-0.5 rounded-sm inline-block">🎲 ALÉATOIRE</div>}
                                     </td>
                                     <td className="px-4 py-3 align-top">
                                         <div className="space-y-1.5 w-full max-w-[280px]">
@@ -267,6 +266,15 @@ export function SniperLogClient({ data: initialData }: { data: any[] }) {
                                                 <span className="text-foreground font-medium truncate" title={log.arrivee}>{log.arrivee}</span>
                                             </div>
                                         </div>
+                                    </td>
+                                    <td className="px-4 py-3 align-middle text-center">
+                                        {log.patientChoice === true ? (
+                                            <div className="text-[10px] font-extrabold text-green-700 bg-green-100 uppercase px-2 py-1 rounded-sm inline-block shadow-sm ring-1 ring-green-600/20">⭐ CHOIX VDF</div>
+                                        ) : log.patientChoice === false ? (
+                                            <div className="text-[10px] font-extrabold text-amber-700 bg-amber-100/80 uppercase px-2 py-1 rounded-sm inline-block shadow-sm ring-1 ring-amber-600/20">🎲 ALÉATOIRE</div>
+                                        ) : (
+                                            <span className="text-muted-foreground text-[10px] italic">-</span>
+                                        )}
                                     </td>
                                     <td className="px-4 py-3 align-middle text-center">
                                         {getStatusBadge(log.status)}
