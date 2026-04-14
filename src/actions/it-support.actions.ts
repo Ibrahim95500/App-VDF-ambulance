@@ -86,9 +86,23 @@ export async function updateTicketStatus(ticketId: string, status: "OPEN" | "IN_
 
 export async function salarieUpdateTicketStatus(ticketId: string, status: "CLOSED" | "IN_PROGRESS", userComment?: string) {
     try {
+        const currentTicket = await prisma.supportTicket.findUnique({
+            where: { id: ticketId },
+            select: { description: true }
+        });
+
+        let newDescription = currentTicket?.description || "";
+        if (userComment) {
+            const dateStr = new Date().toLocaleDateString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+            newDescription += `\n\n--- \n[RETOUR SALARIÉ - ${dateStr}] :\n${userComment}`;
+        }
+
         const ticket = await prisma.supportTicket.update({
             where: { id: ticketId },
-            data: { status },
+            data: { 
+                status,
+                ...(userComment ? { description: newDescription } : {})
+            },
             include: { user: true }
         });
         
