@@ -15,6 +15,11 @@ export async function POST(req: Request) {
         const patient = formData.get("patient") as string;
         const datePec = formData.get("datePec") as string;
         const heurePec = formData.get("heurePec") as string;
+        const patientChoiceStr = formData.get("patientChoice") as string;
+        let patientChoice: boolean | null = null;
+        if (patientChoiceStr === "true") patientChoice = true;
+        if (patientChoiceStr === "false") patientChoice = false;
+        
         const file = formData.get("image") as File | null;
 
         if (num) {
@@ -30,10 +35,20 @@ export async function POST(req: Request) {
                              patient, 
                              demandeur: demandeur || existing.demandeur, 
                              datePec: datePec || existing.datePec, 
-                             heurePec: heurePec || existing.heurePec 
+                             heurePec: heurePec || existing.heurePec,
+                             patientChoice: patientChoice !== null ? patientChoice : existing.patientChoice
                          }
                      });
                      return NextResponse.json({ success: true, message: "Mis à jour avec infos patient" });
+                }
+                
+                // Si le patientChoice est mis à jour depuis le détail même si le patient existait
+                if (patientChoice !== null && existing.patientChoice !== patientChoice) {
+                     await prisma.sniperLog.update({
+                         where: { id: existing.id },
+                         data: { patientChoice }
+                     });
+                     return NextResponse.json({ success: true, message: "Mis à jour avec le patientChoice" });
                 }
                 
                 console.log(`Course AMC N°${num} ignorée: Déjà en base avec toutes les infos.`);
@@ -66,7 +81,8 @@ export async function POST(req: Request) {
                 status: status,
                 imageUrl: imageUrl,
                 datePec: datePec || new Date().toLocaleDateString('fr-FR'),
-                heurePec: heurePec || new Date().toLocaleTimeString('fr-FR')
+                heurePec: heurePec || new Date().toLocaleTimeString('fr-FR'),
+                patientChoice: patientChoice
             }
         });
 

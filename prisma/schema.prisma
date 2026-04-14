@@ -349,7 +349,8 @@ model SniperLog {
   patient   String?
   num       String?
   heurePec  String?
-  status    String   // "SUCCESS", "FAILED_ALREADY_TAKEN", "MANUAL_PENDING", "MANUAL_SUCCESS"
-  imageUrl  String?
-  createdAt DateTime @default(now())
+  status         String   // "SUCCESS", "FAILED_ALREADY_TAKEN", "MANUAL_PENDING", "MANUAL_SUCCESS"
+  patientChoice  Boolean? // Indique si le patient a explicitement choisi l'ambulance
+  imageUrl       String?
+  createdAt      DateTime @default(now())
 }

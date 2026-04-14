@@ -85,8 +85,8 @@ export function SniperLogClient({ data: initialData }: { data: any[] }) {
             "Heure": req.heurePec || "-",
             "Demandeur": req.demandeur || "-",
             "Patient": req.patient || "-",
-            "Départ": req.depart,
             "Arrivée": req.arrivee,
+            "Choix": req.patientChoice === true ? "Oui (Choix VDF)" : req.patientChoice === false ? "Non (Aléatoire)" : "Inconnu",
             "Statut": req.status,
             "Date du Sniping": new Date(req.createdAt).toLocaleString('fr-FR')
         }))
@@ -161,7 +161,11 @@ export function SniperLogClient({ data: initialData }: { data: any[] }) {
                         <div className="flex justify-between items-start w-full">
                             <div>
                                 <h3 className="font-bold text-lg text-foreground flex items-center gap-1">#{log.num || "INCONNU"}</h3>
-                                <p className="text-xs text-muted-foreground">Patient : <span className="font-semibold">{log.patient || "-"}</span></p>
+                                <div className="flex items-center gap-2 mt-1 mb-1">
+                                    <p className="text-xs text-muted-foreground w-fit">Patient : <span className="font-semibold">{log.patient || "-"}</span></p>
+                                    {log.patientChoice === true && <span className="text-[9px] font-extrabold text-green-700 bg-green-100 uppercase px-1.5 py-0.5 rounded-sm">⭐ CHOIX VDF</span>}
+                                    {log.patientChoice === false && <span className="text-[9px] font-extrabold text-amber-700 bg-amber-100/80 uppercase px-1.5 py-0.5 rounded-sm">🎲 ALÉATOIRE</span>}
+                                </div>
                             </div>
                             {getStatusBadge(log.status)}
                         </div>
@@ -248,6 +252,8 @@ export function SniperLogClient({ data: initialData }: { data: any[] }) {
                                     <td className="px-4 py-3 align-top">
                                         <div className="font-semibold text-foreground max-w-[150px] truncate" title={log.patient}>{log.patient || "-"}</div>
                                         <div className="text-[10px] uppercase font-bold text-muted-foreground max-w-[150px] truncate mt-1" title={log.demandeur}>{log.demandeur || "-"}</div>
+                                        {log.patientChoice === true && <div className="mt-1.5 text-[9px] font-extrabold text-green-700 bg-green-100 uppercase px-1.5 py-0.5 rounded-sm inline-block">⭐ CHOIX VDF</div>}
+                                        {log.patientChoice === false && <div className="mt-1.5 text-[9px] font-extrabold text-amber-700 bg-amber-100/80 uppercase px-1.5 py-0.5 rounded-sm inline-block">🎲 ALÉATOIRE</div>}
                                     </td>
                                     <td className="px-4 py-3 align-top">
                                         <div className="space-y-1.5 w-full max-w-[280px]">

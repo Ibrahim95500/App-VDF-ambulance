@@ -89,7 +89,7 @@ export const MENU_SIDEBAR: MenuConfig = [
     path: '/dashboard/rh/regulation',
   },
   {
-    title: 'Applet PRT',
+    title: 'PRT Suivi',
     icon: Zap,
     path: '/dashboard/rh/sniper-logs',
   },
