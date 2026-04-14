@@ -122,8 +122,41 @@ export function SniperLogClient({ data: initialData }: { data: any[] }) {
         return counts
     }, [data])
 
+    const [isRefreshing, setIsRefreshing] = useState(false)
+
+    const handleRefresh = async () => {
+        setIsRefreshing(true)
+        router.refresh()
+        setTimeout(() => setIsRefreshing(false), 500)
+    }
+
     return (
         <div className="flex flex-col gap-6">
+            {/* Header / Toolbar */}
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <div>
+                    <h2 className="text-3xl font-black tracking-tighter flex items-center gap-3">
+                        <div className="p-2.5 bg-blue-600 rounded-xl text-white shadow-lg shadow-blue-500/20">
+                            🎯
+                        </div>
+                        PRT Suivi
+                    </h2>
+                    <p className="text-muted-foreground text-sm mt-1 font-medium">Registre en temps réel des activités du robot d'interception de courses AMC.</p>
+                </div>
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full lg:w-auto">
+                    {/* Bouton Actualiser Stylé */}
+                    <Button 
+                        variant="outline" 
+                        size="icon" 
+                        onClick={handleRefresh}
+                        disabled={isRefreshing}
+                        className="h-12 w-12 rounded-xl border-2 hover:bg-slate-50 hover:text-blue-600 hover:border-blue-200 transition-all duration-300 shadow-sm group flex-shrink-0"
+                    >
+                        <Loader2 className={`size-5 transition-transform duration-500 group-hover:rotate-180 ${isRefreshing ? "animate-spin" : ""}`} />
+                    </Button>
+                </div>
+            </div>
+
             {/* Custom Tab Buttons like Collaborators Table */}
             <div className="flex flex-wrap items-center gap-4">
                 <button 
