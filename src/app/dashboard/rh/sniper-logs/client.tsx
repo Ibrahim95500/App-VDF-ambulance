@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useMemo, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Eye, MapPin, Navigation, Calendar, ScanEye, Trash2, Loader2 } from "lucide-react"
@@ -22,6 +23,16 @@ export function SniperLogClient({ data: initialData }: { data: any[] }) {
 
     useEffect(() => { setCurrentPage(1) }, [searchTerm, statusFilter, dateRange])
     useEffect(() => { setData(initialData) }, [initialData])
+
+    const router = useRouter()
+    
+    // Auto-refresh en temps réel (toutes les 15 secondes)
+    useEffect(() => {
+        const intervalId = setInterval(() => {
+            router.refresh()
+        }, 15000)
+        return () => clearInterval(intervalId)
+    }, [router])
 
     const [isDeleting, setIsDeleting] = useState<string | null>(null)
 
