@@ -57,7 +57,7 @@ export async function updateTicketStatus(ticketId: string, status: "OPEN" | "IN_
         }
 
         // Envoi de Notification PUSH native peu importe le statut !
-        const pushTitle = `Ticket IT : ${status === 'IN_PROGRESS' ? 'Pris en charge' : status === 'RESOLVED' ? 'Résolu !' : status === 'CLOSED' ? 'Fermé' : 'Mis à jour'}`;
+        const pushTitle = `Ticket IT #${ticket.id.slice(-6).toUpperCase()} : ${status === 'IN_PROGRESS' ? 'Pris en charge' : status === 'RESOLVED' ? 'Résolu !' : status === 'CLOSED' ? 'Fermé' : 'Mis à jour'}`;
         const pushMessage = `Le statut de votre demande technique "${ticket.subject.substring(0, 20)}..." a évolué.`;
         
         try {
