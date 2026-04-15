@@ -59,32 +59,43 @@ export function ITSupportBoard({ initialTickets }: { initialTickets: any[] }) {
         }
     };
 
+    const parseTimelineItem = (type: string, dateStr: string | undefined, contentWithImage: string) => {
+        let content = contentWithImage;
+        let image = null;
+        if (content.includes('[IMAGE_ATTACHED]:')) {
+            const parts = content.split('[IMAGE_ATTACHED]:');
+            content = parts[0].trim();
+            image = parts[1].trim();
+        }
+        return { type, date: dateStr, content, image };
+    };
+
     const parseDescriptionToTimeline = (desc: string) => {
         if (!desc) return [];
         const parts = desc.split('---').map(s => s.trim()).filter(Boolean);
         const original = parts[0];
         const timeline = [];
         
-        timeline.push({ type: 'ORIGINAL', content: original });
+        timeline.push({ type: 'ORIGINAL', content: original, date: undefined, image: null });
         
         for (let i = 1; i < parts.length; i++) {
             const p = parts[i];
             if (p.startsWith('[RETOUR SALARIÉ')) {
                 const match = p.match(/\[RETOUR SALARIÉ - (.*?)\] :\s*([\s\S]*)/);
                 if (match) {
-                    timeline.push({ type: 'SALARIE', date: match[1], content: match[2] });
+                    timeline.push(parseTimelineItem('SALARIE', match[1], match[2]));
                 } else {
-                    timeline.push({ type: 'SALARIE', content: p });
+                    timeline.push(parseTimelineItem('SALARIE', undefined, p));
                 }
             } else if (p.startsWith('[RETOUR SUPPORT IT')) {
                 const match = p.match(/\[RETOUR SUPPORT IT - (.*?)\] :\s*([\s\S]*)/);
                 if (match) {
-                    timeline.push({ type: 'IT', date: match[1], content: match[2] });
+                    timeline.push(parseTimelineItem('IT', match[1], match[2]));
                 } else {
-                    timeline.push({ type: 'IT', content: p });
+                    timeline.push(parseTimelineItem('IT', undefined, p));
                 }
             } else {
-                timeline.push({ type: 'OTHER', content: p });
+                timeline.push({ type: 'OTHER', content: p, date: undefined, image: null });
             }
         }
         return timeline;
@@ -434,6 +445,16 @@ export function ITSupportBoard({ initialTickets }: { initialTickets: any[] }) {
                                                     <div className="text-slate-300 whitespace-pre-wrap font-medium leading-relaxed text-xs md:text-sm">
                                                         {item.content}
                                                     </div>
+                                                    {item.image && (
+                                                        <div className="mt-3 overflow-hidden rounded-xl border border-slate-700/50 cursor-pointer group/img" onClick={() => window.open(item.image as string, '_blank')}>
+                                                            <div className="relative">
+                                                                <img src={item.image} alt="Capture jointe" className="w-full max-h-48 object-contain bg-black/40 group-hover/img:opacity-75 transition-opacity" />
+                                                                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity">
+                                                                    <Search className="w-8 h-8 text-white drop-shadow-md" />
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
                                         ))}
