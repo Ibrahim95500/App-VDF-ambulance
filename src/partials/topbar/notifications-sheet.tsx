@@ -2,6 +2,7 @@
 
 import { ReactNode } from 'react';
 import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
 import { Calendar, Settings, Settings2, Shield, Users, Clock, CheckCircle, XCircle, Info, X, Siren, ShieldAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { getNotifications, markAllAsRead, markAsRead, dismissNotification } from '@/actions/notifications.actions';
@@ -55,6 +56,7 @@ export function NotificationsSheet({ trigger, onAllRead }: { trigger: ReactNode;
   const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
+  const router = useRouter();
 
   const fetchNotifications = async (isSilent = false) => {
     try {
@@ -296,7 +298,13 @@ export function NotificationsSheet({ trigger, onAllRead }: { trigger: ReactNode;
                       >
                         <div
                           className="flex grow gap-3 cursor-pointer"
-                          onClick={() => !n.read && handleMarkAsRead(n.id)}
+                          onClick={() => {
+                            if (!n.read) handleMarkAsRead(n.id);
+                            if (n.link) {
+                                setIsOpen(false);
+                                router.push(n.link);
+                            }
+                          }}
                         >
                           <div className="mt-1 size-8 rounded-full bg-muted flex items-center justify-center shrink-0">
                             {getIcon(n.type, n.status)}
@@ -352,8 +360,14 @@ export function NotificationsSheet({ trigger, onAllRead }: { trigger: ReactNode;
                     notifications.filter(n => !n.read).map((n) => (
                       <div
                         key={n.id}
-                        className="p-4 border-b border-border bg-blue-50/30 flex gap-3 items-start"
-                        onClick={() => handleMarkAsRead(n.id)}
+                        className="p-4 border-b border-border bg-blue-50/30 flex gap-3 items-start cursor-pointer"
+                        onClick={() => {
+                          handleMarkAsRead(n.id);
+                          if (n.link) {
+                              setIsOpen(false);
+                              router.push(n.link);
+                          }
+                        }}
                       >
                         <div className="mt-1 size-8 rounded-full bg-muted flex items-center justify-center shrink-0">
                           {getIcon(n.type, n.status)}

@@ -23,8 +23,8 @@ export function SidebarMenu() {
   const pathname = usePathname();
   const { data: session, status } = useSession();
   const [stats, setStats] = useState({
-    global: { advances: 0, services: 0, appointments: 0, leaves: 0, regulation: 0, total: 0 },
-    personal: { advances: 0, services: 0, appointments: 0, leaves: 0, mission: 0, total: 0 }
+    global: { advances: 0, services: 0, appointments: 0, leaves: 0, regulation: 0, support: 0, total: 0 },
+    personal: { advances: 0, services: 0, appointments: 0, leaves: 0, mission: 0, support: 0, total: 0 }
   });
 
   useEffect(() => {
@@ -178,12 +178,16 @@ export function SidebarMenu() {
                 if (path.includes('services')) count = stats.global.services + stats.global.leaves;
                 if (path.includes('rendez-vous')) count = stats.global.appointments;
                 if (path.includes('regulation')) count = stats.global.regulation;
+              } else if (path.startsWith('/dashboard/it')) {
+                // Section IT
+                count = stats.global.support;
               } else if (path.startsWith('/dashboard/salarie')) {
                 // Section SALARIE
                 if (path.includes('acomptes')) count = stats.personal.advances;
                 if (path.includes('services')) count = stats.personal.services + stats.personal.leaves;
                 if (path.includes('rendez-vous')) count = stats.personal.appointments;
                 if (path.includes('regulation')) count = stats.personal.mission;
+                if (path.includes('support')) count = stats.personal.support;
               }
 
               if (count > 0) {
@@ -298,11 +302,14 @@ export function SidebarMenu() {
                 if (path.includes('services')) count = stats.global.services + stats.global.leaves;
                 if (path.includes('rendez-vous')) count = stats.global.appointments;
                 if (path.includes('regulation')) count = stats.global.regulation;
+              } else if (path.startsWith('/dashboard/it')) {
+                count = stats.global.support;
               } else if (path.startsWith('/dashboard/salarie')) {
                 if (path.includes('acomptes')) count = stats.personal.advances;
                 if (path.includes('services')) count = stats.personal.services + stats.personal.leaves;
                 if (path.includes('rendez-vous')) count = stats.personal.appointments;
                 if (path.includes('regulation')) count = stats.personal.mission;
+                if (path.includes('support')) count = stats.personal.support;
               }
               
               if (count > 0) {

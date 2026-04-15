@@ -57,8 +57,8 @@ export function UserSupportBoard({ initialTickets }: { initialTickets: any[] }) 
         const file = e.target.files?.[0];
         if (!file) return;
 
-        if (!file.type.startsWith("image/")) {
-            toast.error("Veuillez sélectionner une image valide.");
+        if (!file.type.startsWith("image/") && file.type !== "application/pdf") {
+            toast.error("Veuillez sélectionner une image ou un PDF valide.");
             return;
         }
 
@@ -526,7 +526,7 @@ export function UserSupportBoard({ initialTickets }: { initialTickets: any[] }) 
                                         <div className="flex text-sm text-slate-600 justify-center">
                                             <label htmlFor="file-upload" className="relative cursor-pointer rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
                                                 <span>Télécharger un fichier</span>
-                                                <input id="file-upload" name="file-upload" type="file" className="sr-only" accept="image/*" onChange={handleImageUpload} />
+                                                <input id="file-upload" name="file-upload" type="file" className="sr-only" accept="image/*,application/pdf" onChange={handleImageUpload} />
                                             </label>
                                         </div>
                                         <p className="text-xs text-slate-500">PNG, JPG, GIF jusqu'à 5MB</p>
@@ -709,7 +709,7 @@ export function UserSupportBoard({ initialTickets }: { initialTickets: any[] }) 
                                                     <label htmlFor="feedback-image" className="cursor-pointer inline-flex items-center gap-2 text-xs text-green-700 hover:text-green-500 transition-colors">
                                                         <ImageIcon className="w-4 h-4" /> Joindre une capture d'écran
                                                     </label>
-                                                    <input id="feedback-image" type="file" accept="image/*" className="hidden" onChange={handleFeedbackImageUpload} />
+                                                    <input id="feedback-image" type="file" accept="image/*,application/pdf" className="hidden" onChange={handleFeedbackImageUpload} />
                                                 </div>
                                             )}
                                         </div>

@@ -6,7 +6,7 @@ import { sendBrandedEmail } from "@/lib/mail";
 import { sendPushNotification } from "@/actions/web-push.actions";
 import { createNotification } from "@/actions/notifications.actions";
 
-export async function updateTicketStatus(ticketId: string, status: "OPEN" | "IN_PROGRESS" | "RESOLVED" | "CLOSED", adminComment?: string) {
+export async function updateTicketStatus(ticketId: string, status: "OPEN" | "IN_PROGRESS" | "RESOLVED" | "CLOSED", adminComment?: string, adminImageBase64?: string) {
     try {
         const currentTicket = await prisma.supportTicket.findUnique({
             where: { id: ticketId },
@@ -18,6 +18,10 @@ export async function updateTicketStatus(ticketId: string, status: "OPEN" | "IN_
         if (adminComment && adminComment.trim().length > 0) {
             const dateStr = new Date().toLocaleDateString('fr-FR', { hour: '2-digit', minute: '2-digit' });
             newDescription += `\n\n--- \n[RETOUR SUPPORT IT - ${dateStr}] :\n${adminComment}`;
+        }
+        
+        if (adminImageBase64) {
+            newDescription += `\n[IMAGE_ATTACHED]:${adminImageBase64}`;
         }
 
         const ticket = await prisma.supportTicket.update({
@@ -83,7 +87,7 @@ export async function updateTicketStatus(ticketId: string, status: "OPEN" | "IN_
                 message: pushMessage,
                 type: "IT_SUPPORT",
                 status: status,
-                link: undefined // Pas de lien direct car c'est géré via la modale globale pour l'instant
+                link: "/dashboard/salarie/support"
             });
         } catch (e) {
             console.error("IT Action Push Notification Error (Silent):", e);
@@ -157,6 +161,36 @@ export async function salarieUpdateTicketStatus(ticketId: string, status: "CLOSE
             });
         } catch (e) {
             console.error("Action Mail Error (Silent):", e);
+        }
+
+        // Notifications in-app et push pour les admins IT
+        try {
+            const admins = await prisma.user.findMany({
+                where: { OR: [{ roles: { has: "ADMIN" } }, { roles: { has: "SERVICE_IT" } }] },
+                select: { id: true }
+            });
+            
+            const actionStr = status === 'CLOSED' ? "fermé son ticket 🔒" : "fait un retour 💬";
+            const msgStr = userComment ? `"${userComment.substring(0, 40)}..."` : "Un nouvel élément a été ajouté.";
+            
+            for (const admin of admins) {
+                // Push natif
+                try {
+                    await sendPushNotification(admin.id, `Ticket IT #${ticket.id.slice(-6).toUpperCase()}`, `${ticket.user.firstName} a ${actionStr} (${msgStr})`, "/dashboard/it");
+                } catch(e) {}
+                
+                // Cloche interne
+                await createNotification({
+                    userId: admin.id,
+                    title: `Ticket IT #${ticket.id.slice(-6).toUpperCase()} mis à jour`,
+                    message: `${ticket.user.firstName} ${ticket.user.lastName} a ${actionStr}.`,
+                    type: "IT_SUPPORT",
+                    status: status,
+                    link: "/dashboard/it"
+                });
+            }
+        } catch (e) {
+            console.error("IT internal notification error:", e);
         }
 
         revalidatePath('/dashboard/it');

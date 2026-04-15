@@ -39,6 +39,7 @@ import { VdfLogo } from '@/components/vdf-logo';
 export function Header({ notificationsCount = 0 }: { notificationsCount?: number }) {
   const [isSidebarSheetOpen, setIsSidebarSheetOpen] = useState(false);
   const [hasUnreadSupport, setHasUnreadSupport] = useState(false);
+  const [unreadSupportCount, setUnreadSupportCount] = useState(0);
 
   const pathname = usePathname();
   const mobileMode = useIsMobile();
@@ -57,6 +58,7 @@ export function Header({ notificationsCount = 0 }: { notificationsCount?: number
           if (res.ok) {
             const data = await res.json();
             setHasUnreadSupport(data.hasUnreadResolved);
+            setUnreadSupportCount(data.count || 0);
           }
         } catch (e) {
           // Silent fail
@@ -125,16 +127,15 @@ export function Header({ notificationsCount = 0 }: { notificationsCount?: number
         <div className="flex items-center gap-3">
           <div className="relative">
             <Link 
-              href="/dashboard/salarie/support"
+              href={(session?.user as any)?.roles?.includes('SERVICE_IT') ? '/dashboard/it' : '/dashboard/salarie/support'}
               className="inline-flex items-center justify-center rounded-full h-10 w-10 text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
               title="Signaler un Bug"
             >
               <LifeBuoy className="h-5 w-5" />
             </Link>
             {hasUnreadSupport && (
-              <span className="absolute top-0 right-0 flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500 border border-white"></span>
+              <span className="absolute top-0 right-0 translate-x-1/3 -translate-y-1/3 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white shadow-lg border-2 border-background animate-in zoom-in">
+                {unreadSupportCount > 99 ? '99+' : unreadSupportCount}
               </span>
             )}
           </div>

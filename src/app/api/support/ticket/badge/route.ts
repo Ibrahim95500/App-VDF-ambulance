@@ -9,15 +9,26 @@ export async function GET(req: Request) {
             return NextResponse.json({ hasUnreadResolved: false });
         }
 
-        const count = await prisma.supportTicket.count({
-            where: {
-                userId: session.user.id,
-                status: "RESOLVED"
-            }
-        });
+        const roles = (session.user as any).roles || [];
+        const isITAdmin = roles.includes("SERVICE_IT") || roles.includes("ADMIN");
 
-        return NextResponse.json({ hasUnreadResolved: count > 0 });
+        let count = 0;
+
+        if (isITAdmin) {
+            count = await prisma.supportTicket.count({
+                where: { status: { in: ["OPEN", "IN_PROGRESS"] } }
+            });
+        } else {
+            count = await prisma.supportTicket.count({
+                where: {
+                    userId: session.user.id,
+                    status: { in: ["RESOLVED", "IN_PROGRESS"] }
+                }
+            });
+        }
+
+        return NextResponse.json({ hasUnreadResolved: count > 0, count });
     } catch (error) {
-        return NextResponse.json({ hasUnreadResolved: false });
+        return NextResponse.json({ hasUnreadResolved: false, count: 0 });
     }
 }

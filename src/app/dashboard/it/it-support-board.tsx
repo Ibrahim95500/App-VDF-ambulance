@@ -20,6 +20,7 @@ export function ITSupportBoard({ initialTickets }: { initialTickets: any[] }) {
     const [tickets, setTickets] = useState(initialTickets);
     const [selectedTicket, setSelectedTicket] = useState<any | null>(null);
     const [tempComment, setTempComment] = useState("");
+    const [itFeedbackImageStr, setItFeedbackImageStr] = useState<string | null>(null);
     const [isSaving, setIsSaving] = useState(false);
     const [enlargedImage, setEnlargedImage] = useState<string | null>(null);
     const [activeFilter, setActiveFilter] = useState<string | null>(null);
@@ -104,7 +105,7 @@ export function ITSupportBoard({ initialTickets }: { initialTickets: any[] }) {
 
     const handleStatusChange = async (newStatus: string) => {
         if (!selectedTicket) return;
-        const res = await updateTicketStatus(selectedTicket.id, newStatus as any, tempComment);
+        const res = await updateTicketStatus(selectedTicket.id, newStatus as any, tempComment, itFeedbackImageStr || undefined);
         if (res.success) {
             toast.success(`Le ticket est passé en ${newStatus}`);
             setTickets(tickets.map(t => t.id === selectedTicket.id ? { ...t, status: newStatus } : t));
@@ -114,21 +115,41 @@ export function ITSupportBoard({ initialTickets }: { initialTickets: any[] }) {
         }
     };
 
+    const handleItFeedbackImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        if (!file.type.startsWith("image/") && file.type !== "application/pdf") {
+            toast.error("Veuillez sélectionner une image ou un PDF valide.");
+            return;
+        }
+        if (file.size > 2 * 1024 * 1024) {
+            toast.error("Le fichier ne doit pas dépasser 2 MB.");
+            return;
+        }
+        const reader = new FileReader();
+        reader.onloadend = () => setItFeedbackImageStr(reader.result as string);
+        reader.readAsDataURL(file);
+    };
+
     const handleCommentSave = async () => {
-        if (!selectedTicket || !tempComment.trim()) return;
+        if (!selectedTicket || (!tempComment.trim() && !itFeedbackImageStr)) return;
         setIsSaving(true);
         try {
-            const res = await updateTicketStatus(selectedTicket.id, selectedTicket.status, tempComment);
+            const res = await updateTicketStatus(selectedTicket.id, selectedTicket.status, tempComment, itFeedbackImageStr || undefined);
             if (res.success) {
                 toast.success(`Le message IT a été ajouté à l'incident et synchronisé`);
                 
                 const dateStr = new Date().toLocaleDateString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-                const newDesc = selectedTicket.description + `\n\n--- \n[RETOUR SUPPORT IT - ${dateStr}] :\n${tempComment}`;
+                let newDesc = selectedTicket.description + `\n\n--- \n[RETOUR SUPPORT IT - ${dateStr}] :\n${tempComment}`;
+                if (itFeedbackImageStr) {
+                    newDesc += `\n[IMAGE_ATTACHED]:${itFeedbackImageStr}`;
+                }
                 
                 const updatedTicket = { ...selectedTicket, description: newDesc, adminComment: tempComment };
                 setSelectedTicket(updatedTicket);
                 setTickets(tickets.map(t => t.id === selectedTicket.id ? updatedTicket : t));
                 setTempComment(""); 
+                setItFeedbackImageStr(null);
             } else {
                 toast.error(res.error);
             }
@@ -197,6 +218,7 @@ export function ITSupportBoard({ initialTickets }: { initialTickets: any[] }) {
                         onClick={() => {
                             setSelectedTicket(t);
                             setTempComment(""); // Rendre le terminal vide pour un nouveau log
+                            setItFeedbackImageStr(null);
                         }}
                         className="bg-[#151e32] border border-slate-700 p-5 rounded-xl shadow-lg hover:shadow-cyan-900/20 hover:border-blue-500/50 transition-all cursor-grab active:cursor-grabbing group relative overflow-hidden"
                     >
@@ -241,6 +263,7 @@ export function ITSupportBoard({ initialTickets }: { initialTickets: any[] }) {
                     onClick={() => {
                         setSelectedTicket(t);
                         setTempComment(t.adminComment || "");
+                        setItFeedbackImageStr(null);
                     }} 
                     className="bg-[#0B1120] border border-slate-700 p-5 rounded-2xl shadow-xl flex flex-col gap-4 relative overflow-hidden"
                 >
@@ -308,6 +331,7 @@ export function ITSupportBoard({ initialTickets }: { initialTickets: any[] }) {
                             onClick={() => {
                                 setSelectedTicket(t);
                                 setTempComment(t.adminComment || "");
+                                setItFeedbackImageStr(null);
                             }} 
                             className="hover:bg-[#1e293b] transition-colors cursor-pointer group"
                         >
@@ -447,14 +471,22 @@ export function ITSupportBoard({ initialTickets }: { initialTickets: any[] }) {
                                                         {item.content}
                                                     </div>
                                                     {item.image && (
-                                                        <div className="mt-3 overflow-hidden rounded-xl border border-slate-700/50 cursor-pointer group/img" onClick={() => setEnlargedImage(item.image as string)}>
-                                                            <div className="relative">
-                                                                <img src={item.image} alt="Capture jointe" className="w-full max-h-48 object-contain bg-black/40 group-hover/img:opacity-75 transition-opacity" />
-                                                                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity">
-                                                                    <Search className="w-8 h-8 text-white drop-shadow-md" />
+                                                        item.image.startsWith("data:application/pdf") ? (
+                                                            <div className="mt-3">
+                                                                <a href={item.image as string} download="PieceJointe.pdf" className="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-lg text-xs font-semibold border border-slate-700 transition-colors">
+                                                                    <FileText className="w-4 h-4 text-emerald-400" /> Télécharger le PDF
+                                                                </a>
+                                                            </div>
+                                                        ) : (
+                                                            <div className="mt-3 overflow-hidden rounded-xl border border-slate-700/50 cursor-pointer group/img" onClick={() => setEnlargedImage(item.image as string)}>
+                                                                <div className="relative">
+                                                                    <img src={item.image} alt="Capture jointe" className="w-full max-h-48 object-contain bg-black/40 group-hover/img:opacity-75 transition-opacity" />
+                                                                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity">
+                                                                        <Search className="w-8 h-8 text-white drop-shadow-md" />
+                                                                    </div>
                                                                 </div>
                                                             </div>
-                                                        </div>
+                                                        )
                                                     )}
                                                 </div>
                                             </div>
@@ -479,14 +511,20 @@ export function ITSupportBoard({ initialTickets }: { initialTickets: any[] }) {
                                                     <ImageIcon className="h-4 w-4" /> Analyse Visuelle (Capture)
                                                 </h4>
                                             </div>
-                                            <div className="block relative group overflow-hidden rounded-2xl border border-slate-700 bg-black cursor-pointer" onClick={() => setEnlargedImage(selectedTicket.imageUrl)}>
-                                                <img src={selectedTicket.imageUrl} className="w-full object-contain opacity-90 group-hover:opacity-100 group-hover:scale-[1.02] transition-all duration-500" alt="Capture d'écran jointe" />
-                                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end justify-center pb-6 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <span className="text-white font-bold text-sm tracking-widest uppercase flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full">
-                                                        <Search className="w-4 h-4" /> Agrandir
-                                                    </span>
+                                            {selectedTicket.imageUrl.startsWith("data:application/pdf") ? (
+                                                <a href={selectedTicket.imageUrl} download="PieceJointe.pdf" className="inline-flex items-center justify-center gap-3 w-full bg-[#151e32] hover:bg-[#1e293b] text-emerald-400 px-6 py-4 rounded-xl text-sm font-bold border border-slate-700 transition-all shadow-lg">
+                                                    <FileText className="w-5 h-5" /> Télécharger le PDF initial
+                                                </a>
+                                            ) : (
+                                                <div className="block relative group overflow-hidden rounded-2xl border border-slate-700 bg-black cursor-pointer" onClick={() => setEnlargedImage(selectedTicket.imageUrl)}>
+                                                    <img src={selectedTicket.imageUrl} className="w-full object-contain opacity-90 group-hover:opacity-100 group-hover:scale-[1.02] transition-all duration-500" alt="Capture d'écran jointe" />
+                                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end justify-center pb-6 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <span className="text-white font-bold text-sm tracking-widest uppercase flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full">
+                                                            <Search className="w-4 h-4" /> Agrandir
+                                                        </span>
+                                                    </div>
                                                 </div>
-                                            </div>
+                                            )}
                                         </div>
                                     )}
                                 </div>
@@ -536,13 +574,36 @@ export function ITSupportBoard({ initialTickets }: { initialTickets: any[] }) {
                                     </Label>
                                     <div className="relative flex-1 flex flex-col min-h-32">
                                         <Textarea 
-                                            className="flex-1 bg-[#0a0f1c] border-slate-700 text-green-400 text-xs md:text-sm p-4 md:p-5 rounded-2xl rounded-b-none focus-visible:ring-1 focus-visible:ring-blue-500 placeholder:text-slate-700 font-mono resize-none shadow-inner min-h-[120px]" 
+                                            className="flex-1 bg-[#0a0f1c] border-slate-700 text-green-400 text-xs md:text-sm p-4 md:p-5 outline-none focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-slate-700 font-mono resize-none shadow-inner min-h-[120px]" 
                                             placeholder="> Rédigez le log de résolution technique ici..."
                                             value={tempComment}
                                             onChange={(e) => setTempComment(e.target.value)}
                                             maxLength={2000}
                                         />
-                                        <div className="bg-[#1e293b] border border-slate-700 border-t-0 p-2 md:p-3 rounded-b-2xl flex justify-between items-center shadow-lg">
+                                        <div className="bg-[#0a0f1c] px-4 pb-4">
+                                            {itFeedbackImageStr ? (
+                                                <div className="relative inline-block">
+                                                    {itFeedbackImageStr.startsWith("data:application/pdf") ? (
+                                                        <div className="h-16 w-32 bg-slate-800 rounded-md border border-slate-700 flex items-center justify-center">
+                                                            <FileText className="w-6 h-6 text-emerald-400" />
+                                                        </div>
+                                                    ) : (
+                                                        <img src={itFeedbackImageStr} className="h-16 rounded-md border border-slate-700 object-contain" />
+                                                    )}
+                                                    <Button variant="destructive" size="icon" className="absolute -top-2 -right-2 w-5 h-5 rounded-full shadow-lg" onClick={() => setItFeedbackImageStr(null)} type="button">
+                                                        <X className="w-3 h-3" />
+                                                    </Button>
+                                                </div>
+                                            ) : (
+                                                <div className="border-t border-slate-800 pt-2 text-xs">
+                                                    <label htmlFor="it-feedback-image" className="cursor-pointer inline-flex items-center gap-2 text-blue-500 hover:text-blue-400 transition-colors">
+                                                        <ImageIcon className="w-4 h-4" /> Joindre une capture d'écran ou un PDF (max 2MB)
+                                                    </label>
+                                                    <input id="it-feedback-image" type="file" accept="image/*,application/pdf" className="hidden" onChange={handleItFeedbackImageUpload} />
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="bg-[#1e293b] border border-slate-700 border-t-0 p-2 md:p-3 rounded-b-2xl flex justify-between items-center shadow-lg z-10">
                                             <span className="text-[9px] md:text-[10px] font-mono font-bold text-slate-500 px-2">BYTES: {tempComment.length}/2K</span>
                                             <Button 
                                                 className="bg-blue-600 hover:bg-blue-500 text-white font-black uppercase tracking-widest text-[10px] md:text-xs px-4 md:px-6 h-8 md:h-10 shadow-[0_0_15px_rgba(37,99,235,0.4)] hover:shadow-[0_0_25px_rgba(37,99,235,0.6)] transition-all"

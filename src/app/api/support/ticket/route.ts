@@ -2,6 +2,8 @@ import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { sendBrandedEmail } from "@/lib/mail";
+import { createNotification } from "@/actions/notifications.actions";
+import { sendPushNotification } from "@/actions/web-push.actions";
 
 export async function GET(req: Request) {
     try {
@@ -49,13 +51,16 @@ export async function POST(req: Request) {
             include: { user: true }
         });
 
-        // Trouver les admins pour le Bcc
+        // Trouver les admins pour le Bcc (inclure SERVICE_IT)
         const admins = await prisma.user.findMany({
             where: {
-                roles: { has: "ADMIN" },
+                OR: [
+                    { roles: { has: "ADMIN" } },
+                    { roles: { has: "SERVICE_IT" } }
+                ],
                 email: { not: null }
             },
-            select: { email: true }
+            select: { id: true, email: true }
         });
         
         // On récupère les emails des admins et on s'assure que ce sont des strings valides.
@@ -100,6 +105,26 @@ export async function POST(req: Request) {
             actionUrl: `${process.env.NEXT_PUBLIC_APP_URL || 'https://vdf-ambulance.fr'}/dashboard/it`,
             actionText: "Ouvrir le Tableau de Bord IT"
         });
+
+        // Notifications in-app pour tous les admins IT
+        for (const admin of admins) {
+            try {
+                // Notifier par web push natif si possible
+                await sendPushNotification(admin.id, "Nouveau Ticket IT 🚨", `Un nouveau ticket "${subject.substring(0, 20)}..." a été ouvert par ${ticket.user.firstName}`, "/dashboard/it");
+                
+                // Cloche de notification interne
+                await createNotification({
+                    userId: admin.id,
+                    title: "Nouveau Ticket IT 🚨",
+                    message: `Incident déclaré par ${ticket.user.firstName} ${ticket.user.lastName}.`,
+                    type: "IT_SUPPORT",
+                    status: "OPEN",
+                    link: "/dashboard/it"
+                });
+            } catch (e) {
+                console.error("Erreur notif interne silencieuse", e);
+            }
+        }
 
         return NextResponse.json({ success: true, ticket });
     } catch (error) {
