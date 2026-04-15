@@ -28,6 +28,7 @@ export function ITSupportKpi({ tickets, activeFilter, onFilterChange }: ITSuppor
             resolvedToday: tickets.filter(t => t.status === "RESOLVED" && new Date(t.createdAt) >= today).length,
             totalActive: tickets.filter(t => t.status !== "CLOSED").length,
             closed: tickets.filter(t => t.status === "CLOSED").length,
+            totalAll: tickets.length,
         };
     }, [tickets]);
 
@@ -40,7 +41,20 @@ export function ITSupportKpi({ tickets, activeFilter, onFilterChange }: ITSuppor
     };
 
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+            <div 
+                onClick={() => onFilterChange(null)}
+                className={cn("relative overflow-hidden bg-gradient-to-br from-slate-800 to-slate-900 border rounded-2xl p-5 shadow-xl cursor-pointer transition-all hover:scale-[1.02]", activeFilter === null ? "border-slate-400 ring-2 ring-slate-400/50" : "border-slate-800")}
+            >
+                <div className="flex items-center gap-3 mb-2">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">TOUT</span>
+                </div>
+                <div className="flex items-end gap-3">
+                    <span className="text-4xl font-extrabold text-white">{stats.totalAll}</span>
+                    <span className="text-[10px] uppercase font-bold text-slate-500 mb-1">Tickets</span>
+                </div>
+            </div>
+
             <div 
                 onClick={() => handleFilterClick("OPEN")}
                 className={cn("relative overflow-hidden bg-gradient-to-br from-indigo-950 to-slate-900 border rounded-2xl p-5 shadow-xl cursor-pointer transition-all hover:scale-[1.02]", activeFilter === "OPEN" ? "border-blue-500 ring-2 ring-blue-500/50" : "border-slate-800")}
