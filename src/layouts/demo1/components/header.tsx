@@ -8,7 +8,6 @@ import { AppsDropdownMenu } from '@/partials/topbar/apps-dropdown-menu';
 import { NotificationsSheet } from '@/partials/topbar/notifications-sheet';
 import { UserDropdownMenu } from '@/partials/topbar/user-dropdown-menu';
 import { NotificationBell } from '@/partials/topbar/notification-bell';
-import { SupportTicketModal } from '@/components/support/support-ticket-modal';
 import { useSession } from 'next-auth/react';
 import {
   LayoutGrid,
@@ -39,7 +38,6 @@ import { VdfLogo } from '@/components/vdf-logo';
 
 export function Header({ notificationsCount = 0 }: { notificationsCount?: number }) {
   const [isSidebarSheetOpen, setIsSidebarSheetOpen] = useState(false);
-  const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
   const [hasUnreadSupport, setHasUnreadSupport] = useState(false);
 
   const pathname = usePathname();
@@ -126,15 +124,13 @@ export function Header({ notificationsCount = 0 }: { notificationsCount?: number
         {/* HeaderTopbar */}
         <div className="flex items-center gap-3">
           <div className="relative">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="rounded-full text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
-              onClick={() => setIsSupportModalOpen(true)}
+            <Link 
+              href="/dashboard/salarie/support"
+              className="inline-flex items-center justify-center rounded-full h-10 w-10 text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
               title="Support Technique IT"
             >
               <LifeBuoy className="h-5 w-5" />
-            </Button>
+            </Link>
             {hasUnreadSupport && (
               <span className="absolute top-0 right-0 flex h-3 w-3">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
@@ -159,8 +155,6 @@ export function Header({ notificationsCount = 0 }: { notificationsCount?: number
           } />
         </div>
       </Container>
-      
-      <SupportTicketModal isOpen={isSupportModalOpen} onClose={() => setIsSupportModalOpen(false)} />
     </header>
   );
 }

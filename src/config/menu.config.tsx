@@ -120,6 +120,11 @@ export const MENU_SIDEBAR: MenuConfig = [
     icon: Siren,
     path: '/dashboard/salarie/regulation',
   },
+  {
+    title: 'Support Helpdesk IT',
+    icon: LifeBuoy,
+    path: '/dashboard/salarie/support',
+  },
   { heading: 'Support Technique' },
   {
     title: 'Tickets IT ServiceNow',
