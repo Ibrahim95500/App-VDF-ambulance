@@ -54,26 +54,25 @@ export function SidebarMenu() {
 
   // Filter menu based on role
   const filteredSidebarMenu = MENU_SIDEBAR.filter((item) => {
-    // 1. ADMIN voit TOUT sans exception
+    // 0. Masquer le menu IT strictement pour TOUT LE MONDE sauf SERVICE_IT (même l'Admin ne le verra pas dans son menu)
+    if (item.heading === 'Support Technique' || item.path?.startsWith('/dashboard/it')) {
+      return roles.includes('SERVICE_IT');
+    }
+
+    // 1. ADMIN voit TOUT le reste sans exception
     if (roles.includes('ADMIN')) return true;
 
     // 1bis. SERVICE_IT exclusif (si le user n'a QUE SERVICE_IT, il ne voit rien d'autre)
     if (roles.includes('SERVICE_IT') && roles.length === 1) {
-      if (item.heading === 'Support Technique' || item.path?.startsWith('/dashboard/it')) return true;
-      return false; // Il ne voit pas RH, ni Salarié, ni même VDF Ambulance
+      return false; // Puisque l'IT est déjà traité au-dessus, on masque tout le reste
     }
 
-    // 0bis. Si c'est l'accueil général (Dashboard), tout le monde le voit (sauf SERVICE_IT géré au-dessus)
+    // 0bis. Si c'est l'accueil général (Dashboard), tout le monde le voit
     if (item.path === '/dashboard') return true;
 
     const isRH = roles.includes('RH');
     const isSalarie = roles.includes('SALARIE');
     const isRegulateur = roles.includes('REGULATEUR') || (session?.user as any)?.isRegulateur;
-
-    // Masquer le menu IT pour les autres (seul ADMIN/SERVICE_IT y a accès)
-    if (item.heading === 'Support Technique' || item.path?.startsWith('/dashboard/it')) {
-      return roles.includes('SERVICE_IT');
-    }
 
     // 2. Section "Mes Démarches" (SALARIE)
     if (item.heading === 'Mes Démarches' || item.path?.startsWith('/dashboard/salarie')) {
