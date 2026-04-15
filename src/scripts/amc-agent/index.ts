@@ -567,6 +567,8 @@ async function startAgent() {
 
             let proofSent = false;
 
+            let redirectionCount = 0;
+
             console.log("⏳ Début de la boucle de surveillance (15s)...")
             while (true) {
                 if (page.isClosed()) {
@@ -654,9 +656,23 @@ async function startAgent() {
                 }
 
                 if (!page.url().includes("TransporteurAtraiter")) {
-                    console.log("⚠️ Redirection temporaire...")
-                    await new Promise(r => setTimeout(r, 5000))
+                    redirectionCount++;
+                    console.log(`⚠️ Redirection temporaire détectée (${page.url()})... (${redirectionCount}/3)`);
+                    
+                    if (redirectionCount > 3) {
+                        console.log("❌ Bloqué en redirection (Écran blanc/Timeout). Crash intentionnel pour forcer une reconnexion immédiate !");
+                        await sendTelegramAlert("⚠️ **ALERTE AUTO-RÉPARATION**\nLe robot s'est retrouvé bloqué sur une page blanche. Je redémarre instantanément mon système depuis zéro !");
+                        throw new Error("Redirection loop detected, forcing PM2 restart");
+                    }
+                    
+                    try {
+                        await page.goto(AMC_URL, { waitUntil: "networkidle", timeout: 10000 });
+                    } catch(e) {}
+                    
+                    await new Promise(r => setTimeout(r, 5000));
                     continue;
+                } else {
+                    redirectionCount = 0;
                 }
 
                 let hasRienAtraiter = true;
