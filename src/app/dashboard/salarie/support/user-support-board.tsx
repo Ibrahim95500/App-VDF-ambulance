@@ -128,7 +128,9 @@ export function UserSupportBoard({ initialTickets }: { initialTickets: any[] }) 
             toast.success("Votre incident a bien été transmis au support technique !");
             
             // Add to ticket list
-            setTickets([data, ...tickets]);
+            if (data.ticket) {
+                setTickets([data.ticket, ...tickets]);
+            }
             
             setSubject("");
             setDescription("");
