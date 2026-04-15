@@ -9,10 +9,9 @@ import { toast } from "sonner";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { ListFilter, LayoutGrid, AlertTriangle, ShieldCheck, HardDrive, Link as LinkIcon, Image as ImageIcon, CheckCircle, Save, Search } from "lucide-react";
+import { ListFilter, LayoutGrid, AlertTriangle, ShieldCheck, HardDrive, Link as LinkIcon, Image as ImageIcon, CheckCircle, Save, Search, MessageSquare, Clock, UserIcon, ArrowRight } from "lucide-react";
 import { ITSupportKpi } from "./it-support-kpi";
 import { Input } from "@/components/ui/input";
 
@@ -54,9 +53,33 @@ export function ITSupportBoard({ initialTickets }: { initialTickets: any[] }) {
         switch (status) {
             case "OPEN": return <span className="text-blue-400 border border-blue-400/30 bg-blue-500/10 px-2 py-1 rounded text-xs font-bold uppercase tracking-wider">OUVERT</span>;
             case "IN_PROGRESS": return <span className="text-orange-400 border border-orange-400/30 bg-orange-500/10 px-2 py-1 rounded text-xs font-bold uppercase tracking-wider">EN COURS</span>;
-            case "RESOLVED": return <span className="text-emerald-400 border border-emerald-400/30 bg-emerald-500/10 px-2 py-1 rounded text-xs font-bold uppercase tracking-wider">RÉSOLU</span>;
+            case "RESOLVED": return <span className="text-emerald-400 border border-emerald-400/30 bg-emerald-500/10 px-2 py-1 rounded text-xs font-bold uppercase tracking-wider shadow-[0_0_10px_rgba(16,185,129,0.2)]">RÉSOLU</span>;
             default: return <span className="text-slate-400 border border-slate-500/30 bg-slate-500/10 px-2 py-1 rounded text-xs font-bold uppercase tracking-wider">CLOS</span>;
         }
+    };
+
+    const parseDescriptionToTimeline = (desc: string) => {
+        if (!desc) return [];
+        const parts = desc.split('---').map(s => s.trim()).filter(Boolean);
+        const original = parts[0];
+        const timeline = [];
+        
+        timeline.push({ type: 'ORIGINAL', content: original });
+        
+        for (let i = 1; i < parts.length; i++) {
+            const p = parts[i];
+            if (p.startsWith('[RETOUR SALARIÉ')) {
+                const match = p.match(/\[RETOUR SALARIÉ - (.*?)\] :\s*([\s\S]*)/);
+                if (match) {
+                    timeline.push({ type: 'RETOUR', date: match[1], content: match[2] });
+                } else {
+                    timeline.push({ type: 'RETOUR', content: p });
+                }
+            } else {
+                timeline.push({ type: 'OTHER', content: p });
+            }
+        }
+        return timeline;
     };
 
     const handleStatusChange = async (newStatus: string) => {
@@ -273,127 +296,163 @@ export function ITSupportBoard({ initialTickets }: { initialTickets: any[] }) {
                 </TabsContent>
             </Tabs>
 
-            {/* TICKET DETAILS MODAL (PREMIUM DARK) */}
+            {/* TICKET DETAILS MODAL (PREMIUM HIGH-TECH) */}
             {selectedTicket && (
                 <Dialog open={!!selectedTicket} onOpenChange={(open) => !open && setSelectedTicket(null)}>
-                    <DialogContent className="sm:max-w-[750px] bg-[#0f172a] p-0 overflow-hidden border border-slate-700 shadow-[0_0_50px_rgba(0,0,0,0.8)]">
-                        <div className="bg-[#0B1120] px-6 py-5 flex justify-between items-start border-b border-slate-800">
-                            <div className="space-y-2 w-full pr-8">
-                                <div className="flex items-center gap-3 mb-1">
+                    <DialogContent className="sm:max-w-5xl lg:max-w-6xl w-full bg-[#0a0f1c] p-0 overflow-hidden border border-slate-800 shadow-[0_0_80px_rgba(0,100,255,0.05)]">
+                        <div className="bg-[#0f172a]/90 backdrop-blur-xl px-8 py-6 flex justify-between items-start border-b border-slate-800 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-[100px] pointer-events-none"></div>
+                            
+                            <div className="space-y-3 w-full pr-8 relative z-10">
+                                <div className="flex items-center gap-4">
                                     {getUrgencyBadge(selectedTicket.urgency)}
-                                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-auto">
-                                        ID #{selectedTicket.id.slice(-6).toUpperCase()}
+                                    <span className="text-xs font-black text-slate-500 uppercase tracking-widest bg-slate-900 px-3 py-1 rounded-md border border-slate-800">
+                                        INCIDENT #{selectedTicket.id.slice(-8).toUpperCase()}
                                     </span>
                                 </div>
-                                <DialogTitle className="text-xl font-bold text-white tracking-tight">{selectedTicket.subject}</DialogTitle>
-                                <DialogDescription className="text-xs font-bold text-slate-500 flex items-center gap-2">
-                                    <span className="w-2 h-2 rounded-full bg-slate-600"></span>
-                                    Signalé le {format(new Date(selectedTicket.createdAt), "dd MMMM yyyy à HH:mm", { locale: fr })}
+                                <DialogTitle className="text-3xl font-black text-white tracking-tight leading-tight">{selectedTicket.subject}</DialogTitle>
+                                <DialogDescription className="text-sm font-bold text-slate-400 flex items-center gap-3">
+                                    <Clock className="w-4 h-4 text-blue-400" />
+                                    Créé le {format(new Date(selectedTicket.createdAt), "dd MMMM yyyy à HH:mm", { locale: fr })}
                                 </DialogDescription>
                             </div>
                         </div>
 
-                        <div className="px-6 py-6 grid grid-cols-1 md:grid-cols-3 gap-8 min-h-[50vh] max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
+                        <div className="flex flex-col md:flex-row h-[75vh] 2xl:h-[80vh]">
                             
-                            {/* COLONNE GAUCHE : INFOS DU TICKET */}
-                            <div className="md:col-span-2 space-y-6">
-                                <section>
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <div className="h-1 w-4 bg-slate-600 rounded"></div>
-                                        <h4 className="text-xs font-black uppercase tracking-widest text-slate-400">Description détaillée</h4>
+                            {/* LEFT COLUMN : INTERACTIVE TIMELINE */}
+                            <div className="flex-1 border-r border-slate-800 overflow-y-auto bg-[#0B1120] scrollbar-thin scrollbar-thumb-slate-800 scrollbar-track-transparent">
+                                <div className="p-8 space-y-8">
+                                    <div className="flex items-center gap-3 mb-6">
+                                        <div className="h-0.5 w-8 bg-blue-500 rounded"></div>
+                                        <h4 className="text-sm font-black uppercase tracking-widest text-slate-400">Chronologie de l'incident</h4>
                                     </div>
-                                    <div className="bg-[#1e293b]/50 p-5 rounded-xl border border-slate-700/50 shadow-inner text-sm text-slate-300 whitespace-pre-wrap leading-relaxed">
-                                        {selectedTicket.description}
-                                    </div>
-                                    {selectedTicket.pageUrl && (
-                                        <a href={selectedTicket.pageUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 mt-4 text-xs font-bold uppercase tracking-wider text-blue-400 bg-blue-500/10 px-4 py-2.5 rounded-lg border border-blue-500/30 hover:bg-blue-500/20 hover:text-blue-300 transition-colors w-max">
-                                            <LinkIcon className="h-4 w-4" />
-                                            Ouvrir l'URL signalée
-                                        </a>
-                                    )}
-                                </section>
-
-                                {selectedTicket.imageUrl && (
-                                    <section>
-                                        <div className="flex items-center gap-2 mb-3">
-                                            <div className="h-1 w-4 bg-slate-600 rounded"></div>
-                                            <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
-                                                <ImageIcon className="h-4 w-4" /> Pièce jointe
-                                            </h4>
-                                        </div>
-                                        <div className="bg-[#1e293b]/50 p-2 rounded-xl border border-slate-700/50 flex justify-center">
-                                            <a href={selectedTicket.imageUrl} target="_blank" rel="noreferrer">
-                                                <img src={selectedTicket.imageUrl} className="max-w-full max-h-[300px] rounded-lg border border-slate-800 shadow-md hover:scale-[1.02] transition-transform cursor-pointer" alt="Capture jointe" />
-                                            </a>
-                                        </div>
-                                    </section>
-                                )}
-                            </div>
-
-                            {/* COLONNE DROITE : ACTIONS ET INFOS INTERNES */}
-                            <div className="space-y-6">
-                                <section className="bg-[#1e293b] p-5 rounded-2xl border border-slate-700 shadow-xl relative overflow-hidden">
-                                    {/* Subtils effets lumineux */}
-                                    <div className="absolute -top-10 -right-10 w-20 h-20 bg-blue-500/20 blur-3xl rounded-full"></div>
                                     
-                                    <div className="relative z-10 space-y-5">
-                                        <div>
-                                            <Label className="text-[10px] text-slate-400 font-black tracking-widest uppercase block mb-2">Changer le Statut</Label>
-                                            <Select value={selectedTicket.status} onValueChange={handleStatusChange}>
-                                                <SelectTrigger className="w-full bg-[#0f172a] border-slate-600 text-white font-bold shadow-inner">
-                                                    <SelectValue />
-                                                </SelectTrigger>
-                                                <SelectContent className="bg-[#1e293b] border-slate-700 text-white">
-                                                    <SelectItem value="OPEN" className="font-bold focus:bg-slate-700 focus:text-white">Ouvert</SelectItem>
-                                                    <SelectItem value="IN_PROGRESS" className="font-bold focus:bg-slate-700 focus:text-white">En Cours</SelectItem>
-                                                    <SelectItem value="RESOLVED" className="font-bold focus:bg-slate-700 focus:text-white">Résolu</SelectItem>
-                                                    <SelectItem value="CLOSED" className="font-bold focus:bg-slate-700 focus:text-white">Fermé (Archivé)</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        </div>
-
-                                        <div className="pt-5 border-t border-slate-700/50">
-                                            <Label className="text-[10px] text-slate-400 font-black tracking-widest uppercase block mb-3">Déclaré par</Label>
-                                            <div className="flex items-center gap-3">
-                                                <div className="h-10 w-10 uppercase rounded-full bg-[#0f172a] border-2 border-slate-600 flex items-center justify-center text-sm font-black text-white shadow-inner">
-                                                    {selectedTicket.user.firstName[0]}
+                                    <div className="relative space-y-8 before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-blue-500 before:via-slate-700 before:to-transparent">
+                                        
+                                        {parseDescriptionToTimeline(selectedTicket.description).map((item, idx) => (
+                                            <div key={idx} className="relative flex items-start justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                                                {/* Écrou de timeline */}
+                                                <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-[#0B1120] bg-slate-800 text-slate-400 shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow-[0_0_0_2px_rgba(59,130,246,0.2)] z-10 transition-transform group-hover:scale-110">
+                                                    {item.type === 'ORIGINAL' ? <AlertTriangle className="w-4 h-4 text-blue-400" /> : <MessageSquare className="w-4 h-4 text-orange-400" />}
                                                 </div>
-                                                <div>
-                                                    <div className="font-bold text-sm text-slate-200">{selectedTicket.user.firstName} {selectedTicket.user.lastName}</div>
-                                                    <div className="text-[9px] uppercase font-black tracking-widest text-slate-500 mt-0.5">
-                                                        {(selectedTicket.user.roles || []).join(', ')}
+                                                
+                                                {/* Carte contenu */}
+                                                <div className={`w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-[#151e32] border border-slate-700/60 p-5 rounded-2xl shadow-xl transition-all hover:border-slate-500 hover:shadow-2xl ${item.type === 'ORIGINAL' ? 'hover:shadow-blue-900/20' : 'hover:shadow-orange-900/20'}`}>
+                                                    <div className="flex items-center justify-between mb-3 text-xs font-bold text-slate-400 uppercase tracking-wider">
+                                                        {item.type === 'ORIGINAL' ? (
+                                                            <div className="flex items-center gap-2 text-blue-400">
+                                                                <UserIcon className="w-3 h-3" /> Déclaration initiale
+                                                            </div>
+                                                        ) : (
+                                                            <div className="flex items-center gap-2 text-orange-400">
+                                                                <ArrowRight className="w-3 h-3" /> Retour Salarié
+                                                            </div>
+                                                        )}
+                                                        {item.date && <span>{item.date}</span>}
+                                                    </div>
+                                                    <div className="text-slate-300 whitespace-pre-wrap font-medium leading-relaxed text-sm">
+                                                        {item.content}
                                                     </div>
                                                 </div>
                                             </div>
+                                        ))}
+
+                                    </div>
+
+                                    {selectedTicket.pageUrl && (
+                                        <div className="mt-8 flex justify-center">
+                                            <a href={selectedTicket.pageUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-3 text-xs font-black uppercase tracking-widest text-[#0a0f1c] bg-blue-500 px-6 py-4 rounded-xl shadow-[0_0_20px_rgba(59,130,246,0.5)] hover:bg-blue-400 hover:scale-105 transition-all">
+                                                <LinkIcon className="h-5 w-5" />
+                                                Accéder à l'URL Signalée
+                                            </a>
+                                        </div>
+                                    )}
+
+                                    {selectedTicket.imageUrl && (
+                                        <div className="mt-10 border-t border-slate-800 pt-8">
+                                            <div className="flex items-center gap-3 mb-6">
+                                                <div className="h-0.5 w-8 bg-slate-600 rounded"></div>
+                                                <h4 className="text-sm font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                                                    <ImageIcon className="h-4 w-4" /> Analyse Visuelle (Capture)
+                                                </h4>
+                                            </div>
+                                            <a href={selectedTicket.imageUrl} target="_blank" rel="noreferrer" className="block relative group overflow-hidden rounded-2xl border border-slate-700 bg-black">
+                                                <img src={selectedTicket.imageUrl} className="w-full object-contain opacity-90 group-hover:opacity-100 group-hover:scale-[1.02] transition-all duration-500" alt="Capture d'écran jointe" />
+                                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end justify-center pb-6 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <span className="text-white font-bold text-sm tracking-widest uppercase flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full">
+                                                        <Search className="w-4 h-4" /> Agrandir
+                                                    </span>
+                                                </div>
+                                            </a>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* RIGHT COLUMN : ACTION CENTER */}
+                            <div className="w-full md:w-[400px] bg-[#0f172a] shadow-[-10px_0_30px_rgba(0,0,0,0.5)] flex flex-col z-20">
+                                <div className="p-8 border-b border-slate-800">
+                                    <Label className="text-xs text-slate-400 font-black tracking-widest uppercase block mb-4 flex items-center gap-2">
+                                        <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
+                                        État du Système
+                                    </Label>
+                                    <Select value={selectedTicket.status} onValueChange={handleStatusChange}>
+                                        <SelectTrigger className="w-full h-14 bg-[#0B1120] border-slate-700 text-white font-black text-sm tracking-widest uppercase shadow-inner hover:border-slate-500 transition-colors">
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent className="bg-[#1e293b] border-slate-700 text-white">
+                                            <SelectItem value="OPEN" className="font-bold py-3">🔴 Ouvert</SelectItem>
+                                            <SelectItem value="IN_PROGRESS" className="font-bold py-3">🟠 En Cours d'analyse</SelectItem>
+                                            <SelectItem value="RESOLVED" className="font-bold py-3">🟢 Résolu (En attente confirmation)</SelectItem>
+                                            <SelectItem value="CLOSED" className="font-bold py-3">⚪ Fermé et Archivé</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                <div className="p-8 border-b border-slate-800 bg-[#151e32]/30">
+                                    <Label className="text-xs text-slate-400 font-black tracking-widest uppercase block mb-6">Identification Salarié</Label>
+                                    <div className="flex items-center gap-4 bg-[#0a0f1c] p-4 rounded-2xl border border-slate-800/50 shadow-inner">
+                                        <div className="h-14 w-14 uppercase rounded-full bg-gradient-to-br from-slate-700 to-slate-900 border-2 border-slate-600 flex items-center justify-center text-xl font-black text-white shadow-lg">
+                                            {selectedTicket.user.firstName[0]}{selectedTicket.user.lastName[0]}
+                                        </div>
+                                        <div>
+                                            <div className="font-black text-lg text-white">{selectedTicket.user.firstName} {selectedTicket.user.lastName}</div>
+                                            <div className="text-[10px] uppercase font-bold tracking-widest text-slate-500 mt-1 flex flex-wrap gap-1">
+                                                {(selectedTicket.user.roles || []).map((r: string) => (
+                                                    <span key={r} className="bg-slate-800 px-2 py-0.5 rounded">{r}</span>
+                                                ))}
+                                            </div>
                                         </div>
                                     </div>
-                                </section>
+                                </div>
 
-                                <section className="flex flex-col h-full">
-                                    <Label className="text-[10px] text-slate-400 font-black tracking-widest uppercase block mb-2 flex items-center justify-between">
-                                        Note Interne IT
-                                        <span className="text-[9px] text-slate-500 font-normal normal-case">Visible par le salarié en "Résolu"</span>
+                                <div className="flex-1 flex flex-col p-8 bg-gradient-to-b from-transparent to-[#0B1120]">
+                                    <Label className="text-xs text-slate-400 font-black tracking-widest uppercase block mb-4 flex items-center justify-between">
+                                        Terminal de Résolution
+                                        <span className="text-[10px] text-blue-400 font-medium normal-case bg-blue-500/10 px-2 py-1 rounded">Visible par le salarié</span>
                                     </Label>
-                                    <Textarea 
-                                        className="bg-[#1e293b] border-slate-700 border-b-0 text-slate-300 text-sm h-32 rounded-t-xl rounded-b-none focus-visible:ring-1 focus-visible:ring-blue-500 placeholder:text-slate-600 resize-none font-medium" 
-                                        placeholder="Écrivez votre rapport de résolution..."
-                                        value={tempComment}
-                                        onChange={(e) => setTempComment(e.target.value)}
-                                        maxLength={2000}
-                                    />
-                                    <div className="bg-[#0f172a] border border-slate-700 border-t-0 p-2 rounded-b-xl flex justify-between items-center">
-                                        <span className="text-[9px] font-bold text-slate-500 px-2">{tempComment.length} / 2000</span>
-                                        <Button 
-                                            size="sm" 
-                                            className="h-7 text-[10px] font-black uppercase tracking-wider bg-blue-600 hover:bg-blue-500 text-white rounded-lg shadow-[0_0_10px_rgba(37,99,235,0.3)] transition-all"
-                                            onClick={handleCommentSave}
-                                            disabled={isSaving}
-                                        >
-                                            <Save className="w-3 h-3 mr-1.5" />
-                                            Enregistrer
-                                        </Button>
+                                    <div className="relative flex-1 flex flex-col">
+                                        <Textarea 
+                                            className="flex-1 bg-[#0a0f1c] border-slate-700 text-green-400 text-sm p-5 rounded-2xl rounded-b-none focus-visible:ring-1 focus-visible:ring-blue-500 placeholder:text-slate-700 font-mono resize-none shadow-inner" 
+                                            placeholder="> Rédigez le log de résolution technique ici..."
+                                            value={tempComment}
+                                            onChange={(e) => setTempComment(e.target.value)}
+                                            maxLength={2000}
+                                        />
+                                        <div className="bg-[#1e293b] border border-slate-700 border-t-0 p-3 rounded-b-2xl flex justify-between items-center shadow-lg">
+                                            <span className="text-[10px] font-mono font-bold text-slate-500 px-2">BYTES: {tempComment.length}/2000</span>
+                                            <Button 
+                                                className="bg-blue-600 hover:bg-blue-500 text-white font-black uppercase tracking-widest text-xs px-6 shadow-[0_0_15px_rgba(37,99,235,0.4)] hover:shadow-[0_0_25px_rgba(37,99,235,0.6)] transition-all"
+                                                onClick={handleCommentSave}
+                                                disabled={isSaving}
+                                            >
+                                                <Save className="w-4 h-4 mr-2" />
+                                                Commit
+                                            </Button>
+                                        </div>
                                     </div>
-                                </section>
+                                </div>
                             </div>
                         </div>
                     </DialogContent>
