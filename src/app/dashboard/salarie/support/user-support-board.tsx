@@ -515,7 +515,7 @@ export function UserSupportBoard({ initialTickets }: { initialTickets: any[] }) 
                                             </div>
                                         ))}
 
-                                        {idx === 0 && selectedTicket.pageUrl && selectedTicket.pageUrl.length > 5 && (
+                                        {selectedTicket.pageUrl && selectedTicket.pageUrl.length > 5 && (
                                             <div className="relative flex items-center justify-center md:items-start group is-active mt-6">
                                                 <div className="w-[calc(100%-3rem)] md:w-full flex justify-center ml-2 md:ml-0 z-10">
                                                     <a href={selectedTicket.pageUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-full text-xs font-bold shadow-[0_0_20px_rgba(37,99,235,0.4)] transition-all hover:scale-105 active:scale-95 border border-blue-400">
