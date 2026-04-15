@@ -121,7 +121,7 @@ export const MENU_SIDEBAR: MenuConfig = [
     path: '/dashboard/salarie/regulation',
   },
   {
-    title: 'Support Helpdesk IT',
+    title: 'Signaler un Bug',
     icon: LifeBuoy,
     path: '/dashboard/salarie/support',
   },

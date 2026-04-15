@@ -127,7 +127,7 @@ export function Header({ notificationsCount = 0 }: { notificationsCount?: number
             <Link 
               href="/dashboard/salarie/support"
               className="inline-flex items-center justify-center rounded-full h-10 w-10 text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-colors"
-              title="Support Technique IT"
+              title="Signaler un Bug"
             >
               <LifeBuoy className="h-5 w-5" />
             </Link>

@@ -35,10 +35,10 @@ export default async function UserSupportPage() {
             <div className="mb-6">
                 <h1 className="text-3xl font-extrabold flex items-center gap-3 text-white tracking-tight">
                     <LifeBuoy className="h-8 w-8 text-blue-500" />
-                    Mon Support Helpdesk
+                    Signaler un Bug
                 </h1>
                 <p className="text-slate-400 mt-2 text-sm max-w-2xl">
-                    Suivez la résolution de vos incidents techniques. Interagissez avec l'équipe IT en temps réel.
+                    Un bouton qui ne marche pas ? Un problème d'affichage ? Déclarez-le ici pour que l'équipe technique puisse le corriger rapidement.
                 </p>
             </div>
 
