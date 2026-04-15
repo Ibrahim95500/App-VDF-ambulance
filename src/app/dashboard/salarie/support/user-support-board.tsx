@@ -21,6 +21,7 @@ export function UserSupportBoard({ initialTickets }: { initialTickets: any[] }) 
     const [selectedTicket, setSelectedTicket] = useState<any | null>(null);
     const [tempComment, setTempComment] = useState("");
     const [isSaving, setIsSaving] = useState(false);
+    const [feedbackImageStr, setFeedbackImageStr] = useState<string | null>(null);
     
     // Create new ticket state
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -68,6 +69,27 @@ export function UserSupportBoard({ initialTickets }: { initialTickets: any[] }) 
         const reader = new FileReader();
         reader.onloadend = () => {
             setImageStr(reader.result as string);
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const handleFeedbackImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        if (!file.type.startsWith("image/")) {
+            toast.error("Veuillez sélectionner une image valide.");
+            return;
+        }
+
+        if (file.size > 5 * 1024 * 1024) { // 5MB limit
+            toast.error("L'image est trop volumineuse (maximum 5Mo).");
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            setFeedbackImageStr(reader.result as string);
         };
         reader.readAsDataURL(file);
     };
@@ -138,6 +160,17 @@ export function UserSupportBoard({ initialTickets }: { initialTickets: any[] }) 
         }
     };
 
+    const parseTimelineItem = (type: string, dateStr: string | undefined, contentWithImage: string) => {
+        let content = contentWithImage;
+        let image = null;
+        if (content.includes('[IMAGE_ATTACHED]:')) {
+            const parts = content.split('[IMAGE_ATTACHED]:');
+            content = parts[0].trim();
+            image = parts[1].trim();
+        }
+        return { type, date: dateStr, content, image };
+    };
+
     const parseDescriptionToTimeline = (desc: string) => {
         if (!desc) return [];
         const parts = desc.split('---').map(s => s.trim()).filter(Boolean);
@@ -151,16 +184,16 @@ export function UserSupportBoard({ initialTickets }: { initialTickets: any[] }) 
             if (p.startsWith('[RETOUR SALARIÉ')) {
                 const match = p.match(/\[RETOUR SALARIÉ - (.*?)\] :\s*([\s\S]*)/);
                 if (match) {
-                    timeline.push({ type: 'SALARIE', date: match[1], content: match[2] });
+                    timeline.push(parseTimelineItem('SALARIE', match[1], match[2]));
                 } else {
-                    timeline.push({ type: 'SALARIE', content: p });
+                    timeline.push(parseTimelineItem('SALARIE', undefined, p));
                 }
             } else if (p.startsWith('[RETOUR SUPPORT IT')) {
                 const match = p.match(/\[RETOUR SUPPORT IT - (.*?)\] :\s*([\s\S]*)/);
                 if (match) {
-                    timeline.push({ type: 'IT', date: match[1], content: match[2] });
+                    timeline.push(parseTimelineItem('IT', match[1], match[2]));
                 } else {
-                    timeline.push({ type: 'IT', content: p });
+                    timeline.push(parseTimelineItem('IT', undefined, p));
                 }
             } else {
                 timeline.push({ type: 'OTHER', content: p });
@@ -197,20 +230,24 @@ export function UserSupportBoard({ initialTickets }: { initialTickets: any[] }) 
 
             setIsSaving(true);
             try {
-                const res = await salarieUpdateTicketStatus(selectedTicket.id, "IN_PROGRESS", tempComment);
+                const res = await salarieUpdateTicketStatus(selectedTicket.id, "IN_PROGRESS", tempComment, feedbackImageStr || undefined);
                 if (res.error) throw new Error(res.error);
                 
                 toast.success("Votre retour a été envoyé au support !");
                 
                 // Optimistic UI Update
                 const dateStr = new Date().toLocaleDateString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-                const newDesc = selectedTicket.description + `\n\n--- \n[RETOUR SALARIÉ - ${dateStr}] :\n${tempComment}`;
+                let newDesc = selectedTicket.description + `\n\n--- \n[RETOUR SALARIÉ - ${dateStr}] :\n${tempComment}`;
+                if (feedbackImageStr) {
+                    newDesc += `\n[IMAGE_ATTACHED]:${feedbackImageStr}`;
+                }
                 
                 const updatedTicket = { ...selectedTicket, description: newDesc, status: "IN_PROGRESS" };
                 setSelectedTicket(updatedTicket);
                 setTickets(tickets.map(t => t.id === selectedTicket.id ? updatedTicket : t));
                 
                 setTempComment("");
+                setFeedbackImageStr(null);
             } catch (e: any) {
                 toast.error(e.message || "Erreur lors de la mise à jour");
             } finally {
@@ -574,6 +611,16 @@ export function UserSupportBoard({ initialTickets }: { initialTickets: any[] }) 
                                                     <div className="text-slate-200 text-xs md:text-sm leading-relaxed whitespace-pre-wrap font-medium">
                                                         {item.content}
                                                     </div>
+                                                    {item.image && (
+                                                        <div className="mt-3 overflow-hidden rounded-xl border border-slate-700/50 cursor-pointer group/img" onClick={() => window.open(item.image, '_blank')}>
+                                                            <div className="relative">
+                                                                <img src={item.image} alt="Capture jointe" className="w-full max-h-48 object-contain bg-black/40 group-hover/img:opacity-75 transition-opacity" />
+                                                                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity">
+                                                                    <ImageIcon className="w-8 h-8 text-white drop-shadow-md" />
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
                                         ))}
@@ -631,15 +678,30 @@ export function UserSupportBoard({ initialTickets }: { initialTickets: any[] }) 
                                             </p>
                                         </div>
                                         
-                                        <div className="flex-1 p-3 bg-black flex flex-col relative font-mono group">
+                                        <div className="flex-1 p-3 bg-black flex flex-col justify-between relative font-mono group">
                                             <textarea 
                                                 value={tempComment}
                                                 onChange={e => setTempComment(e.target.value)}
                                                 placeholder={"> Si non, précisez le problème ici avant de répondre..."}
-                                                className="flex-1 bg-transparent text-green-500 resize-none outline-none text-[12px] sm:text-sm placeholder:text-green-900 selection:bg-green-500 selection:text-black py-2 custom-scrollbar focus:ring-0 w-full"
+                                                className="flex-1 bg-transparent text-green-500 resize-none outline-none text-[12px] sm:text-sm placeholder:text-green-900 selection:bg-green-500 selection:text-black py-2 custom-scrollbar focus:ring-0 w-full min-h-[80px]"
                                                 spellCheck={false}
                                                 disabled={isSaving}
                                             />
+                                            {feedbackImageStr ? (
+                                                <div className="mt-2 relative inline-block self-start">
+                                                    <img src={feedbackImageStr} className="h-16 rounded-md border border-slate-700 object-contain" />
+                                                    <Button variant="destructive" size="icon" className="absolute -top-2 -right-2 w-5 h-5 rounded-full shadow-lg" onClick={() => setFeedbackImageStr(null)} type="button">
+                                                        <X className="w-3 h-3" />
+                                                    </Button>
+                                                </div>
+                                            ) : (
+                                                <div className="mt-2 pt-2 border-t border-green-900/30">
+                                                    <label htmlFor="feedback-image" className="cursor-pointer inline-flex items-center gap-2 text-xs text-green-700 hover:text-green-500 transition-colors">
+                                                        <ImageIcon className="w-4 h-4" /> Joindre une capture d'écran
+                                                    </label>
+                                                    <input id="feedback-image" type="file" accept="image/*" className="hidden" onChange={handleFeedbackImageUpload} />
+                                                </div>
+                                            )}
                                         </div>
                                         
                                         <div className="p-3 bg-[#0B1120] border-t border-slate-800 flex flex-col sm:flex-row gap-2 justify-between items-center z-10 shrink-0">

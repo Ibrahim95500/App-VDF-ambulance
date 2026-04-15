@@ -97,7 +97,7 @@ export async function updateTicketStatus(ticketId: string, status: "OPEN" | "IN_
     }
 }
 
-export async function salarieUpdateTicketStatus(ticketId: string, status: "CLOSED" | "IN_PROGRESS", userComment?: string) {
+export async function salarieUpdateTicketStatus(ticketId: string, status: "CLOSED" | "IN_PROGRESS", userComment?: string, userImageBase64?: string) {
     try {
         const currentTicket = await prisma.supportTicket.findUnique({
             where: { id: ticketId },
@@ -105,9 +105,12 @@ export async function salarieUpdateTicketStatus(ticketId: string, status: "CLOSE
         });
 
         let newDescription = currentTicket?.description || "";
-        if (userComment) {
+        if (userComment || userImageBase64) {
             const dateStr = new Date().toLocaleDateString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-            newDescription += `\n\n--- \n[RETOUR SALARIÉ - ${dateStr}] :\n${userComment}`;
+            newDescription += `\n\n--- \n[RETOUR SALARIÉ - ${dateStr}] :\n${userComment || ''}`;
+            if (userImageBase64) {
+                newDescription += `\n[IMAGE_ATTACHED]:${userImageBase64}`;
+            }
         }
 
         const ticket = await prisma.supportTicket.update({
