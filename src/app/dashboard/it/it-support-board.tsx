@@ -6,39 +6,41 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { updateTicketStatus } from "@/actions/it-support.actions";
 import { toast } from "sonner";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Search, ListFilter, LayoutGrid, Clock, AlertTriangle, ShieldCheck, HardDrive, Link as LinkIcon, Image as ImageIcon } from "lucide-react";
+import { ListFilter, LayoutGrid, AlertTriangle, ShieldCheck, HardDrive, Link as LinkIcon, Image as ImageIcon, CheckCircle, Save } from "lucide-react";
 
 export function ITSupportBoard({ initialTickets }: { initialTickets: any[] }) {
     const [tickets, setTickets] = useState(initialTickets);
     const [selectedTicket, setSelectedTicket] = useState<any | null>(null);
+    const [tempComment, setTempComment] = useState("");
+    const [isSaving, setIsSaving] = useState(false);
 
     const getUrgencyBadge = (urg: string) => {
         switch (urg) {
-            case "CRITICAL": return <Badge className="bg-red-600 hover:bg-red-700 animate-pulse">CRITIQUE</Badge>;
-            case "HIGH": return <Badge className="bg-orange-500 hover:bg-orange-600">HAUTE</Badge>;
-            case "MEDIUM": return <Badge className="bg-yellow-500 hover:bg-yellow-600">MOYENNE</Badge>;
-            default: return <Badge className="bg-slate-500 hover:bg-slate-600">BASSE</Badge>;
+            case "CRITICAL": return <span className="bg-red-500/10 text-red-500 border border-red-500/30 px-2 py-0.5 rounded text-[10px] uppercase font-black tracking-widest shadow-[0_0_10px_rgba(239,68,68,0.2)]">CRITIQUE</span>;
+            case "HIGH": return <span className="bg-orange-500/10 text-orange-500 border border-orange-500/30 px-2 py-0.5 rounded text-[10px] uppercase font-black tracking-widest">HAUTE</span>;
+            case "MEDIUM": return <span className="bg-blue-500/10 text-blue-400 border border-blue-500/30 px-2 py-0.5 rounded text-[10px] uppercase font-black tracking-widest">MOYENNE</span>;
+            default: return <span className="bg-slate-500/10 text-slate-400 border border-slate-500/30 px-2 py-0.5 rounded text-[10px] uppercase font-black tracking-widest">BASSE</span>;
         }
     };
 
     const getStatusBadge = (status: string) => {
         switch (status) {
-            case "OPEN": return <Badge variant="outline" className="text-blue-600 border-blue-600 bg-blue-50">OUVERT</Badge>;
-            case "IN_PROGRESS": return <Badge variant="outline" className="text-orange-600 border-orange-600 bg-orange-50">EN COURS</Badge>;
-            case "RESOLVED": return <Badge variant="outline" className="text-green-600 border-green-600 bg-green-50">RÉSOLU</Badge>;
-            default: return <Badge variant="outline" className="text-slate-600 border-slate-600 bg-slate-50">CLOS</Badge>;
+            case "OPEN": return <span className="text-blue-400 border border-blue-400/30 bg-blue-500/10 px-2 py-1 rounded text-xs font-bold uppercase tracking-wider">OUVERT</span>;
+            case "IN_PROGRESS": return <span className="text-orange-400 border border-orange-400/30 bg-orange-500/10 px-2 py-1 rounded text-xs font-bold uppercase tracking-wider">EN COURS</span>;
+            case "RESOLVED": return <span className="text-emerald-400 border border-emerald-400/30 bg-emerald-500/10 px-2 py-1 rounded text-xs font-bold uppercase tracking-wider">RÉSOLU</span>;
+            default: return <span className="text-slate-400 border border-slate-500/30 bg-slate-500/10 px-2 py-1 rounded text-xs font-bold uppercase tracking-wider">CLOS</span>;
         }
     };
 
     const handleStatusChange = async (newStatus: string) => {
         if (!selectedTicket) return;
-        const res = await updateTicketStatus(selectedTicket.id, newStatus as any, selectedTicket.adminComment);
+        const res = await updateTicketStatus(selectedTicket.id, newStatus as any, tempComment);
         if (res.success) {
             toast.success(`Le ticket est passé en ${newStatus}`);
             setTickets(tickets.map(t => t.id === selectedTicket.id ? { ...t, status: newStatus } : t));
@@ -48,63 +50,71 @@ export function ITSupportBoard({ initialTickets }: { initialTickets: any[] }) {
         }
     };
 
-    const handleCommentSave = async (comment: string) => {
+    const handleCommentSave = async () => {
         if (!selectedTicket) return;
-        const res = await updateTicketStatus(selectedTicket.id, selectedTicket.status, comment);
-        if (res.success) {
-            toast.success(`Note interne sauvegardée`);
-            setTickets(tickets.map(t => t.id === selectedTicket.id ? { ...t, adminComment: comment } : t));
-            setSelectedTicket({ ...selectedTicket, adminComment: comment });
-        } else {
-            toast.error(res.error);
+        setIsSaving(true);
+        try {
+            const res = await updateTicketStatus(selectedTicket.id, selectedTicket.status, tempComment);
+            if (res.success) {
+                toast.success(`Note interne sauvegardée avec succès`);
+                setTickets(tickets.map(t => t.id === selectedTicket.id ? { ...t, adminComment: tempComment } : t));
+                setSelectedTicket({ ...selectedTicket, adminComment: tempComment });
+            } else {
+                toast.error(res.error);
+            }
+        } finally {
+            setIsSaving(false);
         }
     };
 
     // VUE KANBAN
-    const KanbanColumn = ({ title, statusId, icon: Icon, tickets: colTickets }: any) => (
-        <div className="flex-1 min-w-[300px] bg-slate-100/50 rounded-xl border border-slate-200 p-4 flex flex-col h-[70vh]">
-            <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-200">
-                <h3 className="font-bold flex items-center gap-2 text-slate-700">
-                    <Icon className="h-5 w-5" />
+    const KanbanColumn = ({ title, statusId, icon: Icon, colorClass, tickets: colTickets }: any) => (
+        <div className="flex-1 min-w-[320px] bg-[#0B1120] rounded-2xl border border-slate-800 p-4 flex flex-col h-[65vh] shadow-[inset_0_2px_20px_rgba(0,0,0,0.5)]">
+            <div className="flex items-center justify-between mb-5 pb-3 border-b border-slate-800">
+                <h3 className={`font-black uppercase tracking-widest text-xs flex items-center gap-2 ${colorClass}`}>
+                    <Icon className="h-4 w-4" />
                     {title}
                 </h3>
-                <span className="bg-white text-slate-600 text-xs font-bold px-2.5 py-1 rounded-full shadow-sm">
+                <span className="bg-slate-800 text-slate-300 text-[10px] font-black px-2.5 py-1 rounded-md shadow-sm border border-slate-700">
                     {colTickets.length}
                 </span>
             </div>
-            <div className="flex-1 overflow-y-auto space-y-3 pb-4">
+            <div className="flex-1 overflow-y-auto space-y-4 pb-4 scrollbar-thin scrollbar-thumb-slate-800 scrollbar-track-transparent">
                 {colTickets.map((t: any) => (
                     <div 
                         key={t.id} 
-                        onClick={() => setSelectedTicket(t)}
-                        className="bg-white border hover:border-blue-400 border-slate-200 p-4 rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer group"
+                        onClick={() => {
+                            setSelectedTicket(t);
+                            setTempComment(t.adminComment || "");
+                        }}
+                        className="bg-[#151e32] border border-slate-700 p-5 rounded-xl shadow-lg hover:shadow-cyan-900/20 hover:border-blue-500/50 transition-all cursor-pointer group relative overflow-hidden"
                     >
-                        <div className="flex justify-between items-start mb-2 gap-2">
+                        <div className="absolute top-0 left-0 w-1 h-full bg-slate-700 group-hover:bg-blue-500 transition-colors"></div>
+                        
+                        <div className="flex justify-between items-start mb-3 gap-2">
                             {getUrgencyBadge(t.urgency)}
-                            <span className="text-[10px] text-slate-400 font-medium">#{t.id.slice(-6).toUpperCase()}</span>
+                            <span className="text-[10px] text-slate-500 font-bold bg-[#0B1120] px-2 py-0.5 rounded border border-slate-800">#{t.id.slice(-6).toUpperCase()}</span>
                         </div>
-                        <h4 className="font-bold text-sm text-slate-800 line-clamp-2 leading-tight mb-2 group-hover:text-blue-700">
+                        <h4 className="font-bold text-sm text-slate-200 line-clamp-2 leading-snug mb-3 group-hover:text-white transition-colors">
                             {t.subject}
                         </h4>
-                        <p className="text-xs text-slate-500 line-clamp-2 mb-3">
-                            {t.description}
-                        </p>
-                        <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+                        
+                        <div className="flex items-center justify-between pt-4 border-t border-slate-800 mt-2">
                             <div className="flex items-center gap-2">
-                                <div className="h-6 w-6 uppercase rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-600">
+                                <div className="h-6 w-6 uppercase rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-[9px] font-black text-slate-300">
                                     {t.user.firstName[0]}{t.user.lastName[0]}
                                 </div>
-                                <span className="text-[11px] font-medium text-slate-500">{t.user.firstName}</span>
+                                <span className="text-[11px] font-medium text-slate-400">{t.user.firstName}</span>
                             </div>
-                            <span className="text-[11px] text-slate-400">
+                            <span className="text-[10px] font-bold text-slate-500">
                                 {format(new Date(t.createdAt), "dd MMM HH:mm", { locale: fr })}
                             </span>
                         </div>
                     </div>
                 ))}
                 {colTickets.length === 0 && (
-                    <div className="h-full flex items-center justify-center text-slate-400 text-sm italic">
-                        Aucun ticket
+                    <div className="h-full flex items-center justify-center">
+                        <span className="text-slate-600 text-xs font-bold uppercase tracking-widest italic opacity-50">Aucun ticket</span>
                     </div>
                 )}
             </div>
@@ -113,30 +123,43 @@ export function ITSupportBoard({ initialTickets }: { initialTickets: any[] }) {
 
     // VUE TABLE
     const TableView = () => (
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+        <div className="bg-[#0B1120] rounded-2xl border border-slate-800 overflow-hidden shadow-2xl">
             <table className="w-full text-sm text-left">
-                <thead className="bg-slate-50 text-slate-600 text-xs uppercase font-bold border-b border-slate-200">
+                <thead className="bg-[#151e32] text-slate-400 text-[10px] uppercase font-black tracking-widest border-b border-slate-800">
                     <tr>
                         <th className="px-6 py-4">ID</th>
                         <th className="px-6 py-4">Urgence</th>
-                        <th className="px-6 py-4">Sujet</th>
+                        <th className="px-6 py-4 w-1/3">Sujet</th>
                         <th className="px-6 py-4">Déclaré par</th>
                         <th className="px-6 py-4">Date</th>
                         <th className="px-6 py-4">Statut</th>
                     </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-800">
                     {tickets.map(t => (
-                        <tr key={t.id} onClick={() => setSelectedTicket(t)} className="hover:bg-slate-50 cursor-pointer group">
-                            <td className="px-6 py-4 font-mono text-xs text-slate-400">#{t.id.slice(-6).toUpperCase()}</td>
+                        <tr 
+                            key={t.id} 
+                            onClick={() => {
+                                setSelectedTicket(t);
+                                setTempComment(t.adminComment || "");
+                            }} 
+                            className="hover:bg-[#1e293b] transition-colors cursor-pointer group"
+                        >
+                            <td className="px-6 py-4 font-mono text-[11px] font-bold text-slate-500 group-hover:text-blue-400 transition-colors">#{t.id.slice(-6).toUpperCase()}</td>
                             <td className="px-6 py-4">{getUrgencyBadge(t.urgency)}</td>
-                            <td className="px-6 py-4 font-medium text-slate-800 group-hover:text-blue-600">{t.subject}</td>
+                            <td className="px-6 py-4 font-bold text-slate-300 group-hover:text-white transition-colors">{t.subject}</td>
                             <td className="px-6 py-4">
-                                <div className="flex items-center gap-2">
-                                    <span className="font-medium">{t.user.firstName} {t.user.lastName}</span>
+                                <div className="flex items-center gap-3">
+                                    <div className="h-7 w-7 uppercase rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-[10px] font-black text-slate-300">
+                                        {t.user.firstName[0]}{t.user.lastName[0]}
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="font-bold text-xs text-slate-300">{t.user.firstName} {t.user.lastName}</span>
+                                        <span className="text-[9px] uppercase font-bold text-slate-500">{(t.user.roles || []).join(', ')}</span>
+                                    </div>
                                 </div>
                             </td>
-                            <td className="px-6 py-4 text-slate-500">{format(new Date(t.createdAt), "dd/MM/yy HH:mm", { locale: fr })}</td>
+                            <td className="px-6 py-4 text-xs font-bold text-slate-500">{format(new Date(t.createdAt), "dd/MM/yy HH:mm", { locale: fr })}</td>
                             <td className="px-6 py-4">{getStatusBadge(t.status)}</td>
                         </tr>
                     ))}
@@ -149,21 +172,21 @@ export function ITSupportBoard({ initialTickets }: { initialTickets: any[] }) {
         <div>
             <Tabs defaultValue="kanban" className="w-full">
                 <div className="flex items-center justify-between mb-6">
-                    <TabsList className="bg-slate-100 p-1">
-                        <TabsTrigger value="kanban" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">
-                            <LayoutGrid className="h-4 w-4 mr-2" /> Vue Kanban
+                    <TabsList className="bg-[#0B1120] border border-slate-800 p-1 rounded-xl">
+                        <TabsTrigger value="kanban" className="data-[state=active]:bg-[#1e293b] data-[state=active]:text-white text-slate-400 font-bold text-xs rounded-lg px-4 py-2">
+                            <LayoutGrid className="h-4 w-4 mr-2" /> VUE KANBAN
                         </TabsTrigger>
-                        <TabsTrigger value="table" className="data-[state=active]:bg-white data-[state=active]:shadow-sm">
-                            <ListFilter className="h-4 w-4 mr-2" /> Vue Liste
+                        <TabsTrigger value="table" className="data-[state=active]:bg-[#1e293b] data-[state=active]:text-white text-slate-400 font-bold text-xs rounded-lg px-4 py-2">
+                            <ListFilter className="h-4 w-4 mr-2" /> VUE LISTE
                         </TabsTrigger>
                     </TabsList>
                 </div>
 
                 <TabsContent value="kanban" className="mt-0">
-                    <div className="flex gap-4 overflow-x-auto pb-4">
-                        <KanbanColumn title="Nouveaux & Ouverts" statusId="OPEN" icon={AlertTriangle} tickets={tickets.filter(t => t.status === "OPEN")} />
-                        <KanbanColumn title="En Cours d'analyse" statusId="IN_PROGRESS" icon={HardDrive} tickets={tickets.filter(t => t.status === "IN_PROGRESS")} />
-                        <KanbanColumn title="Résolus" statusId="RESOLVED" icon={ShieldCheck} tickets={tickets.filter(t => t.status === "RESOLVED")} />
+                    <div className="flex gap-5 overflow-x-auto pb-4">
+                        <KanbanColumn title="Nouveaux & Ouverts" statusId="OPEN" icon={AlertTriangle} colorClass="text-blue-400" tickets={tickets.filter(t => t.status === "OPEN")} />
+                        <KanbanColumn title="En Cours d'analyse" statusId="IN_PROGRESS" icon={HardDrive} colorClass="text-orange-400" tickets={tickets.filter(t => t.status === "IN_PROGRESS")} />
+                        <KanbanColumn title="Résolus & Clôturés" statusId="RESOLVED" icon={ShieldCheck} colorClass="text-emerald-400" tickets={tickets.filter(t => t.status === "RESOLVED" || t.status === "CLOSED")} />
                     </div>
                 </TabsContent>
 
@@ -172,97 +195,126 @@ export function ITSupportBoard({ initialTickets }: { initialTickets: any[] }) {
                 </TabsContent>
             </Tabs>
 
-            {/* TICKET DETAILS MODAL */}
+            {/* TICKET DETAILS MODAL (PREMIUM DARK) */}
             {selectedTicket && (
                 <Dialog open={!!selectedTicket} onOpenChange={(open) => !open && setSelectedTicket(null)}>
-                    <DialogContent className="sm:max-w-[700px] bg-slate-50 p-0 overflow-hidden border-2 border-slate-200">
-                        <div className="bg-white px-6 py-4 border-b flex justify-between items-start">
-                            <div className="space-y-1">
-                                <div className="flex items-center gap-3">
-                                    <DialogTitle className="text-xl font-bold text-slate-800">{selectedTicket.subject}</DialogTitle>
+                    <DialogContent className="sm:max-w-[750px] bg-[#0f172a] p-0 overflow-hidden border border-slate-700 shadow-[0_0_50px_rgba(0,0,0,0.8)]">
+                        <div className="bg-[#0B1120] px-6 py-5 flex justify-between items-start border-b border-slate-800">
+                            <div className="space-y-2 w-full pr-8">
+                                <div className="flex items-center gap-3 mb-1">
                                     {getUrgencyBadge(selectedTicket.urgency)}
+                                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-auto">
+                                        ID #{selectedTicket.id.slice(-6).toUpperCase()}
+                                    </span>
                                 </div>
-                                <DialogDescription>
-                                    Ticket #{selectedTicket.id.slice(-6).toUpperCase()} • Signalé le {format(new Date(selectedTicket.createdAt), "dd MMMM yyyy à HH:mm", { locale: fr })}
+                                <DialogTitle className="text-xl font-bold text-white tracking-tight">{selectedTicket.subject}</DialogTitle>
+                                <DialogDescription className="text-xs font-bold text-slate-500 flex items-center gap-2">
+                                    <span className="w-2 h-2 rounded-full bg-slate-600"></span>
+                                    Signalé le {format(new Date(selectedTicket.createdAt), "dd MMMM yyyy à HH:mm", { locale: fr })}
                                 </DialogDescription>
                             </div>
                         </div>
 
-                        <div className="px-6 py-5 grid grid-cols-3 gap-6 h-[50vh] overflow-y-auto">
-                            <div className="col-span-2 space-y-6">
+                        <div className="px-6 py-6 grid grid-cols-1 md:grid-cols-3 gap-8 min-h-[50vh] max-h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
+                            
+                            {/* COLONNE GAUCHE : INFOS DU TICKET */}
+                            <div className="md:col-span-2 space-y-6">
                                 <section>
-                                    <h4 className="text-xs font-bold uppercase text-slate-400 mb-2">Description du problème</h4>
-                                    <div className="bg-white p-4 rounded-xl border shadow-sm text-sm text-slate-700 whitespace-pre-wrap">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <div className="h-1 w-4 bg-slate-600 rounded"></div>
+                                        <h4 className="text-xs font-black uppercase tracking-widest text-slate-400">Description détaillée</h4>
+                                    </div>
+                                    <div className="bg-[#1e293b]/50 p-5 rounded-xl border border-slate-700/50 shadow-inner text-sm text-slate-300 whitespace-pre-wrap leading-relaxed">
                                         {selectedTicket.description}
                                     </div>
                                     {selectedTicket.pageUrl && (
-                                        <a href={selectedTicket.pageUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 mt-3 text-sm text-blue-600 hover:text-blue-800 bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100 hover:bg-blue-100 transition-colors">
+                                        <a href={selectedTicket.pageUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 mt-4 text-xs font-bold uppercase tracking-wider text-blue-400 bg-blue-500/10 px-4 py-2.5 rounded-lg border border-blue-500/30 hover:bg-blue-500/20 hover:text-blue-300 transition-colors w-max">
                                             <LinkIcon className="h-4 w-4" />
-                                            Ouvrir la page concernée
+                                            Ouvrir l'URL signalée
                                         </a>
                                     )}
                                 </section>
 
                                 {selectedTicket.imageUrl && (
                                     <section>
-                                        <h4 className="text-xs font-bold uppercase text-slate-400 mb-2 flex items-center gap-2">
-                                            <ImageIcon className="h-4 w-4" /> Capture d'écran
-                                        </h4>
-                                        <div className="bg-white p-2 rounded-xl border shadow-sm">
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <div className="h-1 w-4 bg-slate-600 rounded"></div>
+                                            <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                                                <ImageIcon className="h-4 w-4" /> Pièce jointe
+                                            </h4>
+                                        </div>
+                                        <div className="bg-[#1e293b]/50 p-2 rounded-xl border border-slate-700/50 flex justify-center">
                                             <a href={selectedTicket.imageUrl} target="_blank" rel="noreferrer">
-                                                <img src={selectedTicket.imageUrl} className="w-full h-auto rounded-lg hover:opacity-90 transition-opacity" alt="Piece jointe" />
+                                                <img src={selectedTicket.imageUrl} className="max-w-full max-h-[300px] rounded-lg border border-slate-800 shadow-md hover:scale-[1.02] transition-transform cursor-pointer" alt="Capture jointe" />
                                             </a>
                                         </div>
                                     </section>
                                 )}
                             </div>
 
+                            {/* COLONNE DROITE : ACTIONS ET INFOS INTERNES */}
                             <div className="space-y-6">
-                                <section className="bg-white p-4 rounded-xl border shadow-sm space-y-4">
-                                    <div>
-                                        <Label className="text-xs text-slate-400 font-bold uppercase">Statut</Label>
-                                        <Select value={selectedTicket.status} onValueChange={handleStatusChange}>
-                                            <SelectTrigger className="mt-1 border-slate-200">
-                                                <SelectValue />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="OPEN">Ouvert</SelectItem>
-                                                <SelectItem value="IN_PROGRESS">En Cours</SelectItem>
-                                                <SelectItem value="RESOLVED">Résolu</SelectItem>
-                                                <SelectItem value="CLOSED">Fermé (Archivé)</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
+                                <section className="bg-[#1e293b] p-5 rounded-2xl border border-slate-700 shadow-xl relative overflow-hidden">
+                                    {/* Subtils effets lumineux */}
+                                    <div className="absolute -top-10 -right-10 w-20 h-20 bg-blue-500/20 blur-3xl rounded-full"></div>
+                                    
+                                    <div className="relative z-10 space-y-5">
+                                        <div>
+                                            <Label className="text-[10px] text-slate-400 font-black tracking-widest uppercase block mb-2">Changer le Statut</Label>
+                                            <Select value={selectedTicket.status} onValueChange={handleStatusChange}>
+                                                <SelectTrigger className="w-full bg-[#0f172a] border-slate-600 text-white font-bold shadow-inner">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent className="bg-[#1e293b] border-slate-700 text-white">
+                                                    <SelectItem value="OPEN" className="font-bold focus:bg-slate-700 focus:text-white">Ouvert</SelectItem>
+                                                    <SelectItem value="IN_PROGRESS" className="font-bold focus:bg-slate-700 focus:text-white">En Cours</SelectItem>
+                                                    <SelectItem value="RESOLVED" className="font-bold focus:bg-slate-700 focus:text-white">Résolu</SelectItem>
+                                                    <SelectItem value="CLOSED" className="font-bold focus:bg-slate-700 focus:text-white">Fermé (Archivé)</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
 
-                                    <div className="pt-4 border-t">
-                                        <Label className="text-xs text-slate-400 font-bold uppercase">Déclaré par</Label>
-                                        <div className="mt-2 flex items-center gap-3">
-                                            <div className="h-8 w-8 uppercase rounded-full bg-slate-800 flex items-center justify-center text-xs font-bold text-white">
-                                                {selectedTicket.user.firstName[0]}
-                                            </div>
-                                            <div>
-                                                <div className="font-bold text-sm text-slate-800">{selectedTicket.user.firstName} {selectedTicket.user.lastName}</div>
-                                                <div className="text-[10px] uppercase font-bold text-blue-600">
-                                                    {(selectedTicket.user.roles || []).join(', ')}
+                                        <div className="pt-5 border-t border-slate-700/50">
+                                            <Label className="text-[10px] text-slate-400 font-black tracking-widest uppercase block mb-3">Déclaré par</Label>
+                                            <div className="flex items-center gap-3">
+                                                <div className="h-10 w-10 uppercase rounded-full bg-[#0f172a] border-2 border-slate-600 flex items-center justify-center text-sm font-black text-white shadow-inner">
+                                                    {selectedTicket.user.firstName[0]}
+                                                </div>
+                                                <div>
+                                                    <div className="font-bold text-sm text-slate-200">{selectedTicket.user.firstName} {selectedTicket.user.lastName}</div>
+                                                    <div className="text-[9px] uppercase font-black tracking-widest text-slate-500 mt-0.5">
+                                                        {(selectedTicket.user.roles || []).join(', ')}
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="pt-2">
-                                        <Label className="text-xs text-slate-400 font-bold uppercase">Catégorie</Label>
-                                        <div className="mt-1 text-sm font-medium text-slate-700">{selectedTicket.category.replace('_', ' ')}</div>
-                                    </div>
                                 </section>
 
-                                <section>
-                                    <Label className="text-xs text-slate-400 font-bold uppercase block mb-2">Note de Résolution (Interne)</Label>
+                                <section className="flex flex-col h-full">
+                                    <Label className="text-[10px] text-slate-400 font-black tracking-widest uppercase block mb-2 flex items-center justify-between">
+                                        Note Interne IT
+                                        <span className="text-[9px] text-slate-500 font-normal normal-case">Visible par le salarié en "Résolu"</span>
+                                    </Label>
                                     <Textarea 
-                                        className="bg-white resize-none text-sm h-32" 
-                                        placeholder="Notez ici la solution apportée..."
-                                        defaultValue={selectedTicket.adminComment || ""}
-                                        onBlur={(e) => handleCommentSave(e.target.value)}
+                                        className="bg-[#1e293b] border-slate-700 border-b-0 text-slate-300 text-sm h-32 rounded-t-xl rounded-b-none focus-visible:ring-1 focus-visible:ring-blue-500 placeholder:text-slate-600 resize-none font-medium" 
+                                        placeholder="Écrivez votre rapport de résolution..."
+                                        value={tempComment}
+                                        onChange={(e) => setTempComment(e.target.value)}
+                                        maxLength={2000}
                                     />
-                                    <p className="text-[10px] text-slate-400 mt-2 italic">Sauvegardé automatiquement</p>
+                                    <div className="bg-[#0f172a] border border-slate-700 border-t-0 p-2 rounded-b-xl flex justify-between items-center">
+                                        <span className="text-[9px] font-bold text-slate-500 px-2">{tempComment.length} / 2000</span>
+                                        <Button 
+                                            size="sm" 
+                                            className="h-7 text-[10px] font-black uppercase tracking-wider bg-blue-600 hover:bg-blue-500 text-white rounded-lg shadow-[0_0_10px_rgba(37,99,235,0.3)] transition-all"
+                                            onClick={handleCommentSave}
+                                            disabled={isSaving}
+                                        >
+                                            <Save className="w-3 h-3 mr-1.5" />
+                                            Enregistrer
+                                        </Button>
+                                    </div>
                                 </section>
                             </div>
                         </div>
