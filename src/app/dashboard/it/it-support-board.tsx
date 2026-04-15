@@ -88,9 +88,45 @@ export function ITSupportBoard({ initialTickets }: { initialTickets: any[] }) {
         }
     };
 
+    const handleDrop = async (e: React.DragEvent, newStatus: string) => {
+        e.preventDefault();
+        const draggedTicketId = e.dataTransfer.getData("ticketId");
+        if (!draggedTicketId) return;
+
+        const ticket = tickets.find(t => t.id === draggedTicketId);
+        if (ticket && ticket.status !== newStatus) {
+            // Optimistic update
+            setTickets(tickets.map(t => t.id === draggedTicketId ? { ...t, status: newStatus } : t));
+            
+            const res = await updateTicketStatus(draggedTicketId, newStatus as any, ticket.adminComment);
+            if (res.success) {
+                toast.success(`Le ticket est passé en ${newStatus}`);
+            } else {
+                toast.error(res.error);
+                // Revert on failure
+                setTickets(tickets); 
+            }
+        }
+    };
+
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+    };
+
     // VUE KANBAN
     const KanbanColumn = ({ title, statusId, icon: Icon, colorClass, tickets: colTickets }: any) => (
-        <div className="flex-1 min-w-[320px] bg-[#0B1120] rounded-2xl border border-slate-800 p-4 flex flex-col h-[65vh] shadow-[inset_0_2px_20px_rgba(0,0,0,0.5)]">
+        <div 
+            className="flex-1 min-w-[320px] bg-[#0B1120] rounded-2xl border border-slate-800 p-4 flex flex-col h-[65vh] shadow-[inset_0_2px_20px_rgba(0,0,0,0.5)] transition-colors data-[dragover=true]:bg-[#151e32]/50 data-[dragover=true]:border-slate-600"
+            onDragOver={(e) => {
+                handleDragOver(e);
+                e.currentTarget.setAttribute('data-dragover', 'true');
+            }}
+            onDragLeave={(e) => e.currentTarget.removeAttribute('data-dragover')}
+            onDrop={(e) => {
+                e.currentTarget.removeAttribute('data-dragover');
+                handleDrop(e, statusId);
+            }}
+        >
             <div className="flex items-center justify-between mb-5 pb-3 border-b border-slate-800">
                 <h3 className={`font-black uppercase tracking-widest text-xs flex items-center gap-2 ${colorClass}`}>
                     <Icon className="h-4 w-4" />
@@ -104,11 +140,16 @@ export function ITSupportBoard({ initialTickets }: { initialTickets: any[] }) {
                 {colTickets.map((t: any) => (
                     <div 
                         key={t.id} 
+                        draggable
+                        onDragStart={(e) => {
+                            e.dataTransfer.setData("ticketId", t.id);
+                            e.dataTransfer.effectAllowed = "move";
+                        }}
                         onClick={() => {
                             setSelectedTicket(t);
                             setTempComment(t.adminComment || "");
                         }}
-                        className="bg-[#151e32] border border-slate-700 p-5 rounded-xl shadow-lg hover:shadow-cyan-900/20 hover:border-blue-500/50 transition-all cursor-pointer group relative overflow-hidden"
+                        className="bg-[#151e32] border border-slate-700 p-5 rounded-xl shadow-lg hover:shadow-cyan-900/20 hover:border-blue-500/50 transition-all cursor-grab active:cursor-grabbing group relative overflow-hidden"
                     >
                         <div className="absolute top-0 left-0 w-1 h-full bg-slate-700 group-hover:bg-blue-500 transition-colors"></div>
                         
