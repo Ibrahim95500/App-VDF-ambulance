@@ -45,9 +45,7 @@ export default async function ITSupportPage() {
                 </p>
             </div>
 
-            <ITSupportKpi tickets={tickets as any} />
-
-            {/* Le composant client qui gère les 2 vues */}
+            {/* Le composant client qui gère les KPI et les 2 vues */}
             <ITSupportBoard initialTickets={tickets} />
         </div>
     );

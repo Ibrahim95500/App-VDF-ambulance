@@ -13,12 +13,20 @@ import { Label } from "@/components/ui/label";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { ListFilter, LayoutGrid, AlertTriangle, ShieldCheck, HardDrive, Link as LinkIcon, Image as ImageIcon, CheckCircle, Save } from "lucide-react";
+import { ITSupportKpi } from "./it-support-kpi";
 
 export function ITSupportBoard({ initialTickets }: { initialTickets: any[] }) {
     const [tickets, setTickets] = useState(initialTickets);
     const [selectedTicket, setSelectedTicket] = useState<any | null>(null);
     const [tempComment, setTempComment] = useState("");
     const [isSaving, setIsSaving] = useState(false);
+    const [activeFilter, setActiveFilter] = useState<string | null>(null);
+
+    const filteredTickets = activeFilter 
+        ? tickets.filter(t => 
+            activeFilter === "CRITICAL" ? (t.urgency === "CRITICAL" && t.status !== "CLOSED" && t.status !== "RESOLVED") : t.status === activeFilter
+          )
+        : tickets;
 
     const getUrgencyBadge = (urg: string) => {
         switch (urg) {
@@ -136,7 +144,7 @@ export function ITSupportBoard({ initialTickets }: { initialTickets: any[] }) {
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800">
-                    {tickets.map(t => (
+                    {filteredTickets.map(t => (
                         <tr 
                             key={t.id} 
                             onClick={() => {
@@ -170,23 +178,29 @@ export function ITSupportBoard({ initialTickets }: { initialTickets: any[] }) {
 
     return (
         <div>
-            <Tabs defaultValue="kanban" className="w-full">
+            <ITSupportKpi 
+                tickets={tickets} 
+                activeFilter={activeFilter} 
+                onFilterChange={setActiveFilter} 
+            />
+
+            <Tabs defaultValue="table" className="w-full">
                 <div className="flex items-center justify-between mb-6">
                     <TabsList className="bg-[#0B1120] border border-slate-800 p-1 rounded-xl">
-                        <TabsTrigger value="kanban" className="data-[state=active]:bg-[#1e293b] data-[state=active]:text-white text-slate-400 font-bold text-xs rounded-lg px-4 py-2">
-                            <LayoutGrid className="h-4 w-4 mr-2" /> VUE KANBAN
-                        </TabsTrigger>
                         <TabsTrigger value="table" className="data-[state=active]:bg-[#1e293b] data-[state=active]:text-white text-slate-400 font-bold text-xs rounded-lg px-4 py-2">
                             <ListFilter className="h-4 w-4 mr-2" /> VUE LISTE
+                        </TabsTrigger>
+                        <TabsTrigger value="kanban" className="data-[state=active]:bg-[#1e293b] data-[state=active]:text-white text-slate-400 font-bold text-xs rounded-lg px-4 py-2">
+                            <LayoutGrid className="h-4 w-4 mr-2" /> VUE KANBAN
                         </TabsTrigger>
                     </TabsList>
                 </div>
 
                 <TabsContent value="kanban" className="mt-0">
                     <div className="flex gap-5 overflow-x-auto pb-4">
-                        <KanbanColumn title="Nouveaux & Ouverts" statusId="OPEN" icon={AlertTriangle} colorClass="text-blue-400" tickets={tickets.filter(t => t.status === "OPEN")} />
-                        <KanbanColumn title="En Cours d'analyse" statusId="IN_PROGRESS" icon={HardDrive} colorClass="text-orange-400" tickets={tickets.filter(t => t.status === "IN_PROGRESS")} />
-                        <KanbanColumn title="Résolus & Clôturés" statusId="RESOLVED" icon={ShieldCheck} colorClass="text-emerald-400" tickets={tickets.filter(t => t.status === "RESOLVED" || t.status === "CLOSED")} />
+                        <KanbanColumn title="Nouveaux & Ouverts" statusId="OPEN" icon={AlertTriangle} colorClass="text-blue-400" tickets={filteredTickets.filter((t: any) => t.status === "OPEN")} />
+                        <KanbanColumn title="En Cours d'analyse" statusId="IN_PROGRESS" icon={HardDrive} colorClass="text-orange-400" tickets={filteredTickets.filter((t: any) => t.status === "IN_PROGRESS")} />
+                        <KanbanColumn title="Résolus & Clôturés" statusId="RESOLVED" icon={ShieldCheck} colorClass="text-emerald-400" tickets={filteredTickets.filter((t: any) => t.status === "RESOLVED" || t.status === "CLOSED")} />
                     </div>
                 </TabsContent>
 
