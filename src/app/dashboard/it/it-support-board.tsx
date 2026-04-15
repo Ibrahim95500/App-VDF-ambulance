@@ -21,6 +21,7 @@ export function ITSupportBoard({ initialTickets }: { initialTickets: any[] }) {
     const [selectedTicket, setSelectedTicket] = useState<any | null>(null);
     const [tempComment, setTempComment] = useState("");
     const [isSaving, setIsSaving] = useState(false);
+    const [enlargedImage, setEnlargedImage] = useState<string | null>(null);
     const [activeFilter, setActiveFilter] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
 
@@ -446,7 +447,7 @@ export function ITSupportBoard({ initialTickets }: { initialTickets: any[] }) {
                                                         {item.content}
                                                     </div>
                                                     {item.image && (
-                                                        <div className="mt-3 overflow-hidden rounded-xl border border-slate-700/50 cursor-pointer group/img" onClick={() => window.open(item.image as string, '_blank')}>
+                                                        <div className="mt-3 overflow-hidden rounded-xl border border-slate-700/50 cursor-pointer group/img" onClick={() => setEnlargedImage(item.image as string)}>
                                                             <div className="relative">
                                                                 <img src={item.image} alt="Capture jointe" className="w-full max-h-48 object-contain bg-black/40 group-hover/img:opacity-75 transition-opacity" />
                                                                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity">
@@ -478,14 +479,14 @@ export function ITSupportBoard({ initialTickets }: { initialTickets: any[] }) {
                                                     <ImageIcon className="h-4 w-4" /> Analyse Visuelle (Capture)
                                                 </h4>
                                             </div>
-                                            <a href={selectedTicket.imageUrl} target="_blank" rel="noreferrer" className="block relative group overflow-hidden rounded-2xl border border-slate-700 bg-black">
+                                            <div className="block relative group overflow-hidden rounded-2xl border border-slate-700 bg-black cursor-pointer" onClick={() => setEnlargedImage(selectedTicket.imageUrl)}>
                                                 <img src={selectedTicket.imageUrl} className="w-full object-contain opacity-90 group-hover:opacity-100 group-hover:scale-[1.02] transition-all duration-500" alt="Capture d'écran jointe" />
                                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end justify-center pb-6 opacity-0 group-hover:opacity-100 transition-opacity">
                                                     <span className="text-white font-bold text-sm tracking-widest uppercase flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-full">
                                                         <Search className="w-4 h-4" /> Agrandir
                                                     </span>
                                                 </div>
-                                            </a>
+                                            </div>
                                         </div>
                                     )}
                                 </div>
@@ -559,6 +560,27 @@ export function ITSupportBoard({ initialTickets }: { initialTickets: any[] }) {
                     </DialogContent>
                 </Dialog>
             )}
+
+            {/* LIGHTBOX POUR IMAGES */}
+            <Dialog open={!!enlargedImage} onOpenChange={(o) => !o && setEnlargedImage(null)}>
+                <DialogContent className="max-w-[95vw] h-[95vh] p-0 bg-black/95 border-none shadow-2xl flex items-center justify-center">
+                    <DialogTitle className="sr-only">Zoom Image</DialogTitle>
+                    <DialogDescription className="sr-only">Agrandissement de la capture d'écran associée au ticket.</DialogDescription>
+                    <div className="relative w-full h-full flex items-center justify-center p-2">
+                        {enlargedImage && (
+                            <img src={enlargedImage} className="max-w-full max-h-full object-contain rounded-xl" alt="Image agrandie" />
+                        )}
+                        <Button 
+                            variant="default" 
+                            size="icon" 
+                            className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white border border-white/20 backdrop-blur-md z-50 rounded-full w-10 h-10"
+                            onClick={() => setEnlargedImage(null)}
+                        >
+                            <X className="w-5 h-5" />
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

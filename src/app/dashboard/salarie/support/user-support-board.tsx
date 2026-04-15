@@ -22,6 +22,7 @@ export function UserSupportBoard({ initialTickets }: { initialTickets: any[] }) 
     const [tempComment, setTempComment] = useState("");
     const [isSaving, setIsSaving] = useState(false);
     const [feedbackImageStr, setFeedbackImageStr] = useState<string | null>(null);
+    const [enlargedImage, setEnlargedImage] = useState<string | null>(null);
     
     // Create new ticket state
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -612,7 +613,7 @@ export function UserSupportBoard({ initialTickets }: { initialTickets: any[] }) 
                                                         {item.content}
                                                     </div>
                                                     {item.image && (
-                                                        <div className="mt-3 overflow-hidden rounded-xl border border-slate-700/50 cursor-pointer group/img" onClick={() => window.open(item.image as string, '_blank')}>
+                                                        <div className="mt-3 overflow-hidden rounded-xl border border-slate-700/50 cursor-pointer group/img" onClick={() => setEnlargedImage(item.image as string)}>
                                                             <div className="relative">
                                                                 <img src={item.image} alt="Capture jointe" className="w-full max-h-48 object-contain bg-black/40 group-hover/img:opacity-75 transition-opacity" />
                                                                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity">
@@ -621,9 +622,6 @@ export function UserSupportBoard({ initialTickets }: { initialTickets: any[] }) 
                                                             </div>
                                                         </div>
                                                     )}
-                                                </div>
-                                            </div>
-                                        ))}
 
                                         {selectedTicket.pageUrl && selectedTicket.pageUrl.length > 5 && (
                                             <div className="relative flex items-center justify-center md:items-start group is-active mt-6">
@@ -635,14 +633,23 @@ export function UserSupportBoard({ initialTickets }: { initialTickets: any[] }) 
                                             </div>
                                         )}
                                         
-                                        {selectedTicket.image && (
-                                            <div className="relative flex items-center justify-center md:items-start group is-active mt-6">
-                                                <div className="w-[calc(100%-3rem)] md:w-[calc(50%-2.5rem)] ml-2 md:ml-0 z-10 cursor-pointer group" onClick={() => window.open(selectedTicket.image, '_blank')}>
-                                                    <div className="bg-[#151e32] border border-slate-700/60 p-2 rounded-2xl shadow-xl hover:border-slate-500 overflow-hidden relative">
-                                                       <img src={selectedTicket.image} className="w-full object-contain rounded-xl opacity-80 group-hover:opacity-100 transition-opacity" />
-                                                       <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-all rounded-xl">
-                                                            <ImageIcon className="w-8 h-8 text-white" />
-                                                       </div>
+                                        {selectedTicket.imageUrl && (
+                                            <div className="relative flex items-center justify-center md:items-start group is-active mt-8">
+                                                <div className="w-[calc(100%-3rem)] md:w-full flex-col flex items-center ml-2 md:ml-0 z-10">
+                                                    <div className="flex items-center gap-3 mb-4 self-start md:self-center">
+                                                        <div className="h-px w-8 bg-slate-600"></div>
+                                                        <h4 className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                                                            <ImageIcon className="h-3 w-3" /> Capture initiale
+                                                        </h4>
+                                                        <div className="h-px w-8 bg-slate-600"></div>
+                                                    </div>
+                                                    <div className="relative rounded-2xl border border-slate-700 bg-black cursor-pointer group/main border" onClick={() => setEnlargedImage(selectedTicket.imageUrl)}>
+                                                        <img src={selectedTicket.imageUrl} className="w-full max-w-sm rounded-xl object-contain opacity-90 group-hover/main:opacity-100 group-hover/main:scale-105 transition-all duration-300" alt="Capture d'écran jointe" />
+                                                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover/main:opacity-100 transition-opacity rounded-xl">
+                                                            <span className="text-white font-bold text-xs tracking-widest uppercase flex items-center gap-2 bg-white/20 backdrop-blur-md px-4 py-2 rounded-full">
+                                                                <Search className="w-4 h-4" /> Agrandir
+                                                            </span>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -736,7 +743,28 @@ export function UserSupportBoard({ initialTickets }: { initialTickets: any[] }) 
                         </div>
                     </DialogContent>
                 )}
-            </Dialog>            
+            </Dialog>
+
+            {/* LIGHTBOX POUR IMAGES */}
+            <Dialog open={!!enlargedImage} onOpenChange={(o) => !o && setEnlargedImage(null)}>
+                <DialogContent className="max-w-[95vw] h-[95vh] p-0 bg-black/95 border-none shadow-2xl flex items-center justify-center">
+                    <DialogTitle className="sr-only">Zoom Image</DialogTitle>
+                    <DialogDescription className="sr-only">Agrandissement de la capture d'écran associée au ticket.</DialogDescription>
+                    <div className="relative w-full h-full flex items-center justify-center p-2">
+                        {enlargedImage && (
+                            <img src={enlargedImage} className="max-w-full max-h-full object-contain rounded-xl" alt="Image agrandie" />
+                        )}
+                        <Button 
+                            variant="default" 
+                            size="icon" 
+                            className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white border border-white/20 backdrop-blur-md z-50 rounded-full w-10 h-10"
+                            onClick={() => setEnlargedImage(null)}
+                        >
+                            <X className="w-5 h-5" />
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
