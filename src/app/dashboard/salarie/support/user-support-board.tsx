@@ -343,12 +343,11 @@ export function UserSupportBoard({ initialTickets }: { initialTickets: any[] }) 
                 </div>
 
                 <TabsContent value="kanban" className="mt-0">
-                    <div className="w-full relative rounded-2xl bg-gradient-to-br from-slate-900 to-[#0B1120] border border-slate-800 overflow-hidden shadow-2xl p-4 sm:p-6 pb-2 sm:pb-4 flex flex-col h-[calc(100vh-250px)] max-h-[850px]">
-                        <div className="flex gap-4 sm:gap-6 w-full h-full pb-4 sm:pb-6 overflow-x-auto overflow-y-hidden snap-x snap-mandatory">
-                            {columns.map(col => (
+                    <div className="flex flex-col md:flex-row gap-5 overflow-x-auto pb-4 snap-x sm:snap-none">
+                        {columns.map(col => (
+                            <div key={col.id} className="snap-center sm:min-w-[320px] flex-1 w-[85vw] sm:w-auto">
                                 <div 
-                                    key={col.id} 
-                                    className="bg-[#0B1120]/80 border border-slate-800/80 rounded-2xl flex flex-col flex-none w-[85vw] sm:w-[380px] snap-center overflow-hidden h-full"
+                                    className="bg-[#0B1120]/80 border border-slate-800/80 rounded-2xl flex flex-col overflow-hidden h-[65vh] shadow-[inset_0_2px_20px_rgba(0,0,0,0.5)]"
                                 >
                                     {/* Column Header */}
                                     <div className="p-4 border-b border-slate-800 bg-slate-900/40 shrink-0">
@@ -400,8 +399,8 @@ export function UserSupportBoard({ initialTickets }: { initialTickets: any[] }) 
                                         )}
                                     </div>
                                 </div>
-                            ))}
-                        </div>
+                            </div>
+                        ))}
                     </div>
                 </TabsContent>
 
