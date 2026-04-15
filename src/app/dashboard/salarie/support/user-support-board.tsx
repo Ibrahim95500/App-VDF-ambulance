@@ -612,7 +612,7 @@ export function UserSupportBoard({ initialTickets }: { initialTickets: any[] }) 
                                                         {item.content}
                                                     </div>
                                                     {item.image && (
-                                                        <div className="mt-3 overflow-hidden rounded-xl border border-slate-700/50 cursor-pointer group/img" onClick={() => window.open(item.image, '_blank')}>
+                                                        <div className="mt-3 overflow-hidden rounded-xl border border-slate-700/50 cursor-pointer group/img" onClick={() => window.open(item.image as string, '_blank')}>
                                                             <div className="relative">
                                                                 <img src={item.image} alt="Capture jointe" className="w-full max-h-48 object-contain bg-black/40 group-hover/img:opacity-75 transition-opacity" />
                                                                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity">
