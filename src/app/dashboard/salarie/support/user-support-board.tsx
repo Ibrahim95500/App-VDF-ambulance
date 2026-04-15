@@ -758,7 +758,7 @@ export function UserSupportBoard({ initialTickets }: { initialTickets: any[] }) 
                             <img src={enlargedImage} className="max-w-full max-h-full object-contain rounded-xl" alt="Image agrandie" />
                         )}
                         <Button 
-                            variant="default" 
+                            variant="ghost" 
                             size="icon" 
                             className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 text-white border border-white/20 backdrop-blur-md z-50 rounded-full w-10 h-10"
                             onClick={() => setEnlargedImage(null)}
