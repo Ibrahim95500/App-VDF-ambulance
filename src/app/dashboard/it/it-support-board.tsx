@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { ListFilter, LayoutGrid, AlertTriangle, ShieldCheck, HardDrive, Link as LinkIcon, Image as ImageIcon, CheckCircle, Save, Search, MessageSquare, Clock, UserIcon, ArrowRight, X } from "lucide-react";
+import { ListFilter, LayoutGrid, AlertTriangle, ShieldCheck, HardDrive, Link as LinkIcon, Image as ImageIcon, CheckCircle, Save, Search, MessageSquare, Clock, UserIcon, ArrowRight, X, FileText, XIcon } from "lucide-react";
 import { ITSupportKpi } from "./it-support-kpi";
 import { Input } from "@/components/ui/input";
 
