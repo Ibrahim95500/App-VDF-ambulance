@@ -13,6 +13,9 @@ export default async function DashboardPage() {
 
     if (roles.includes("ADMIN") || roles.includes("RH")) {
         redirect("/dashboard/rh")
+    } else if (roles.includes("SERVICE_IT") && roles.length === 1) {
+        // Rediriger le profil strictement IT vers son tableau de bord
+        redirect("/dashboard/it")
     } else {
         redirect("/dashboard/salarie")
     }

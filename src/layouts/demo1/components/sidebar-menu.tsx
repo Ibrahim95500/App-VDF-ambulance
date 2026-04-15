@@ -54,17 +54,17 @@ export function SidebarMenu() {
 
   // Filter menu based on role
   const filteredSidebarMenu = MENU_SIDEBAR.filter((item) => {
-    // 0bis. Si c'est l'accueil général (Dashboard), tout le monde le voit
-    if (item.path === '/dashboard') return true;
-
     // 1. ADMIN voit TOUT sans exception
     if (roles.includes('ADMIN')) return true;
 
     // 1bis. SERVICE_IT exclusif (si le user n'a QUE SERVICE_IT, il ne voit rien d'autre)
     if (roles.includes('SERVICE_IT') && roles.length === 1) {
       if (item.heading === 'Support Technique' || item.path?.startsWith('/dashboard/it')) return true;
-      return false; // Il ne voit pas RH, ni Salarié
+      return false; // Il ne voit pas RH, ni Salarié, ni même VDF Ambulance
     }
+
+    // 0bis. Si c'est l'accueil général (Dashboard), tout le monde le voit (sauf SERVICE_IT géré au-dessus)
+    if (item.path === '/dashboard') return true;
 
     const isRH = roles.includes('RH');
     const isSalarie = roles.includes('SALARIE');
