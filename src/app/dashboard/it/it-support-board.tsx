@@ -12,8 +12,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { ListFilter, LayoutGrid, AlertTriangle, ShieldCheck, HardDrive, Link as LinkIcon, Image as ImageIcon, CheckCircle, Save } from "lucide-react";
+import { ListFilter, LayoutGrid, AlertTriangle, ShieldCheck, HardDrive, Link as LinkIcon, Image as ImageIcon, CheckCircle, Save, Search } from "lucide-react";
 import { ITSupportKpi } from "./it-support-kpi";
+import { Input } from "@/components/ui/input";
 
 export function ITSupportBoard({ initialTickets }: { initialTickets: any[] }) {
     const [tickets, setTickets] = useState(initialTickets);
@@ -21,12 +22,24 @@ export function ITSupportBoard({ initialTickets }: { initialTickets: any[] }) {
     const [tempComment, setTempComment] = useState("");
     const [isSaving, setIsSaving] = useState(false);
     const [activeFilter, setActiveFilter] = useState<string | null>(null);
+    const [searchQuery, setSearchQuery] = useState("");
 
-    const filteredTickets = activeFilter 
+    let filteredTickets = activeFilter 
         ? tickets.filter(t => 
             activeFilter === "CRITICAL" ? (t.urgency === "CRITICAL" && t.status !== "CLOSED" && t.status !== "RESOLVED") : t.status === activeFilter
           )
         : tickets;
+
+    if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        filteredTickets = filteredTickets.filter(t => 
+            t.id.toLowerCase().includes(q) || 
+            t.subject.toLowerCase().includes(q) || 
+            t.user.firstName.toLowerCase().includes(q) ||
+            t.user.lastName.toLowerCase().includes(q) ||
+            t.id.slice(-6).toLowerCase().includes(q)
+        );
+    }
 
     const getUrgencyBadge = (urg: string) => {
         switch (urg) {
@@ -185,7 +198,7 @@ export function ITSupportBoard({ initialTickets }: { initialTickets: any[] }) {
             />
 
             <Tabs defaultValue="table" className="w-full">
-                <div className="flex items-center justify-between mb-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                     <TabsList className="bg-[#0B1120] border border-slate-800 p-1 rounded-xl">
                         <TabsTrigger value="table" className="data-[state=active]:bg-[#1e293b] data-[state=active]:text-white text-slate-400 font-bold text-xs rounded-lg px-4 py-2">
                             <ListFilter className="h-4 w-4 mr-2" /> VUE LISTE
@@ -194,6 +207,16 @@ export function ITSupportBoard({ initialTickets }: { initialTickets: any[] }) {
                             <LayoutGrid className="h-4 w-4 mr-2" /> VUE KANBAN
                         </TabsTrigger>
                     </TabsList>
+
+                    <div className="relative w-full sm:w-72">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+                        <Input 
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            placeholder="Rechercher (ex: #8IN5GP, problème...)"
+                            className="bg-[#0B1120] border-slate-800 text-slate-200 placeholder:text-slate-600 pl-10 focus-visible:ring-blue-500/50"
+                        />
+                    </div>
                 </div>
 
                 <TabsContent value="kanban" className="mt-0">
