@@ -13,6 +13,8 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { ListFilter, LayoutGrid, AlertTriangle, ShieldCheck, HardDrive, Link as LinkIcon, Image as ImageIcon, CheckCircle, Search, MessageSquare, Clock, UserIcon, ArrowRight, PlusCircle, Loader2, Upload, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ITSupportKpi as UserSupportKpi } from "./user-support-kpi";
 
 export function UserSupportBoard({ initialTickets }: { initialTickets: any[] }) {
     const [tickets, setTickets] = useState(initialTickets);
@@ -225,127 +227,189 @@ export function UserSupportBoard({ initialTickets }: { initialTickets: any[] }) 
         { id: "CLOSED", title: "Clos" }
     ];
 
-    const MobileCard = ({ ticket }: { ticket: any }) => (
-        <div 
-            onClick={() => {
-                setSelectedTicket(ticket);
-                setTempComment("");
-            }}
-            className="flex flex-col bg-[#111827] border border-slate-800 rounded-2xl p-4 cursor-pointer relative overflow-hidden transition-all hover:border-slate-600"
-        >
-            {(ticket.urgency === "CRITICAL" || ticket.urgency === "HIGH") && (
-                <AlertTriangle className="absolute -right-6 -bottom-6 w-32 h-32 opacity-[0.03] text-red-500" />
-            )}
-            <div className="flex justify-between items-start mb-3 z-10">
-                <Badge variant="outline" className="text-slate-400 border-slate-700 bg-slate-900 font-mono">
-                    #{ticket.id.slice(-6).toUpperCase()}
-                </Badge>
-                {getUrgencyBadge(ticket.urgency)}
-            </div>
-            
-            <h3 className="text-slate-100 font-bold text-sm mb-3 line-clamp-2 z-10 leading-snug">
-                {ticket.subject}
-            </h3>
-            
-            <div className="flex items-center justify-between mt-auto pt-3 border-t border-slate-800 z-10">
-                <div className="flex items-center gap-2 text-slate-500 text-xs">
-                    <Clock className="w-3.5 h-3.5" />
-                    {format(new Date(ticket.createdAt), "dd MMM à HH:mm", { locale: fr })}
+    // VUE CARTES MOBILES (Responsive List)
+    const MobileView = () => (
+        <div className="md:hidden space-y-4 pb-12">
+            {filteredTickets.map(t => (
+                <div 
+                    key={t.id} 
+                    onClick={() => {
+                        setSelectedTicket(t);
+                        setTempComment("");
+                    }} 
+                    className="bg-[#0B1120] border border-slate-700 p-5 rounded-2xl shadow-xl flex flex-col gap-4 relative overflow-hidden"
+                >
+                    <div className="absolute top-0 right-0 p-3 opacity-50">
+                        {t.status === 'OPEN' && <AlertTriangle className="w-10 h-10 text-blue-500" />}
+                        {t.status === 'IN_PROGRESS' && <HardDrive className="w-10 h-10 text-orange-500" />}
+                        {t.status === 'RESOLVED' && <ShieldCheck className="w-10 h-10 text-emerald-500" />}
+                    </div>
+                    
+                    <div className="flex items-center justify-between z-10">
+                        {getUrgencyBadge(t.urgency)}
+                        <span className="font-mono text-[10px] font-bold text-slate-500">#{t.id.slice(-6).toUpperCase()}</span>
+                    </div>
+                    
+                    <h3 className="font-bold text-slate-200 text-sm leading-snug z-10">{t.subject}</h3>
+                    
+                    <div className="flex items-center justify-between border-t border-slate-800 pt-3 mt-1 z-10">
+                        <span className="text-[9px] uppercase font-bold text-slate-500 block mt-1">STATUT</span>
+                        {getStatusBadge(t.status)}
+                    </div>
                 </div>
-                {getStatusBadge(ticket.status)}
-            </div>
+            ))}
+            {filteredTickets.length === 0 && (
+                <div className="text-center py-10 text-slate-500 text-xs uppercase font-bold tracking-widest">
+                    Aucun ticket trouvé.
+                </div>
+            )}
+        </div>
+    );
+
+    // VUE TABLE
+    const TableView = () => (
+        <div className="hidden md:block bg-[#0B1120] rounded-2xl border border-slate-800 overflow-hidden shadow-2xl">
+            <table className="w-full text-sm text-left">
+                <thead className="bg-[#151e32] text-slate-400 text-[10px] uppercase font-black tracking-widest border-b border-slate-800">
+                    <tr>
+                        <th className="px-6 py-4">ID</th>
+                        <th className="px-6 py-4">Urgence</th>
+                        <th className="px-6 py-4 w-1/3">Sujet</th>
+                        <th className="px-6 py-4">Date</th>
+                        <th className="px-6 py-4">Statut</th>
+                    </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800">
+                    {filteredTickets.map(t => (
+                        <tr 
+                            key={t.id} 
+                            onClick={() => {
+                                setSelectedTicket(t);
+                                setTempComment("");
+                            }} 
+                            className="hover:bg-[#1e293b] transition-colors cursor-pointer group"
+                        >
+                            <td className="px-6 py-4 font-mono text-[11px] font-bold text-slate-500 group-hover:text-blue-400 transition-colors">#{t.id.slice(-6).toUpperCase()}</td>
+                            <td className="px-6 py-4">{getUrgencyBadge(t.urgency)}</td>
+                            <td className="px-6 py-4 font-bold text-slate-300 group-hover:text-white transition-colors">{t.subject}</td>
+                            <td className="px-6 py-4 text-xs font-bold text-slate-500">{format(new Date(t.createdAt), "dd/MM/yy HH:mm", { locale: fr })}</td>
+                            <td className="px-6 py-4">{getStatusBadge(t.status)}</td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
         </div>
     );
 
     return (
         <div className="space-y-6">
-            
-            {/* Action Bar */}
-            <div className="flex flex-col md:flex-row gap-4 justify-between items-start md:items-center bg-slate-900/50 p-4 rounded-xl border border-slate-800">
-                <div className="flex items-center gap-3">
-                    <Button 
-                        onClick={() => setIsCreateModalOpen(true)}
-                        className="bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-500/20 font-bold"
-                    >
-                        <PlusCircle className="w-4 h-4 mr-2" />
-                        Nouveau Ticket
-                    </Button>
-                </div>
+            <UserSupportKpi 
+                tickets={tickets} 
+                activeFilter={activeFilter} 
+                onFilterChange={setActiveFilter} 
+            />
 
-                <div className="flex w-full md:w-auto items-center gap-3">
-                    <div className="relative flex-1 md:w-64">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+            <Tabs defaultValue="table" className="w-full">
+                {/* Action Bar (Top Controls) */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 bg-slate-900/50 p-4 rounded-xl border border-slate-800">
+                    <div className="flex flex-wrap items-center gap-3">
+                        <Button 
+                            onClick={() => setIsCreateModalOpen(true)}
+                            className="bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-500/20 font-bold"
+                        >
+                            <PlusCircle className="w-4 h-4 mr-2" />
+                            Nouveau Ticket
+                        </Button>
+                        
+                        <TabsList className="bg-[#0B1120] border border-slate-800 p-1 rounded-xl">
+                            <TabsTrigger value="table" className="data-[state=active]:bg-[#1e293b] data-[state=active]:text-white text-slate-400 font-bold text-xs rounded-lg px-4 py-2">
+                                <ListFilter className="h-4 w-4 mr-2" /> VUE LISTE
+                            </TabsTrigger>
+                            <TabsTrigger value="kanban" className="data-[state=active]:bg-[#1e293b] data-[state=active]:text-white text-slate-400 font-bold text-xs rounded-lg px-4 py-2">
+                                <LayoutGrid className="h-4 w-4 mr-2" /> VUE KANBAN
+                            </TabsTrigger>
+                        </TabsList>
+                    </div>
+
+                    <div className="relative w-full sm:w-72">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
                         <Input 
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder="Chercher un ticket..."
-                            className="pl-9 bg-slate-900 border-slate-700 text-slate-300 placeholder:text-slate-600 focus-visible:ring-blue-500 max-h-10"
+                            placeholder="Rechercher (ex: #8IN5GP, problème...)"
+                            className="bg-[#0B1120] border-slate-800 text-slate-200 placeholder:text-slate-600 pl-10 focus-visible:ring-blue-500/50 max-h-10"
                         />
                     </div>
                 </div>
-            </div>
 
-            {/* Kanban View Desktop & Mobile */}
-            <div className="w-full relative rounded-2xl bg-gradient-to-br from-slate-900 to-[#0B1120] border border-slate-800 overflow-hidden shadow-2xl p-4 sm:p-6 pb-2 sm:pb-4 flex flex-col h-[calc(100vh-250px)] max-h-[850px]">
-                <div className="flex gap-4 sm:gap-6 w-full h-full pb-4 sm:pb-6 overflow-x-auto overflow-y-hidden snap-x snap-mandatory">
-                    {columns.map(col => (
-                        <div 
-                            key={col.id} 
-                            className="bg-[#0B1120]/80 border border-slate-800/80 rounded-2xl flex flex-col flex-none w-[85vw] sm:w-[380px] snap-center overflow-hidden h-full"
-                        >
-                            {/* Column Header */}
-                            <div className="p-4 border-b border-slate-800 bg-slate-900/40 shrink-0">
-                                <div className="flex items-center justify-between">
-                                    <h2 className="font-exrabold text-sm text-slate-300 flex items-center gap-2 tracking-wide">
-                                        {col.title}
-                                        <Badge variant="secondary" className="bg-slate-800 text-slate-400 font-mono">
-                                            {filteredTickets.filter(t => t.status === col.id).length}
-                                        </Badge>
-                                    </h2>
-                                </div>
-                            </div>
-                            
-                            {/* Column Items */}
-                            <div className="p-3 sm:p-4 flex-1 overflow-y-auto space-y-3 sm:space-y-4">
-                                {filteredTickets.filter(t => t.status === col.id).map(t => (
-                                    <div 
-                                        key={t.id}
-                                        onClick={() => {
-                                            setSelectedTicket(t);
-                                            setTempComment(""); 
-                                        }}
-                                        className="bg-[#151e32] border border-slate-700 p-4 lg:p-5 rounded-xl shadow-lg hover:shadow-cyan-900/20 hover:border-blue-500/50 transition-all cursor-pointer group relative overflow-hidden"
-                                    >
-                                        {(t.urgency === "CRITICAL" || t.urgency === "HIGH") && (
-                                            <div className="absolute top-0 right-0 w-24 h-24 bg-red-500/10 blur-2xl rounded-full" />
-                                        )}
-                                        <div className="flex justify-between items-start mb-3 relative z-10">
-                                            <Badge variant="outline" className="text-slate-500 border-slate-700/50 bg-[#0B1120] font-mono">
-                                                #{t.id.slice(-6).toUpperCase()}
-                                            </Badge>
-                                            {getUrgencyBadge(t.urgency)}
+                <TabsContent value="kanban" className="mt-0">
+                    <div className="w-full relative rounded-2xl bg-gradient-to-br from-slate-900 to-[#0B1120] border border-slate-800 overflow-hidden shadow-2xl p-4 sm:p-6 pb-2 sm:pb-4 flex flex-col h-[calc(100vh-250px)] max-h-[850px]">
+                        <div className="flex gap-4 sm:gap-6 w-full h-full pb-4 sm:pb-6 overflow-x-auto overflow-y-hidden snap-x snap-mandatory">
+                            {columns.map(col => (
+                                <div 
+                                    key={col.id} 
+                                    className="bg-[#0B1120]/80 border border-slate-800/80 rounded-2xl flex flex-col flex-none w-[85vw] sm:w-[380px] snap-center overflow-hidden h-full"
+                                >
+                                    {/* Column Header */}
+                                    <div className="p-4 border-b border-slate-800 bg-slate-900/40 shrink-0">
+                                        <div className="flex items-center justify-between">
+                                            <h2 className="font-exrabold text-sm text-slate-300 flex items-center gap-2 tracking-wide">
+                                                {col.title}
+                                                <Badge variant="secondary" className="bg-slate-800 text-slate-400 font-mono">
+                                                    {filteredTickets.filter(t => t.status === col.id).length}
+                                                </Badge>
+                                            </h2>
                                         </div>
-                                        <h3 className="text-slate-200 font-bold text-[13px] lg:text-sm mb-4 line-clamp-2 leading-relaxed relative z-10">
-                                            {t.subject}
-                                        </h3>
-                                        <div className="flex items-center justify-between mt-auto border-t border-slate-700/50 pt-3 relative z-10">
-                                            <div className="flex items-center gap-2 text-slate-500 text-[10px] lg:text-xs">
-                                                <Clock className="w-3.5 h-3.5" />
-                                                {format(new Date(t.createdAt), "dd MMM à HH:mm", { locale: fr })}
+                                    </div>
+                                    
+                                    {/* Column Items */}
+                                    <div className="p-3 sm:p-4 flex-1 overflow-y-auto space-y-3 sm:space-y-4">
+                                        {filteredTickets.filter(t => t.status === col.id).map(t => (
+                                            <div 
+                                                key={t.id}
+                                                onClick={() => {
+                                                    setSelectedTicket(t);
+                                                    setTempComment(""); 
+                                                }}
+                                                className="bg-[#151e32] border border-slate-700 p-4 lg:p-5 rounded-xl shadow-lg hover:shadow-cyan-900/20 hover:border-blue-500/50 transition-all cursor-pointer group relative overflow-hidden"
+                                            >
+                                                {(t.urgency === "CRITICAL" || t.urgency === "HIGH") && (
+                                                    <div className="absolute top-0 right-0 w-24 h-24 bg-red-500/10 blur-2xl rounded-full" />
+                                                )}
+                                                <div className="flex justify-between items-start mb-3 relative z-10">
+                                                    <Badge variant="outline" className="text-slate-500 border-slate-700/50 bg-[#0B1120] font-mono">
+                                                        #{t.id.slice(-6).toUpperCase()}
+                                                    </Badge>
+                                                    {getUrgencyBadge(t.urgency)}
+                                                </div>
+                                                <h3 className="text-slate-200 font-bold text-[13px] lg:text-sm mb-4 line-clamp-2 leading-relaxed relative z-10">
+                                                    {t.subject}
+                                                </h3>
+                                                <div className="flex items-center justify-between mt-auto border-t border-slate-700/50 pt-3 relative z-10">
+                                                    <div className="flex items-center gap-2 text-slate-500 text-[10px] lg:text-xs">
+                                                        <Clock className="w-3.5 h-3.5" />
+                                                        {format(new Date(t.createdAt), "dd MMM à HH:mm", { locale: fr })}
+                                                    </div>
+                                                </div>
                                             </div>
-                                        </div>
+                                        ))}
+                                        {filteredTickets.filter(t => t.status === col.id).length === 0 && (
+                                            <div className="h-full flex items-center justify-center border-2 border-dashed border-slate-800 rounded-xl">
+                                                <span className="text-slate-600 text-sm font-medium">Vide</span>
+                                            </div>
+                                        )}
                                     </div>
-                                ))}
-                                {filteredTickets.filter(t => t.status === col.id).length === 0 && (
-                                    <div className="h-full flex items-center justify-center border-2 border-dashed border-slate-800 rounded-xl">
-                                        <span className="text-slate-600 text-sm font-medium">Vide</span>
-                                    </div>
-                                )}
-                            </div>
+                                </div>
+                            ))}
                         </div>
-                    ))}
-                </div>
-            </div>
+                    </div>
+                </TabsContent>
+
+                <TabsContent value="table" className="mt-0">
+                    <MobileView />
+                    <TableView />
+                </TabsContent>
+            </Tabs>
 
             {/* CREATE MODAL */}
             <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
