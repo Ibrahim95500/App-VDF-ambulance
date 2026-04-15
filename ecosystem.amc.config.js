@@ -14,6 +14,7 @@ module.exports = {
       merge_logs: true,
       env: {
         NODE_ENV: "production",
+        TZ: "Europe/Paris", // Important pour la pause de 5H30
         // Identifiants forcés ici !
         AMC_USERNAME: "VDF",
         AMC_PASSWORD: "Jordan95500!",
