@@ -22,6 +22,32 @@ export function UserSupportBoard({ initialTickets }: { initialTickets: any[] }) 
     const [tickets, setTickets] = useState(initialTickets);
     const [selectedTicket, setSelectedTicket] = useState<any | null>(null);
 
+    // Unread Tracking (pastilles)
+    const [seenDates, setSeenDates] = useState<Record<string, string>>({});
+
+    useEffect(() => {
+        const saved = localStorage.getItem('salarie_ticket_seen');
+        if (saved) {
+            setSeenDates(JSON.parse(saved));
+        } else {
+            const initialSeen: Record<string, string> = {};
+            initialTickets.forEach(t => { initialSeen[t.id] = t.updatedAt; });
+            setSeenDates(initialSeen);
+            localStorage.setItem('salarie_ticket_seen', JSON.stringify(initialSeen));
+        }
+    }, [initialTickets]);
+
+    const markSeen = (ticket: any) => {
+        const newDates = { ...seenDates, [ticket.id]: ticket.updatedAt };
+        setSeenDates(newDates);
+        localStorage.setItem('salarie_ticket_seen', JSON.stringify(newDates));
+    };
+
+    const isUnread = (t: any) => {
+        if (!seenDates[t.id]) return true; // Brand new, never seen locally
+        return new Date(t.updatedAt).getTime() > new Date(seenDates[t.id]).getTime();
+    };
+
     // Sync new data continuously from server
     useEffect(() => {
         setTickets(initialTickets);
@@ -198,6 +224,7 @@ export function UserSupportBoard({ initialTickets }: { initialTickets: any[] }) 
             // Add to ticket list
             if (data.ticket) {
                 setTickets([data.ticket, ...tickets]);
+                markSeen(data.ticket);
             }
             
             setSubject("");
@@ -313,9 +340,10 @@ export function UserSupportBoard({ initialTickets }: { initialTickets: any[] }) 
                     newDesc += `\n[IMAGE_ATTACHED]:${feedbackImageStr}`;
                 }
                 
-                const updatedTicket = { ...selectedTicket, description: newDesc, status: "IN_PROGRESS" };
+                const updatedTicket = { ...selectedTicket, description: newDesc, status: "IN_PROGRESS", updatedAt: new Date().toISOString() };
                 setSelectedTicket(updatedTicket);
                 setTickets(tickets.map(t => t.id === selectedTicket.id ? updatedTicket : t));
+                markSeen(updatedTicket);
                 
                 setTempComment("");
                 setFeedbackImageStr(null);
@@ -344,9 +372,13 @@ export function UserSupportBoard({ initialTickets }: { initialTickets: any[] }) 
                     onClick={() => {
                         setSelectedTicket(t);
                         setTempComment("");
+                        markSeen(t);
                     }} 
                     className="bg-[#0B1120] border border-slate-700 p-5 rounded-2xl shadow-xl flex flex-col gap-4 relative overflow-hidden"
                 >
+                    {isUnread(t) && (
+                        <div className="absolute top-3 left-3 flex h-3 w-3 items-center justify-center rounded-full bg-red-500 animate-pulse ring-2 ring-[#0B1120] z-20"></div>
+                    )}
                     <div className="absolute top-0 right-0 p-3 opacity-50">
                         {t.status === 'OPEN' && <AlertTriangle className="w-10 h-10 text-blue-500" />}
                         {t.status === 'IN_PROGRESS' && <HardDrive className="w-10 h-10 text-orange-500" />}
@@ -394,10 +426,16 @@ export function UserSupportBoard({ initialTickets }: { initialTickets: any[] }) 
                             onClick={() => {
                                 setSelectedTicket(t);
                                 setTempComment("");
+                                markSeen(t);
                             }} 
-                            className="hover:bg-[#1e293b] transition-colors cursor-pointer group"
+                            className="hover:bg-[#1e293b] transition-colors cursor-pointer group relative"
                         >
-                            <td className="px-6 py-4 font-mono text-[11px] font-bold text-slate-500 group-hover:text-blue-400 transition-colors">#{t.id.slice(-6).toUpperCase()}</td>
+                            <td className="px-6 py-4 font-mono text-[11px] font-bold text-slate-500 group-hover:text-blue-400 transition-colors relative">
+                                {isUnread(t) && (
+                                    <div className="absolute left-2 top-1/2 -translate-y-1/2 flex h-2.5 w-2.5 items-center justify-center rounded-full bg-red-500 animate-pulse"></div>
+                                )}
+                                #{t.id.slice(-6).toUpperCase()}
+                            </td>
                             <td className="px-6 py-4">{getUrgencyBadge(t.urgency)}</td>
                             <td className="px-6 py-4 font-bold text-slate-300 group-hover:text-white transition-colors">{t.subject}</td>
                             <td className="px-6 py-4 text-xs font-bold text-slate-500">{format(new Date(t.createdAt), "dd/MM/yy HH:mm", { locale: fr })}</td>
@@ -477,9 +515,13 @@ export function UserSupportBoard({ initialTickets }: { initialTickets: any[] }) 
                                                 onClick={() => {
                                                     setSelectedTicket(t);
                                                     setTempComment(""); 
+                                                    markSeen(t);
                                                 }}
                                                 className="bg-[#151e32] border border-slate-700 p-4 lg:p-5 rounded-xl shadow-lg hover:shadow-cyan-900/20 hover:border-blue-500/50 transition-all cursor-pointer group relative overflow-hidden"
                                             >
+                                                {isUnread(t) && (
+                                                    <div className="absolute top-3 left-3 flex h-3 w-3 items-center justify-center rounded-full bg-red-500 animate-pulse ring-2 ring-[#151e32] z-20"></div>
+                                                )}
                                                 {(t.urgency === "CRITICAL" || t.urgency === "HIGH") && (
                                                     <div className="absolute top-0 right-0 w-24 h-24 bg-red-500/10 blur-2xl rounded-full" />
                                                 )}
