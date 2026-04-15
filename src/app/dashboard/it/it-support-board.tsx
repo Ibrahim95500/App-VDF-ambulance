@@ -136,20 +136,61 @@ export function ITSupportBoard({ initialTickets }: { initialTickets: any[] }) {
         }
     };
 
-    const handleItFeedbackImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const compressImage = (file: File): Promise<string> => {
+        return new Promise((resolve, reject) => {
+            if (file.type === "application/pdf") {
+                if (file.size > 2 * 1024 * 1024) {
+                    toast.error("Le PDF dépasse 2Mo. Veuillez réduire sa taille.");
+                    reject("Too large");
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result as string);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement("canvas");
+                    let width = img.width;
+                    let height = img.height;
+                    const MAX = 1200;
+                    if (width > height) {
+                        if (width > MAX) { height = Math.round(height * MAX / width); width = MAX; }
+                    } else {
+                        if (height > MAX) { width = Math.round(width * MAX / height); height = MAX; }
+                    }
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext("2d");
+                    ctx?.drawImage(img, 0, 0, width, height);
+                    resolve(canvas.toDataURL("image/jpeg", 0.6));
+                };
+                img.onerror = reject;
+                if (event.target?.result) img.src = event.target.result as string;
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    };
+
+    const handleItFeedbackImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
         if (!file.type.startsWith("image/") && file.type !== "application/pdf") {
             toast.error("Veuillez sélectionner une image ou un PDF valide.");
             return;
         }
-        if (file.size > 2 * 1024 * 1024) {
-            toast.error("Le fichier ne doit pas dépasser 2 MB.");
-            return;
+        try {
+            const compressed = await compressImage(file);
+            setItFeedbackImageStr(compressed);
+        } catch (e) {
+            console.error(e);
         }
-        const reader = new FileReader();
-        reader.onloadend = () => setItFeedbackImageStr(reader.result as string);
-        reader.readAsDataURL(file);
     };
 
     const handleCommentSave = async () => {

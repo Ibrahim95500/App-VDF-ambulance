@@ -65,6 +65,48 @@ export function UserSupportBoard({ initialTickets }: { initialTickets: any[] }) 
           )
         : tickets;
 
+    const compressImage = (file: File): Promise<string> => {
+        return new Promise((resolve, reject) => {
+            if (file.type === "application/pdf") {
+                if (file.size > 2 * 1024 * 1024) {
+                    toast.error("Le PDF dépasse 2Mo. Veuillez réduire sa taille.");
+                    reject("Too large");
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result as string);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement("canvas");
+                    let width = img.width;
+                    let height = img.height;
+                    const MAX = 1200;
+                    if (width > height) {
+                        if (width > MAX) { height = Math.round(height * MAX / width); width = MAX; }
+                    } else {
+                        if (height > MAX) { width = Math.round(width * MAX / height); height = MAX; }
+                    }
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext("2d");
+                    ctx?.drawImage(img, 0, 0, width, height);
+                    resolve(canvas.toDataURL("image/jpeg", 0.6));
+                };
+                img.onerror = reject;
+                if (event.target?.result) img.src = event.target.result as string;
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    };
+
     if (searchQuery) {
         const q = searchQuery.toLowerCase();
         filteredTickets = filteredTickets.filter(t => 
@@ -74,7 +116,7 @@ export function UserSupportBoard({ initialTickets }: { initialTickets: any[] }) 
         );
     }
 
-    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
@@ -83,19 +125,15 @@ export function UserSupportBoard({ initialTickets }: { initialTickets: any[] }) 
             return;
         }
 
-        if (file.size > 5 * 1024 * 1024) { // 5MB limit
-            toast.error("L'image est trop volumineuse (maximum 5Mo).");
-            return;
+        try {
+            const compressed = await compressImage(file);
+            setImageStr(compressed);
+        } catch (e) {
+            console.error(e);
         }
-
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            setImageStr(reader.result as string);
-        };
-        reader.readAsDataURL(file);
     };
 
-    const handleFeedbackImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFeedbackImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
@@ -104,16 +142,12 @@ export function UserSupportBoard({ initialTickets }: { initialTickets: any[] }) 
             return;
         }
 
-        if (file.size > 5 * 1024 * 1024) { // 5MB limit
-            toast.error("L'image est trop volumineuse (maximum 5Mo).");
-            return;
+        try {
+            const compressed = await compressImage(file);
+            setFeedbackImageStr(compressed);
+        } catch (e) {
+            console.error(e);
         }
-
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            setFeedbackImageStr(reader.result as string);
-        };
-        reader.readAsDataURL(file);
     };
 
     const handleCreateSubmit = async (e: React.FormEvent) => {
@@ -139,7 +173,20 @@ export function UserSupportBoard({ initialTickets }: { initialTickets: any[] }) 
                 })
             });
 
-            const data = await res.json();
+            if (res.status === 413) {
+                toast.error("Fichier soumis trop lourd (limite serveur dépassée).");
+                setLoadingCreate(false);
+                return;
+            }
+
+            let data;
+            try {
+                data = await res.json();
+            } catch (e) {
+                toast.error("Erreur serveur : Le fichier est probablement trop lourd pour le réseau.");
+                setLoadingCreate(false);
+                return;
+            }
 
             if (!res.ok) {
                 toast.error(data.error || "Erreur lors de la déclaration de l'incident.");
