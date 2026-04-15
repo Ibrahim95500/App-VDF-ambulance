@@ -559,17 +559,6 @@ async function startAgent() {
                 args: ["--no-sandbox", "--disable-setuid-sandbox"],
             })
             const context = await browser.newContext({ viewport: { width: 1280, height: 800 } });
-            
-            // 🚀 MODE ULTRA-SPEED : Bloquer le téléchargement des images, polices et de la décoration (CSS)
-            await context.route('**/*', (route) => {
-                const type = route.request().resourceType();
-                if (['image', 'stylesheet', 'font', 'media'].includes(type)) {
-                    route.abort(); // Interdiction formelle de télécharger ça !
-                } else {
-                    route.continue();
-                }
-            });
-            
             const page = await context.newPage()
             act_page = page;
 
