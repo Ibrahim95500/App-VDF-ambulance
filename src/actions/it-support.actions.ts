@@ -8,11 +8,24 @@ import { createNotification } from "@/actions/notifications.actions";
 
 export async function updateTicketStatus(ticketId: string, status: "OPEN" | "IN_PROGRESS" | "RESOLVED" | "CLOSED", adminComment?: string) {
     try {
+        const currentTicket = await prisma.supportTicket.findUnique({
+            where: { id: ticketId },
+            select: { description: true, adminComment: true }
+        });
+
+        let newDescription = currentTicket?.description || "";
+        
+        if (adminComment && adminComment.trim().length > 0) {
+            const dateStr = new Date().toLocaleDateString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+            newDescription += `\n\n--- \n[RETOUR SUPPORT IT - ${dateStr}] :\n${adminComment}`;
+        }
+
         const ticket = await prisma.supportTicket.update({
             where: { id: ticketId },
             data: { 
                 status,
-                ...(adminComment !== undefined && { adminComment })
+                description: newDescription,
+                ...(adminComment ? { adminComment } : {})
             },
             include: { user: true }
         });

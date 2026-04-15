@@ -72,9 +72,16 @@ export function ITSupportBoard({ initialTickets }: { initialTickets: any[] }) {
             if (p.startsWith('[RETOUR SALARIÉ')) {
                 const match = p.match(/\[RETOUR SALARIÉ - (.*?)\] :\s*([\s\S]*)/);
                 if (match) {
-                    timeline.push({ type: 'RETOUR', date: match[1], content: match[2] });
+                    timeline.push({ type: 'SALARIE', date: match[1], content: match[2] });
                 } else {
-                    timeline.push({ type: 'RETOUR', content: p });
+                    timeline.push({ type: 'SALARIE', content: p });
+                }
+            } else if (p.startsWith('[RETOUR SUPPORT IT')) {
+                const match = p.match(/\[RETOUR SUPPORT IT - (.*?)\] :\s*([\s\S]*)/);
+                if (match) {
+                    timeline.push({ type: 'IT', date: match[1], content: match[2] });
+                } else {
+                    timeline.push({ type: 'IT', content: p });
                 }
             } else {
                 timeline.push({ type: 'OTHER', content: p });
@@ -96,14 +103,20 @@ export function ITSupportBoard({ initialTickets }: { initialTickets: any[] }) {
     };
 
     const handleCommentSave = async () => {
-        if (!selectedTicket) return;
+        if (!selectedTicket || !tempComment.trim()) return;
         setIsSaving(true);
         try {
             const res = await updateTicketStatus(selectedTicket.id, selectedTicket.status, tempComment);
             if (res.success) {
-                toast.success(`Note interne sauvegardée avec succès`);
-                setTickets(tickets.map(t => t.id === selectedTicket.id ? { ...t, adminComment: tempComment } : t));
-                setSelectedTicket({ ...selectedTicket, adminComment: tempComment });
+                toast.success(`Le message IT a été ajouté à l'incident et synchronisé`);
+                
+                const dateStr = new Date().toLocaleDateString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+                const newDesc = selectedTicket.description + `\n\n--- \n[RETOUR SUPPORT IT - ${dateStr}] :\n${tempComment}`;
+                
+                const updatedTicket = { ...selectedTicket, description: newDesc, adminComment: tempComment };
+                setSelectedTicket(updatedTicket);
+                setTickets(tickets.map(t => t.id === selectedTicket.id ? updatedTicket : t));
+                setTempComment(""); 
             } else {
                 toast.error(res.error);
             }
@@ -171,7 +184,7 @@ export function ITSupportBoard({ initialTickets }: { initialTickets: any[] }) {
                         }}
                         onClick={() => {
                             setSelectedTicket(t);
-                            setTempComment(t.adminComment || "");
+                            setTempComment(""); // Rendre le terminal vide pour un nouveau log
                         }}
                         className="bg-[#151e32] border border-slate-700 p-5 rounded-xl shadow-lg hover:shadow-cyan-900/20 hover:border-blue-500/50 transition-all cursor-grab active:cursor-grabbing group relative overflow-hidden"
                     >
@@ -394,18 +407,22 @@ export function ITSupportBoard({ initialTickets }: { initialTickets: any[] }) {
                                     <div className="relative space-y-6 before:absolute before:inset-0 before:ml-4 md:before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-blue-500 before:via-slate-700 before:to-transparent">
                                         
                                         {parseDescriptionToTimeline(selectedTicket.description).map((item, idx) => (
-                                            <div key={idx} className="relative flex items-start justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                                            <div key={idx} className={`relative flex items-start justify-between md:justify-normal ${item.type === 'SALARIE' ? 'md:flex-row-reverse' : ''} group is-active`}>
                                                 {/* Écrou de timeline */}
                                                 <div className="flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full border-4 border-[#0B1120] bg-slate-800 text-slate-400 shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow-[0_0_0_2px_rgba(59,130,246,0.2)] z-10 transition-transform group-hover:scale-110">
-                                                    {item.type === 'ORIGINAL' ? <AlertTriangle className="w-3 h-3 md:w-4 md:h-4 text-blue-400" /> : <MessageSquare className="w-3 h-3 md:w-4 md:h-4 text-orange-400" />}
+                                                    {item.type === 'ORIGINAL' ? <AlertTriangle className="w-3 h-3 md:w-4 md:h-4 text-blue-400" /> : item.type === 'IT' ? <Search className="w-3 h-3 md:w-4 md:h-4 text-emerald-400" /> : <MessageSquare className="w-3 h-3 md:w-4 md:h-4 text-orange-400" />}
                                                 </div>
                                                 
                                                 {/* Carte contenu */}
-                                                <div className={`w-[calc(100%-3rem)] md:w-[calc(50%-2.5rem)] bg-[#151e32] border border-slate-700/60 p-4 md:p-5 rounded-2xl shadow-xl transition-all hover:border-slate-500 hover:shadow-2xl ml-2 md:ml-0 ${item.type === 'ORIGINAL' ? 'hover:shadow-blue-900/20' : 'hover:shadow-orange-900/20'}`}>
+                                                <div className={`w-[calc(100%-3rem)] md:w-[calc(50%-2.5rem)] bg-[#151e32] border border-slate-700/60 p-4 md:p-5 rounded-2xl shadow-xl transition-all hover:border-slate-500 hover:shadow-2xl ml-2 md:ml-0 ${item.type === 'ORIGINAL' ? 'hover:shadow-blue-900/20' : item.type === 'IT' ? 'hover:shadow-emerald-900/20 border-emerald-900/30' : 'hover:shadow-orange-900/20'}`}>
                                                     <div className="flex flex-col md:flex-row md:items-center justify-between mb-3 text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-wider gap-2">
                                                         {item.type === 'ORIGINAL' ? (
                                                             <div className="flex items-center gap-2 text-blue-400">
                                                                 <UserIcon className="w-3 h-3" /> Déclaration initiale
+                                                            </div>
+                                                        ) : item.type === 'IT' ? (
+                                                            <div className="flex items-center gap-2 text-emerald-400">
+                                                                <ShieldCheck className="w-3 h-3" /> Réponse Support IT
                                                             </div>
                                                         ) : (
                                                             <div className="flex items-center gap-2 text-orange-400">
