@@ -26,6 +26,7 @@ export async function getNotificationStats(userId?: string) {
         let myAppointments = 0;
         let myLeaves = 0;
         let myMission = 0;
+        let mySupport = 0;
 
         if (userId) {
             const [adv, serv, appt, leave, support] = await Promise.all([
@@ -39,7 +40,7 @@ export async function getNotificationStats(userId?: string) {
             myServices = serv;
             myAppointments = appt;
             myLeaves = leave;
-            let mySupport = support;
+            mySupport = support;
 
             // Mission pour demain (non validée)
             const tomorrow = addDays(new Date(), 1);
