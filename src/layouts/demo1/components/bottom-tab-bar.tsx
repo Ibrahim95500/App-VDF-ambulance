@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSession } from 'next-auth/react';
-import { Home, CalendarClock, Euro, Users, User, LayoutList, LifeBuoy, CalendarRange, Siren, Banknote, CalendarDays, ArrowLeftRight } from 'lucide-react';
+import { Home, CalendarClock, Euro, Users, User, LayoutList, LifeBuoy, CalendarRange, Siren, Banknote, CalendarDays, ArrowLeftRight, HardDrive } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { motion, AnimatePresence } from 'motion/react';
@@ -55,24 +55,41 @@ export function BottomTabBar() {
     const safeIsRegulateur = isLoadingOrEmpty ? true : isRegulateur;
     const safeIsAdmin = isLoadingOrEmpty ? true : (session?.user as any)?.roles?.includes('ADMIN');
     const safeIsRealRH = isLoadingOrEmpty ? true : isRealRH;
+    const isStrictIT = !isLoadingOrEmpty && (session?.user as any)?.roles?.includes('SERVICE_IT') && (session?.user as any)?.roles?.length === 1;
+    const safeIsIT = isLoadingOrEmpty ? true : (session?.user as any)?.roles?.includes('SERVICE_IT');
 
     const isRHSection = pathname.startsWith('/dashboard/rh');
+    const isITSection = pathname.startsWith('/dashboard/it');
 
     // Determine tabs based on current view
-    const navItems = isRHSection
-        ? [
+    let navItems: any[] = [];
+
+    if (isStrictIT) {
+        navItems = [
+            { label: 'Support IT', href: '/dashboard/it', icon: HardDrive, badgeCount: stats.global.support }
+        ];
+    } else if (isITSection) {
+        navItems = [
+            { label: 'Support IT', href: '/dashboard/it', icon: HardDrive, badgeCount: stats.global.support },
+            { label: 'Côté Salarié', href: '/dashboard/salarie', icon: ArrowLeftRight, isSwitch: true }
+        ];
+    } else if (isRHSection) {
+        navItems = [
             safeIsRealRH ? { label: 'Accueil', href: '/dashboard/rh', icon: Home } : null,
             { label: 'Régule RH', href: '/dashboard/rh/regulation', icon: Siren, badgeCount: stats.global.regulation },
             (safeIsRealRH || safeIsRegulateur) ? { label: 'Équipe', href: '/dashboard/rh/collaborateurs', icon: Users } : null,
             { label: 'Côté Salarié', href: '/dashboard/salarie', icon: ArrowLeftRight, isSwitch: true }
-        ].filter(Boolean) as any[]
-        : [
+        ].filter(Boolean);
+    } else {
+        navItems = [
             { label: 'Acomptes', href: '/dashboard/salarie/acomptes', icon: Banknote, badgeCount: stats.personal.advances },
             { label: 'Mon Espace', href: '/dashboard/salarie/collaborateurs', icon: Users },
             { label: 'Services', href: '/dashboard/salarie/services', icon: LifeBuoy, badgeCount: stats.personal.services + stats.personal.leaves },
             { label: safeIsRegulateur ? 'Régulation' : 'Régule Salarié', href: '/dashboard/salarie/regulation', icon: Siren, badgeCount: stats.personal.mission },
-            safeHasPrivilege ? { label: 'Côté RH', href: safeIsRealRH ? '/dashboard/rh' : '/dashboard/rh/regulation', icon: ArrowLeftRight, isSwitch: true } : null
-        ].filter(Boolean) as any[];
+            safeIsIT ? { label: 'Centre IT', href: '/dashboard/it', icon: HardDrive, isSwitch: true, badgeCount: stats.global.support } 
+            : safeHasPrivilege ? { label: 'Côté RH', href: safeIsRealRH ? '/dashboard/rh' : '/dashboard/rh/regulation', icon: ArrowLeftRight, isSwitch: true } : null
+        ].filter(Boolean);
+    }
 
     return (
         <>
