@@ -177,7 +177,7 @@ export function UserSupportBoard({ initialTickets }: { initialTickets: any[] }) 
         const original = parts[0];
         const timeline = [];
         
-        timeline.push({ type: 'ORIGINAL', content: original });
+        timeline.push({ type: 'ORIGINAL', content: original, date: undefined, image: null });
         
         for (let i = 1; i < parts.length; i++) {
             const p = parts[i];
@@ -196,7 +196,7 @@ export function UserSupportBoard({ initialTickets }: { initialTickets: any[] }) 
                     timeline.push(parseTimelineItem('IT', undefined, p));
                 }
             } else {
-                timeline.push({ type: 'OTHER', content: p });
+                timeline.push({ type: 'OTHER', content: p, date: undefined, image: null });
             }
         }
         return timeline;
