@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { salarieUpdateTicketStatus } from "@/actions/it-support.actions";
@@ -17,8 +18,28 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ITSupportKpi as UserSupportKpi } from "./user-support-kpi";
 
 export function UserSupportBoard({ initialTickets }: { initialTickets: any[] }) {
+    const router = useRouter();
     const [tickets, setTickets] = useState(initialTickets);
     const [selectedTicket, setSelectedTicket] = useState<any | null>(null);
+
+    // Sync new data continuously from server
+    useEffect(() => {
+        setTickets(initialTickets);
+        if (selectedTicket) {
+            const updated = initialTickets.find(t => t.id === selectedTicket.id);
+            if (updated && (updated.description !== selectedTicket.description || updated.status !== selectedTicket.status)) {
+                setSelectedTicket(updated);
+            }
+        }
+    }, [initialTickets]);
+
+    // Polling every 10 seconds
+    useEffect(() => {
+        const interval = setInterval(() => {
+            router.refresh();
+        }, 10000);
+        return () => clearInterval(interval);
+    }, [router]);
     const [tempComment, setTempComment] = useState("");
     const [isSaving, setIsSaving] = useState(false);
     const [feedbackImageStr, setFeedbackImageStr] = useState<string | null>(null);
