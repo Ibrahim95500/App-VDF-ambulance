@@ -582,8 +582,8 @@ export function UserSupportBoard({ initialTickets }: { initialTickets: any[] }) 
                                 <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-6 flex items-center gap-2">
                                     <div className="w-6 h-px bg-slate-700"></div> Chronologie de l'incident
                                 </h3>
-                                {/* Timeline Wrapper - Added padding bottom for mobile so text isn't cut off */}
-                                <div className="flex-1 lg:max-h-[500px] overflow-y-auto pr-2 pb-6 customize-scrollbar">
+                                {/* Timeline Wrapper - Removed max-height so it scrolls with the modal body natively */}
+                                <div className="flex-1 pr-2 pb-6">
                                     <div className="relative space-y-6 before:absolute before:inset-0 before:ml-4 md:before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-blue-500 before:via-slate-700 before:to-transparent">
                                         
                                         {parseDescriptionToTimeline(selectedTicket.description).map((item, idx) => (
@@ -658,7 +658,7 @@ export function UserSupportBoard({ initialTickets }: { initialTickets: any[] }) 
                                 </div>
                             </div>
                             
-                            <div className="w-full lg:w-1/3 flex flex-col gap-6">
+                            <div className="w-full lg:w-1/3 flex flex-col gap-6 lg:sticky lg:top-0 h-max pb-4">
                                 <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shrink-0">
                                     <div className="px-4 py-3 border-b border-slate-800 bg-slate-800/50 flex items-center justify-between">
                                         <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">

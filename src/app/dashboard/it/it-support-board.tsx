@@ -406,11 +406,11 @@ export function ITSupportBoard({ initialTickets }: { initialTickets: any[] }) {
                             </div>
                         </div>
 
-                        <div className="flex flex-col md:flex-row flex-1 overflow-y-auto overflow-x-hidden md:overflow-hidden h-full md:h-[70vh]">
+                        <div className="flex flex-col md:flex-row flex-1 overflow-y-auto overflow-x-hidden md:min-h-[50vh]">
                             
                             {/* LEFT COLUMN : INTERACTIVE TIMELINE */}
-                            <div className="flex-1 border-b md:border-b-0 md:border-r border-slate-800 md:overflow-y-auto bg-[#0B1120] scrollbar-thin scrollbar-thumb-slate-800 scrollbar-track-transparent order-2 md:order-1 shrink-0 h-[60vh] md:h-full">
-                                <div className="p-5 md:p-8 space-y-8">
+                            <div className="flex-1 border-b md:border-b-0 md:border-r border-slate-800 bg-[#0B1120] order-2 md:order-1 h-auto min-h-0">
+                                <div className="p-5 md:p-8 space-y-8 pb-10">
                                     <div className="flex items-center gap-3 mb-6">
                                         <div className="h-0.5 w-8 bg-blue-500 rounded"></div>
                                         <h4 className="text-xs md:text-sm font-black uppercase tracking-widest text-slate-400">Chronologie de l'incident</h4>
@@ -493,7 +493,7 @@ export function ITSupportBoard({ initialTickets }: { initialTickets: any[] }) {
                             </div>
 
                             {/* RIGHT COLUMN : ACTION CENTER */}
-                            <div className="w-full md:w-[400px] bg-[#0f172a] shadow-[-10px_0_30px_rgba(0,0,0,0.5)] flex flex-col z-20 shrink-0 order-1 md:order-2 h-auto md:h-full">
+                            <div className="w-full md:w-[400px] bg-[#0f172a] shadow-[-10px_0_30px_rgba(0,0,0,0.5)] flex flex-col z-20 shrink-0 order-1 md:order-2 h-max md:sticky md:top-0">
                                 <div className="p-5 md:p-8 border-b border-slate-800">
                                     <Label className="text-[10px] md:text-xs text-slate-400 font-black tracking-widest uppercase block mb-3 md:mb-4 flex items-center gap-2">
                                         <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
