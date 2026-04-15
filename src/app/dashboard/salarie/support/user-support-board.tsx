@@ -622,6 +622,9 @@ export function UserSupportBoard({ initialTickets }: { initialTickets: any[] }) 
                                                             </div>
                                                         </div>
                                                     )}
+                                                </div>
+                                            </div>
+                                        ))}
 
                                         {selectedTicket.pageUrl && selectedTicket.pageUrl.length > 5 && (
                                             <div className="relative flex items-center justify-center md:items-start group is-active mt-6">
