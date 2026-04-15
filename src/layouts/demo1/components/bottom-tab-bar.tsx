@@ -27,8 +27,8 @@ export function BottomTabBar() {
     const isRealRH = (session?.user as any)?.roles?.includes('RH') || (session?.user as any)?.roles?.includes('ADMIN');
 
     const [stats, setStats] = useState({
-        global: { advances: 0, services: 0, appointments: 0, leaves: 0, regulation: 0, total: 0 },
-        personal: { advances: 0, services: 0, appointments: 0, leaves: 0, mission: 0, total: 0 }
+        global: { advances: 0, services: 0, appointments: 0, leaves: 0, regulation: 0, support: 0, total: 0 },
+        personal: { advances: 0, services: 0, appointments: 0, leaves: 0, mission: 0, support: 0, total: 0 }
     });
 
     useEffect(() => {
