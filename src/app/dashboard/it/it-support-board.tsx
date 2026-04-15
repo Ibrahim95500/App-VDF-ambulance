@@ -207,9 +207,64 @@ export function ITSupportBoard({ initialTickets }: { initialTickets: any[] }) {
         </div>
     );
 
+    // VUE CARTES MOBILES (Responsive List)
+    const MobileView = () => (
+        <div className="md:hidden space-y-4 pb-12">
+            {filteredTickets.map(t => (
+                <div 
+                    key={t.id} 
+                    onClick={() => {
+                        setSelectedTicket(t);
+                        setTempComment(t.adminComment || "");
+                    }} 
+                    className="bg-[#0B1120] border border-slate-700 p-5 rounded-2xl shadow-xl flex flex-col gap-4 relative overflow-hidden"
+                >
+                    <div className="absolute top-0 right-0 p-3 opacity-50">
+                        {t.status === 'OPEN' && <AlertTriangle className="w-10 h-10 text-blue-500" />}
+                        {t.status === 'IN_PROGRESS' && <HardDrive className="w-10 h-10 text-orange-500" />}
+                        {t.status === 'RESOLVED' && <ShieldCheck className="w-10 h-10 text-emerald-500" />}
+                    </div>
+                    
+                    <div className="flex items-center justify-between z-10">
+                        {getUrgencyBadge(t.urgency)}
+                        <span className="font-mono text-[10px] font-bold text-slate-500">#{t.id.slice(-6).toUpperCase()}</span>
+                    </div>
+                    
+                    <h3 className="font-bold text-slate-200 text-sm leading-snug z-10">{t.subject}</h3>
+                    
+                    <div className="grid grid-cols-2 gap-2 border-t border-slate-800 pt-3 z-10">
+                        <div>
+                            <span className="text-[9px] uppercase font-bold text-slate-500 block mb-1">DÉCLARÉ PAR</span>
+                            <div className="flex items-center gap-2">
+                                <div className="h-5 w-5 uppercase rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-[8px] font-black text-slate-300">
+                                    {t.user.firstName[0]}
+                                </div>
+                                <span className="text-[11px] font-bold text-slate-300 truncate">{t.user.firstName}</span>
+                            </div>
+                        </div>
+                        <div>
+                            <span className="text-[9px] uppercase font-bold text-slate-500 block mb-1">DATE</span>
+                            <span className="text-[11px] font-bold text-slate-300">{format(new Date(t.createdAt), "dd/MM à HH:mm", { locale: fr })}</span>
+                        </div>
+                    </div>
+                    
+                    <div className="flex items-center justify-between border-t border-slate-800 pt-3 mt-1 z-10">
+                        <span className="text-[9px] uppercase font-bold text-slate-500 block mt-1">STATUT</span>
+                        {getStatusBadge(t.status)}
+                    </div>
+                </div>
+            ))}
+            {filteredTickets.length === 0 && (
+                <div className="text-center py-10 text-slate-500 text-xs uppercase font-bold tracking-widest">
+                    Aucun ticket trouvé.
+                </div>
+            )}
+        </div>
+    );
+
     // VUE TABLE
     const TableView = () => (
-        <div className="bg-[#0B1120] rounded-2xl border border-slate-800 overflow-hidden shadow-2xl">
+        <div className="hidden md:block bg-[#0B1120] rounded-2xl border border-slate-800 overflow-hidden shadow-2xl">
             <table className="w-full text-sm text-left">
                 <thead className="bg-[#151e32] text-slate-400 text-[10px] uppercase font-black tracking-widest border-b border-slate-800">
                     <tr>
@@ -285,14 +340,21 @@ export function ITSupportBoard({ initialTickets }: { initialTickets: any[] }) {
                 </div>
 
                 <TabsContent value="kanban" className="mt-0">
-                    <div className="flex gap-5 overflow-x-auto pb-4">
-                        <KanbanColumn title="Nouveaux & Ouverts" statusId="OPEN" icon={AlertTriangle} colorClass="text-blue-400" tickets={filteredTickets.filter((t: any) => t.status === "OPEN")} />
-                        <KanbanColumn title="En Cours d'analyse" statusId="IN_PROGRESS" icon={HardDrive} colorClass="text-orange-400" tickets={filteredTickets.filter((t: any) => t.status === "IN_PROGRESS")} />
-                        <KanbanColumn title="Résolus & Clôturés" statusId="RESOLVED" icon={ShieldCheck} colorClass="text-emerald-400" tickets={filteredTickets.filter((t: any) => t.status === "RESOLVED" || t.status === "CLOSED")} />
+                    <div className="flex flex-col md:flex-row gap-5 overflow-x-auto pb-4 snap-x sm:snap-none">
+                        <div className="snap-center sm:min-w-[320px]">
+                            <KanbanColumn title="Nouveaux & Ouverts" statusId="OPEN" icon={AlertTriangle} colorClass="text-blue-400" tickets={filteredTickets.filter((t: any) => t.status === "OPEN")} />
+                        </div>
+                        <div className="snap-center sm:min-w-[320px]">
+                            <KanbanColumn title="En Cours d'analyse" statusId="IN_PROGRESS" icon={HardDrive} colorClass="text-orange-400" tickets={filteredTickets.filter((t: any) => t.status === "IN_PROGRESS")} />
+                        </div>
+                        <div className="snap-center sm:min-w-[320px]">
+                            <KanbanColumn title="Résolus & Clôturés" statusId="RESOLVED" icon={ShieldCheck} colorClass="text-emerald-400" tickets={filteredTickets.filter((t: any) => t.status === "RESOLVED" || t.status === "CLOSED")} />
+                        </div>
                     </div>
                 </TabsContent>
 
                 <TabsContent value="table" className="mt-0">
+                    <MobileView />
                     <TableView />
                 </TabsContent>
             </Tabs>
@@ -300,47 +362,47 @@ export function ITSupportBoard({ initialTickets }: { initialTickets: any[] }) {
             {/* TICKET DETAILS MODAL (PREMIUM HIGH-TECH) */}
             {selectedTicket && (
                 <Dialog open={!!selectedTicket} onOpenChange={(open) => !open && setSelectedTicket(null)}>
-                    <DialogContent className="sm:max-w-5xl lg:max-w-6xl w-full bg-[#0a0f1c] p-0 overflow-hidden border border-slate-800 shadow-[0_0_80px_rgba(0,100,255,0.05)]">
-                        <div className="bg-[#0f172a]/90 backdrop-blur-xl px-8 py-6 flex justify-between items-start border-b border-slate-800 relative overflow-hidden">
-                            <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-[100px] pointer-events-none"></div>
+                    <DialogContent className="sm:max-w-5xl lg:max-w-6xl w-[95%] md:w-full bg-[#0a0f1c] p-0 overflow-hidden border border-slate-800 shadow-[0_0_80px_rgba(0,100,255,0.05)] max-h-[90vh] md:max-h-[85vh] flex flex-col rounded-2xl">
+                        <div className="shrink-0 bg-[#0f172a]/90 backdrop-blur-xl px-5 md:px-8 py-5 md:py-6 flex justify-between items-start border-b border-slate-800 relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-32 md:w-64 h-32 md:h-64 bg-blue-500/10 rounded-full blur-[50px] md:blur-[100px] pointer-events-none"></div>
                             
                             <div className="space-y-3 w-full pr-8 relative z-10">
-                                <div className="flex items-center gap-4">
+                                <div className="flex items-center gap-2 md:gap-4 flex-wrap">
                                     {getUrgencyBadge(selectedTicket.urgency)}
-                                    <span className="text-xs font-black text-slate-500 uppercase tracking-widest bg-slate-900 px-3 py-1 rounded-md border border-slate-800">
-                                        INCIDENT #{selectedTicket.id.slice(-8).toUpperCase()}
+                                    <span className="text-[10px] md:text-xs font-black text-slate-500 uppercase tracking-widest bg-slate-900 px-2 md:px-3 py-1 rounded-md border border-slate-800">
+                                        #{selectedTicket.id.slice(-8).toUpperCase()}
                                     </span>
                                 </div>
-                                <DialogTitle className="text-3xl font-black text-white tracking-tight leading-tight">{selectedTicket.subject}</DialogTitle>
-                                <DialogDescription className="text-sm font-bold text-slate-400 flex items-center gap-3">
-                                    <Clock className="w-4 h-4 text-blue-400" />
-                                    Créé le {format(new Date(selectedTicket.createdAt), "dd MMMM yyyy à HH:mm", { locale: fr })}
+                                <DialogTitle className="text-xl md:text-3xl font-black text-white tracking-tight leading-tight">{selectedTicket.subject}</DialogTitle>
+                                <DialogDescription className="text-xs md:text-sm font-bold text-slate-400 flex items-center gap-2 md:gap-3">
+                                    <Clock className="w-3 h-3 md:w-4 md:h-4 text-blue-400" />
+                                    {format(new Date(selectedTicket.createdAt), "dd MMM yy 'à' HH:mm", { locale: fr })}
                                 </DialogDescription>
                             </div>
                         </div>
 
-                        <div className="flex flex-col md:flex-row h-[75vh] 2xl:h-[80vh]">
+                        <div className="flex flex-col md:flex-row flex-1 overflow-y-auto overflow-x-hidden md:overflow-hidden h-full md:h-[70vh]">
                             
                             {/* LEFT COLUMN : INTERACTIVE TIMELINE */}
-                            <div className="flex-1 border-r border-slate-800 overflow-y-auto bg-[#0B1120] scrollbar-thin scrollbar-thumb-slate-800 scrollbar-track-transparent">
-                                <div className="p-8 space-y-8">
+                            <div className="flex-1 border-b md:border-b-0 md:border-r border-slate-800 md:overflow-y-auto bg-[#0B1120] scrollbar-thin scrollbar-thumb-slate-800 scrollbar-track-transparent order-2 md:order-1 shrink-0 h-[60vh] md:h-full">
+                                <div className="p-5 md:p-8 space-y-8">
                                     <div className="flex items-center gap-3 mb-6">
                                         <div className="h-0.5 w-8 bg-blue-500 rounded"></div>
-                                        <h4 className="text-sm font-black uppercase tracking-widest text-slate-400">Chronologie de l'incident</h4>
+                                        <h4 className="text-xs md:text-sm font-black uppercase tracking-widest text-slate-400">Chronologie de l'incident</h4>
                                     </div>
                                     
-                                    <div className="relative space-y-8 before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-blue-500 before:via-slate-700 before:to-transparent">
+                                    <div className="relative space-y-6 before:absolute before:inset-0 before:ml-4 md:before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-blue-500 before:via-slate-700 before:to-transparent">
                                         
                                         {parseDescriptionToTimeline(selectedTicket.description).map((item, idx) => (
                                             <div key={idx} className="relative flex items-start justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
                                                 {/* Écrou de timeline */}
-                                                <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-[#0B1120] bg-slate-800 text-slate-400 shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow-[0_0_0_2px_rgba(59,130,246,0.2)] z-10 transition-transform group-hover:scale-110">
-                                                    {item.type === 'ORIGINAL' ? <AlertTriangle className="w-4 h-4 text-blue-400" /> : <MessageSquare className="w-4 h-4 text-orange-400" />}
+                                                <div className="flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-full border-4 border-[#0B1120] bg-slate-800 text-slate-400 shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 shadow-[0_0_0_2px_rgba(59,130,246,0.2)] z-10 transition-transform group-hover:scale-110">
+                                                    {item.type === 'ORIGINAL' ? <AlertTriangle className="w-3 h-3 md:w-4 md:h-4 text-blue-400" /> : <MessageSquare className="w-3 h-3 md:w-4 md:h-4 text-orange-400" />}
                                                 </div>
                                                 
                                                 {/* Carte contenu */}
-                                                <div className={`w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-[#151e32] border border-slate-700/60 p-5 rounded-2xl shadow-xl transition-all hover:border-slate-500 hover:shadow-2xl ${item.type === 'ORIGINAL' ? 'hover:shadow-blue-900/20' : 'hover:shadow-orange-900/20'}`}>
-                                                    <div className="flex items-center justify-between mb-3 text-xs font-bold text-slate-400 uppercase tracking-wider">
+                                                <div className={`w-[calc(100%-3rem)] md:w-[calc(50%-2.5rem)] bg-[#151e32] border border-slate-700/60 p-4 md:p-5 rounded-2xl shadow-xl transition-all hover:border-slate-500 hover:shadow-2xl ml-2 md:ml-0 ${item.type === 'ORIGINAL' ? 'hover:shadow-blue-900/20' : 'hover:shadow-orange-900/20'}`}>
+                                                    <div className="flex flex-col md:flex-row md:items-center justify-between mb-3 text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-wider gap-2">
                                                         {item.type === 'ORIGINAL' ? (
                                                             <div className="flex items-center gap-2 text-blue-400">
                                                                 <UserIcon className="w-3 h-3" /> Déclaration initiale
@@ -350,9 +412,9 @@ export function ITSupportBoard({ initialTickets }: { initialTickets: any[] }) {
                                                                 <ArrowRight className="w-3 h-3" /> Retour Salarié
                                                             </div>
                                                         )}
-                                                        {item.date && <span>{item.date}</span>}
+                                                        {item.date && <span className="opacity-75">{item.date}</span>}
                                                     </div>
-                                                    <div className="text-slate-300 whitespace-pre-wrap font-medium leading-relaxed text-sm">
+                                                    <div className="text-slate-300 whitespace-pre-wrap font-medium leading-relaxed text-xs md:text-sm">
                                                         {item.content}
                                                     </div>
                                                 </div>
@@ -392,9 +454,9 @@ export function ITSupportBoard({ initialTickets }: { initialTickets: any[] }) {
                             </div>
 
                             {/* RIGHT COLUMN : ACTION CENTER */}
-                            <div className="w-full md:w-[400px] bg-[#0f172a] shadow-[-10px_0_30px_rgba(0,0,0,0.5)] flex flex-col z-20">
-                                <div className="p-8 border-b border-slate-800">
-                                    <Label className="text-xs text-slate-400 font-black tracking-widest uppercase block mb-4 flex items-center gap-2">
+                            <div className="w-full md:w-[400px] bg-[#0f172a] shadow-[-10px_0_30px_rgba(0,0,0,0.5)] flex flex-col z-20 shrink-0 order-1 md:order-2 h-auto md:h-full">
+                                <div className="p-5 md:p-8 border-b border-slate-800">
+                                    <Label className="text-[10px] md:text-xs text-slate-400 font-black tracking-widest uppercase block mb-3 md:mb-4 flex items-center gap-2">
                                         <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
                                         État du Système
                                     </Label>
@@ -411,15 +473,15 @@ export function ITSupportBoard({ initialTickets }: { initialTickets: any[] }) {
                                     </Select>
                                 </div>
 
-                                <div className="p-8 border-b border-slate-800 bg-[#151e32]/30">
-                                    <Label className="text-xs text-slate-400 font-black tracking-widest uppercase block mb-6">Identification Salarié</Label>
-                                    <div className="flex items-center gap-4 bg-[#0a0f1c] p-4 rounded-2xl border border-slate-800/50 shadow-inner">
-                                        <div className="h-14 w-14 uppercase rounded-full bg-gradient-to-br from-slate-700 to-slate-900 border-2 border-slate-600 flex items-center justify-center text-xl font-black text-white shadow-lg">
+                                <div className="p-5 md:p-8 border-b border-slate-800 bg-[#151e32]/30">
+                                    <Label className="text-[10px] md:text-xs text-slate-400 font-black tracking-widest uppercase block mb-3 md:mb-6">Identification Salarié</Label>
+                                    <div className="flex items-center gap-3 md:gap-4 bg-[#0a0f1c] p-3 md:p-4 rounded-2xl border border-slate-800/50 shadow-inner">
+                                        <div className="h-10 w-10 md:h-14 md:w-14 uppercase rounded-full bg-gradient-to-br from-slate-700 to-slate-900 border-2 border-slate-600 flex items-center justify-center text-sm md:text-xl font-black text-white shadow-lg">
                                             {selectedTicket.user.firstName[0]}{selectedTicket.user.lastName[0]}
                                         </div>
                                         <div>
-                                            <div className="font-black text-lg text-white">{selectedTicket.user.firstName} {selectedTicket.user.lastName}</div>
-                                            <div className="text-[10px] uppercase font-bold tracking-widest text-slate-500 mt-1 flex flex-wrap gap-1">
+                                            <div className="font-black text-sm md:text-lg text-white">{selectedTicket.user.firstName} {selectedTicket.user.lastName}</div>
+                                            <div className="text-[9px] md:text-[10px] uppercase font-bold tracking-widest text-slate-500 mt-1 flex flex-wrap gap-1">
                                                 {(selectedTicket.user.roles || []).map((r: string) => (
                                                     <span key={r} className="bg-slate-800 px-2 py-0.5 rounded">{r}</span>
                                                 ))}
@@ -428,27 +490,27 @@ export function ITSupportBoard({ initialTickets }: { initialTickets: any[] }) {
                                     </div>
                                 </div>
 
-                                <div className="flex-1 flex flex-col p-8 bg-gradient-to-b from-transparent to-[#0B1120]">
-                                    <Label className="text-xs text-slate-400 font-black tracking-widest uppercase block mb-4 flex items-center justify-between">
+                                <div className="flex-1 flex flex-col p-5 md:p-8 bg-gradient-to-b from-transparent to-[#0B1120] min-h-[300px]">
+                                    <Label className="text-[10px] md:text-xs text-slate-400 font-black tracking-widest uppercase block mb-3 md:mb-4 flex items-center justify-between">
                                         Terminal de Résolution
-                                        <span className="text-[10px] text-blue-400 font-medium normal-case bg-blue-500/10 px-2 py-1 rounded">Visible par le salarié</span>
+                                        <span className="text-[9px] md:text-[10px] text-blue-400 font-medium normal-case bg-blue-500/10 px-2 py-1 rounded">Visible Salarié</span>
                                     </Label>
-                                    <div className="relative flex-1 flex flex-col">
+                                    <div className="relative flex-1 flex flex-col min-h-32">
                                         <Textarea 
-                                            className="flex-1 bg-[#0a0f1c] border-slate-700 text-green-400 text-sm p-5 rounded-2xl rounded-b-none focus-visible:ring-1 focus-visible:ring-blue-500 placeholder:text-slate-700 font-mono resize-none shadow-inner" 
+                                            className="flex-1 bg-[#0a0f1c] border-slate-700 text-green-400 text-xs md:text-sm p-4 md:p-5 rounded-2xl rounded-b-none focus-visible:ring-1 focus-visible:ring-blue-500 placeholder:text-slate-700 font-mono resize-none shadow-inner min-h-[120px]" 
                                             placeholder="> Rédigez le log de résolution technique ici..."
                                             value={tempComment}
                                             onChange={(e) => setTempComment(e.target.value)}
                                             maxLength={2000}
                                         />
-                                        <div className="bg-[#1e293b] border border-slate-700 border-t-0 p-3 rounded-b-2xl flex justify-between items-center shadow-lg">
-                                            <span className="text-[10px] font-mono font-bold text-slate-500 px-2">BYTES: {tempComment.length}/2000</span>
+                                        <div className="bg-[#1e293b] border border-slate-700 border-t-0 p-2 md:p-3 rounded-b-2xl flex justify-between items-center shadow-lg">
+                                            <span className="text-[9px] md:text-[10px] font-mono font-bold text-slate-500 px-2">BYTES: {tempComment.length}/2K</span>
                                             <Button 
-                                                className="bg-blue-600 hover:bg-blue-500 text-white font-black uppercase tracking-widest text-xs px-6 shadow-[0_0_15px_rgba(37,99,235,0.4)] hover:shadow-[0_0_25px_rgba(37,99,235,0.6)] transition-all"
+                                                className="bg-blue-600 hover:bg-blue-500 text-white font-black uppercase tracking-widest text-[10px] md:text-xs px-4 md:px-6 h-8 md:h-10 shadow-[0_0_15px_rgba(37,99,235,0.4)] hover:shadow-[0_0_25px_rgba(37,99,235,0.6)] transition-all"
                                                 onClick={handleCommentSave}
                                                 disabled={isSaving}
                                             >
-                                                <Save className="w-4 h-4 mr-2" />
+                                                <Save className="w-3 h-3 md:w-4 md:h-4 mr-2" />
                                                 Commit
                                             </Button>
                                         </div>
