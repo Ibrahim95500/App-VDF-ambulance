@@ -49,8 +49,13 @@ async function sendStatusReport(reqChatId?: number) {
     const isCo = !isBotDisconnected;
     const isPaused = isBotPaused;
     
+    const now = new Date();
+    const hours = now.getHours();
+    const mins = now.getMinutes();
+    const isMorningPause = (hours === 5 && mins >= 30) || (hours === 6) || (hours === 7 && mins === 0);
+    
     let msg = "📊 *Rapport d'État - Sniper PRT*\n\n";
-    const dateStr = new Date().toLocaleString('fr-FR', { timeZone: 'Europe/Paris' });
+    const dateStr = now.toLocaleString('fr-FR', { timeZone: 'Europe/Paris' });
     msg += `🕒 *Heure* : ${dateStr}\n\n`;
 
     if (!isCo) {
@@ -60,7 +65,9 @@ async function sendStatusReport(reqChatId?: number) {
         return;
     }
 
-    if (isPaused) {
+    if (isMorningPause) {
+        msg += `🛌 *Statut* : **PAUSE MATINALE (AUTOMATIQUE) 🔵**\nLe robot dort jusqu'à 07h00 tapante.`;
+    } else if (isPaused) {
         msg += `⏸️ *Statut* : **EN PAUSE 🟡**\nLe robot est connecté au site mais le sniping est mis sur pause.`;
     } else {
         msg += `✅ *Statut* : **EN MISSION (SNIPING ACTIF) 🟢**\nLe robot scanne activement le radar PRT !`;
