@@ -50,8 +50,12 @@ async function sendStatusReport(reqChatId?: number) {
     const isPaused = isBotPaused;
     
     const now = new Date();
-    const hours = now.getHours();
-    const mins = now.getMinutes();
+    // 🌍 Forcer le calcul de l'heure exacte sur le fuseau de Paris, peu importe l'heure du VPS Hostinger
+    const parisTimeStr = now.toLocaleString("en-US", { timeZone: "Europe/Paris", hour12: false });
+    const parisDate = new Date(parisTimeStr);
+    const hours = parisDate.getHours();
+    const mins = parisDate.getMinutes();
+    
     const isMorningPause = (hours === 5 && mins >= 30) || (hours === 6) || (hours === 7 && mins === 0);
     
     let msg = "📊 *Rapport d'État - Sniper PRT*\n\n";
@@ -603,9 +607,11 @@ async function startAgent() {
 
                 // --- PAUSE MATINALE CRITIQUE (05:30 -> 07:00) ---
                 const now = new Date();
-                // Ajustement auto sur l'heure locale VPS (qui devrait être sur Europe/Paris), sinon prévoir un offset
-                const hours = now.getHours();
-                const mins = now.getMinutes();
+                // 🌍 Calculer l'heure de Paris pour s'affranchir du fuseau UTC du VPS Hostinger
+                const parisTimeStr = now.toLocaleString("en-US", { timeZone: "Europe/Paris", hour12: false });
+                const parisDate = new Date(parisTimeStr);
+                const hours = parisDate.getHours();
+                const mins = parisDate.getMinutes();
                 const isMorningPause = (hours === 5 && mins >= 30) || (hours === 6) || (hours === 7 && mins === 0);
                 if (isMorningPause) {
                     console.log(`[${now.toLocaleTimeString()}] ☕ PAUSE MATINALE OBLIGATOIRE (05:30 - 07:00). Le robot se met en veille 1 minute...`);
