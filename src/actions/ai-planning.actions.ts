@@ -140,7 +140,7 @@ NOUVELLES RÈGLES STRICTES DE MACHINE LEARNING :
 
 DONNÉES D'ENTRÉE :
 Véhicules disponibles :
-${JSON.stringify(availableVehicles.map(v => ({ id: v.id, plaque: v.plateNumber, marque: v.brand })), null, 2)}
+${JSON.stringify(availableVehicles.map(v => ({ id: v.id, plaque: v.plateNumber, categorie: v.category })), null, 2)}
 
 Employés disponibles :
 ${JSON.stringify(availableUsers.map(u => ({ id: u.id, nom: u.lastName, prenom: u.firstName, estChef: u.isTeamLeader, diplome: u.diploma, preferenceShift: u.shift })), null, 2)}
