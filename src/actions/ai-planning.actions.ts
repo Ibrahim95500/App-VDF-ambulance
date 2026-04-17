@@ -110,7 +110,7 @@ export async function generateDailyPlanningAI(dateStr: string, shift: 'JOUR' | '
 
         // 4. Constitution du Prompt Contextuel
         const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: "gemini-2.5-pro", generationConfig: { responseMimeType: "application/json" } });
+        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash", generationConfig: { responseMimeType: "application/json" } });
 
         const prompt = `
 Tu es "Jarvis", l'assistant régulateur I.A. principal de VDF Ambulance. 

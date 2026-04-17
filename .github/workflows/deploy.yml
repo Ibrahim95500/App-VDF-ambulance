@@ -49,19 +49,10 @@ jobs:
             EMAIL_SERVER_PASSWORD=${{ secrets.EMAIL_SERVER_PASSWORD }}
             EMAIL_FROM=${{ secrets.EMAIL_FROM }}
             EMAIL_ADMIN_NOTIFY=${{ secrets.EMAIL_ADMIN_NOTIFY }}
-            GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
-            TELEGRAM_BOT_TOKEN=${{ secrets.TELEGRAM_BOT_TOKEN }}
             ENVEOF
             
             # Rebuilder et redémarrer les containers
             docker compose -f $DOCKER_FILE up -d --build
-            
-            # Application des modifications de base de données (Prisma)
-            if [ "${{ github.ref_name }}" = "main" ]; then
-                docker exec vdf-app-prod npx prisma db push
-            else
-                docker exec vdf-app-dev npx prisma db push
-            fi
             
             # Nettoyage des images inutiles
             docker image prune -f
