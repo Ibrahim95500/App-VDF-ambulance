@@ -292,8 +292,8 @@ export function RegulationView() {
                         </PopoverContent>
                     </Popover>
 
-                    {/* BOUTON MAGIQUE IA */}
-                    {(viewMode === 'PLANNING_JOUR' || viewMode === 'PLANNING_NUIT') && (
+                    {/* BOUTON MAGIQUE IA (Masqué Temporairement) */}
+                    {false && (viewMode === 'PLANNING_JOUR' || viewMode === 'PLANNING_NUIT') && (
                         <Button
                             onClick={handleGenerateAI}
                             disabled={isGeneratingAI || loading}
@@ -308,8 +308,8 @@ export function RegulationView() {
                         </Button>
                     )}
 
-                    {/* BOUTON SUPPRIMER IA */}
-                    {(viewMode === 'PLANNING_JOUR' || viewMode === 'PLANNING_NUIT') && (
+                    {/* BOUTON SUPPRIMER IA (Masqué Temporairement) */}
+                    {false && (viewMode === 'PLANNING_JOUR' || viewMode === 'PLANNING_NUIT') && (
                         <Button
                             onClick={handleRemoveAI}
                             disabled={isRemovingAI || loading}
