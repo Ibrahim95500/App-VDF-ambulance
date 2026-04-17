@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { getVehiclesWithAssignments, getAvailablePersonnel, getRegulationHistory, getRegulationAssignments, getDisponibilities, deletePlanningAssignment } from "@/actions/regulation.actions"
+import { generateDailyPlanningAI } from "@/actions/ai-planning.actions"
 
 import { AmbulanceCard } from "@/components/regulation/ambulance-card"
 import { AssignmentDialog } from "@/components/regulation/assignment-dialog"
@@ -48,6 +49,7 @@ export function RegulationView() {
 
     // History & New Tabs State
     const [viewMode, setViewMode] = useState<'PLANNING_JOUR' | 'PLANNING_NUIT' | 'REGULATION' | 'DISPO' | 'HISTORY'>('PLANNING_JOUR')
+    const [isGeneratingAI, setIsGeneratingAI] = useState(false)
     const [historyData, setHistoryData] = useState<any[]>([])
     const [regulationData, setRegulationData] = useState<any[]>([])
     const [dispoData, setDispoData] = useState<any[]>([])
@@ -94,6 +96,28 @@ export function RegulationView() {
             loadHistory()
         }
     }, [viewMode])
+
+    const handleGenerateAI = async () => {
+        try {
+            setIsGeneratingAI(true);
+            toast.loading("Jarvis réfléchit aux meilleures combinaisons...", { id: 'ai-gen' });
+            
+            const dateStr = format(date, 'yyyy-MM-dd');
+            const shift = viewMode === 'PLANNING_NUIT' ? 'NUIT' : 'JOUR';
+            
+            const res = await generateDailyPlanningAI(dateStr, shift);
+            if (res.error) {
+                toast.error(`Erreur IA : ${res.error}`, { id: 'ai-gen' });
+            } else {
+                toast.success(`✨ Jarvis a généré ${res.count} affectations !`, { id: 'ai-gen' });
+                loadData(); // Refresh the grid
+            }
+        } catch (e: any) {
+            toast.error(`Erreur système : ${e.message}`, { id: 'ai-gen' });
+        } finally {
+            setIsGeneratingAI(false);
+        }
+    };
 
     const loadHistory = async () => {
         try {
@@ -244,6 +268,22 @@ export function RegulationView() {
                             />
                         </PopoverContent>
                     </Popover>
+
+                    {/* BOUTON MAGIQUE IA */}
+                    {(viewMode === 'PLANNING_JOUR' || viewMode === 'PLANNING_NUIT') && (
+                        <Button
+                            onClick={handleGenerateAI}
+                            disabled={isGeneratingAI || loading}
+                            className="h-12 px-5 sm:px-6 rounded-xl font-black bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white shadow-lg shadow-purple-500/30 transition-all duration-300 transform hover:-translate-y-0.5 border-0"
+                        >
+                            {isGeneratingAI ? (
+                                <Loader2 className="size-5 mr-2 animate-spin" />
+                            ) : (
+                                <span className="text-xl mr-2">✨</span>
+                            )}
+                            Génération IA
+                        </Button>
+                    )}
 
                     {/* Bouton Actualiser Stylé */}
                     <Button 

@@ -317,6 +317,34 @@ export async function handleUserCommand(chatId: string | number, text: string, u
             return;
         }
 
+        if (cmd === '/jarvis' || cmd === '✨ générer avec l\'ia') {
+            const isAdminOrRH = user.roles?.includes('ADMIN') || user.roles?.includes('REGULATEUR');
+            if (!isAdminOrRH) {
+                await sendTelegramMessage(chatId, "⛔️ L'accès à l'Intelligence Artificielle de régulation est restreint.");
+                return;
+            }
+
+            // Démarrage du Wizard IA
+            await prisma.user.update({
+                where: { id: user.id },
+                data: {
+                    telegramState: 'JARVIS_DATE',
+                    telegramStateData: JSON.stringify({}) 
+                }
+            });
+
+            const keyboard = {
+                inline_keyboard: [
+                    [{ text: "📅 Pour Aujourd'hui", callback_data: "JARVIS_DATE_TODAY" }],
+                    [{ text: "📅 Pour Demain", callback_data: "JARVIS_DATE_TOMORROW" }],
+                    [{ text: "❌ Annuler", callback_data: "CANCEL_ACTION" }]
+                ]
+            };
+
+            await sendTelegramMessage(chatId, `🧠 <b>Assistant Jarvis (IA)</b>\n\nJe vais générer les meilleurs binômes possibles en fonction des disponibilités.\n\n👉 <i>Pour quelle date dois-je calculer le planning ?</i>`, keyboard);
+            return;
+        }
+
         // Si la commande n'est pas reconnue mais commence par /
         if (cmd.startsWith('/')) {
             await sendTelegramMessage(chatId, "❌ Commande introuvable. Tapez /menu pour voir les options disponibles.");

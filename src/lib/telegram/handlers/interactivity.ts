@@ -4,6 +4,7 @@ import { createAdvanceRequest } from '@/actions/advance-request.actions';
 import { createServiceRequest } from '@/actions/service-request.actions';
 import { createAppointmentRequest } from '@/services/appointment-request';
 import { createManyNotifications } from '@/actions/notifications.actions';
+import { generateDailyPlanningAI } from '@/actions/ai-planning.actions';
 // --- GESTION DES CLICS SUR LES BOUTONS ---
 export async function handleBotCallback(chatId: string | number, dataAction: string, user: any, messageId: number) {
     try {
@@ -660,6 +661,35 @@ export async function handleBotCallback(chatId: string | number, dataAction: str
                 }
                 return;
             }
+        }
+
+        // --- IA JARVIS ---
+        if (dataAction.startsWith('JARVIS_DATE_')) {
+            const isTomorrow = dataAction === 'JARVIS_DATE_TOMORROW';
+            const targetDate = new Date();
+            if (isTomorrow) targetDate.setDate(targetDate.getDate() + 1);
+            
+            const dateStr = targetDate.toISOString().split('T')[0];
+            
+            // Clean state
+            await prisma.user.update({
+                where: { id: user.id },
+                data: { telegramState: null, telegramStateData: null }
+            });
+
+            await sendTelegramMessage(chatId, `🧠 <b>Jarvis réfléchit...</b>\n\nPatientez quelques secondes, je construis les équipages parfaits pour le ${targetDate.toLocaleDateString('fr-FR')} (JOUR)...`);
+            
+            try {
+                const res = await generateDailyPlanningAI(dateStr, 'JOUR');
+                if (res.error) {
+                    await sendTelegramMessage(chatId, `❌ <b>Erreur IA Jarvis :</b>\n\n${res.error}`);
+                } else {
+                    await sendTelegramMessage(chatId, `✅ <b>Magie !</b>\n\nJarvis a généré <b>${res.count}</b> équipages dans la base de données. Allez sur l'application Web pour les valider ou apporter les dernières modifications.`);
+                }
+            } catch (err: any) {
+                await sendTelegramMessage(chatId, `❌ <b>Erreur Critique :</b>\n\n${err.message}`);
+            }
+            return;
         }
 
         // Action générique d'annulation
