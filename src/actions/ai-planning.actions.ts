@@ -17,7 +17,6 @@ export async function generateDailyPlanningAI(dateStr: string, shift: 'JOUR' | '
 
         // 1. Récupérer les véhicules
         const allVehicles = await prisma.vehicle.findMany({
-            where: { isActive: true },
             orderBy: { plateNumber: 'asc' }
         });
 
@@ -175,7 +174,8 @@ Renvoie un objet JSON contenant une clé "assignments" qui est un tableau d'obje
             endTime: shift === 'JOUR' ? "19:00" : "07:00",
             status: 'PENDING',
             leaderValidated: false,
-            teammateValidated: false
+            teammateValidated: false,
+            isAiGenerated: true
         }));
 
         const createCount = await prisma.planningAssignment.createMany({
@@ -190,5 +190,38 @@ Renvoie un objet JSON contenant une clé "assignments" qui est un tableau d'obje
     } catch (e: any) {
         console.error("Erreur Generative IA:", e);
         return { error: e.message || "Erreur inconnue de l'IA." };
+    }
+}
+
+export async function removeAIAssignments(dateStr: string, shift: 'JOUR' | 'NUIT' = 'JOUR') {
+    try {
+        const targetDate = new Date(`${dateStr}T00:00:00.000Z`);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        // RÈGLE DE SÉCURITÉ : Interdit de supprimer la veille et avant. 
+        if (targetDate < today) {
+            return { error: "Vous ne pouvez pas supprimer les affectations du passé." };
+        }
+
+        const startOfDay = new Date(`${dateStr}T00:00:00.000Z`);
+        const endOfDay = new Date(`${dateStr}T23:59:59.999Z`);
+
+        const deleted = await prisma.planningAssignment.deleteMany({
+            where: {
+                date: { gte: startOfDay, lte: endOfDay },
+                startTime: shift === 'JOUR' ? { lt: "19:30" } : { gte: "19:30" },
+                isAiGenerated: true,
+                status: 'PENDING'
+            }
+        });
+
+        revalidatePath('/dashboard/rh/regulation');
+        revalidatePath('/dashboard/salarie/regulation');
+
+        return { success: true, count: deleted.count };
+    } catch (e: any) {
+        console.error("Erreur annulation IA:", e);
+        return { error: e.message || "Erreur lors du nettoyage de l'IA." };
     }
 }

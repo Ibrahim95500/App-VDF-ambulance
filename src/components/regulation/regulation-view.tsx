@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { getVehiclesWithAssignments, getAvailablePersonnel, getRegulationHistory, getRegulationAssignments, getDisponibilities, deletePlanningAssignment } from "@/actions/regulation.actions"
-import { generateDailyPlanningAI } from "@/actions/ai-planning.actions"
+import { generateDailyPlanningAI, removeAIAssignments } from "@/actions/ai-planning.actions"
 
 import { AmbulanceCard } from "@/components/regulation/ambulance-card"
 import { AssignmentDialog } from "@/components/regulation/assignment-dialog"
@@ -50,6 +50,7 @@ export function RegulationView() {
     // History & New Tabs State
     const [viewMode, setViewMode] = useState<'PLANNING_JOUR' | 'PLANNING_NUIT' | 'REGULATION' | 'DISPO' | 'HISTORY'>('PLANNING_JOUR')
     const [isGeneratingAI, setIsGeneratingAI] = useState(false)
+    const [isRemovingAI, setIsRemovingAI] = useState(false)
     const [historyData, setHistoryData] = useState<any[]>([])
     const [regulationData, setRegulationData] = useState<any[]>([])
     const [dispoData, setDispoData] = useState<any[]>([])
@@ -116,6 +117,28 @@ export function RegulationView() {
             toast.error(`Erreur système : ${e.message}`, { id: 'ai-gen' });
         } finally {
             setIsGeneratingAI(false);
+        }
+    };
+
+    const handleRemoveAI = async () => {
+        try {
+            setIsRemovingAI(true);
+            toast.loading("Nettoyage de l'I.A. en cours...", { id: 'ai-rm' });
+            
+            const dateStr = format(date, 'yyyy-MM-dd');
+            const shift = viewMode === 'PLANNING_NUIT' ? 'NUIT' : 'JOUR';
+            
+            const res = await removeAIAssignments(dateStr, shift);
+            if (res.error) {
+                toast.error(`Impossible d'annuler : ${res.error}`, { id: 'ai-rm' });
+            } else {
+                toast.success(`🧹 L'IA a été effacée (${res.count} affectations annulées). Tes choix manuels sont conservés.`, { id: 'ai-rm', duration: 4000 });
+                loadData(); // Refresh the grid
+            }
+        } catch (e: any) {
+            toast.error(`Erreur système : ${e.message}`, { id: 'ai-rm' });
+        } finally {
+            setIsRemovingAI(false);
         }
     };
 
@@ -282,6 +305,24 @@ export function RegulationView() {
                                 <span className="text-xl mr-2">✨</span>
                             )}
                             Génération IA
+                        </Button>
+                    )}
+
+                    {/* BOUTON SUPPRIMER IA */}
+                    {(viewMode === 'PLANNING_JOUR' || viewMode === 'PLANNING_NUIT') && (
+                        <Button
+                            onClick={handleRemoveAI}
+                            disabled={isRemovingAI || loading}
+                            variant="destructive"
+                            className="h-12 px-5 sm:px-6 rounded-xl font-bold transition-all duration-300 transform hover:-translate-y-0.5"
+                            title="Annule uniquement ce que l'I.A a fait. Tes choix manuels resteront intacts."
+                        >
+                            {isRemovingAI ? (
+                                <Loader2 className="size-5 mr-2 animate-spin" />
+                            ) : (
+                                <span className="text-xl mr-2">🧹</span>
+                            )}
+                            Annuler I.A.
                         </Button>
                     )}
 
