@@ -27,6 +27,15 @@ export async function handleUserCommand(chatId: string | number, text: string, u
             return;
         }
 
+        if (cmd === '/logout' || cmd === '/disconnect') {
+            await prisma.user.update({
+                where: { id: user.id },
+                data: { telegramChatId: null, telegramState: null, telegramStateData: null }
+            });
+            await sendTelegramMessage(chatId, "🔌 <b>Déconnexion réussie.</b>\nVotre compte Telegram a été dissocié du profil RH.\n\nTapez /start pour associer un nouveau profil.");
+            return;
+        }
+
         if (cmd === '/acompte' || cmd === '💶 mes acomptes') {
             const acomptes = await prisma.advanceRequest.findMany({
                 where: { userId: user.id },
