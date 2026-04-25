@@ -187,6 +187,12 @@ export function SniperLogClient({ data: initialData }: { data: any[] }) {
                     <span className="font-black text-blue-800">{filterCounts.MANUAL_SUCCESS}</span> Succès Manuels
                 </button>
                 <button 
+                    onClick={() => setStatusFilter("MANUAL_PENDING")}
+                    className={`px-4 py-2 rounded-xl border flex items-center gap-2 transition-all ${statusFilter === "MANUAL_PENDING" ? "bg-yellow-50 text-yellow-700 border-yellow-200 shadow-sm" : "bg-background text-muted-foreground border-border hover:bg-muted"}`}
+                >
+                    <span className="font-black text-yellow-800">{filterCounts.MANUAL_PENDING}</span> En Attente
+                </button>
+                <button 
                     onClick={() => setStatusFilter("FAILED_ALREADY_TAKEN")}
                     className={`px-4 py-2 rounded-xl border flex items-center gap-2 transition-all ${statusFilter === "FAILED_ALREADY_TAKEN" ? "bg-red-50 text-red-700 border-red-200 shadow-sm" : "bg-background text-muted-foreground border-border hover:bg-muted"}`}
                 >
