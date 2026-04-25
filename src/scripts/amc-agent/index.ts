@@ -278,7 +278,7 @@ async function snipeCourse(page: any, withFilters: boolean = true): Promise<{ bu
                     result.num = tds[nIdx].innerText.trim();
                     result.allNums.push(result.num);
 
-                    const isGonesseDepart = result.departText.toLowerCase().includes('gonesse') || result.departText.includes('95500') || result.departText.toLowerCase().includes('ght plaine de france');
+                    const isGonesseDepart = result.departText.toLowerCase().includes('gonesse') || result.departText.includes('95500');
                     const isAllowedArrivee = allowedZipCodes.some(zip => result.arriveeText.includes(zip));
 
                     const isVIP = withFilters ? (isGonesseDepart && isAllowedArrivee) : true;
@@ -740,97 +740,7 @@ async function startAgent() {
                     }
                 }
 
-                // --- NOUVEAU : SYNC DU TABLEAU "DEMANDES ACCEPTEES" ---
-                try {
-                    const evalResult = await page.evaluate((syncedIds: string[]) => {
-                        let results: any[] = [];
-                        let debugInfo = "Init;";
-
-                        const allTables = Array.from(document.querySelectorAll('table'));
-                        debugInfo += ` Tables_On_Page:${allTables.length};`;
-
-                        const acceptedTable = allTables.find(t => t.innerText && (t.innerText.includes('Demandes acceptées') || t.innerText.includes('Acceptées')));
-
-                        if (acceptedTable) {
-                            debugInfo += " Table_Found;";
-                            const rows = acceptedTable.querySelectorAll('tr');
-                            debugInfo += ` Rows:${rows.length};`;
-
-                            for (let row of rows) {
-                                const tds = row.querySelectorAll('td');
-                                if (tds.length >= 8) {
-                                    const td0 = tds[0].innerText.trim();
-                                    const numMatch = td0.match(/[0-9]{6,7}/);
-
-                                    if (numMatch || parseInt(td0) > 100000) {
-                                        const num = numMatch ? numMatch[0] : td0;
-                                        if (!syncedIds.includes(num)) {
-                                            const demandeurText = tds[1] ? tds[1].innerText.replace(/\n/g, ' ').trim() : "";
-                                            const departText = tds[2] ? tds[2].innerText.replace(/\n/g, ' ').trim() : "Inconnu";
-                                            const patientText = tds[3] ? tds[3].innerText.replace(/\n/g, ' ').trim() : "";
-                                            const arriveeText = tds[6] ? tds[6].innerText.replace(/\n/g, ' ').trim() : "Inconnu";
-                                            const dateText = tds[7] ? tds[7].innerText.trim() : "";
-                                            let heureText = tds[8] ? tds[8].innerText.trim() : "";
-                                            if (heureText.includes(' ')) heureText = heureText.split(' ')[1]; // Extraction de l'heure
-
-                                            results.push({
-                                                num,
-                                                demandeur: demandeurText,
-                                                patient: patientText,
-                                                depart: departText,
-                                                arrivee: arriveeText,
-                                                datePec: dateText,
-                                                heurePec: heureText
-                                            });
-                                        }
-                                    }
-                                }
-                            }
-                        } else {
-                            debugInfo += " NO_ACCEPTED_TABLE_FOUND;";
-                        }
-                        return { results, debugInfo };
-                    }, Array.from(syncedAcceptedCourses));
-
-                    const newHistory = evalResult.results;
-                    console.log(`🔥 [DEBUG V2] Info interne historique : ${evalResult.debugInfo}`);
-
-                    if (newHistory.length > 0) {
-                        console.log(`📌 Nouvel historique détecté : ${newHistory.length} course(s)... historisation en cours !`);
-                        const acceptedBuffer = await page.screenshot({ fullPage: true }) as Buffer;
-                        for (let hist of newHistory) {
-                            syncedAcceptedCourses.add(hist.num);
-                            
-                            // NOUVEAU: Récupérer le "Choix Ambulance par patient" silencieusement
-                            let patientChoice = undefined;
-                            try {
-                                patientChoice = await page.evaluate(async (courseNum: string) => {
-                                    try {
-                                        const res = await fetch(`ImpDemande.aspx?IDDemande=${courseNum}`);
-                                        const html = await res.text();
-                                        // Cherche la balise <span>non</span> ou <span>oui</span>
-                                        const parser = new DOMParser();
-                                        const doc = parser.parseFromString(html, "text/html");
-                                        const span = doc.getElementById('ctl00_ContentPlaceHolder1_LabChoixAmbuPatient');
-                                        if (span) {
-                                            return span.innerText.trim().toLowerCase() === 'oui';
-                                        }
-                                        return false;
-                                    } catch (e) {
-                                        return false;
-                                    }
-                                }, hist.num);
-                                console.log(`-> Info PatientChoice pour ${hist.num}: ${patientChoice ? 'OUI' : 'NON'}`);
-                            } catch (e) {}
-
-                            console.log(`-> Push de la course history ${hist.num} (${hist.depart} -> ${hist.arrivee})`);
-                            await saveLog("MANUAL_SUCCESS", acceptedBuffer, hist.depart, hist.arrivee, hist.num, hist.demandeur, hist.patient, hist.datePec, hist.heurePec, patientChoice);
-                        }
-                    }
-                } catch (err) {
-                    console.error("❌ Erreur pendant le sync de l'historique :", err);
-                }
-                // --------------------------------------------------------
+                // Le bloc sync history a été déplacé dans le bloc else (quand il n'y a pas d'urgence)
 
                 if (!hasRienAtraiter) {
                     console.log("🚨 ACTIVITÉ DÉTECTÉE SUR LE PRT !!")
@@ -924,7 +834,97 @@ async function startAgent() {
                         await new Promise(r => setTimeout(r, 30000));
                     }
                 } else {
-                    const randomDelay = Math.floor(Math.random() * (20000 - 12000 + 1) + 12000)
+                    // --- NOUVEAU : SYNC DU TABLEAU "DEMANDES ACCEPTEES" UNIQUEMENT QUAND IL N'Y A RIEN A SNIPER ---
+                    try {
+                        const evalResult = await page.evaluate((syncedIds: string[]) => {
+                            let results: any[] = [];
+                            let debugInfo = "Init;";
+
+                            const allTables = Array.from(document.querySelectorAll('table'));
+                            debugInfo += ` Tables_On_Page:${allTables.length};`;
+
+                            const acceptedTable = allTables.find(t => t.innerText && (t.innerText.includes('Demandes acceptées') || t.innerText.includes('Acceptées')));
+
+                            if (acceptedTable) {
+                                debugInfo += " Table_Found;";
+                                const rows = acceptedTable.querySelectorAll('tr');
+                                debugInfo += ` Rows:${rows.length};`;
+
+                                for (let row of rows) {
+                                    const tds = row.querySelectorAll('td');
+                                    if (tds.length >= 8) {
+                                        const td0 = tds[0].innerText.trim();
+                                        const numMatch = td0.match(/[0-9]{6,7}/);
+
+                                        if (numMatch || parseInt(td0) > 100000) {
+                                            const num = numMatch ? numMatch[0] : td0;
+                                            if (!syncedIds.includes(num)) {
+                                                const demandeurText = tds[1] ? tds[1].innerText.replace(/\n/g, ' ').trim() : "";
+                                                const departText = tds[2] ? tds[2].innerText.replace(/\n/g, ' ').trim() : "Inconnu";
+                                                const patientText = tds[3] ? tds[3].innerText.replace(/\n/g, ' ').trim() : "";
+                                                const arriveeText = tds[6] ? tds[6].innerText.replace(/\n/g, ' ').trim() : "Inconnu";
+                                                const dateText = tds[7] ? tds[7].innerText.trim() : "";
+                                                let heureText = tds[8] ? tds[8].innerText.trim() : "";
+                                                if (heureText.includes(' ')) heureText = heureText.split(' ')[1]; // Extraction de l'heure
+
+                                                results.push({
+                                                    num,
+                                                    demandeur: demandeurText,
+                                                    patient: patientText,
+                                                    depart: departText,
+                                                    arrivee: arriveeText,
+                                                    datePec: dateText,
+                                                    heurePec: heureText
+                                                });
+                                            }
+                                        }
+                                    }
+                                }
+                            } else {
+                                debugInfo += " NO_ACCEPTED_TABLE_FOUND;";
+                            }
+                            return { results, debugInfo };
+                        }, Array.from(syncedAcceptedCourses));
+
+                        const newHistory = evalResult.results;
+                        
+                        if (newHistory.length > 0) {
+                            console.log(`📌 Nouvel historique détecté : ${newHistory.length} course(s)... historisation en cours !`);
+                            const acceptedBuffer = await page.screenshot({ fullPage: true }) as Buffer;
+                            for (let hist of newHistory) {
+                                syncedAcceptedCourses.add(hist.num);
+                                
+                                let patientChoice = undefined;
+                                try {
+                                    patientChoice = await page.evaluate(async (courseNum: string) => {
+                                        try {
+                                            const res = await fetch(`ImpDemande.aspx?IDDemande=${courseNum}`);
+                                            const html = await res.text();
+                                            const parser = new DOMParser();
+                                            const doc = parser.parseFromString(html, "text/html");
+                                            const span = doc.getElementById('ctl00_ContentPlaceHolder1_LabChoixAmbuPatient');
+                                            if (span) {
+                                                return span.innerText.trim().toLowerCase() === 'oui';
+                                            }
+                                            return false;
+                                        } catch (e) {
+                                            return false;
+                                        }
+                                    }, hist.num);
+                                    console.log(`-> Info PatientChoice pour ${hist.num}: ${patientChoice ? 'OUI' : 'NON'}`);
+                                } catch (e) {}
+
+                                console.log(`-> Push de la course history ${hist.num} (${hist.depart} -> ${hist.arrivee})`);
+                                await saveLog("MANUAL_SUCCESS", acceptedBuffer, hist.depart, hist.arrivee, hist.num, hist.demandeur, hist.patient, hist.datePec, hist.heurePec, patientChoice);
+                            }
+                        }
+                    } catch (err) {
+                        console.error("❌ Erreur pendant le sync de l'historique :", err);
+                    }
+
+                    // 5. Pause Humaine Aléatoire (Anti-Détection) plus AGRESSIVE
+                    // Au lieu de 12 à 20s, on passe entre 3 et 6 secondes !
+                    const randomDelay = Math.floor(Math.random() * (6000 - 3000 + 1) + 3000)
                     console.log(`[Surveillance Temps Réel] En écoute active du DOM pendant ${Math.floor(randomDelay / 1000)}s (sans recharger)...`)
 
                     try {
