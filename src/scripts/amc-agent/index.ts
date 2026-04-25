@@ -278,7 +278,7 @@ async function snipeCourse(page: any, withFilters: boolean = true): Promise<{ bu
                     result.num = tds[nIdx].innerText.trim();
                     result.allNums.push(result.num);
 
-                    const isGonesseDepart = result.departText.toLowerCase().includes('gonesse') || result.departText.includes('95500');
+                    const isGonesseDepart = result.departText.toLowerCase().includes('gonesse') || result.departText.includes('95500') || result.departText.toLowerCase().includes('ght plaine de france');
                     const isAllowedArrivee = allowedZipCodes.some(zip => result.arriveeText.includes(zip));
 
                     const isVIP = withFilters ? (isGonesseDepart && isAllowedArrivee) : true;
