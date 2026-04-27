@@ -887,19 +887,31 @@ async function startAgent() {
                         }, Array.from(syncedAcceptedCourses));
 
                         const newHistory = evalResult.results;
-                        
                         if (newHistory.length > 0) {
                             console.log(`📌 Nouvel historique détecté : ${newHistory.length} course(s)... historisation en cours !`);
                             
                             // On prend UN SEUL screenshot pour gagner du temps
                             const acceptedBuffer = await page.screenshot({ fullPage: true }).catch(() => null) as Buffer | null;
                             
+                            // 🚀 RÉCUPÉRATION DES COOKIES POUR LE FETCH EN ARRIÈRE-PLAN
+                            const cookies = await context.cookies();
+                            const cookieString = cookies.map(c => `${c.name}=${c.value}`).join('; ');
+                            
                             for (let hist of newHistory) {
                                 syncedAcceptedCourses.add(hist.num);
                                 console.log(`-> Push de la course history ${hist.num} (${hist.depart} -> ${hist.arrivee})`);
                                 
-                                // Fire and forget : on n'attend pas la base de données pour continuer à sniper !
-                                saveLog("MANUAL_SUCCESS", acceptedBuffer, hist.depart, hist.arrivee, hist.num, hist.demandeur, hist.patient, hist.datePec, hist.heurePec, undefined).catch(e => console.error(e));
+                                // Enrichissement Asynchrone (Ne bloque pas le Sniper !)
+                                fetch(`https://www.transportpatient.fr/Transport/ImpDemande.aspx?IDDemande=${hist.num}`, {
+                                    headers: { 'Cookie': cookieString }
+                                }).then(async (res) => {
+                                    const html = await res.text();
+                                    // Analyse rudimentaire sans DOMParser (plus rapide)
+                                    const isPatientChoice = html.toLowerCase().includes('id="ctl00_contentplaceholder1_labchoixambupatient">oui</span>');
+                                    
+                                    await saveLog("MANUAL_SUCCESS", acceptedBuffer, hist.depart, hist.arrivee, hist.num, hist.demandeur, hist.patient, hist.datePec, hist.heurePec, isPatientChoice);
+                                    console.log(`✅ [Background Sync] Course ${hist.num} mise à jour avec Choix Patient : ${isPatientChoice ? 'OUI' : 'NON (Aléatoire)'}`);
+                                }).catch(e => console.error(`❌ Erreur background fetch pour ${hist.num}:`, e));
                             }
                         }
                     } catch (err) {
