@@ -890,42 +890,26 @@ async function startAgent() {
                         
                         if (newHistory.length > 0) {
                             console.log(`📌 Nouvel historique détecté : ${newHistory.length} course(s)... historisation en cours !`);
-                            const acceptedBuffer = await page.screenshot({ fullPage: true }) as Buffer;
+                            
+                            // On prend UN SEUL screenshot pour gagner du temps
+                            const acceptedBuffer = await page.screenshot({ fullPage: true }).catch(() => null) as Buffer | null;
+                            
                             for (let hist of newHistory) {
                                 syncedAcceptedCourses.add(hist.num);
-                                
-                                let patientChoice = undefined;
-                                try {
-                                    patientChoice = await page.evaluate(async (courseNum: string) => {
-                                        try {
-                                            const res = await fetch(`ImpDemande.aspx?IDDemande=${courseNum}`);
-                                            const html = await res.text();
-                                            const parser = new DOMParser();
-                                            const doc = parser.parseFromString(html, "text/html");
-                                            const span = doc.getElementById('ctl00_ContentPlaceHolder1_LabChoixAmbuPatient');
-                                            if (span) {
-                                                return span.innerText.trim().toLowerCase() === 'oui';
-                                            }
-                                            return false;
-                                        } catch (e) {
-                                            return false;
-                                        }
-                                    }, hist.num);
-                                    console.log(`-> Info PatientChoice pour ${hist.num}: ${patientChoice ? 'OUI' : 'NON'}`);
-                                } catch (e) {}
-
                                 console.log(`-> Push de la course history ${hist.num} (${hist.depart} -> ${hist.arrivee})`);
-                                await saveLog("MANUAL_SUCCESS", acceptedBuffer, hist.depart, hist.arrivee, hist.num, hist.demandeur, hist.patient, hist.datePec, hist.heurePec, patientChoice);
+                                
+                                // Fire and forget : on n'attend pas la base de données pour continuer à sniper !
+                                saveLog("MANUAL_SUCCESS", acceptedBuffer, hist.depart, hist.arrivee, hist.num, hist.demandeur, hist.patient, hist.datePec, hist.heurePec, undefined).catch(e => console.error(e));
                             }
                         }
                     } catch (err) {
                         console.error("❌ Erreur pendant le sync de l'historique :", err);
                     }
 
-                    // 5. Pause Humaine Aléatoire (Anti-Détection) plus AGRESSIVE
-                    // Au lieu de 12 à 20s, on passe entre 3 et 6 secondes !
-                    const randomDelay = Math.floor(Math.random() * (6000 - 3000 + 1) + 3000)
-                    console.log(`[Surveillance Temps Réel] En écoute active du DOM pendant ${Math.floor(randomDelay / 1000)}s (sans recharger)...`)
+                    // 5. Pause Humaine Aléatoire (Anti-Détection) EXTRÊMEMENT COURTE
+                    // Le robot ne dort presque plus : entre 1 et 2 secondes max !
+                    const randomDelay = Math.floor(Math.random() * (2000 - 1000 + 1) + 1000)
+                    console.log(`[Surveillance Temps Réel] En écoute active du DOM pendant ${Math.floor(randomDelay / 1000)}s...`)
 
                     try {
                         // Event-Driven: Playwright attend la milli-seconde où le bouton accpeter apparaît.
