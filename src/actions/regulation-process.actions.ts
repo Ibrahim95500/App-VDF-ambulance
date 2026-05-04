@@ -356,9 +356,18 @@ export async function checkConfirmationsAndPenalize(dateStr: string) {
             htmlReport += `</tbody></table>`;
         }
 
-        // Récupérer les admins et régulateurs pour envoyer le mail et telegram
+        // Récupérer UNIQUEMENT les vrais admins et régulateurs pour le rapport
+        // On utilise le flag `isRegulateur` ET le rôle ADMIN pour cibler uniquement les bonnes personnes
+        // On exclut également les comptes supprimés ou inactifs
         const admins = await prisma.user.findMany({
-            where: { OR: [{ roles: { has: 'ADMIN' } }, { roles: { has: 'REGULATEUR' } }] },
+            where: {
+                isDeleted: false,
+                isActive: true,
+                OR: [
+                    { roles: { has: 'ADMIN' } },
+                    { isRegulateur: true }
+                ]
+            },
             select: { email: true, telegramChatId: true }
         });
 
